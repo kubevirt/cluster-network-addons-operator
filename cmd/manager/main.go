@@ -9,6 +9,7 @@ import (
 
 	"github.com/phoracek/cluster-network-addons-operator/pkg/apis"
 	"github.com/phoracek/cluster-network-addons-operator/pkg/controller"
+	"github.com/phoracek/cluster-network-addons-operator/pkg/util/k8s"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
@@ -23,20 +24,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
-// Change below variables to serve metrics on different host or port.
 var (
 	metricsHost       = "0.0.0.0"
 	metricsPort int32 = 8383
 )
+
 var log = logf.Log.WithName("cmd")
 
-func printVersion() {
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
-}
-
-func main() {
+func configureLogging() {
 	// Add the zap logger flag set to the CLI. The flag set must
 	// be added before calling pflag.Parse().
 	pflag.CommandLine.AddFlagSet(zap.FlagSet())
@@ -50,12 +45,17 @@ func main() {
 	// Use a zap logr.Logger implementation. If none of the zap
 	// flags are configured (or if the zap flag set is not being
 	// used), this defaults to a production zap logger.
-	//
-	// The logger instantiated here can be changed to any logger
-	// implementing the logr.Logger interface. This logger will
-	// be propagated through the whole operator, generating
-	// uniform and structured logs.
 	logf.SetLogger(zap.Logger())
+}
+
+func printVersion() {
+	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
+	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
+	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
+}
+
+func main() {
+	configureLogging()
 
 	printVersion()
 
@@ -85,6 +85,7 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
 		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		MapperProvider:     k8s.NewDynamicRESTMapper,
 	})
 	if err != nil {
 		log.Error(err, "")

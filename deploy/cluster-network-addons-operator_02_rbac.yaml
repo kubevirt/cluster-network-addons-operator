@@ -1,0 +1,19 @@
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-network-addons-operator
+subjects:
+- kind: ServiceAccount
+  name: cluster-network-addons-operator
+  namespace: cluster-network-addons-operator
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-network-addons-operator
+  namespace: cluster-network-addons-operator
