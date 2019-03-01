@@ -2,7 +2,6 @@ package networkaddonsconfig
 
 import (
 	"context"
-	"time"
 
 	networkaddonsoperatorv1alpha1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/phoracek/cluster-network-addons-operator/pkg/apply"
@@ -163,7 +162,6 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 					continue
 				}
 			}
-			//r.status.SetConfigFailing("ApplyOperatorConfig", err)
 			return reconcile.Result{}, err
 		}
 	}

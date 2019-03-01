@@ -11,7 +11,7 @@ Try it out:
 ./cluster/down.sh
 ```
 
-`ClusterNetworkAddonsConfig` example:
+`NetworkAddonsConfig` example:
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
@@ -19,5 +19,13 @@ kind: NetworkAddonsConfig
 metadata:
   name: cluster
 spec:
-  multus: {}
+  multus:
+    delegates: |
+      [{
+        "type": "flannel",
+        "name": "flannel.1",
+        "delegate": {
+          "isDefaultGateway": true
+        }
+      }]
 ```

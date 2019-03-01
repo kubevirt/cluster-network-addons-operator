@@ -16,7 +16,7 @@ func Render(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec, manifes
 	objs := []*unstructured.Unstructured{}
 
 	// render Multus
-	o, err := RenderMultus(conf, manifestDir)
+	o, err := renderMultus(conf, manifestDir)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func Canonicalize(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec) {
 func Validate(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec) error {
 	errs := []error{}
 
-	errs = append(errs, ValidateMultus(conf)...)
+	errs = append(errs, validateMultus(conf)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration: %v", errs)
@@ -73,30 +73,4 @@ func IsChangeSafe(prev, next *networkaddonsoperatorv1alpha1.NetworkAddonsConfigS
 		return errors.Errorf("invalid configuration: %v", errs)
 	}
 	return nil
-}
-
-// ValidateMultus validates the combination of DisableMultiNetwork and AddtionalNetworks
-func ValidateMultus(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec) []error {
-	// TODO
-
-	return []error{}
-}
-
-// RenderMultus generates the manifests of Multus
-func RenderMultus(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
-	if conf.Multus == nil {
-		return nil, nil
-	}
-
-	var err error
-	out := []*unstructured.Unstructured{}
-	objs := []*unstructured.Unstructured{}
-
-	objs, err = renderMultusConfig(manifestDir)
-	if err != nil {
-		return nil, err
-	}
-	out = append(out, objs...)
-
-	return out, nil
 }

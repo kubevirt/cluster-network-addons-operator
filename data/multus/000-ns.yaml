@@ -1,10 +1,6 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: openshift-multus
+  name: multus
   labels:
-    name: openshift-multus
-    openshift.io/run-level: "0"
-  annotations:
-    openshift.io/node-selector: "" #override default node selector
-    openshift.io/description: "Multus network plugin components"
+    name: multus

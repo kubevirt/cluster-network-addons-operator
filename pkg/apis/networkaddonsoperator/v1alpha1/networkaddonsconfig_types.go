@@ -11,7 +11,9 @@ type NetworkAddonsConfigSpec struct {
 }
 
 // +k8s:openapi-gen=true
-type MultusConfig struct{}
+type MultusConfig struct {
+	Delegates string `json:"delegates,omitempty"`
+}
 
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true

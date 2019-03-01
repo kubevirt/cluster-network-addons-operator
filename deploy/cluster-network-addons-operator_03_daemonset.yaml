@@ -27,11 +27,7 @@ spec:
               memory: 50Mi
           env:
             - name: MULTUS_IMAGE
-              value: "quay.io/openshift/origin-multus-cni:v4.0.0"
-            - name: CNI_PLUGINS_SUPPORTED_IMAGE
-              value: "quay.io/openshift/origin-container-networking-plugins-supported:v4.0.0"
-            - name: CNI_PLUGINS_UNSUPPORTED_IMAGE
-              value: "quay.io/openshift/origin-container-networking-plugins-unsupported:v4.0.0"
+              value: "docker.io/nfvpe/multus:latest"
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME

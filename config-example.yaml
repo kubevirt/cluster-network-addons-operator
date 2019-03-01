@@ -3,4 +3,12 @@ kind: NetworkAddonsConfig
 metadata:
   name: cluster
 spec:
-  multus: {}
+  multus:
+    delegates: |
+      [{
+        "type": "flannel",
+        "name": "flannel.1",
+        "delegate": {
+          "isDefaultGateway": true
+        }
+      }]
