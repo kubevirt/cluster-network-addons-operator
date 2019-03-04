@@ -338,12 +338,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:0ae7e37344409d86cf1fff4ccd82180c19680b266f1df73fd7d38ade4ad5f5d3"
+  name = "github.com/openshift/cluster-network-operator"
+  packages = [
+    "pkg/apis",
+    "pkg/apis/networkoperator/v1",
+  ]
+  pruneopts = "NT"
+  revision = "ca122b5aa28a375e9cb365e76b980bb8cad7a5f2"
+
+[[projects]]
+  branch = "master"
   digest = "1:4533a59591a41946fb4512c99881b38ed7938410fdf516805a5e72bd6b9e6ecf"
   name = "github.com/operator-framework/operator-sdk"
   packages = [
     "pkg/k8sutil",
     "pkg/leader",
-    "pkg/log/zap",
     "pkg/metrics",
     "version",
   ]
@@ -945,9 +955,11 @@
   input-imports = [
     "github.com/Masterminds/sprig",
     "github.com/go-openapi/spec",
+    "github.com/golang/glog",
+    "github.com/openshift/cluster-network-operator/pkg/apis",
+    "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
-    "github.com/operator-framework/operator-sdk/pkg/log/zap",
     "github.com/operator-framework/operator-sdk/pkg/metrics",
     "github.com/operator-framework/operator-sdk/version",
     "github.com/pkg/errors",
@@ -982,7 +994,6 @@
     "sigs.k8s.io/controller-runtime/pkg/handler",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
-    "sigs.k8s.io/controller-runtime/pkg/runtime/log",
     "sigs.k8s.io/controller-runtime/pkg/runtime/scheme",
     "sigs.k8s.io/controller-runtime/pkg/runtime/signals",
     "sigs.k8s.io/controller-runtime/pkg/source",

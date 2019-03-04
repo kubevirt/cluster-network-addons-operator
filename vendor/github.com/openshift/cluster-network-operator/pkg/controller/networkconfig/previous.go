@@ -1,8 +1,12 @@
-package networkaddonsconfig
+package networkconfig
 
 import (
 	"context"
 	"encoding/json"
+
+	netv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
+	"github.com/openshift/cluster-network-operator/pkg/names"
+	k8sutil "github.com/openshift/cluster-network-operator/pkg/util/k8s"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -10,15 +14,11 @@ import (
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	opv1alphav1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/names"
-	k8sutil "github.com/phoracek/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 // GetAppliedConfiguration retrieves the configuration we applied.
 // Returns nil with no error if no previous configuration was observed.
-func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name string) (*opv1alphav1.NetworkAddonsConfigSpec, error) {
+func GetAppliedConfiguration(ctx context.Context, client k8sclient.Client, name string) (*netv1.NetworkConfigSpec, error) {
 	cm := &corev1.ConfigMap{}
 	err := client.Get(ctx, types.NamespacedName{Namespace: names.APPLIED_NAMESPACE, Name: names.APPLIED_PREFIX + name}, cm)
 	if err != nil && apierrors.IsNotFound(err) {
@@ -27,7 +27,7 @@ func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name 
 		return nil, err
 	}
 
-	spec := &opv1alphav1.NetworkAddonsConfigSpec{}
+	spec := &netv1.NetworkConfigSpec{}
 	err = json.Unmarshal([]byte(cm.Data["applied"]), spec)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name 
 
 // AppliedConfiguration renders the ConfigMap in which we store the configuration
 // we've applied.
-func appliedConfiguration(applied *opv1alphav1.NetworkAddonsConfig) (*uns.Unstructured, error) {
+func AppliedConfiguration(applied *netv1.NetworkConfig) (*uns.Unstructured, error) {
 	app, err := json.Marshal(applied.Spec)
 	if err != nil {
 		return nil, err

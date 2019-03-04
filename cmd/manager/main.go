@@ -4,24 +4,24 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 
-	"github.com/phoracek/cluster-network-addons-operator/pkg/apis"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/controller"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/util/k8s"
-
+	netapis "github.com/openshift/cluster-network-operator/pkg/apis"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
-	"github.com/operator-framework/operator-sdk/pkg/log/zap"
 	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+
+	"github.com/phoracek/cluster-network-addons-operator/pkg/apis"
+	"github.com/phoracek/cluster-network-addons-operator/pkg/controller"
+	"github.com/phoracek/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 var (
@@ -29,46 +29,29 @@ var (
 	metricsPort int32 = 8383
 )
 
-var log = logf.Log.WithName("cmd")
-
-func configureLogging() {
-	// Add the zap logger flag set to the CLI. The flag set must
-	// be added before calling pflag.Parse().
-	pflag.CommandLine.AddFlagSet(zap.FlagSet())
-
-	// Add flags registered by imported packages (e.g. glog and
-	// controller-runtime)
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-
-	pflag.Parse()
-
-	// Use a zap logr.Logger implementation. If none of the zap
-	// flags are configured (or if the zap flag set is not being
-	// used), this defaults to a production zap logger.
-	logf.SetLogger(zap.Logger())
-}
-
 func printVersion() {
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
+	log.Printf("Go Version: %s", runtime.Version())
+	log.Printf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
+	log.Printf("version of operator-sdk: %v", sdkVersion.Version)
 }
 
 func main() {
-	configureLogging()
+	// Add flags registered by imported packages (e.g. controller-runtime)
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+	pflag.Parse()
 
 	printVersion()
 
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
-		log.Error(err, "Failed to get watch namespace")
+		log.Printf("failed to get watch namespace: %v", err)
 		os.Exit(1)
 	}
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Error(err, "")
+		log.Printf("failed to get apiserver config: %v", err)
 		os.Exit(1)
 	}
 
@@ -77,7 +60,7 @@ func main() {
 	// Become the leader before proceeding
 	err = leader.Become(ctx, "cluster-network-addons-operator-lock")
 	if err != nil {
-		log.Error(err, "")
+		log.Printf("failed to become operator leader: %v", err)
 		os.Exit(1)
 	}
 
@@ -88,35 +71,39 @@ func main() {
 		MapperProvider:     k8s.NewDynamicRESTMapper,
 	})
 	if err != nil {
-		log.Error(err, "")
+		log.Printf("failed to instantiate new operator manager: %v", err)
 		os.Exit(1)
 	}
 
-	log.Info("Registering Components.")
+	log.Print("registering Components")
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "")
+		log.Printf("failed adding network addons scheme to the client: %v", err)
+		os.Exit(1)
+	}
+	if err := netapis.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Printf("failed adding openshift network scheme to the client: %v", err)
 		os.Exit(1)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		log.Error(err, "")
+		log.Printf("failed setting up operator controllers: %v", err)
 		os.Exit(1)
 	}
 
 	// Create Service object to expose the metrics port.
-	_, err = metrics.ExposeMetricsPort(ctx, metricsPort)
-	if err != nil {
-		log.Info(err.Error())
+	if _, err = metrics.ExposeMetricsPort(ctx, metricsPort); err != nil {
+		log.Println("failed to expose metrics: %v", err)
+		os.Exit(1)
 	}
 
-	log.Info("Starting the Cmd.")
+	log.Print("starting the operator manager")
 
-	// Start the Cmd
+	// Start the operator manager
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "Manager exited non-zero")
+		log.Printf("manager exited with non-zero: %v", err)
 		os.Exit(1)
 	}
 }

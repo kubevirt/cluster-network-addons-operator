@@ -12,8 +12,3 @@ const APPLIED_PREFIX = "applied-"
 // configmaps are stored.
 // Should match 00_namespace.yaml
 const APPLIED_NAMESPACE = "cluster-network-addons-operator"
-
-// IgnoreObjectErrorAnnotation is an annotation we can set on objects
-// to signal to the reconciler that we don't care if they fail to create
-// or update. Useful when we want to make a CR for which the CRD may not exist yet.
-const IgnoreObjectErrorAnnotation = "networkoperator.openshift.io/ignore-errors"

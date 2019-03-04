@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/pkg/errors"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
@@ -18,7 +19,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	name := obj.GetName()
 	namespace := obj.GetNamespace()
 	if name == "" {
-		return errors.Errorf("object %s has no name", obj.GroupVersionKind().String())
+		return errors.Errorf("Object %s has no name", obj.GroupVersionKind().String())
 	}
 	gvk := obj.GroupVersionKind()
 	// used for logging and errors
@@ -56,9 +57,9 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 		return errors.Wrapf(err, "could not update object %s", objDesc)
 	}
 	if existing.GetResourceVersion() == obj.GetResourceVersion() {
-		log.Print("update was noop")
+		log.Printf("update was noop")
 	} else {
-		log.Print("update was successful")
+		log.Printf("update was successful")
 	}
 
 	return nil

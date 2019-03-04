@@ -2,30 +2,33 @@ package networkaddonsconfig
 
 import (
 	"context"
+	"log"
+	"strings"
 
-	networkaddonsoperatorv1alpha1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/apply"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/names"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/network"
-
+	osnetv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
+	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	opv1alpha1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/phoracek/cluster-network-addons-operator/pkg/apply"
+	"github.com/phoracek/cluster-network-addons-operator/pkg/names"
+	"github.com/phoracek/cluster-network-addons-operator/pkg/network"
 )
 
 // ManifestPath is the path to the manifest templates
 var ManifestPath = "./data"
-
-var log = logf.Log.WithName("controller_networkaddonsconfig")
 
 // Add creates a new NetworkAddonsConfig Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -47,8 +50,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource NetworkAddonsConfig
-	err = c.Watch(&source.Kind{Type: &networkaddonsoperatorv1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
+	if err := c.Watch(&source.Kind{Type: &opv1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}); err != nil {
 		return err
 	}
 
@@ -68,23 +70,21 @@ type ReconcileNetworkAddonsConfig struct {
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
 // and what is in the NetworkAddonsConfig.Spec
 func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling NetworkAddonsConfig")
+	log.Print("reconciling NetworkAddonsConfig")
 
 	// We won't create more than one network addons instance
 	if request.Name != names.OPERATOR_CONFIG {
-		log.Info("Ignoring NetworkAddonsConfig without default name")
+		log.Print("ignoring NetworkAddonsConfig without default name")
 		return reconcile.Result{}, nil
 	}
 
 	// Fetch the NetworkAddonsConfig instance
-	networkAddonsConfig := &networkaddonsoperatorv1alpha1.NetworkAddonsConfig{}
+	networkAddonsConfig := &opv1alpha1.NetworkAddonsConfig{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfig)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
+			// Owned objects are automatically garbage collected. Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
@@ -94,16 +94,23 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// Convert to a canonicalized form
 	network.Canonicalize(&networkAddonsConfig.Spec)
 
+	// TODO doc
+	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
+	if err != nil {
+		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
+		return reconcile.Result{}, err
+	}
+
 	// Validate the configuration
-	if err := network.Validate(&networkAddonsConfig.Spec); err != nil {
-		reqLogger.Info("Failed to validate NetworkConfig.Spec: %v", err)
+	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
+		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
 		return reconcile.Result{}, err
 	}
 
 	// Retrieve the previously applied operator configuration
-	prev, err := GetAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name)
+	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name)
 	if err != nil {
-		reqLogger.Info("Failed to retrieve previously applied configuration: %v", err)
+		log.Printf("failed to retrieve previously applied configuration: %v", err)
 		return reconcile.Result{}, err
 	}
 
@@ -117,54 +124,62 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		// upconversion scheme -- if we add additional fields to the config.
 		err = network.IsChangeSafe(prev, &networkAddonsConfig.Spec)
 		if err != nil {
-			reqLogger.Info("Not applying unsafe change: %v", err)
+			log.Printf("not applying unsafe change: %v", err)
 			errors.Wrapf(err, "not applying unsafe change")
 			return reconcile.Result{}, err
 		}
 	}
 
 	// Generate the objects
-	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath)
+	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig)
 	if err != nil {
-		reqLogger.Info("Failed to render: %v", err)
+		log.Printf("failed to render: %v", err)
 		err = errors.Wrapf(err, "failed to render")
 		return reconcile.Result{}, err
 	}
 
 	// The first object we create should be the record of our applied configuration
-	applied, err := AppliedConfiguration(networkAddonsConfig)
+	applied, err := appliedConfiguration(networkAddonsConfig)
 	if err != nil {
-		reqLogger.Info("Failed to render applied: %v", err)
+		log.Printf("failed to render applied: %v", err)
 		err = errors.Wrapf(err, "failed to render applied")
 		return reconcile.Result{}, err
 	}
-	objs = append([]*uns.Unstructured{applied}, objs...)
+	objs = append([]*unstructured.Unstructured{applied}, objs...)
 
 	// Apply the objects to the cluster
 	for _, obj := range objs {
 		// Mark the object to be GC'd if the owner is deleted
 		if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
+			log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 			err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
-			reqLogger.Info("%v", err)
 			return reconcile.Result{}, err
 		}
 
-		// Open question: should an error here indicate we will never retry?
+		// Apply all objects on apiserver
 		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
+			log.Printf("could not apply (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
-			reqLogger.Info("%v", err)
-
-			// Ignore errors if we've asked to do so.
-			anno := obj.GetAnnotations()
-			if anno != nil {
-				if _, ok := anno[names.IgnoreObjectErrorAnnotation]; ok {
-					reqLogger.Info("Object has ignore-errors annotation set, continuing")
-					continue
-				}
-			}
 			return reconcile.Result{}, err
 		}
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osnetv1.NetworkConfig, error) {
+	nc := &osnetv1.NetworkConfig{}
+
+	// TODO: names imported and in constant
+	err := c.Get(ctx, types.NamespacedName{Namespace: "", Name: osnetnames.OPERATOR_CONFIG}, nc)
+	if err != nil {
+		if apierrors.IsNotFound(err) || strings.Contains(err.Error(), "no matches for kind") {
+			log.Printf("OpenShift cluster network configuration resource has not been found: %v", err)
+			return nil, nil
+		}
+		log.Printf("failed to obtain OpenShift cluster network configuration with unexpected error: %v", err)
+		return nil, err
+	}
+
+	return nc, nil
 }
