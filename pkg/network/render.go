@@ -22,6 +22,13 @@ func Render(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec, manifes
 	}
 	objs = append(objs, o...)
 
+	// render Linux Bridge
+	o, err = renderLinuxBridge(conf, manifestDir)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
 	log.Printf("Render phase done, rendered %d objects", len(objs))
 	return objs, nil
 }
@@ -37,6 +44,8 @@ func Validate(conf *networkaddonsoperatorv1alpha1.NetworkAddonsConfigSpec) error
 	errs := []error{}
 
 	errs = append(errs, validateMultus(conf)...)
+
+	errs = append(errs, validateLinuxBridge(conf)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration: %v", errs)

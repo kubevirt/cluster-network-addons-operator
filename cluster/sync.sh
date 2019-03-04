@@ -3,6 +3,8 @@
 registry_port=$(./cluster/cli.sh ports registry | tr -d '\r')
 registry=localhost:$registry_port
 
+./cluster/clean.sh
+
 operator-sdk build $registry/cluster-network-addons-operator
 docker push $registry/cluster-network-addons-operator
 
@@ -16,4 +18,4 @@ done
 ./cluster/kubectl.sh create -f deploy/cluster-network-addons-operator_00_namespace.yaml
 ./cluster/kubectl.sh create -f deploy/cluster-network-addons-operator_01_crd.yaml
 ./cluster/kubectl.sh create -f deploy/cluster-network-addons-operator_02_rbac.yaml
-sed 's#quay.io/phoracek#registry:5000#' deploy/cluster-network-addons-operator_03_daemonset.yaml | ./cluster/kubectl.sh create -f -
+sed 's#quay.io/phoracek#registry:5000#' deploy/cluster-network-addons-operator_03_deployment.yaml | ./cluster/kubectl.sh create -f -

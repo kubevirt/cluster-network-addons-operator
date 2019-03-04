@@ -28,4 +28,5 @@ spec:
           "isDefaultGateway": true
         }
       }]
+  linuxBridge: {}
 ```

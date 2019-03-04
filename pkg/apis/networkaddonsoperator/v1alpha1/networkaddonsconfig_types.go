@@ -7,13 +7,16 @@ import (
 // NetworkAddonsConfigSpec defines the desired state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
 type NetworkAddonsConfigSpec struct {
-	Multus *MultusConfig `json:"multus,omitempty"`
+	Multus      *MultusConfig `json:"multus,omitempty"`
+	LinuxBridge *LinuxBridge  `json:"linuxBridge,omitempty"`
 }
 
 // +k8s:openapi-gen=true
 type MultusConfig struct {
 	Delegates string `json:"delegates,omitempty"`
 }
+
+type LinuxBridge struct{}
 
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true

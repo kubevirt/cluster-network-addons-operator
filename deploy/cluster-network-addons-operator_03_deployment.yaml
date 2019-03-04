@@ -13,6 +13,7 @@ spec:
       labels:
         name: cluster-network-addons-operator
     spec:
+      hostNetwork: true
       serviceAccountName: cluster-network-addons-operator
       containers:
         - name: cluster-network-addons-operator
@@ -26,8 +27,12 @@ spec:
               cpu: 10m
               memory: 50Mi
           env:
+            - name: IMAGE_PULL_POLICY
+              value: "Always"
             - name: MULTUS_IMAGE
               value: "docker.io/nfvpe/multus:latest"
+            - name: LINUX_BRIDGE_IMAGE
+              value: "quay.io/kubevirt/cni-default-plugins"
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME
