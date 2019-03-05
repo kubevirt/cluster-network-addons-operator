@@ -13,7 +13,7 @@ import (
 )
 
 func changeSafeLinuxBridge(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
-	if prev.LinuxBridge != nil && !reflect.DeepEqual(prev, next) {
+	if prev.LinuxBridge != nil && !reflect.DeepEqual(prev.LinuxBridge, next.LinuxBridge) {
 		return []error{errors.Errorf("cannot modify Linux Bridge configuration once it is deployed")}
 	}
 	return nil

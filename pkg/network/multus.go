@@ -34,7 +34,7 @@ func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkCo
 }
 
 func changeSafeMultus(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
-	if prev.Multus != nil && !reflect.DeepEqual(prev, next) {
+	if prev.Multus != nil && !reflect.DeepEqual(prev.Multus, next.Multus) {
 		return []error{errors.Errorf("cannot modify Multus configuration once it is deployed")}
 	}
 	return nil
