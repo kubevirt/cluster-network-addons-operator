@@ -3,7 +3,7 @@ package controller
 import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/phoracek/cluster-network-addons-operator/pkg/controller/networkaddonsconfig"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/networkaddonsconfig"
 )
 
 // AddToManagerFuncs is a list of functions to add all Controllers to the Manager

@@ -19,9 +19,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 
-	"github.com/phoracek/cluster-network-addons-operator/pkg/apis"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/controller"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/util/k8s"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 var (

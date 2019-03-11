@@ -21,10 +21,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	opv1alpha1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/apply"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/names"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/network"
+	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 )
 
 // ManifestPath is the path to the manifest templates

@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/phoracek/cluster-network-addons-operator/pkg/render"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	opv1alpha1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 )
 
 func changeSafeLinuxBridge(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {

@@ -94,10 +94,10 @@ Additionally, container image used to deliver this plugin can be set using
 First install the operator itself:
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/phoracek/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_00_namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/phoracek/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_01_crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/phoracek/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_02_rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/phoracek/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_03_deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_00_namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_01_crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_02_rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_03_deployment.yaml
 ```
 
 Then you need to create a configuration for the operator:

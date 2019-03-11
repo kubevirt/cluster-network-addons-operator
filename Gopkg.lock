@@ -343,6 +343,7 @@
   packages = [
     "pkg/apis",
     "pkg/apis/networkoperator/v1",
+    "pkg/names",
   ]
   pruneopts = "NT"
   revision = "ca122b5aa28a375e9cb365e76b980bb8cad7a5f2"
@@ -954,10 +955,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/sprig",
-    "github.com/go-openapi/spec",
-    "github.com/golang/glog",
     "github.com/openshift/cluster-network-operator/pkg/apis",
     "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1",
+    "github.com/openshift/cluster-network-operator/pkg/names",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/metrics",
@@ -986,7 +986,6 @@
     "k8s.io/code-generator/cmd/lister-gen",
     "k8s.io/gengo/args",
     "k8s.io/kube-openapi/cmd/openapi-gen",
-    "k8s.io/kube-openapi/pkg/common",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/controller",

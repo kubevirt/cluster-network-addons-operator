@@ -11,9 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alphav1 "github.com/phoracek/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	"github.com/phoracek/cluster-network-addons-operator/pkg/names"
-	k8sutil "github.com/phoracek/cluster-network-addons-operator/pkg/util/k8s"
+	opv1alphav1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
+	k8sutil "github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 // GetAppliedConfiguration retrieves the configuration we applied.
