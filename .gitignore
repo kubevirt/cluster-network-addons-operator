@@ -1,0 +1,7 @@
+# Temporary build files
+build/_output
+build/_test
+
+# Temporary local cluster files
+cluster/.kubeconfig
+cluster/.kubectl
