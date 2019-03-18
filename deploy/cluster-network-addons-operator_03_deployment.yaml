@@ -19,8 +19,6 @@ spec:
       - name: cluster-network-addons-operator
         # Replace this with the built image name
         image: quay.io/kubevirt/cluster-network-addons-operator
-        command:
-        - cluster-network-addons-operator
         imagePullPolicy: Always
         resources:
           requests:
