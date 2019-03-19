@@ -1,16 +1,15 @@
-FROM centos:centos7
+FROM golang:1.10 AS builder
+ENV GOPATH=/go
+WORKDIR /go/src/github.com/kubevirt/cluster-network-addons-operator/
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /cluster-network-addons-operator github.com/kubevirt/cluster-network-addons-operator/cmd/manager
 
-ENV OPERATOR=/usr/local/bin/cluster-network-addons-operator \
+FROM centos:centos7
+ENV ENTRYPOINT=/entrypoint \
+    OPERATOR=/cluster-network-addons-operator \
     USER_UID=1001 \
     USER_NAME=cluster-network-addons-operator
-
-# install operator binary
-COPY build/_output/bin/cluster-network-addons-operator ${OPERATOR}
-COPY data /data
-
-COPY build/bin /usr/local/bin
-RUN  /usr/local/bin/user_setup
-
-ENTRYPOINT ["/usr/local/bin/entrypoint"]
-
+COPY --from=builder /cluster-network-addons-operator $OPERATOR
+COPY --from=builder /go/src/github.com/kubevirt/cluster-network-addons-operator/build/bin/entrypoint $ENTRYPOINT
+ENTRYPOINT ["$ENTRYPOINT"]
 USER ${USER_UID}
