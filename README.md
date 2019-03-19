@@ -136,8 +136,8 @@ make fmt
 # generate sources (requires operator-sdk installed on your host)
 operator-sdk generate k8s
 
-# build image
-operator-sdk build cluster-network-addons-operator
+# build image (uses multi-stage builds and therefore requires Docker >= 17.05)
+make docker-build
 
 # bring up a local cluster with Kubernetes
 make cluster-up

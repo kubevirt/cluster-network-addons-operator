@@ -5,8 +5,7 @@ registry=localhost:$registry_port
 
 ./cluster/clean.sh
 
-operator-sdk build $registry/cluster-network-addons-operator
-docker push $registry/cluster-network-addons-operator
+IMAGE_REGISTRY=$registry make docker-build docker-push
 
 for i in $(seq 1 ${CLUSTER_NUM_NODES}); do
     ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" 'sudo docker pull registry:5000/cluster-network-addons-operator'
