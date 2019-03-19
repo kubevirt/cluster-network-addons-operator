@@ -95,6 +95,25 @@ components that are not compatible with KubeVirt SR-IOV feature. Therefore, if
 SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
 operator will return an error.
 
+
+## Kubemacpool
+The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool)
+This project allow to allocate mac addresses from a pool to secondary interfaces using 
+[Network Plumbing Working Group de-facto standard](https://github.com/K8sNetworkPlumbingWG/multi-net-spec).
+
+Administrator need to specify a requested range
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  kubeMacPool:
+   startPoolRange: "02:00:00:00:00:00"
+   endPoolRange: "FD:FF:FF:FF:FF:FF"
+```
+
 ## Image Pull Policy
 
 Administrator can specify [image pull policy](https://kubernetes.io/docs/concepts/containers/images/)

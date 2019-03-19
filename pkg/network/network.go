@@ -22,6 +22,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 	errs := []error{}
 
 	errs = append(errs, validateMultus(conf, openshiftNetworkConfig)...)
+	errs = append(errs, validateKubeMacPool(conf)...)
 	errs = append(errs, validateImagePullPolicy(conf)...)
 
 	if len(errs) > 0 {
@@ -56,6 +57,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	errs = append(errs, changeSafeMultus(prev, next)...)
 	errs = append(errs, changeSafeLinuxBridge(prev, next)...)
 	errs = append(errs, changeSafeSriov(prev, next)...)
+	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
 
 	if len(errs) > 0 {
@@ -84,6 +86,13 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 
 	// render SR-IOV
 	o, err = renderSriov(conf, manifestDir, enableSCC)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
+	// render kubeMacPool
+	o, err = renderKubeMacPool(conf, manifestDir)
 	if err != nil {
 		return nil, err
 	}

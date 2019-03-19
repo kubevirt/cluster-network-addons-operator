@@ -35,6 +35,8 @@ spec:
           value: "docker.io/nfvpe/sriov-cni:latest"
         - name: SRIOV_ROOT_DEVICES
           value: ""
+        - name: KUBEMACPOOL_IMAGE
+          value: "quay.io/schseba/mac-controller:latest"
         - name: WATCH_NAMESPACE
           value: ""
         - name: POD_NAME
