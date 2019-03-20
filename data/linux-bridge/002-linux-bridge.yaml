@@ -14,7 +14,9 @@ spec:
         tier: node
         app: cni-plugins
     spec:
-      hostNetwork: true
+{{ if .EnableSCC }}
+      serviceAccountName: linux-bridge
+{{ end }}
       nodeSelector:
         beta.kubernetes.io/arch: amd64
       tolerations:

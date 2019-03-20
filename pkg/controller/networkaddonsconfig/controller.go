@@ -2,6 +2,7 @@ package networkaddonsconfig
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -12,8 +13,10 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -33,12 +36,31 @@ var ManifestPath = "./data"
 // Add creates a new NetworkAddonsConfig Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get apiserver config: %v", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to initialize apiserver client: %v", err)
+	}
+
+	sccIsAvailable, err := isSCCAvailable(clientset)
+	if err != nil {
+		return fmt.Errorf("failed to check for availability of SCC: %v", err)
+	}
+
+	return add(mgr, newReconciler(mgr, sccIsAvailable))
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileNetworkAddonsConfig{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+func newReconciler(mgr manager.Manager, sccIsAvailable bool) reconcile.Reconciler {
+	return &ReconcileNetworkAddonsConfig{
+		client:         mgr.GetClient(),
+		scheme:         mgr.GetScheme(),
+		sccIsAvailable: sccIsAvailable,
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -65,6 +87,8 @@ type ReconcileNetworkAddonsConfig struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+
+	sccIsAvailable bool
 }
 
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
@@ -131,7 +155,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Generate the objects
-	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig)
+	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.sccIsAvailable)
 	if err != nil {
 		log.Printf("failed to render: %v", err)
 		err = errors.Wrapf(err, "failed to render")
@@ -182,4 +206,20 @@ func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osnetv
 	}
 
 	return nc, nil
+}
+
+func isSCCAvailable(c kubernetes.Interface) (bool, error) {
+	return isResourceAvailable(c, "securitycontextconstraints", "security.openshift.io", "v1")
+}
+
+func isResourceAvailable(kubeClient kubernetes.Interface, name string, group string, version string) (bool, error) {
+	result := kubeClient.ExtensionsV1beta1().RESTClient().Get().RequestURI("/apis/" + group + "/" + version + "/" + name).Do()
+	if result.Error() != nil {
+		if strings.Contains(result.Error().Error(), "the server could not find the requested resource") {
+			return false, nil
+		}
+		return false, result.Error()
+	}
+
+	return true, nil
 }
