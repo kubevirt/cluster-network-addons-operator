@@ -11,5 +11,5 @@ ENV ENTRYPOINT=/entrypoint \
     USER_NAME=cluster-network-addons-operator
 COPY --from=builder /cluster-network-addons-operator $OPERATOR
 COPY --from=builder /go/src/github.com/kubevirt/cluster-network-addons-operator/build/bin/entrypoint $ENTRYPOINT
-ENTRYPOINT ["$ENTRYPOINT"]
-USER ${USER_UID}
+ENTRYPOINT $ENTRYPOINT
+USER $USER_UID
