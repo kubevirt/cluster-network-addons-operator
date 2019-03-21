@@ -66,7 +66,7 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 	objs := []*unstructured.Unstructured{}
 
 	// render Multus
-	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig)
+	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, enableSCC)
 	if err != nil {
 		return nil, err
 	}

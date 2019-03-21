@@ -53,7 +53,6 @@ spec:
         tier: node
         app: multus
     spec:
-      hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/arch: amd64
       tolerations:
