@@ -78,19 +78,20 @@ func RenderTemplate(path string, d *RenderData) ([]*unstructured.Unstructured, e
 		return nil, errors.Wrapf(err, "failed to parse manifest %s as template", path)
 	}
 
-	rendered := bytes.Buffer{}
-	if err := tmpl.Execute(&rendered, d.Data); err != nil {
+	renderedBuffer := bytes.Buffer{}
+	if err := tmpl.Execute(&renderedBuffer, d.Data); err != nil {
 		return nil, errors.Wrapf(err, "failed to render manifest %s", path)
 	}
+	rendered := strings.TrimSpace(renderedBuffer.String())
 
 	out := []*unstructured.Unstructured{}
 
 	// special case - if the entire file is whitespace, skip
-	if len(strings.TrimSpace(rendered.String())) == 0 {
+	if len(rendered) == 0 {
 		return out, nil
 	}
 
-	decoder := yaml.NewYAMLOrJSONDecoder(&rendered, 4096)
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewBufferString(rendered), 4096)
 	for {
 		u := unstructured.Unstructured{}
 		if err := decoder.Decode(&u); err != nil {

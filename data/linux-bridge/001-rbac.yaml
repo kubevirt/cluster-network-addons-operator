@@ -1,0 +1,21 @@
+{{ if .EnableSCC }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: linux-bridge
+  namespace: linux-bridge
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: linux-bridge
+allowPrivilegedContainer: true
+allowHostDirVolumePlugin: true
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+users:
+- system:serviceaccount:linux-bridge:linux-bridge
+{{ end }}

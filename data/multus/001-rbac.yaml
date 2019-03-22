@@ -36,3 +36,18 @@ kind: ServiceAccount
 metadata:
   name: multus
   namespace: multus
+{{ if .EnableSCC }}
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: multus
+allowPrivilegedContainer: true
+allowHostDirVolumePlugin: true
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+users:
+- system:serviceaccount:multus:multus
+{{ end }}

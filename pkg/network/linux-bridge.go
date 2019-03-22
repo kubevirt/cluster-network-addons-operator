@@ -20,7 +20,7 @@ func changeSafeLinuxBridge(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []err
 }
 
 // renderLinuxBridge generates the manifests of Linux Bridge
-func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
+func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	if conf.LinuxBridge == nil {
 		return nil, nil
 	}
@@ -29,6 +29,7 @@ func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 	data := render.MakeRenderData()
 	data.Data["LinuxBridgeImage"] = os.Getenv("LINUX_BRIDGE_IMAGE")
 	data.Data["ImagePullPolicy"] = os.Getenv("IMAGE_PULL_POLICY")
+	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "linux-bridge"), &data)
 	if err != nil {
