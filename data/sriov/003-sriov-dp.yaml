@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sriov-nodes-config
+  namespace: sriov
+data:
+  fallback-config: |
+    {
+        "resourceList":
+        [
+            {
+                "resourceName": "sriov",
+                "rootDevices": [{{ .SriovRootDevices }}],
+                "sriovMode": true,
+                "deviceType": "vfio"
+            }
+        ]
+    }
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: kube-sriov-device-plugin
+  namespace: sriov
+  labels:
+    tier: node
+    app: sriov-device-plugin
+spec:
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: device-plugins
+    spec:
+{{ if .EnableSCC }}
+      serviceAccountName: sriov
+{{ end }}
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      initContainers:
+      - name: config-container
+        image: {{ .SriovDpImage }}
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "50Mi"
+        command:
+        - /bin/sh
+        - -c
+        args:
+        - |
+          if [ -f /etc/sriov-nodes-config/$NODE_NAME ]; then
+            config_path=/etc/sriov-nodes-config/$NODE_NAME
+          else
+            config_path=/etc/sriov-nodes-config/fallback-config
+          fi
+          cp $config_path /etc/pcidp/config.json
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: config
+          mountPath: /etc/pcidp
+        - name: configmap
+          mountPath: /etc/sriov-nodes-config
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      containers:
+      - name: kube-sriov-device-plugin
+        image: {{ .SriovDpImage }}
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        args:
+          - --log-level=10
+        volumeMounts:
+          - name: devicesock
+            mountPath: /var/lib/kubelet/device-plugins/
+            readOnly: false
+          - name: sysfs
+            mountPath: /sys
+            readOnly: true
+          - name: config
+            mountPath: /etc/pcidp
+            readOnly: true
+      volumes:
+      - name: devicesock
+        hostPath:
+          path: /var/lib/kubelet/device-plugins/
+      - name: sysfs
+        hostPath:
+          path: /sys
+      - name: config
+        hostPath:
+          path: /etc/pcidp
+          type: DirectoryOrCreate
+      - name: configmap
+        configMap:
+          name: sriov-nodes-config
