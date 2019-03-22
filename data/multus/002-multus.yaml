@@ -21,23 +21,6 @@ spec:
             config:
               type: string
 ---
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: multus-cni-config
-  namespace: multus
-  labels:
-    tier: node
-    app: multus
-data:
-  00-multus.json: |
-    {
-      "name": "multus-cni-network",
-      "type": "multus",
-      "delegates": {{ .MultusDelegates | indent 8}},
-      "kubeconfig": "/etc/cni/net.d/multus.d/multus.kubeconfig"
-    }
----
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -62,7 +45,7 @@ spec:
       containers:
       - name: kube-multus
         command: ["/entrypoint.sh"]
-        args: ["--multus-conf-file=/usr/src/multus-cni/images/00-multus.json"]
+        args: ["--multus-conf-file=auto"]
         image: {{ .MultusImage }}
         resources:
           requests:
@@ -78,8 +61,6 @@ spec:
           mountPath: /host/etc/cni/net.d
         - name: cnibin
           mountPath: /host/opt/cni/bin
-        - name: multus-cfg
-          mountPath: /usr/src/multus-cni/images/
       volumes:
         - name: cni
           hostPath:
@@ -87,6 +68,3 @@ spec:
         - name: cnibin
           hostPath:
             path: /opt/cni/bin
-        - name: multus-cfg
-          configMap:
-            name: multus-cni-config

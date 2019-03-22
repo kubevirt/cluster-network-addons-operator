@@ -16,52 +16,15 @@ kind: NetworkAddonsConfig
 metadata:
   name: cluster
 spec:
-  multus:
-    delegates: |
-      [{
-        "type": "flannel",
-        "name": "flannel.1",
-        "delegate": {
-          "isDefaultGateway": true
-        }
-      }]
+  multus: {}
   linuxBridge: {}
 ```
 
 ## Multus
 
-The operator allows administrator to deploy multi-network [Multus plugin](https://github.com/intel/multus-cni). Configuration of this component varies based on used platform.
-
-### On Kubernetes
-
-On Kubernetes or OpenShift 3, operator can be used to deploy and configure
-Multus. It is done using `multus` attribute. `multus.delegates` attribute must
-be specified and contain CNI configuration for the default plugin used on your
-cluster.
-
-```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
-kind: NetworkAddonsConfig
-metadata:
-  name: cluster
-spec:
-  multus:
-    delegates: |
-      [{
-        "type": "flannel",
-        "name": "flannel.1",
-        "delegate": {
-          "isDefaultGateway": true
-        }
-      }]
-```
-
-Additionally, container image used to deliver this plugin can be set using
-`MULTUS_IMAGE` environment variable in operator deployment manifest.
-
-### On OpenShift 4
-
-OpenShift 4 is shipped with [Cluster Network Operator](https://github.com/openshift/cluster-network-operator). OpenShift operator already supports Multus deployment. Therefore, if Multus is requested in our operator using `multus` attribute, we just make sure that is is not disabled in the OpenShift one.
+The operator allows administrator to deploy multi-network
+[Multus plugin](https://github.com/intel/multus-cni). It is done using `multus`
+attribute.
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
@@ -71,6 +34,11 @@ metadata:
 spec:
   multus: {}
 ```
+
+Additionally, container image used to deliver this plugin can be set using
+`MULTUS_IMAGE` environment variable in operator deployment manifest.
+
+**Note:** OpenShift 4 is shipped with [Cluster Network Operator](https://github.com/openshift/cluster-network-operator). OpenShift operator already supports Multus deployment. Therefore, if Multus is requested in our operator using `multus` attribute, we just make sure that is is not disabled in the OpenShift one.
 
 ## Linux Bridge
 
@@ -109,15 +77,7 @@ kind: NetworkAddonsConfig
 metadata:
   name: cluster
 spec:
-  multus:
-    delegates: |
-      [{
-        "type": "flannel",
-        "name": "flannel.1",
-        "delegate": {
-          "isDefaultGateway": true
-        }
-      }]
+  multus: {}
   linuxBridge: {}
 EOF
 ```
