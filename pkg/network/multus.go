@@ -19,12 +19,7 @@ func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkCo
 		return []error{}
 	}
 
-	if openshiftNetworkConfig == nil {
-		if conf.Multus.Delegates == "" {
-			return []error{errors.Errorf("if multus is used, delegates must be specified")}
-		}
-		// TODO notify that multus configuration is left for openshift
-	} else {
+	if openshiftNetworkConfig != nil {
 		if openshiftNetworkConfig.Spec.DisableMultiNetwork == newTrue() {
 			return []error{errors.Errorf("multus has been requested, but is disabled on OpenShift Cluster Network Operator")}
 		}
@@ -49,7 +44,6 @@ func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, 
 	// render manifests from disk
 	data := render.MakeRenderData()
 	data.Data["MultusImage"] = os.Getenv("MULTUS_IMAGE")
-	data.Data["MultusDelegates"] = conf.Multus.Delegates
 	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "multus"), &data)
