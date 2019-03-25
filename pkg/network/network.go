@@ -61,19 +61,19 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	return nil
 }
 
-func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osnetv1.NetworkConfig, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osnetv1.NetworkConfig, namespace string, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
 
 	// render Multus
-	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, enableSCC)
+	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, namespace, enableSCC)
 	if err != nil {
 		return nil, err
 	}
 	objs = append(objs, o...)
 
 	// render Linux Bridge
-	o, err = renderLinuxBridge(conf, manifestDir, enableSCC)
+	o, err = renderLinuxBridge(conf, manifestDir, namespace, enableSCC)
 	if err != nil {
 		return nil, err
 	}

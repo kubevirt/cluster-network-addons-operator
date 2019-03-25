@@ -33,6 +33,10 @@ spec:
           value: "quay.io/kubevirt/cni-default-plugins"
         - name: WATCH_NAMESPACE
           value: ""
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: POD_NAME
           valueFrom:
             fieldRef:

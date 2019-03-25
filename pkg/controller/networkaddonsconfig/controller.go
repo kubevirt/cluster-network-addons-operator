@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	osnetv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
@@ -46,19 +47,25 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("failed to initialize apiserver client: %v", err)
 	}
 
+	namespace, found := os.LookupEnv("NAMESPACE")
+	if !found {
+		return fmt.Errorf("namespace must be set in pod's NAMESPACE environment variable")
+	}
+
 	sccIsAvailable, err := isSCCAvailable(clientset)
 	if err != nil {
 		return fmt.Errorf("failed to check for availability of SCC: %v", err)
 	}
 
-	return add(mgr, newReconciler(mgr, sccIsAvailable))
+	return add(mgr, newReconciler(mgr, namespace, sccIsAvailable))
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager, sccIsAvailable bool) reconcile.Reconciler {
+func newReconciler(mgr manager.Manager, namespace string, sccIsAvailable bool) reconcile.Reconciler {
 	return &ReconcileNetworkAddonsConfig{
 		client:         mgr.GetClient(),
 		scheme:         mgr.GetScheme(),
+		namespace:      namespace,
 		sccIsAvailable: sccIsAvailable,
 	}
 }
@@ -88,6 +95,7 @@ type ReconcileNetworkAddonsConfig struct {
 	client client.Client
 	scheme *runtime.Scheme
 
+	namespace      string
 	sccIsAvailable bool
 }
 
@@ -155,7 +163,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Generate the objects
-	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.sccIsAvailable)
+	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.namespace, r.sccIsAvailable)
 	if err != nil {
 		log.Printf("failed to render: %v", err)
 		err = errors.Wrapf(err, "failed to render")

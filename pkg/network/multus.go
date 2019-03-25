@@ -36,7 +36,7 @@ func changeSafeMultus(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
 }
 
 // RenderMultus generates the manifests of Multus
-func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osnetv1.NetworkConfig, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osnetv1.NetworkConfig, namespace string, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	if conf.Multus == nil || openshiftNetworkConfig != nil {
 		return nil, nil
 	}
@@ -44,6 +44,7 @@ func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, 
 	// render manifests from disk
 	data := render.MakeRenderData()
 	data.Data["MultusImage"] = os.Getenv("MULTUS_IMAGE")
+	data.Data["Namespace"] = namespace
 	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "multus"), &data)
