@@ -22,6 +22,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 	errs := []error{}
 
 	errs = append(errs, validateMultus(conf, openshiftNetworkConfig)...)
+	errs = append(errs, validateImagePullPolicy(conf)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration: %v", errs)
@@ -35,7 +36,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 // Defaults are carried forward from previous if it is provided. This is so we
 // can change defaults as we move forward, but won't disrupt existing clusters.
 func FillDefaults(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) {
-	// TODO
+	fillDefaultsImagePullPolicy(conf, previous)
 }
 
 // IsChangeSafe checks to see if the change between prev and next are allowed
@@ -54,6 +55,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 
 	errs = append(errs, changeSafeMultus(prev, next)...)
 	errs = append(errs, changeSafeLinuxBridge(prev, next)...)
+	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration: %v", errs)

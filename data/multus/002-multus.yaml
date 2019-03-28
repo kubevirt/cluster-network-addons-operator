@@ -47,6 +47,7 @@ spec:
         command: ["/entrypoint.sh"]
         args: ["--multus-conf-file=auto"]
         image: {{ .MultusImage }}
+        imagePullPolicy: {{ .ImagePullPolicy }}
         resources:
           requests:
             cpu: "100m"

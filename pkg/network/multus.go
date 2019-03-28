@@ -44,6 +44,7 @@ func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, 
 	// render manifests from disk
 	data := render.MakeRenderData()
 	data.Data["MultusImage"] = os.Getenv("MULTUS_IMAGE")
+	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "multus"), &data)

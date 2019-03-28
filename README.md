@@ -57,6 +57,20 @@ spec:
 Additionally, container image used to deliver this plugin can be set using
 `LINUX_BRIDGE_IMAGE` environment variable in operator deployment manifest.
 
+## Image Pull Policy
+
+Administrator can specify [image pull policy](https://kubernetes.io/docs/concepts/containers/images/)
+for deployed components. Default is `IfNotPresent`.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  imagePullPolicy: Always
+```
+
 # Deployment
 
 First install the operator itself:

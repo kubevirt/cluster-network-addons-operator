@@ -28,7 +28,7 @@ func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 	// render the manifests on disk
 	data := render.MakeRenderData()
 	data.Data["LinuxBridgeImage"] = os.Getenv("LINUX_BRIDGE_IMAGE")
-	data.Data["ImagePullPolicy"] = os.Getenv("IMAGE_PULL_POLICY")
+	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "linux-bridge"), &data)
