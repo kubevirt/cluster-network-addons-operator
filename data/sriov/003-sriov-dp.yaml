@@ -58,12 +58,14 @@ spec:
         - -c
         args:
         - |
-          if [ -f /etc/sriov-nodes-config/$NODE_NAME ]; then
-            config_path=/etc/sriov-nodes-config/$NODE_NAME
-          else
-            config_path=/etc/sriov-nodes-config/fallback-config
+          if ! [ -f /etc/pcidp/config.json ]; then
+            if [ -f /etc/sriov-nodes-config/$NODE_NAME ]; then
+              config_path=/etc/sriov-nodes-config/$NODE_NAME
+            else
+              config_path=/etc/sriov-nodes-config/fallback-config
+            fi
+            cp $config_path /etc/pcidp/config.json
           fi
-          cp $config_path /etc/pcidp/config.json
         securityContext:
           privileged: true
         volumeMounts:

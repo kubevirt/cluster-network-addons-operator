@@ -80,7 +80,9 @@ SR-IOV capable network devices.
 
 If all nodes in the cluster are homogenous, meaning they have the same root
 device IDs (or perhaps it's a single node deployment), then you can use
-`SRIOV_ROOT_DEVICES` variable to specify appropriate IDs.
+`SRIOV_ROOT_DEVICES` variable to specify appropriate IDs. If they are not, you
+can deploy with default configuration file and then modify
+`/etc/pcidp/config.json` on each node to list corresponding root device IDs.
 
 Additionally, container images used to deliver these plugins can be set using
 `SRIOV_DP_IMAGE` and `SRIOV_CNI_IMAGE` environment variables in operator
