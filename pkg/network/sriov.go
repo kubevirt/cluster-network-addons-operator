@@ -1,9 +1,11 @@
 package network
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 	"github.com/pkg/errors"
@@ -19,6 +21,16 @@ func changeSafeSriov(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	return nil
 }
 
+func getRootDevicesConfigString(rootDevices string) string {
+	devices := make([]string, 0)
+	for _, id := range strings.Split(rootDevices, ",") {
+		if id != "" {
+			devices = append(devices, fmt.Sprintf("\"%s\"", id))
+		}
+	}
+	return strings.Join(devices, ",")
+}
+
 // renderSriov generates the manifests of SR-IOV plugins
 func renderSriov(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	if conf.Sriov == nil {
@@ -27,7 +39,7 @@ func renderSriov(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, e
 
 	// render the manifests on disk
 	data := render.MakeRenderData()
-	data.Data["SriovRootDevices"] = os.Getenv("SRIOV_ROOT_DEVICES")
+	data.Data["SriovRootDevices"] = getRootDevicesConfigString(os.Getenv("SRIOV_ROOT_DEVICES"))
 	data.Data["SriovDpImage"] = os.Getenv("SRIOV_DP_IMAGE")
 	data.Data["SriovCniImage"] = os.Getenv("SRIOV_CNI_IMAGE")
 	data.Data["ImagePullPolicy"] = os.Getenv("IMAGE_PULL_POLICY")
