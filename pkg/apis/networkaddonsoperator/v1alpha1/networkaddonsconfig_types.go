@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,8 +26,48 @@ type Sriov struct{}
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
 type NetworkAddonsConfigStatus struct {
-	// TODO
+	Phase      NetworkAddonsPhase       `json:"phase,omitempty"`
+	Conditions []NetworkAddonsCondition `json:"conditions,omitempty" optional:"true"`
 }
+
+// NetworkAddonsPhase is a label for the phase of a NetworkAddons deployment at the current time.
+// ---
+// +k8s:openapi-gen=true
+type NetworkAddonsPhase string
+
+// These are the valid NetworkAddons deployment phases
+const (
+	// The deployment is processing
+	NetworkAddonsPhaseDeploying NetworkAddonsPhase = "Deploying"
+	// The deployment succeeded
+	NetworkAddonsPhaseDeployed NetworkAddonsPhase = "Deployed"
+)
+
+// NetworkAddonsCondition represents a condition of a NetworkAddons deployment
+// ---
+// +k8s:openapi-gen=true
+type NetworkAddonsCondition struct {
+	Type               NetworkAddonsConditionType `json:"type"`
+	Status             corev1.ConditionStatus     `json:"status"`
+	LastProbeTime      metav1.Time                `json:"lastProbeTime,omitempty"`
+	LastTransitionTime metav1.Time                `json:"lastTransitionTime,omitempty"`
+	Reason             string                     `json:"reason,omitempty"`
+	Message            string                     `json:"message,omitempty"`
+}
+
+// ---
+// +k8s:openapi-gen=true
+type NetworkAddonsConditionType string
+
+// These are the valid NetworkAddons condition types
+const (
+	// Whether the deployment or deletion was successful (only used if false)
+	NetworkAddonsConditionSynchronized NetworkAddonsConditionType = "Synchronized"
+	// Whether all resources were created
+	NetworkAddonsConditionCreated NetworkAddonsConditionType = "Created"
+	// Whether all components were ready
+	NetworkAddonsConditionReady NetworkAddonsConditionType = "Ready"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
