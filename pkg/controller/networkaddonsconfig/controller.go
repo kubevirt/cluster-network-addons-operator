@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	osnetv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
+	osv1 "github.com/openshift/api/operator/v1"
 	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -118,7 +118,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// Convert to a canonicalized form
 	network.Canonicalize(&networkAddonsConfig.Spec)
 
-	// TODO doc
+	// Read OpenShift network operator configuration (if exists)
 	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
 	if err != nil {
 		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
@@ -191,10 +191,9 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	return reconcile.Result{}, nil
 }
 
-func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osnetv1.NetworkConfig, error) {
-	nc := &osnetv1.NetworkConfig{}
+func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.Network, error) {
+	nc := &osv1.Network{}
 
-	// TODO: names imported and in constant
 	err := c.Get(ctx, types.NamespacedName{Namespace: "", Name: osnetnames.OPERATOR_CONFIG}, nc)
 	if err != nil {
 		if apierrors.IsNotFound(err) || strings.Contains(err.Error(), "no matches for kind") {
