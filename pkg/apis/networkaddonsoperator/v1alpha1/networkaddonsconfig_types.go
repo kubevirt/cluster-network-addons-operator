@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,8 +32,34 @@ type Sriov struct{}
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
 type NetworkAddonsConfigStatus struct {
-	// TODO
+	Conditions []NetworkAddonsCondition `json:"conditions,omitempty" optional:"true"`
 }
+
+// NetworkAddonsCondition represents a condition of a NetworkAddons deployment
+// ---
+// +k8s:openapi-gen=true
+type NetworkAddonsCondition struct {
+	Type               NetworkAddonsConditionType `json:"type"`
+	Status             corev1.ConditionStatus     `json:"status"`
+	LastProbeTime      metav1.Time                `json:"lastProbeTime,omitempty"`
+	LastTransitionTime metav1.Time                `json:"lastTransitionTime,omitempty"`
+	Reason             string                     `json:"reason,omitempty"`
+	Message            string                     `json:"message,omitempty"`
+}
+
+// ---
+// +k8s:openapi-gen=true
+type NetworkAddonsConditionType string
+
+// These are the valid NetworkAddons condition types
+const (
+	// Whether operator failed during deployment
+	NetworkAddonsConditionFailing NetworkAddonsConditionType = "Failing"
+	// Whether is the deployment progressing
+	NetworkAddonsConditionProgressing NetworkAddonsConditionType = "Progressing"
+	// Whether all components were ready
+	NetworkAddonsConditionAvailable NetworkAddonsConditionType = "Ready"
+)
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
