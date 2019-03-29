@@ -338,6 +338,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:7f456914faa87d1b0b33f3d9e1f884b83532b74df5c1be0328d86b5cc22fefe3"
+  name = "github.com/openshift/api"
+  packages = [
+    "config/v1",
+    "operator/v1",
+  ]
+  pruneopts = "NT"
+  revision = "e8532c51d46fdc99060e3357da9282a3c588ee94"
+
+[[projects]]
+  branch = "master"
   digest = "1:0ae7e37344409d86cf1fff4ccd82180c19680b266f1df73fd7d38ade4ad5f5d3"
   name = "github.com/openshift/cluster-network-operator"
   packages = [
@@ -955,8 +966,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/sprig",
+    "github.com/openshift/api/operator/v1",
     "github.com/openshift/cluster-network-operator/pkg/apis",
-    "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1",
     "github.com/openshift/cluster-network-operator/pkg/names",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",

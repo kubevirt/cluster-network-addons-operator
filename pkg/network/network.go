@@ -4,7 +4,7 @@ import (
 	"log"
 	"reflect"
 
-	osnetv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
+	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -18,7 +18,7 @@ func Canonicalize(conf *opv1alpha1.NetworkAddonsConfigSpec) {
 
 // Validate checks that the supplied configuration is reasonable.
 // This should be called after Canonicalize
-func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *osnetv1.NetworkConfig) error {
+func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.Network) error {
 	errs := []error{}
 
 	errs = append(errs, validateMultus(conf, openshiftNetworkConfig)...)
@@ -63,7 +63,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	return nil
 }
 
-func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osnetv1.NetworkConfig, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
 

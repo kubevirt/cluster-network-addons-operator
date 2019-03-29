@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	osnetv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
+	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -14,7 +14,7 @@ import (
 )
 
 // ValidateMultus validates the combination of DisableMultiNetwork and AddtionalNetworks
-func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *osnetv1.NetworkConfig) []error {
+func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.Network) []error {
 	if conf.Multus == nil {
 		return []error{}
 	}
@@ -36,7 +36,7 @@ func changeSafeMultus(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
 }
 
 // RenderMultus generates the manifests of Multus
-func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osnetv1.NetworkConfig, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	if conf.Multus == nil || openshiftNetworkConfig != nil {
 		return nil, nil
 	}
