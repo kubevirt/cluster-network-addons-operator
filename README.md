@@ -88,6 +88,13 @@ Additionally, container images used to deliver these plugins can be set using
 `SRIOV_DP_IMAGE` and `SRIOV_CNI_IMAGE` environment variables in operator
 deployment manifest.
 
+**Note:** OpenShift 4 is shipped with [Cluster Network
+Operator](https://github.com/openshift/cluster-network-operator). OpenShift
+operator already supports SR-IOV deployment. But it uses older versions of
+components that are not compatible with KubeVirt SR-IOV feature. Therefore, if
+SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
+operator will return an error.
+
 ## Image Pull Policy
 
 Administrator can specify [image pull policy](https://kubernetes.io/docs/concepts/containers/images/)
