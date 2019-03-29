@@ -10,6 +10,7 @@ import (
 	osv1 "github.com/openshift/api/operator/v1"
 	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,19 +61,20 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr, namespace, sccIsAvailable))
 }
 
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager, namespace string, sccIsAvailable bool) reconcile.Reconciler {
+// newReconciler returns a new ReconcileNetworkAddonsConfig
+func newReconciler(mgr manager.Manager, namespace string, sccIsAvailable bool) *ReconcileNetworkAddonsConfig {
 	return &ReconcileNetworkAddonsConfig{
 		client:         mgr.GetClient(),
 		scheme:         mgr.GetScheme(),
 		namespace:      namespace,
+		podReconciler:  newPodReconciler(),
 		sccIsAvailable: sccIsAvailable,
 	}
 }
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
+// add adds a new Controller to mgr with r as the ReconcileNetworkAddonsConfig
+func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
+	// Create a new controller for operator's NetworkAddonsConfig resource
 	c, err := controller.New("networkaddonsconfig-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
@@ -80,6 +82,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to primary resource NetworkAddonsConfig
 	if err := c.Watch(&source.Kind{Type: &opv1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}); err != nil {
+		return err
+	}
+
+	// Create a new controller for Pod resources, this will be used to track state of deployed components
+	c, err = controller.New("pod-controller", mgr, controller.Options{Reconciler: r.podReconciler})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes on DaemonSet and Deployment resources
+	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
 		return err
 	}
 
@@ -95,6 +113,7 @@ type ReconcileNetworkAddonsConfig struct {
 	client         client.Client
 	scheme         *runtime.Scheme
 	namespace      string
+	podReconciler  *ReconcilePods
 	sccIsAvailable bool
 }
 
@@ -177,6 +196,21 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, err
 	}
 	objs = append([]*unstructured.Unstructured{applied}, objs...)
+
+	// Set up the Pod reconciler before we start creating DaemonSets/Deployments
+	daemonSets := []types.NamespacedName{}
+	deployments := []types.NamespacedName{}
+	for _, obj := range objs {
+		if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "DaemonSet" {
+			daemonSets = append(daemonSets, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
+		} else if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "Deployment" {
+			deployments = append(deployments, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
+		}
+	}
+	allResources := []types.NamespacedName{}
+	allResources = append(allResources, daemonSets...)
+	allResources = append(allResources, deployments...)
+	r.podReconciler.SetResources(allResources)
 
 	// Apply the objects to the cluster
 	for _, obj := range objs {
