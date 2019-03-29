@@ -29,6 +29,12 @@ spec:
           value: "docker.io/nfvpe/multus:latest"
         - name: LINUX_BRIDGE_IMAGE
           value: "quay.io/kubevirt/cni-default-plugins"
+        - name: SRIOV_DP_IMAGE
+          value: "quay.io/booxter/sriov-device-plugin:latest"
+        - name: SRIOV_CNI_IMAGE
+          value: "docker.io/nfvpe/sriov-cni:latest"
+        - name: SRIOV_ROOT_DEVICES
+          value: ""
         - name: WATCH_NAMESPACE
           value: ""
         - name: POD_NAME

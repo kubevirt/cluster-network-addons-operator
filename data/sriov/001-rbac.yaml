@@ -1,0 +1,21 @@
+{{ if .EnableSCC }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sriov
+  namespace: sriov
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: sriov
+allowPrivilegedContainer: true
+allowHostDirVolumePlugin: true
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+users:
+- system:serviceaccount:sriov:sriov
+{{ end }}

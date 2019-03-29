@@ -18,6 +18,7 @@ metadata:
 spec:
   multus: {}
   linuxBridge: {}
+  sriov: {}
 ```
 
 ## Multus
@@ -56,6 +57,43 @@ spec:
 
 Additionally, container image used to deliver this plugin can be set using
 `LINUX_BRIDGE_IMAGE` environment variable in operator deployment manifest.
+
+## SR-IOV
+
+The operator allows administrator to deploy SR-IOV
+[device plugin](https://github.com/intel/sriov-network-device-plugin/) and
+[CNI plugin](https://github.com/intel/sriov-cni/) simply by adding `sriov`
+attribute to `NetworkAddonsConfig`.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  sriov: {}
+```
+
+By default, device plugin is deployed with a configuration file with no root
+devices configured, meaning that the plugin won't discover and advertise any
+SR-IOV capable network devices.
+
+If all nodes in the cluster are homogenous, meaning they have the same root
+device IDs (or perhaps it's a single node deployment), then you can use
+`SRIOV_ROOT_DEVICES` variable to specify appropriate IDs. If they are not, you
+can deploy with default configuration file and then modify
+`/etc/pcidp/config.json` on each node to list corresponding root device IDs.
+
+Additionally, container images used to deliver these plugins can be set using
+`SRIOV_DP_IMAGE` and `SRIOV_CNI_IMAGE` environment variables in operator
+deployment manifest.
+
+**Note:** OpenShift 4 is shipped with [Cluster Network
+Operator](https://github.com/openshift/cluster-network-operator). OpenShift
+operator already supports SR-IOV deployment. But it uses older versions of
+components that are not compatible with KubeVirt SR-IOV feature. Therefore, if
+SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
+operator will return an error.
 
 ## Image Pull Policy
 

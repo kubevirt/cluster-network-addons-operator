@@ -5,4 +5,5 @@ metadata:
 spec:
   multus: {}
   linuxBridge: {}
+  sriov: {}
   imagePullPolicy: Always

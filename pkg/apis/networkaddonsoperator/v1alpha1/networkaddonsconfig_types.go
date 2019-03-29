@@ -9,6 +9,7 @@ import (
 type NetworkAddonsConfigSpec struct {
 	Multus          *Multus      `json:"multus,omitempty"`
 	LinuxBridge     *LinuxBridge `json:"linuxBridge,omitempty"`
+	Sriov           *Sriov       `json:"sriov,omitempty"`
 	ImagePullPolicy string       `json:"imagePullPolicy,omitempty"`
 }
 
@@ -17,6 +18,9 @@ type Multus struct{}
 
 // +k8s:openapi-gen=true
 type LinuxBridge struct{}
+
+// +k8s:openapi-gen=true
+type Sriov struct{}
 
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
