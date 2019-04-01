@@ -95,6 +95,30 @@ components that are not compatible with KubeVirt SR-IOV feature. Therefore, if
 SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
 operator will return an error.
 
+**Note:** To use SR-IOV for KubeVirt, one should also create a corresponding
+network attachment definition resource. For example:
+
+```yaml
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net1
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: intel.com/sriov
+spec:
+  config: '{
+  "type": "sriov",
+  "name": "sriov-network",
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.56.217.0/24",
+    "routes": [{
+      "dst": "0.0.0.0/0"
+    }],
+    "gateway": "10.56.217.1"
+  }
+}'
+```
 
 ## Kubemacpool
 The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool)
