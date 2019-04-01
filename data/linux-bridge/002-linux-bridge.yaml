@@ -31,9 +31,8 @@ spec:
             - /bin/bash
             - -c
             - |
-              unalias cp
-              cp -rf /usr/src/containernetworking/plugins/bin/*bridge /opt/cni/bin/
-              cp -rf /usr/src/containernetworking/plugins/bin/*tuning /opt/cni/bin/
+              cp -rf /usr/src/containernetworking/plugins/bin/bridge /opt/cni/bin/
+              cp -rf /usr/src/containernetworking/plugins/bin/tuning /opt/cni/bin/
               echo "Entering sleep... (success)"
               sleep infinity
           resources:
