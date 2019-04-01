@@ -141,6 +141,30 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, err
 	}
 
+	// Canonicalize and validate NetworkAddonsConfig, finally render objects of requested components
+	objs, err := r.renderObjects(networkAddonsConfig)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Apply generated objects on Kubernetes API server
+	err = r.applyObjects(networkAddonsConfig, objs)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Track state of all deployed pods in order to keep NetworkAddonsConfig status up-to-date
+	r.trackDeployedObjects(objs)
+
+	return reconcile.Result{}, nil
+}
+
+// Handle NetworkAddonsConfig object. Canonicalize, validate and finally render objects for all
+// desired components. Please note that this function has side effects, it reads config map
+// containing previously saved NetworkAddonsConfig and OpenShift's Network operator config.
+func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig) ([]*unstructured.Unstructured, error) {
+	objs := []*unstructured.Unstructured{}
+
 	// Convert to a canonicalized form
 	network.Canonicalize(&networkAddonsConfig.Spec)
 
@@ -148,20 +172,20 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
 	if err != nil {
 		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
-		return reconcile.Result{}, err
+		return objs, err
 	}
 
 	// Validate the configuration
 	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
 		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
-		return reconcile.Result{}, err
+		return objs, err
 	}
 
 	// Retrieve the previously applied operator configuration
 	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
 		log.Printf("failed to retrieve previously applied configuration: %v", err)
-		return reconcile.Result{}, err
+		return objs, err
 	}
 
 	// Fill all defaults explicitly
@@ -176,16 +200,16 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		if err != nil {
 			log.Printf("not applying unsafe change: %v", err)
 			errors.Wrapf(err, "not applying unsafe change")
-			return reconcile.Result{}, err
+			return objs, err
 		}
 	}
 
 	// Generate the objects
-	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.sccIsAvailable)
+	objs, err = network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.sccIsAvailable)
 	if err != nil {
 		log.Printf("failed to render: %v", err)
 		err = errors.Wrapf(err, "failed to render")
-		return reconcile.Result{}, err
+		return objs, err
 	}
 
 	// The first object we create should be the record of our applied configuration
@@ -193,13 +217,42 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	if err != nil {
 		log.Printf("failed to render applied: %v", err)
 		err = errors.Wrapf(err, "failed to render applied")
-		return reconcile.Result{}, err
+		return objs, err
 	}
 	objs = append([]*unstructured.Unstructured{applied}, objs...)
 
-	// Set up the Pod reconciler before we start creating DaemonSets/Deployments
+	return objs, nil
+}
+
+// Apply the objects to the cluster. Set their controller reference to NetworkAddonsConfig, so they
+// are removed when NetworkAddonsConfig config is
+func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, objs []*unstructured.Unstructured) error {
+	for _, obj := range objs {
+		// Mark the object to be GC'd if the owner is deleted
+		if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
+			log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+			err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
+			return err
+		}
+
+		// Apply all objects on apiserver
+		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
+			log.Printf("could not apply (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Track current state of Deployments and DaemonSets deployed by the operator. This is needed to
+// keep state of NetworkAddonsConfig up-to-date, e.g. mark as Ready once all objects are successfully
+// created
+func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured.Unstructured) {
 	daemonSets := []types.NamespacedName{}
 	deployments := []types.NamespacedName{}
+
 	for _, obj := range objs {
 		if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "DaemonSet" {
 			daemonSets = append(daemonSets, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
@@ -207,29 +260,12 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 			deployments = append(deployments, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
 		}
 	}
+
 	allResources := []types.NamespacedName{}
 	allResources = append(allResources, daemonSets...)
 	allResources = append(allResources, deployments...)
+
 	r.podReconciler.SetResources(allResources)
-
-	// Apply the objects to the cluster
-	for _, obj := range objs {
-		// Mark the object to be GC'd if the owner is deleted
-		if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
-			log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
-			err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
-			return reconcile.Result{}, err
-		}
-
-		// Apply all objects on apiserver
-		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
-			log.Printf("could not apply (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
-			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
-			return reconcile.Result{}, err
-		}
-	}
-
-	return reconcile.Result{}, nil
 }
 
 func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.Network, error) {
