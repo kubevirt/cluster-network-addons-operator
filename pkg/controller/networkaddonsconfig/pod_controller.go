@@ -6,20 +6,25 @@ import (
 
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 )
 
 var resyncPeriod = 5 * time.Minute
 
 // newPodReconciler returns a new reconcile.Reconciler
-func newPodReconciler() *ReconcilePods {
-	return &ReconcilePods{}
+func newPodReconciler(statusManager *statusmanager.StatusManager) *ReconcilePods {
+	return &ReconcilePods{
+		statusManager: statusManager,
+	}
 }
 
 var _ reconcile.Reconciler = &ReconcilePods{}
 
 // ReconcilePods watches for updates to specified resources and then updates its StatusManager
 type ReconcilePods struct {
-	resources []types.NamespacedName
+	statusManager *statusmanager.StatusManager
+	resources     []types.NamespacedName
 }
 
 func (r *ReconcilePods) SetResources(resources []types.NamespacedName) {
@@ -32,6 +37,7 @@ func (r *ReconcilePods) Reconcile(request reconcile.Request) (reconcile.Result, 
 	for _, name := range r.resources {
 		if name.Namespace == request.Namespace && name.Name == request.Name {
 			log.Printf("Reconciling update to %s/%s\n", request.Namespace, request.Name)
+			r.statusManager.SetFromPods()
 			return reconcile.Result{RequeueAfter: resyncPeriod}, nil
 		}
 	}
