@@ -86,7 +86,7 @@ func renderSriov(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, e
 	data.Data["SriovRootDevices"] = getRootDevicesConfigString(os.Getenv("SRIOV_ROOT_DEVICES"))
 	data.Data["SriovDpImage"] = os.Getenv("SRIOV_DP_IMAGE")
 	data.Data["SriovCniImage"] = os.Getenv("SRIOV_CNI_IMAGE")
-	data.Data["ImagePullPolicy"] = os.Getenv("IMAGE_PULL_POLICY")
+	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "sriov"), &data)
