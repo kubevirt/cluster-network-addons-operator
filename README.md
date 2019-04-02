@@ -83,6 +83,8 @@ device IDs (or perhaps it's a single node deployment), then you can use
 `SRIOV_ROOT_DEVICES` variable to specify appropriate IDs. If they are not, you
 can deploy with default configuration file and then modify
 `/etc/pcidp/config.json` on each node to list corresponding root device IDs.
+You may need to restart SR-IOV device plugin pods to catch up configuration
+file changes.
 
 Additionally, container images used to deliver these plugins can be set using
 `SRIOV_DP_IMAGE` and `SRIOV_CNI_IMAGE` environment variables in operator
@@ -95,6 +97,30 @@ components that are not compatible with KubeVirt SR-IOV feature. Therefore, if
 SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
 operator will return an error.
 
+**Note:** To use SR-IOV for KubeVirt, one should also create a corresponding
+network attachment definition resource. For example:
+
+```yaml
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net1
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: intel.com/sriov
+spec:
+  config: '{
+  "type": "sriov",
+  "name": "sriov-network",
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.56.217.0/24",
+    "routes": [{
+      "dst": "0.0.0.0/0"
+    }],
+    "gateway": "10.56.217.1"
+  }
+}'
+```
 
 ## Kubemacpool
 The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool)
