@@ -3,6 +3,7 @@ package network
 import (
 	"log"
 	"reflect"
+	"strings"
 
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
@@ -26,7 +27,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 	errs = append(errs, validateImagePullPolicy(conf)...)
 
 	if len(errs) > 0 {
-		return errors.Errorf("invalid configuration: %v", errs)
+		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
 	}
 	return nil
 }
@@ -61,7 +62,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
 
 	if len(errs) > 0 {
-		return errors.Errorf("invalid configuration: %v", errs)
+		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
 	}
 	return nil
 }
@@ -100,4 +101,12 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 
 	log.Printf("render phase done, rendered %d objects", len(objs))
 	return objs, nil
+}
+
+func errorListToMultiLineString(errs []error) string {
+	stringErrs := []string{}
+	for _, err := range errs {
+		stringErrs = append(stringErrs, err.Error())
+	}
+	return strings.Join(stringErrs, "\n")
 }
