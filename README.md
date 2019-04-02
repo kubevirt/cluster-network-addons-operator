@@ -83,6 +83,8 @@ device IDs (or perhaps it's a single node deployment), then you can use
 `SRIOV_ROOT_DEVICES` variable to specify appropriate IDs. If they are not, you
 can deploy with default configuration file and then modify
 `/etc/pcidp/config.json` on each node to list corresponding root device IDs.
+You may need to restart SR-IOV device plugin pods to catch up configuration
+file changes.
 
 Additionally, container images used to deliver these plugins can be set using
 `SRIOV_DP_IMAGE` and `SRIOV_CNI_IMAGE` environment variables in operator
