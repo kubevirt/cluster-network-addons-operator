@@ -17,8 +17,7 @@ spec:
       serviceAccountName: cluster-network-addons-operator
       containers:
       - name: cluster-network-addons-operator
-        # Replace this with the built image name
-        image: quay.io/kubevirt/cluster-network-addons-operator
+        image: quay.io/kubevirt/cluster-network-addons-operator:latest
         imagePullPolicy: Always
         resources:
           requests:

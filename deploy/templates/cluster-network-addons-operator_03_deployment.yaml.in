@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-network-addons-operator
+  namespace: cluster-network-addons-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: cluster-network-addons-operator
+  template:
+    metadata:
+      labels:
+        name: cluster-network-addons-operator
+    spec:
+      hostNetwork: true
+      serviceAccountName: cluster-network-addons-operator
+      containers:
+      - name: cluster-network-addons-operator
+        image: $OPERATOR_IMAGE_REGISTRY/$OPERATOR_IMAGE:$OPERATOR_IMAGE_TAG
+        imagePullPolicy: $IMAGE_PULL_POLICY
+        resources:
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        env:
+        - name: MULTUS_IMAGE
+          value: "$MULTUS_IMAGE"
+        - name: LINUX_BRIDGE_IMAGE
+          value: "$LINUX_BRIDGE_IMAGE"
+        - name: SRIOV_DP_IMAGE
+          value: "$SRIOV_DP_IMAGE"
+        - name: SRIOV_CNI_IMAGE
+          value: "$SRIOV_CNI_IMAGE"
+        - name: SRIOV_ROOT_DEVICES
+          value: ""
+        - name: KUBEMACPOOL_IMAGE
+          value: "$KUBEMACPOOL_IMAGE"
+        - name: WATCH_NAMESPACE
+          value: ""
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: "cluster-network-addons-operator"

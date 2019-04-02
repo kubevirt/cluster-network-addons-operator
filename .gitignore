@@ -1,3 +1,6 @@
+# Generated manifests
+_out/
+
 # Temporary build files
 build/_output
 build/_test
