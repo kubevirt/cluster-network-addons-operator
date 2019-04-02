@@ -19,6 +19,10 @@ spec:
   multus: {}
   linuxBridge: {}
   sriov: {}
+  kubeMacPool:
+   startPoolRange: "02:00:00:00:00:00"
+   endPoolRange: "FD:FF:FF:FF:FF:FF"
+  imagePullPolicy: Always
 ```
 
 ## Multus
@@ -176,6 +180,11 @@ metadata:
 spec:
   multus: {}
   linuxBridge: {}
+  sriov: {}
+  kubeMacPool:
+   startPoolRange: "02:00:00:00:00:00"
+   endPoolRange: "FD:FF:FF:FF:FF:FF"
+  imagePullPolicy: Always
 EOF
 ```
 
