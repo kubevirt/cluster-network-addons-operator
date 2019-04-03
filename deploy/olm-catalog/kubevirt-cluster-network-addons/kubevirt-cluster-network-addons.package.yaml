@@ -1,0 +1,4 @@
+packageName: kubevirt-cluster-network-addons
+channels:
+- name: alpha
+  currentCSV: kubevirt-cluster-network-addons-operator.v0.0.1
