@@ -167,6 +167,12 @@ func getCNA(data *templateData) {
 	marshallObject(crd, &writer)
 	crdString := writer.String()
 
+	// Get CNA CR
+	writer = strings.Builder{}
+	cr := components.GetCR()
+	marshallObject(cr, &writer)
+	crString := writer.String()
+
 	cnaData := operatorData{
 		Deployment:        deployment,
 		DeploymentSpec:    deploymentSpec,
@@ -174,6 +180,7 @@ func getCNA(data *templateData) {
 		Rules:             rules,
 		CRD:               crd,
 		CRDString:         crdString,
+		CRString:          crString,
 	}
 	data.CNA = &cnaData
 }

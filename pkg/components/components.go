@@ -3,6 +3,7 @@ package components
 import (
 	"fmt"
 
+	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -400,6 +401,28 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 		},
 	}
 	return crd
+}
+
+func GetCR() *cnav1alpha1.NetworkAddonsConfig {
+	return &cnav1alpha1.NetworkAddonsConfig{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "networkaddonsoperator.network.kubevirt.io/v1alpha1",
+			Kind:       "NetworkAddonsConfig",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "hyperconverged-cluster",
+		},
+		Spec: cnav1alpha1.NetworkAddonsConfigSpec{
+			Multus:      &cnav1alpha1.Multus{},
+			LinuxBridge: &cnav1alpha1.LinuxBridge{},
+			Sriov:       &cnav1alpha1.Sriov{},
+			KubeMacPool: &cnav1alpha1.KubeMacPool{
+				StartPoolRange: "02:00:00:00:00:00",
+				EndPoolRange:   "FD:FF:FF:FF:FF:FF",
+			},
+			ImagePullPolicy: "Always",
+		},
+	}
 }
 
 func int32Ptr(i int32) *int32 {

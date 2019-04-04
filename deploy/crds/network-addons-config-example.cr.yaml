@@ -1,0 +1,13 @@
+---
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: hyperconverged-cluster
+spec:
+  imagePullPolicy: Always
+  kubeMacPool:
+    endPoolRange: FD:FF:FF:FF:FF:FF
+    startPoolRange: "02:00:00:00:00:00"
+  linuxBridge: {}
+  multus: {}
+  sriov: {}
