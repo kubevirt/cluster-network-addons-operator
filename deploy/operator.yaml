@@ -11,7 +11,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         name: cluster-network-addons-operator
     spec:

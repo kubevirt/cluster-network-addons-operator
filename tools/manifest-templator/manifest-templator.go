@@ -98,6 +98,7 @@ func marshallObject(obj interface{}, writer io.Writer) error {
 
 	// remove status and metadata.creationTimestamp
 	unstructured.RemoveNestedField(r.Object, "template", "metadata", "creationTimestamp")
+	unstructured.RemoveNestedField(r.Object, "spec", "template", "metadata", "creationTimestamp")
 	unstructured.RemoveNestedField(r.Object, "metadata", "creationTimestamp")
 	unstructured.RemoveNestedField(r.Object, "status")
 
