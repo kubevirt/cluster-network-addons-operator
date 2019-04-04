@@ -41,6 +41,9 @@ spec:
     - Bridge
   version: {{.CsvVersion}}
   maturity: alpha
+{{if .CsvReplaces}}
+  replaces: cluster-network-addons-operator.v{{.CsvReplaces}}
+{{end}}
   maintainers:
     - name: KubeVirt project
       email: kubevirt-dev@googlegroups.com

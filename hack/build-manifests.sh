@@ -9,12 +9,13 @@ PROJECT_ROOT="$(readlink -e $(dirname "$BASH_SOURCE[0]")/../)"
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
 
 NAMESPACE="${NAMESPACE:-cluster-network-addons-operator}"
-CSV_VERSION="${CSV_VERSION:-0.0.1}"
 CONTAINER_PREFIX="${CONTAINER_PREFIX:-kubevirt}"
 CONTAINER_TAG="${CONTAINER_TAG:-latest}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Always}"
 
 (cd ${PROJECT_ROOT}/tools/manifest-templator/ && go build)
+
+CSV_VERSION=$(${PROJECT_ROOT}/tools/manifest-templator/manifest-templator --get-csv-version)
 
 templates=$(cd ${PROJECT_ROOT}/templates && find . -type f -name "*.yaml.in")
 for template in $templates; do

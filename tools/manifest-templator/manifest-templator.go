@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -34,6 +35,7 @@ import (
 
 	components "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	names "github.com/kubevirt/cluster-network-addons-operator/pkg/names"
+	version "github.com/kubevirt/cluster-network-addons-operator/pkg/version"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
@@ -50,6 +52,7 @@ type operatorData struct {
 type templateData struct {
 	Namespace       string
 	CsvVersion      string
+	CsvReplaces     string
 	ContainerPrefix string
 	ContainerTag    string
 	ImagePullPolicy string
@@ -186,18 +189,25 @@ func getCNA(data *templateData) {
 }
 
 func main() {
-	csvVersion := flag.String("csv-version", "0.0.1", "")
 	containerPrefix := flag.String("container-prefix", "kubevirt", "")
 	containerTag := flag.String("container-tag", "latest", "")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "")
 	inputFile := flag.String("input-file", "", "")
+	getVersion := flag.Bool("get-csv-version", false, "")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
 	pflag.Parse()
 
+	// exit early if just asked for version
+	if *getVersion {
+		fmt.Print(version.CSV_VERSION)
+		return
+	}
+
 	data := templateData{
 		Namespace:       names.APPLIED_NAMESPACE,
-		CsvVersion:      *csvVersion,
+		CsvVersion:      version.CSV_VERSION,
+		CsvReplaces:     version.CSV_REPLACES,
 		ContainerPrefix: *containerPrefix,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
