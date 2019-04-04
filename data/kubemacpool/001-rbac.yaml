@@ -81,6 +81,17 @@ rules:
       - get
       - list
   - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - get
+      - create
+      - update
+      - patch
+      - list
+      - watch
+  - apiGroups:
       - kubevirt.io
     resources:
       - virtualmachines
