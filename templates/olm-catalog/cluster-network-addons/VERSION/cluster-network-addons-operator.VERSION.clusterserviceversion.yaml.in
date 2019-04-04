@@ -1,11 +1,11 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: kubevirt-cluster-network-addons-operator.v{{.CsvVersion}}
+  name: cluster-network-addons-operator.v{{.CsvVersion}}
   namespace: placeholder
   annotations:
     capabilities: "Full Lifecycle"
-    categories: "Virtualization"
+    categories: "Network/Networking"
     alm-examples: |
       [
         {
@@ -28,7 +28,7 @@ metadata:
       ]
     description: Additional networking components for Kubernetes
 spec:
-  displayName: KubeVirt Cluster Network Addons
+  displayName: Cluster Network Addons
   description: Deploy additional networking components for Kubernetes
   keywords:
     - KubeVirt
@@ -53,12 +53,12 @@ spec:
       url: https://github.com/kubevirt/cluster-network-addons-operator
   icon: []
   labels:
-    alm-owner-kubevirt: kubevirt-cluster-network-addons
-    operated-by: kubevirt-cluster-network-addons
+    alm-owner-kubevirt: cluster-network-addons
+    operated-by: cluster-network-addons
   selector:
     matchLabels:
-      alm-owner-kubevirt: kubevirt-cluster-network-addons
-      operated-by: kubevirt-cluster-network-addons
+      alm-owner-kubevirt: cluster-network-addons
+      operated-by: cluster-network-addons
   installModes:
     - type: OwnNamespace
       supported: true
