@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: cluster-network-addons-operator.v0.0.1
+  name: cluster-network-addons-operator.v0.2.0
   namespace: placeholder
   annotations:
     capabilities: "Full Lifecycle"
@@ -39,8 +39,9 @@ spec:
     - macpool
     - SR-IOV
     - Bridge
-  version: 0.0.1
+  version: 0.2.0
   maturity: alpha
+
   maintainers:
     - name: KubeVirt project
       email: kubevirt-dev@googlegroups.com
