@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	components "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
-	names "github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
@@ -207,7 +206,8 @@ func getCNA(data *templateData) {
 }
 
 func main() {
-	containerPrefix := flag.String("container-prefix", "kubevirt", "")
+	namespace := flag.String("namespace", "cluster-network-addons-operator", "")
+	containerPrefix := flag.String("container-prefix", "quay.io/kubevirt", "")
 	containerTag := flag.String("container-tag", "latest", "")
 	csvVersion := flag.String("csv-version", "latest", "")
 	csvReplaces := flag.String("csv-replaces", "", "")
@@ -218,7 +218,7 @@ func main() {
 	pflag.Parse()
 
 	data := templateData{
-		Namespace:       names.APPLIED_NAMESPACE,
+		Namespace:       *namespace,
 		CsvVersion:      *csvVersion,
 		CsvReplaces:     *csvReplaces,
 		ContainerPrefix: *containerPrefix,

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	names "github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -12,36 +11,37 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const Name = "cluster-network-addons-operator"
+
 func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv1.Deployment {
-	name := names.APPLIED_NAMESPACE
-	image := fmt.Sprintf("%s/%s:%s", repository, name, tag)
+	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
 			Kind:       "Deployment",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: name,
+			Name:      Name,
+			Namespace: Name,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"name": name,
+					"name": Name,
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"name": name,
+						"name": Name,
 					},
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: name,
+					ServiceAccountName: Name,
 					Containers: []corev1.Container{
 						{
-							Name:            name,
+							Name:            Name,
 							Image:           image,
 							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 							Env: []corev1.EnvVar{
@@ -75,7 +75,15 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 								},
 								{
 									Name:  "OPERATOR_NAME",
-									Value: name,
+									Value: Name,
+								},
+								{
+									Name: "OPERATOR_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
 								},
 								{
 									Name: "POD_NAME",
@@ -104,17 +112,16 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 }
 
 func GetRole() *rbacv1.Role {
-	name := names.APPLIED_NAMESPACE
 	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
 			Kind:       "Role",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: name,
+			Name:      Name,
+			Namespace: Name,
 			Labels: map[string]string{
-				"name": name,
+				"name": Name,
 			},
 		},
 		Rules: []rbacv1.PolicyRule{
@@ -160,16 +167,15 @@ func GetRole() *rbacv1.Role {
 }
 
 func GetClusterRole() *rbacv1.ClusterRole {
-	name := names.APPLIED_NAMESPACE
 	role := &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
 			Kind:       "ClusterRole",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name: Name,
 			Labels: map[string]string{
-				"name": name,
+				"name": Name,
 			},
 		},
 		Rules: []rbacv1.PolicyRule{

@@ -142,14 +142,14 @@ spec:
           value: quay.io/kubevirt/cluster-network-addons-operator:latest
         - name: OPERATOR_NAME
           value: cluster-network-addons-operator
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
         - name: OPERATOR_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         - name: WATCH_NAMESPACE
           valueFrom:
             fieldRef:
