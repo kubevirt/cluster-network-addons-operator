@@ -40,8 +40,10 @@ import (
 type operatorData struct {
 	Deployment        string
 	DeploymentSpec    string
-	ClusterRoleString string
+	RoleString        string
 	Rules             string
+	ClusterRoleString string
+	ClusterRules      string
 	CRD               *extv1beta1.CustomResourceDefinition
 	CRDString         string
 	CRString          string
@@ -148,6 +150,21 @@ func getCNA(data *templateData) {
 	check(err)
 	deploymentSpec := fixResourceString(writer.String(), 12)
 
+	// Get CNA Role
+	writer = strings.Builder{}
+	role := components.GetRole()
+	marshallObject(role, &writer)
+	roleString := writer.String()
+
+	// Get the Rules out of CNA's ClusterRole
+	writer = strings.Builder{}
+	cnaRules := role.Rules
+	for _, rule := range cnaRules {
+		err := marshallObject(rule, &writer)
+		check(err)
+	}
+	rules := fixResourceString(writer.String(), 14)
+
 	// Get CNA ClusterRole
 	writer = strings.Builder{}
 	clusterRole := components.GetClusterRole()
@@ -156,12 +173,12 @@ func getCNA(data *templateData) {
 
 	// Get the Rules out of CNA's ClusterRole
 	writer = strings.Builder{}
-	cnarules := clusterRole.Rules
-	for _, rule := range cnarules {
+	cnaClusterRules := clusterRole.Rules
+	for _, rule := range cnaClusterRules {
 		err := marshallObject(rule, &writer)
 		check(err)
 	}
-	rules := fixResourceString(writer.String(), 14)
+	clusterRules := fixResourceString(writer.String(), 14)
 
 	// Get CNA CRD
 	writer = strings.Builder{}
@@ -178,8 +195,10 @@ func getCNA(data *templateData) {
 	cnaData := operatorData{
 		Deployment:        deployment,
 		DeploymentSpec:    deploymentSpec,
-		ClusterRoleString: clusterRoleString,
+		RoleString:        roleString,
 		Rules:             rules,
+		ClusterRoleString: clusterRoleString,
+		ClusterRules:      clusterRules,
 		CRD:               crd,
 		CRDString:         crdString,
 		CRString:          crString,

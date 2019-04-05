@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	names "github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -12,7 +13,7 @@ import (
 )
 
 func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv1.Deployment {
-	name := "cluster-network-addons-operator"
+	name := names.APPLIED_NAMESPACE
 	image := fmt.Sprintf("%s/%s:%s", repository, name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -20,7 +21,8 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 			Kind:       "Deployment",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: name,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),
@@ -101,8 +103,64 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 	return deployment
 }
 
+func GetRole() *rbacv1.Role {
+	name := names.APPLIED_NAMESPACE
+	role := &rbacv1.Role{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1",
+			Kind:       "Role",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: name,
+			Labels: map[string]string{
+				"name": name,
+			},
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				APIGroups: []string{
+					"",
+				},
+				Resources: []string{
+					"pods",
+					"configmaps",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+					"create",
+					"patch",
+					"update",
+					"delete",
+				},
+			},
+			{
+				APIGroups: []string{
+					"apps",
+				},
+				Resources: []string{
+					"deployments",
+					"replicasets",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+					"create",
+					"patch",
+					"update",
+					"delete",
+				},
+			},
+		},
+	}
+	return role
+}
+
 func GetClusterRole() *rbacv1.ClusterRole {
-	name := "cluster-network-addons-operator"
+	name := names.APPLIED_NAMESPACE
 	role := &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -117,237 +175,6 @@ func GetClusterRole() *rbacv1.ClusterRole {
 		Rules: []rbacv1.PolicyRule{
 			{
 				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"events",
-				},
-				Verbs: []string{
-					"create",
-					"update",
-					"patch",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"persistentvolumeclaims",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"update",
-					"patch",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"persistentvolumeclaims/finalizers",
-					"pods/finalizers",
-				},
-				Verbs: []string{
-					"update",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"pods",
-					"services",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"secrets",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"namespaces",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-				},
-			},
-			{
-				APIGroups: []string{
-					"extensions",
-				},
-				Resources: []string{
-					"ingresses",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"configmaps",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"update",
-				},
-			},
-			{
-				APIGroups: []string{
-					"storage.k8s.io",
-				},
-				Resources: []string{
-					"storageclasses",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-				},
-			},
-			{
-				APIGroups: []string{
-					"route.openshift.io",
-				},
-				Resources: []string{
-					"routes",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-				},
-			},
-			{
-				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"serviceaccounts",
-					"services",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"update",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"batch",
-				},
-				Resources: []string{
-					"jobs",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"apps",
-				},
-				Resources: []string{
-					"deployments",
-					"daemonsets",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"rbac.authorization.k8s.io",
-				},
-				Resources: []string{
-					"clusterroles",
-					"clusterrolebindings",
-					"roles",
-					"rolebindings",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"apiextensions.k8s.io",
-				},
-				Resources: []string{
-					"customresourcedefinitions",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-					"create",
-					"delete",
-				},
-			},
-			{
-				APIGroups: []string{
-					"security.openshift.io",
-				},
-				Resources: []string{
-					"securitycontextconstraints",
-				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-				},
-			},
-			{
-				APIGroups: []string{
 					"security.openshift.io",
 				},
 				Resources: []string{
@@ -358,8 +185,32 @@ func GetClusterRole() *rbacv1.ClusterRole {
 				},
 				Verbs: []string{
 					"get",
-					"patch",
-					"update",
+					"list",
+					"watch",
+				},
+			},
+			{
+				APIGroups: []string{
+					"networkaddonsoperator.network.kubevirt.io",
+				},
+				Resources: []string{
+					"networkaddonsconfigs",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+				},
+			},
+			{
+				APIGroups: []string{
+					"*",
+				},
+				Resources: []string{
+					"*",
+				},
+				Verbs: []string{
+					"*",
 				},
 			},
 		},
@@ -381,13 +232,10 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 			Version: "v1alpha1",
 			Scope:   "Cluster",
 
-			Versions: []extv1beta1.CustomResourceDefinitionVersion{
-				{
-					Name:    "v1alpha1",
-					Served:  true,
-					Storage: true,
-				},
+			Subresources: &extv1beta1.CustomResourceSubresources{
+				Status: &extv1beta1.CustomResourceSubresourceStatus{},
 			},
+
 			Names: extv1beta1.CustomResourceDefinitionNames{
 				Plural:   "networkaddonsconfigs",
 				Singular: "networkaddonsconfig",
@@ -395,8 +243,34 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 				ListKind: "NetworkAddonsConfigList",
 			},
 
-			Subresources: &extv1beta1.CustomResourceSubresources{
-				Status: &extv1beta1.CustomResourceSubresourceStatus{},
+			Versions: []extv1beta1.CustomResourceDefinitionVersion{
+				{
+					Name:    "v1alpha1",
+					Served:  true,
+					Storage: true,
+				},
+			},
+
+			Validation: &extv1beta1.CustomResourceValidation{
+				OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{
+					Properties: map[string]extv1beta1.JSONSchemaProps{
+						"apiVersion": extv1beta1.JSONSchemaProps{
+							Type: "string",
+						},
+						"kind": extv1beta1.JSONSchemaProps{
+							Type: "string",
+						},
+						"metadata": extv1beta1.JSONSchemaProps{
+							Type: "object",
+						},
+						"spec": extv1beta1.JSONSchemaProps{
+							Type: "object",
+						},
+						"status": extv1beta1.JSONSchemaProps{
+							Type: "object",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -410,7 +284,7 @@ func GetCR() *cnav1alpha1.NetworkAddonsConfig {
 			Kind:       "NetworkAddonsConfig",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "hyperconverged-cluster",
+			Name: "cluster",
 		},
 		Spec: cnav1alpha1.NetworkAddonsConfigSpec{
 			Multus:      &cnav1alpha1.Multus{},

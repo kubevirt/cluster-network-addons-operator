@@ -74,10 +74,14 @@ spec:
   install:
     strategy: deployment
     spec:
-      clusterPermissions:
+      permissions:
         - serviceAccountName: cluster-network-addons-operator
           rules:
 {{.CNA.Rules}}
+      clusterPermissions:
+        - serviceAccountName: cluster-network-addons-operator
+          rules:
+{{.CNA.ClusterRules}}
       deployments:
         - name: cluster-network-addons-operator
           spec:

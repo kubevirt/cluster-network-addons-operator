@@ -17,22 +17,14 @@ metadata:
 rules:
 - apiGroups:
   - security.openshift.io
-  resources:
-  - securitycontextconstraints
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - security.openshift.io
   resourceNames:
   - privileged
   resources:
   - securitycontextconstraints
   verbs:
   - get
-  - patch
-  - update
+  - list
+  - watch
 - apiGroups:
   - networkaddonsoperator.network.kubevirt.io
   resources:
@@ -41,6 +33,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -68,11 +66,31 @@ metadata:
   namespace: cluster-network-addons-operator
 rules:
 - apiGroups:
-  - '*'
+  - ""
   resources:
-  - '*'
+  - pods
+  - configmaps
   verbs:
-  - '*'
+  - get
+  - list
+  - watch
+  - create
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - patch
+  - update
+  - delete
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
