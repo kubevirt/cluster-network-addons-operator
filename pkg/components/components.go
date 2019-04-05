@@ -13,7 +13,7 @@ import (
 
 func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv1.Deployment {
 	name := "cluster-network-addons-operator"
-	image := fmt.Sprintf("quay.io/%s/%s:%s", repository, name, tag)
+	image := fmt.Sprintf("%s/%s:%s", repository, name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",

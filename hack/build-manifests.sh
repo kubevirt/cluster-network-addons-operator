@@ -1,21 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
-# TODO: If we create more hack scripts this should go in common
-# and be sourced
 PROJECT_ROOT="$(readlink -e $(dirname "$BASH_SOURCE[0]")/../)"
-
-# TODO: Move this to deploy
 DEPLOY_DIR="${PROJECT_ROOT}/deploy"
-
-NAMESPACE="${NAMESPACE:-cluster-network-addons-operator}"
-CONTAINER_PREFIX="${CONTAINER_PREFIX:-kubevirt}"
+CONTAINER_PREFIX="${CONTAINER_PREFIX:-quay.io/kubevirt}"
 CONTAINER_TAG="${CONTAINER_TAG:-latest}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Always}"
 
-(cd ${PROJECT_ROOT}/tools/manifest-templator/ && go build)
+CSV_VERSION="${CSV_VERSION:-$CONTAINER_TAG}"
+CSV_VERSION="${CSV_VERSION/latest/0.0.0}" # Latest is a non-released version
+CSV_VERSION="${CSV_VERSION#v}" # Strip leading v
 
-CSV_VERSION=$(${PROJECT_ROOT}/tools/manifest-templator/manifest-templator --get-csv-version)
+(cd ${PROJECT_ROOT}/tools/manifest-templator/ && go build)
 
 templates=$(cd ${PROJECT_ROOT}/templates && find . -type f -name "*.yaml.in")
 for template in $templates; do
@@ -29,7 +25,6 @@ for template in $templates; do
 	file=${file/VERSION/v$CSV_VERSION}
 	rendered=$( \
 		${PROJECT_ROOT}/tools/manifest-templator/manifest-templator \
-		--namespace=${NAMESPACE} \
 		--csv-version=${CSV_VERSION} \
 		--container-prefix=${CONTAINER_PREFIX} \
 		--container-tag=${CONTAINER_TAG} \

@@ -28,6 +28,9 @@ cluster-sync:
 cluster-clean:
 	./cluster/clean.sh
 
+manifests:
+	CONTAINER_PREFIX=$(IMAGE_REGISTRY) CONTAINER_TAG=$(IMAGE_TAG) ./hack/build-manifests.sh
+
 .PHONY:
 	docker-build \
 	docker-push \
