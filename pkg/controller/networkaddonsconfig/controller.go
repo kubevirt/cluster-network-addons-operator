@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	osv1 "github.com/openshift/api/operator/v1"
@@ -46,19 +47,25 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("failed to initialize apiserver client: %v", err)
 	}
 
+	namespace, namespaceSet := os.LookupEnv("OPERATOR_NAMESPACE")
+	if !namespaceSet {
+		return fmt.Errorf("environment variable OPERATOR_NAMESPACE has to be set")
+	}
+
 	sccIsAvailable, err := isSCCAvailable(clientset)
 	if err != nil {
 		return fmt.Errorf("failed to check for availability of SCC: %v", err)
 	}
 
-	return add(mgr, newReconciler(mgr, sccIsAvailable))
+	return add(mgr, newReconciler(mgr, namespace, sccIsAvailable))
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager, sccIsAvailable bool) reconcile.Reconciler {
+func newReconciler(mgr manager.Manager, namespace string, sccIsAvailable bool) reconcile.Reconciler {
 	return &ReconcileNetworkAddonsConfig{
 		client:         mgr.GetClient(),
 		scheme:         mgr.GetScheme(),
+		namespace:      namespace,
 		sccIsAvailable: sccIsAvailable,
 	}
 }
@@ -85,9 +92,9 @@ var _ reconcile.Reconciler = &ReconcileNetworkAddonsConfig{}
 type ReconcileNetworkAddonsConfig struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
-
+	client         client.Client
+	scheme         *runtime.Scheme
+	namespace      string
 	sccIsAvailable bool
 }
 
@@ -132,7 +139,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Retrieve the previously applied operator configuration
-	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name)
+	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
 		log.Printf("failed to retrieve previously applied configuration: %v", err)
 		return reconcile.Result{}, err
@@ -163,7 +170,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// The first object we create should be the record of our applied configuration
-	applied, err := appliedConfiguration(networkAddonsConfig)
+	applied, err := appliedConfiguration(networkAddonsConfig, r.namespace)
 	if err != nil {
 		log.Printf("failed to render applied: %v", err)
 		err = errors.Wrapf(err, "failed to render applied")
