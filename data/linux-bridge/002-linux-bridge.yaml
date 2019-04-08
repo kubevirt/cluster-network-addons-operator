@@ -1,5 +1,5 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-cni-linux-bridge-plugin
@@ -8,9 +8,13 @@ metadata:
     tier: node
     app: cni-linux-bridge-plugin
 spec:
+  selector:
+    matchLabels:
+      name: kube-cni-linux-bridge-plugin
   template:
     metadata:
       labels:
+        name: kube-cni-linux-bridge-plugin
         tier: node
         app: cni-plugins
     spec:
