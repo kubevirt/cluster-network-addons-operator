@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    kubevirt.io: ""
+  name: cluster-network-addons-operator
+  namespace: {{.Namespace}}
+
+{{.CNA.ClusterRoleString}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubevirt.io: ""
+  name: cluster-network-addons-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-network-addons-operator
+subjects:
+  - kind: ServiceAccount
+    name: cluster-network-addons-operator
+    namespace: {{.Namespace}}
+
+{{.CNA.RoleString}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    kubevirt.io: ""
+  name: cluster-network-addons-operator
+  namespace: {{.Namespace}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-network-addons-operator
+subjects:
+  - kind: ServiceAccount
+    name: cluster-network-addons-operator
+
+{{.CNA.Deployment}}

@@ -1,0 +1,95 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: cluster-network-addons-operator.v{{.CsvVersion}}
+  namespace: placeholder
+  annotations:
+    capabilities: "Full Lifecycle"
+    categories: "Network/Networking"
+    alm-examples: |
+      [
+        {
+          "apiVersion":"networkaddonsoperator.network.kubevirt.io/v1alpha1",
+          "kind":"NetworkAddonsConfig",
+          "metadata": {
+            "name":"cluster"
+          },
+          "spec": {
+            "multus":{},
+            "linuxBridge":{},
+            "sriov":{},
+            "kubeMacPool": {
+              "startPoolRange": "02:00:00:00:00:00",
+              "endPoolRange": "FD:FF:FF:FF:FF:FF"
+            },
+            "imagePullPolicy": "Always"
+          }
+        }
+      ]
+    description: Additional networking components for Kubernetes
+spec:
+  displayName: Cluster Network Addons
+  description: Deploy additional networking components for Kubernetes
+  keywords:
+    - KubeVirt
+    - Virtualization
+    - Networking
+    - Multus
+    - CNI
+    - macpool
+    - SR-IOV
+    - Bridge
+  version: {{.CsvVersion}}
+  maturity: alpha
+{{if .CsvReplaces}}
+  replaces: cluster-network-addons-operator.v{{.CsvReplaces}}
+{{end}}
+  maintainers:
+    - name: KubeVirt project
+      email: kubevirt-dev@googlegroups.com
+  provider:
+    name: KubeVirt project
+  links:
+    - name: KubeVirt
+      url: https://kubevirt.io
+    - name: Source Code
+      url: https://github.com/kubevirt/cluster-network-addons-operator
+  icon: []
+  labels:
+    alm-owner-kubevirt: cluster-network-addons
+    operated-by: cluster-network-addons
+  selector:
+    matchLabels:
+      alm-owner-kubevirt: cluster-network-addons
+      operated-by: cluster-network-addons
+  installModes:
+    - type: OwnNamespace
+      supported: true
+    - type: SingleNamespace
+      supported: true
+    - type: MultiNamespace
+      supported: true
+    - type: AllNamespaces
+      supported: true
+  install:
+    strategy: deployment
+    spec:
+      permissions:
+        - serviceAccountName: cluster-network-addons-operator
+          rules:
+{{.CNA.Rules}}
+      clusterPermissions:
+        - serviceAccountName: cluster-network-addons-operator
+          rules:
+{{.CNA.ClusterRules}}
+      deployments:
+        - name: cluster-network-addons-operator
+          spec:
+{{.CNA.DeploymentSpec}}
+  customresourcedefinitions:
+    owned:
+      - name: {{.CNA.CRD.ObjectMeta.Name}}
+        version: {{.CNA.CRD.Spec.Version}}
+        kind: {{.CNA.CRD.Spec.Names.Kind}}
+        displayName: Cluster Network Addons
+        description: Cluster Network Addons

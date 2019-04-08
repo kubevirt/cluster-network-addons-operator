@@ -128,7 +128,7 @@ spec:
 
 ## Kubemacpool
 The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool)
-This project allow to allocate mac addresses from a pool to secondary interfaces using 
+This project allow to allocate mac addresses from a pool to secondary interfaces using
 [Network Plumbing Working Group de-facto standard](https://github.com/K8sNetworkPlumbingWG/multi-net-spec).
 
 Administrator need to specify a requested range
@@ -163,29 +163,16 @@ spec:
 First install the operator itself:
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_00_namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_01_crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_02_rbac.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/cluster-network-addons-operator_03_deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/crds/network-addons-config.crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/operator.yaml
 ```
 
-Then you need to create a configuration for the operator:
+Then you need to create a configuration for the operator [example
+CR](deploy/crds/network-addons-config-example.cr.yaml):
 
-```yaml
-cat <<EOF | kubectl create -f -
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
-kind: NetworkAddonsConfig
-metadata:
-  name: cluster
-spec:
-  multus: {}
-  linuxBridge: {}
-  sriov: {}
-  kubeMacPool:
-   startPoolRange: "02:00:00:00:00:00"
-   endPoolRange: "FD:FF:FF:FF:FF:FF"
-  imagePullPolicy: Always
-EOF
+```shell
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/crds/network-addons-config-example.cr.yaml
 ```
 
 For more information about the configuration format check [configuring section](#configuration).
@@ -198,6 +185,9 @@ make vet
 
 # validate formatting
 make fmt
+
+# generate manifests
+make manifests
 
 # generate sources (requires operator-sdk installed on your host)
 operator-sdk generate k8s
@@ -226,4 +216,95 @@ make cluster-clean
 
 # delete the cluster
 make cluster-down
+```
+
+## Deploy Using OLM
+
+For more information on the [Operator Lifecycle
+Manager](https://github.com/operator-framework/operator-lifecycle-manager) and
+Cluster Service Versions checkout out ["Building a Cluster Service
+Version"](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/Documentation/design/building-your-csv.md).
+
+**NOTE**
+
+Replace `<docker_org>` with your Docker organization.
+
+1) Build and push an operator-registry image.
+
+```shell
+cd deploy
+export DOCKER_ORG=<docker_org>
+docker build --no-cache -t docker.io/$DOCKER_ORG/cna-registry:example -f Dockerfile .
+docker push docker.io/$DOCKER_ORG/cna-registry:example
+```
+
+2) Create the cluster-network-addons-operator Namespace and OperatorGroup.
+[This](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/Documentation/design/building-your-csv.md#operator-metadata)
+portion of OLM's CSV writing documentation goes into more detail about
+OperatorGroups.
+
+```shell
+kubectl create ns cluster-network-addons-operator
+
+cat <<EOF | kubectl create -f -
+apiVersion: operators.coreos.com/v1alpha2
+kind: OperatorGroup
+metadata:
+  name: cluster-network-addons-operator
+  namespace: cluster-network-addons-operator
+EOF
+```
+
+3) Using the `cna-registry` container image built in step 1,
+create a CatalogSource. This object tells OLM about the operator.
+
+```bash
+cat <<EOF | kubectl create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: cluster-network-addons
+  namespace: openshift-operator-lifecycle-manager
+spec:
+  sourceType: grpc
+  image: docker.io/$DOCKER_ORG/cna-registry:example
+  displayName: Cluster Network Addons
+  publisher: Red Hat
+EOF
+```
+
+4) Subscribe to the cluster-network-addons-operator.
+
+```shell
+cat <<EOF | kubectl create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-network-addons-operator-subscription
+  namespace: cluster-network-addons-operator
+spec:
+  channel: alpha
+  name: cluster-network-addons
+  source: cluster-network-addons
+  sourceNamespace: openshift-operator-lifecycle-manager
+  startingCSV: cluster-network-addons-operator.v0.0.0
+EOF
+```
+
+5) With the cluster-network-addons-operator ready and available, create a NetworkAddonsConfig.
+
+```shell
+cat <<EOF | kubectl create -f -
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  imagePullPolicy: Always
+  kubeMacPool:
+    endPoolRange: FD:FF:FF:FF:FF:FF
+    startPoolRange: "02:00:00:00:00:00"
+  linuxBridge: {}
+  multus: {}
+  sriov: {}
 ```
