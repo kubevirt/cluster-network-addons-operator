@@ -1,5 +1,7 @@
 all: fmt vet
 
+DEPLOY_DIR ?= deploy
+
 IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
 OPERATOR_IMAGE ?= cluster-network-addons-operator
@@ -29,7 +31,7 @@ cluster-clean:
 	./cluster/clean.sh
 
 manifests:
-	CONTAINER_PREFIX=$(IMAGE_REGISTRY) CONTAINER_TAG=$(IMAGE_TAG) ./hack/build-manifests.sh
+	DEPLOY_DIR=$(DEPLOY_DIR) CONTAINER_PREFIX=$(IMAGE_REGISTRY) CONTAINER_TAG=$(IMAGE_TAG) ./hack/build-manifests.sh
 
 .PHONY:
 	docker-build \
