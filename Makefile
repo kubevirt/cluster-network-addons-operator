@@ -37,4 +37,5 @@ manifests:
 	cluster-up \
 	cluster-down \
 	cluster-sync \
-	cluster-clean
+	cluster-clean \
+	manifests
