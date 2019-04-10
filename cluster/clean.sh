@@ -2,9 +2,9 @@
 
 echo 'Cleaning up ...'
 
-./cluster/kubectl.sh delete --ignore-not-found -f deploy/cluster-network-addons-operator_01_crd.yaml
-./cluster/kubectl.sh delete --ignore-not-found -f deploy/cluster-network-addons-operator_02_rbac.yaml
-./cluster/kubectl.sh delete --ignore-not-found -f deploy/cluster-network-addons-operator_00_namespace.yaml
+./cluster/kubectl.sh delete --ignore-not-found -f _out/namespace.yaml
+./cluster/kubectl.sh delete --ignore-not-found -f _out/crds/network-addons-config.crd.yaml
+./cluster/kubectl.sh delete --ignore-not-found -f _out/operator.yaml
 
 sleep 2
 
