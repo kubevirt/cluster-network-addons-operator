@@ -50,11 +50,11 @@ spec:
               protocol: TCP
           resources:
             limits:
-              cpu: 100m
-              memory: 30Mi
+              cpu: 800m
+              memory: 800Mi
             requests:
-              cpu: 100m
-              memory: 20Mi
+              cpu: 500m
+              memory: 500Mi
           volumeMounts:
             - mountPath: /tmp/cert
               name: cert
