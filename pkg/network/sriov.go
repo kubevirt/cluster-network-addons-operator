@@ -77,7 +77,7 @@ func getRootDevicesConfigString(rootDevices string) string {
 }
 
 // renderSriov generates the manifests of SR-IOV plugins
-func renderSriov(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, runningOnOpenShift4 bool, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func renderSriov(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.Sriov == nil {
 		return nil, nil
 	}
@@ -88,12 +88,12 @@ func renderSriov(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, r
 	data.Data["SriovDpImage"] = os.Getenv("SRIOV_DP_IMAGE")
 	data.Data["SriovCniImage"] = os.Getenv("SRIOV_CNI_IMAGE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
-	if runningOnOpenShift4 {
+	if clusterInfo.OpenShift4 {
 		data.Data["CNIBinDir"] = cni.BinDirOpenShift4
 	} else {
 		data.Data["CNIBinDir"] = cni.BinDir
 	}
-	data.Data["EnableSCC"] = enableSCC
+	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "sriov"), &data)
 	if err != nil {

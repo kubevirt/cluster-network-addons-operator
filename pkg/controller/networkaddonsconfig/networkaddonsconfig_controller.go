@@ -57,36 +57,39 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("environment variable OPERATOR_NAMESPACE has to be set")
 	}
 
-	runningOnOpenShift4, err := isRunningOnOpenShift4(clientset)
+	clusterInfo := &network.ClusterInfo{}
+
+	openShift4, err := isRunningOnOpenShift4(clientset)
 	if err != nil {
 		return fmt.Errorf("failed to check whether running on OpenShift 4: %v", err)
 	}
-	if runningOnOpenShift4 {
+	if openShift4 {
 		log.Printf("Running on OpenShift 4")
 	}
+	clusterInfo.OpenShift4 = openShift4
 
-	sccIsAvailable, err := isSCCAvailable(clientset)
+	sccAvailable, err := isSCCAvailable(clientset)
 	if err != nil {
 		return fmt.Errorf("failed to check for availability of SCC: %v", err)
 	}
+	clusterInfo.SCCAvailable = sccAvailable
 
-	return add(mgr, newReconciler(mgr, namespace, runningOnOpenShift4, sccIsAvailable))
+	return add(mgr, newReconciler(mgr, namespace, clusterInfo))
 }
 
 // newReconciler returns a new ReconcileNetworkAddonsConfig
-func newReconciler(mgr manager.Manager, namespace string, runningOnOpenShift4 bool, sccIsAvailable bool) *ReconcileNetworkAddonsConfig {
+func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.ClusterInfo) *ReconcileNetworkAddonsConfig {
 	// Status manager is shared between both reconcilers and it is used to update conditions of
 	// NetworkAddonsConfig.State. NetworkAddonsConfig reconciler updates it with progress of rendering
 	// and applying of manifests. Pods reconciler updates it with progress of deployed pods.
 	statusManager := statusmanager.New(mgr.GetClient(), names.OPERATOR_CONFIG)
 	return &ReconcileNetworkAddonsConfig{
-		client:              mgr.GetClient(),
-		scheme:              mgr.GetScheme(),
-		namespace:           namespace,
-		podReconciler:       newPodReconciler(statusManager),
-		statusManager:       statusManager,
-		runningOnOpenShift4: runningOnOpenShift4,
-		sccIsAvailable:      sccIsAvailable,
+		client:        mgr.GetClient(),
+		scheme:        mgr.GetScheme(),
+		namespace:     namespace,
+		podReconciler: newPodReconciler(statusManager),
+		statusManager: statusManager,
+		clusterInfo:   clusterInfo,
 	}
 }
 
@@ -147,13 +150,12 @@ var _ reconcile.Reconciler = &ReconcileNetworkAddonsConfig{}
 type ReconcileNetworkAddonsConfig struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client              client.Client
-	scheme              *runtime.Scheme
-	namespace           string
-	podReconciler       *ReconcilePods
-	statusManager       *statusmanager.StatusManager
-	runningOnOpenShift4 bool
-	sccIsAvailable      bool
+	client        client.Client
+	scheme        *runtime.Scheme
+	namespace     string
+	podReconciler *ReconcilePods
+	statusManager *statusmanager.StatusManager
+	clusterInfo   *network.ClusterInfo
 }
 
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
@@ -255,7 +257,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 	}
 
 	// Generate the objects
-	objs, err = network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.runningOnOpenShift4, r.sccIsAvailable)
+	objs, err = network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
 		log.Printf("failed to render: %v", err)
 		err = errors.Wrapf(err, "failed to render")

@@ -67,26 +67,26 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	return nil
 }
 
-func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, runningOnOpenShift4 bool, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
 
 	// render Multus
-	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, runningOnOpenShift4, enableSCC)
+	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
 	objs = append(objs, o...)
 
 	// render Linux Bridge
-	o, err = renderLinuxBridge(conf, manifestDir, runningOnOpenShift4, enableSCC)
+	o, err = renderLinuxBridge(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
 	objs = append(objs, o...)
 
 	// render SR-IOV
-	o, err = renderSriov(conf, manifestDir, runningOnOpenShift4, enableSCC)
+	o, err = renderSriov(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
