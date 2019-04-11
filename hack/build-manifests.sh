@@ -2,7 +2,7 @@
 set -e
 
 PROJECT_ROOT="$(readlink -e $(dirname "$BASH_SOURCE[0]")/../)"
-DEPLOY_DIR="${PROJECT_ROOT}/deploy"
+DEPLOY_DIR="${DEPLOY_DIR:-${PROJECT_ROOT}/deploy}"
 CONTAINER_PREFIX="${CONTAINER_PREFIX:-quay.io/kubevirt}"
 CONTAINER_TAG="${CONTAINER_TAG:-latest}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Always}"

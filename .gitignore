@@ -1,3 +1,6 @@
+# Temporary generated files
+_out
+
 # Temporary build files
 build/_output
 build/_test
