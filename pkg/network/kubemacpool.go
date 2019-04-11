@@ -1,6 +1,7 @@
 package network
 
 import (
+	"crypto/rand"
 	"net"
 	"os"
 	"path/filepath"
@@ -19,15 +20,20 @@ func validateKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 		return []error{}
 	}
 
-	if conf.KubeMacPool.StartPoolRange == "" {
-		return []error{errors.Errorf("startPoolRange must be configured")}
-	} else if _, err := net.ParseMAC(conf.KubeMacPool.StartPoolRange); err != nil {
+	if conf.KubeMacPool.StartPoolRange == "" && conf.KubeMacPool.EndPoolRange == "" {
+		return []error{}
+	}
+
+	if (conf.KubeMacPool.StartPoolRange == "" && conf.KubeMacPool.EndPoolRange != "") ||
+		(conf.KubeMacPool.StartPoolRange != "" && conf.KubeMacPool.EndPoolRange == "") {
+		return []error{errors.Errorf("both or none of the KubeMacPool ranges needs to be configured")}
+	}
+
+	if _, err := net.ParseMAC(conf.KubeMacPool.StartPoolRange); err != nil {
 		return []error{errors.Errorf("failed to parse startPoolRange invalid mac address")}
 	}
 
-	if conf.KubeMacPool.EndPoolRange == "" {
-		return []error{errors.Errorf("endPoolRange must be configured")}
-	} else if _, err := net.ParseMAC(conf.KubeMacPool.EndPoolRange); err != nil {
+	if _, err := net.ParseMAC(conf.KubeMacPool.EndPoolRange); err != nil {
 		return []error{errors.Errorf("failed to parse endPoolRange invalid mac address")}
 	}
 
@@ -47,6 +53,19 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 		return nil, nil
 	}
 
+	if conf.KubeMacPool.StartPoolRange == "" || conf.KubeMacPool.EndPoolRange == "" {
+		prefix, err := generateRandomMacPrefix()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to generate random mac address prefix")
+		}
+
+		startPoolRange := net.HardwareAddr(append(prefix, 0x00, 0x00, 0x00))
+		conf.KubeMacPool.StartPoolRange = startPoolRange.String()
+
+		endPoolRange := net.HardwareAddr(append(prefix, 0xFF, 0xFF, 0xFF))
+		conf.KubeMacPool.EndPoolRange = endPoolRange.String()
+	}
+
 	// render the manifests on disk
 	data := render.MakeRenderData()
 	data.Data["KubeMacPoolImage"] = os.Getenv("KUBEMACPOOL_IMAGE")
@@ -60,4 +79,16 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 	}
 
 	return objs, nil
+}
+
+func generateRandomMacPrefix() ([]byte, error) {
+	suffix := make([]byte, 2)
+	_, err := rand.Read(suffix)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	prefix := append([]byte{0x02}, suffix...)
+
+	return prefix, nil
 }
