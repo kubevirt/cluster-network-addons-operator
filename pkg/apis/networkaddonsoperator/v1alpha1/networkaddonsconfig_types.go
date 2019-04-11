@@ -8,11 +8,11 @@ import (
 // NetworkAddonsConfigSpec defines the desired state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
 type NetworkAddonsConfigSpec struct {
-	Multus          *Multus      `json:"multus,omitempty"`
-	LinuxBridge     *LinuxBridge `json:"linuxBridge,omitempty"`
-	Sriov           *Sriov       `json:"sriov,omitempty"`
-	KubeMacPool     *KubeMacPool `json:"kubeMacPool,omitempty"`
-	ImagePullPolicy string       `json:"imagePullPolicy,omitempty"`
+	Multus          *Multus           `json:"multus,omitempty"`
+	LinuxBridge     *LinuxBridge      `json:"linuxBridge,omitempty"`
+	Sriov           *Sriov            `json:"sriov,omitempty"`
+	KubeMacPool     *KubeMacPool      `json:"kubeMacPool,omitempty"`
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 }
 
 // +k8s:openapi-gen=true
