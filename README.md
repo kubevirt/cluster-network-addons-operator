@@ -19,9 +19,7 @@ spec:
   multus: {}
   linuxBridge: {}
   sriov: {}
-  kubeMacPool:
-   startPoolRange: "02:00:00:00:00:00"
-   endPoolRange: "FD:FF:FF:FF:FF:FF"
+  kubeMacPool: {}
   imagePullPolicy: Always
 ```
 
@@ -131,7 +129,7 @@ The operator allows administrator to deploy the [Kubemacpool](https://github.com
 This project allow to allocate mac addresses from a pool to secondary interfaces using
 [Network Plumbing Working Group de-facto standard](https://github.com/K8sNetworkPlumbingWG/multi-net-spec).
 
-Administrator need to specify a requested range
+*note:* Administrator can specify a requested range, if the range is not requested a random range will be provided
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
