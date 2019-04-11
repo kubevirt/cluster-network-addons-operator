@@ -289,13 +289,10 @@ func GetCR() *cnav1alpha1.NetworkAddonsConfig {
 			Name: "cluster",
 		},
 		Spec: cnav1alpha1.NetworkAddonsConfigSpec{
-			Multus:      &cnav1alpha1.Multus{},
-			LinuxBridge: &cnav1alpha1.LinuxBridge{},
-			Sriov:       &cnav1alpha1.Sriov{},
-			KubeMacPool: &cnav1alpha1.KubeMacPool{
-				StartPoolRange: "02:00:00:00:00:00",
-				EndPoolRange:   "FD:FF:FF:FF:FF:FF",
-			},
+			Multus:          &cnav1alpha1.Multus{},
+			LinuxBridge:     &cnav1alpha1.LinuxBridge{},
+			Sriov:           &cnav1alpha1.Sriov{},
+			KubeMacPool:     &cnav1alpha1.KubeMacPool{},
 			ImagePullPolicy: "Always",
 		},
 	}
