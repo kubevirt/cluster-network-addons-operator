@@ -153,6 +153,10 @@ spec:
                     value: quay.io/booxter/sriov-device-plugin:latest
                   - name: SRIOV_CNI_IMAGE
                     value: docker.io/nfvpe/sriov-cni:latest
+                  - name: SRIOV_NETWORK_NAME
+                    value: sriov-network
+                  - name: SRIOV_NETWORK_TYPE
+                    value: sriov
                   - name: SRIOV_ROOT_DEVICES
                   - name: KUBEMACPOOL_IMAGE
                     value: quay.io/schseba/mac-controller:latest
