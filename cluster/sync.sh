@@ -16,6 +16,6 @@ for i in $(seq 1 ${CLUSTER_NUM_NODES}); do
     ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" 'sudo sysctl -w user.max_user_namespaces=1024'
 done
 
+./cluster/kubectl.sh create -f _out/namespace.yaml
 ./cluster/kubectl.sh create -f _out/crds/network-addons-config.crd.yaml
 ./cluster/kubectl.sh create -f _out/operator.yaml
-./cluster/kubectl.sh create -f _out/namespace.yaml
