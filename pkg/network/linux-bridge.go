@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/network/cni"
 )
 
 func changeSafeLinuxBridge(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
@@ -20,7 +21,7 @@ func changeSafeLinuxBridge(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []err
 }
 
 // renderLinuxBridge generates the manifests of Linux Bridge
-func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, enableSCC bool) ([]*unstructured.Unstructured, error) {
+func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, runningOnOpenShift4 bool, enableSCC bool) ([]*unstructured.Unstructured, error) {
 	if conf.LinuxBridge == nil {
 		return nil, nil
 	}
@@ -29,6 +30,11 @@ func renderLinuxBridge(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 	data := render.MakeRenderData()
 	data.Data["LinuxBridgeImage"] = os.Getenv("LINUX_BRIDGE_IMAGE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
+	if runningOnOpenShift4 {
+		data.Data["CNIBinDir"] = cni.BinDirOpenShift4
+	} else {
+		data.Data["CNIBinDir"] = cni.BinDir
+	}
 	data.Data["EnableSCC"] = enableSCC
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "linux-bridge"), &data)
