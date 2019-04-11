@@ -129,10 +129,10 @@ The operator allows administrator to deploy the [Kubemacpool](https://github.com
 This project allow to allocate mac addresses from a pool to secondary interfaces using
 [Network Plumbing Working Group de-facto standard](https://github.com/K8sNetworkPlumbingWG/multi-net-spec).
 
-*note:* Administrator can specify a requested range, if the range is not requested a random range will be provided
-
-This random range spans from 02:XX:XX:00:00:00 to 02:XX:XX:FF:FF:FF, 
-where 02 makes the address local unicast and XX:XX is a random prefix.
+**Note:** Administrator can specify a requested range, if the range is not
+requested a random range will be provided. This random range spans from
+`02:XX:XX:00:00:00` to `02:XX:XX:FF:FF:FF`, where `02` makes the address local
+unicast and `XX:XX` is a random prefix.
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
