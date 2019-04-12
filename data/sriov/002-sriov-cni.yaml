@@ -31,6 +31,14 @@ spec:
       - name: kube-sriov-cni
         image: {{ .SriovCniImage }}
         imagePullPolicy: {{ .ImagePullPolicy }}
+        command:
+          - /bin/bash
+          - -c
+          - |
+            cp -f /usr/src/sriov-cni/bin/*sriov /host/opt/cni/bin/
+            cp -f /usr/bin/*sriov /host/opt/cni/bin/
+            echo "Entering sleep... (success)"
+            sleep infinity
         securityContext:
           privileged: true
         resources:
