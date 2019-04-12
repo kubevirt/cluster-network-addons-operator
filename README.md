@@ -88,6 +88,18 @@ can deploy with default configuration file and then modify
 You may need to restart SR-IOV device plugin pods to catch up configuration
 file changes.
 
+The operator will also deploy a new network attachment definition for SR-IOV
+network. By default, its name is `sriov-network` but it can be changed using
+the `SRIOV_NETWORK_NAME` environment variable.
+
+One may also want to change the type of the newly created network attachment
+definition from the default `sriov` to something else. For example, this is
+needed for Red Hat's CNV product that is deployed on top of OpenShift that may
+be already shipped with `sriov` CNI plugin of different version incompatible
+with KubeVirt. In this case an admin may want to use different network types
+for KubeVirt and OpenShift SR-IOV CNI plugins. This can be achieved using the
+`SRIOV_NETWORK_TYPE` environment variable.
+
 Additionally, container images used to deliver these plugins can be set using
 `SRIOV_DP_IMAGE` and `SRIOV_CNI_IMAGE` environment variables in operator
 deployment manifest.
@@ -98,31 +110,6 @@ operator already supports SR-IOV deployment. But it uses older versions of
 components that are not compatible with KubeVirt SR-IOV feature. Therefore, if
 SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
 operator will return an error.
-
-**Note:** To use SR-IOV for KubeVirt, one should also create a corresponding
-network attachment definition resource. For example:
-
-```yaml
-apiVersion: "k8s.cni.cncf.io/v1"
-kind: NetworkAttachmentDefinition
-metadata:
-  name: sriov-net1
-  annotations:
-    k8s.v1.cni.cncf.io/resourceName: intel.com/sriov
-spec:
-  config: '{
-  "type": "sriov",
-  "name": "sriov-network",
-  "ipam": {
-    "type": "host-local",
-    "subnet": "10.56.217.0/24",
-    "routes": [{
-      "dst": "0.0.0.0/0"
-    }],
-    "gateway": "10.56.217.1"
-  }
-}'
-```
 
 ## Kubemacpool
 The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool)

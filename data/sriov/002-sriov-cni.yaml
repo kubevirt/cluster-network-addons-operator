@@ -35,8 +35,8 @@ spec:
           - /bin/bash
           - -c
           - |
-            cp -f /usr/src/sriov-cni/bin/*sriov /host/opt/cni/bin/
-            cp -f /usr/bin/*sriov /host/opt/cni/bin/
+            cp -f /usr/src/sriov-cni/bin/sriov /host/opt/cni/bin/{{ .SriovNetworkType }}
+            cp -f /usr/bin/sriov /host/opt/cni/bin/{{ .SriovNetworkType }}
             echo "Entering sleep... (success)"
             sleep infinity
         securityContext:

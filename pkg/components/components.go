@@ -66,6 +66,14 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 									Value: "",
 								},
 								{
+									Name:  "SRIOV_NETWORK_NAME",
+									Value: "sriov-network",
+								},
+								{
+									Name:  "SRIOV_NETWORK_TYPE",
+									Value: "sriov",
+								},
+								{
 									Name:  "KUBEMACPOOL_IMAGE",
 									Value: "quay.io/schseba/mac-controller:latest",
 								},
