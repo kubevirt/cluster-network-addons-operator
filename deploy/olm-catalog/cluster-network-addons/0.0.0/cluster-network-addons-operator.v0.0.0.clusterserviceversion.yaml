@@ -148,7 +148,7 @@ spec:
                   - name: MULTUS_IMAGE
                     value: docker.io/nfvpe/multus:latest
                   - name: LINUX_BRIDGE_IMAGE
-                    value: quay.io/kubevirt/cni-default-plugins
+                    value: quay.io/kubevirt/cni-default-plugins:latest
                   - name: SRIOV_DP_IMAGE
                     value: quay.io/booxter/sriov-device-plugin:latest
                   - name: SRIOV_CNI_IMAGE

@@ -13,7 +13,42 @@ import (
 
 const Name = "cluster-network-addons-operator"
 
-func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv1.Deployment {
+const (
+	MultusImageDefault         = "docker.io/nfvpe/multus:latest"
+	LinuxBridgeCniImageDefault = "quay.io/kubevirt/cni-default-plugins:latest"
+	SriovDpImageDefault        = "quay.io/booxter/sriov-device-plugin:latest"
+	SriovCniImageDefault       = "docker.io/nfvpe/sriov-cni:latest"
+	KubeMacPoolImageDefault    = "quay.io/schseba/mac-controller:latest"
+)
+
+type AddonsImages struct {
+	Multus         string
+	LinuxBridgeCni string
+	SriovDp        string
+	SriovCni       string
+	KubeMacPool    string
+}
+
+func (ai *AddonsImages) FillDefaults() *AddonsImages {
+	if ai.Multus == "" {
+		ai.Multus = MultusImageDefault
+	}
+	if ai.LinuxBridgeCni == "" {
+		ai.LinuxBridgeCni = LinuxBridgeCniImageDefault
+	}
+	if ai.SriovDp == "" {
+		ai.SriovDp = SriovDpImageDefault
+	}
+	if ai.SriovCni == "" {
+		ai.SriovCni = SriovCniImageDefault
+	}
+	if ai.KubeMacPool == "" {
+		ai.KubeMacPool = KubeMacPoolImageDefault
+	}
+	return ai
+}
+
+func GetDeployment(repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -47,19 +82,19 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 							Env: []corev1.EnvVar{
 								{
 									Name:  "MULTUS_IMAGE",
-									Value: "docker.io/nfvpe/multus:latest",
+									Value: addonsImages.Multus,
 								},
 								{
 									Name:  "LINUX_BRIDGE_IMAGE",
-									Value: "quay.io/kubevirt/cni-default-plugins",
+									Value: addonsImages.LinuxBridgeCni,
 								},
 								{
 									Name:  "SRIOV_DP_IMAGE",
-									Value: "quay.io/booxter/sriov-device-plugin:latest",
+									Value: addonsImages.SriovDp,
 								},
 								{
 									Name:  "SRIOV_CNI_IMAGE",
-									Value: "docker.io/nfvpe/sriov-cni:latest",
+									Value: addonsImages.SriovCni,
 								},
 								{
 									Name:  "SRIOV_ROOT_DEVICES",
@@ -75,7 +110,7 @@ func GetDeployment(repository string, tag string, imagePullPolicy string) *appsv
 								},
 								{
 									Name:  "KUBEMACPOOL_IMAGE",
-									Value: "quay.io/schseba/mac-controller:latest",
+									Value: addonsImages.KubeMacPool,
 								},
 								{
 									Name:  "OPERATOR_IMAGE",
