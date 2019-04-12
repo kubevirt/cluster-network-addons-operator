@@ -190,47 +190,6 @@ kubectl get networkaddonsconfig cluster -o yaml
 
 For more information about the configuration format check [configuring section](#configuration).
 
-# Development
-
-```shell
-# validate imports
-make vet
-
-# validate formatting
-make fmt
-
-# generate manifests
-make manifests
-
-# generate sources (requires operator-sdk installed on your host)
-operator-sdk generate k8s
-
-# build image (uses multi-stage builds and therefore requires Docker >= 17.05)
-make docker-build
-
-# bring up a local cluster with Kubernetes
-make cluster-up
-
-# bridge up a local cluster with OpenShift 3
-export CLUSTER_PROVIDER='os-3.11.0'
-make cluster-up
-
-# deploy operator from sources on the cluster
-make cluster-sync
-
-# access kubernetes API on the cluster
-./cluster/kubectl.sh get nodes
-
-# ssh into the cluster's node
-./cluster/cli.sh ssh node01
-
-# clean up all resources created by the operator from the cluster
-make cluster-clean
-
-# delete the cluster
-make cluster-down
-```
-
 ## Deploy Using OLM
 
 For more information on the [Operator Lifecycle
@@ -320,4 +279,45 @@ spec:
   linuxBridge: {}
   multus: {}
   sriov: {}
+```
+
+# Development
+
+```shell
+# validate imports
+make vet
+
+# validate formatting
+make fmt
+
+# generate manifests
+make manifests
+
+# generate sources (requires operator-sdk installed on your host)
+operator-sdk generate k8s
+
+# build image (uses multi-stage builds and therefore requires Docker >= 17.05)
+make docker-build
+
+# bring up a local cluster with Kubernetes
+make cluster-up
+
+# bridge up a local cluster with OpenShift 3
+export CLUSTER_PROVIDER='os-3.11.0'
+make cluster-up
+
+# deploy operator from sources on the cluster
+make cluster-sync
+
+# access kubernetes API on the cluster
+./cluster/kubectl.sh get nodes
+
+# ssh into the cluster's node
+./cluster/cli.sh ssh node01
+
+# clean up all resources created by the operator from the cluster
+make cluster-clean
+
+# delete the cluster
+make cluster-down
 ```
