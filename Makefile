@@ -30,8 +30,17 @@ cluster-sync:
 cluster-clean:
 	./cluster/clean.sh
 
+# Default images can be found in pkg/components/components.go
 manifests:
-	DEPLOY_DIR=$(DEPLOY_DIR) CONTAINER_PREFIX=$(IMAGE_REGISTRY) CONTAINER_TAG=$(IMAGE_TAG) ./hack/build-manifests.sh
+	DEPLOY_DIR=$(DEPLOY_DIR) \
+	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
+	CONTAINER_TAG=$(IMAGE_TAG) \
+	MULTUS_IMAGE=$(MULTUS_IMAGE) \
+	LINUX_BRIDGE_CNI_IMAGE=$(LINUX_BRIDGE_CNI_IMAGE) \
+	SRIOV_DP_IMAGE=$(SRIOV_DP_IMAGE) \
+	SRIOV_CNI_IMAGE=$(SRIOV_CNI_IMAGE) \
+	KUBEMACPOOL_IMAGE=$(KUBEMACPOOL_IMAGE) \
+		./hack/build-manifests.sh
 
 .PHONY:
 	docker-build \

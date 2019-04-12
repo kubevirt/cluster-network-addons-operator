@@ -56,6 +56,7 @@ type templateData struct {
 	ContainerTag    string
 	ImagePullPolicy string
 	CNA             *operatorData
+	AddonsImages    *components.AddonsImages
 }
 
 func check(err error) {
@@ -138,6 +139,7 @@ func getCNA(data *templateData) {
 		data.ContainerPrefix,
 		data.ContainerTag,
 		data.ImagePullPolicy,
+		data.AddonsImages,
 	)
 	err := marshallObject(cnadeployment, &writer)
 	check(err)
@@ -213,6 +215,11 @@ func main() {
 	csvReplaces := flag.String("csv-replaces", "", "")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "")
 	inputFile := flag.String("input-file", "", "")
+	multusImage := flag.String("multus-image", "", "")
+	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", "", "")
+	sriovDpImage := flag.String("sriov-dp-image", "", "")
+	sriovCniImage := flag.String("sriov-cni-image", "", "")
+	kubeMacPoolImage := flag.String("kubemacpool-image", "", "")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
 	pflag.Parse()
@@ -224,6 +231,13 @@ func main() {
 		ContainerPrefix: *containerPrefix,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
+		AddonsImages: (&components.AddonsImages{
+			Multus:         *multusImage,
+			LinuxBridgeCni: *linuxBridgeCniImage,
+			SriovDp:        *sriovDpImage,
+			SriovCni:       *sriovCniImage,
+			KubeMacPool:    *kubeMacPoolImage,
+		}).FillDefaults(),
 	}
 
 	// Load in all CNA Resources
