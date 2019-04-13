@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: cluster-network-addons-operator.v0.0.0
+  name: cluster-network-addons-operator.v0.4.0
   namespace: placeholder
   annotations:
     capabilities: "Full Lifecycle"
@@ -39,7 +39,7 @@ spec:
     - macpool
     - SR-IOV
     - Bridge
-  version: 0.0.0
+  version: 0.4.0
   maturity: alpha
 
   maintainers:
@@ -153,11 +153,11 @@ spec:
                     value: quay.io/booxter/sriov-device-plugin:latest
                   - name: SRIOV_CNI_IMAGE
                     value: docker.io/nfvpe/sriov-cni:latest
+                  - name: SRIOV_ROOT_DEVICES
                   - name: SRIOV_NETWORK_NAME
                     value: sriov-network
                   - name: SRIOV_NETWORK_TYPE
                     value: sriov
-                  - name: SRIOV_ROOT_DEVICES
                   - name: KUBEMACPOOL_IMAGE
                     value: quay.io/schseba/mac-controller:latest
                   - name: OPERATOR_IMAGE
