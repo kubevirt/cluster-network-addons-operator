@@ -3,7 +3,7 @@ all: fmt vet
 # Always keep the future version here, so we won't overwrite latest released manifests
 VERSION ?= 0.4.0
 
-DEPLOY_DIR ?= deploy
+DEPLOY_DIR ?= manifests
 
 IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
