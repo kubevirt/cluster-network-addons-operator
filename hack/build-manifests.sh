@@ -22,6 +22,7 @@ for template in $templates; do
 	rendered=$( \
 		${PROJECT_ROOT}/tools/manifest-templator/manifest-templator \
 		--version=${VERSION} \
+		--version-replaces=${VERSION_REPLACES} \
 		--container-prefix=${CONTAINER_PREFIX} \
 		--container-tag=${CONTAINER_TAG} \
 		--image-pull-policy=${IMAGE_PULL_POLICY} \

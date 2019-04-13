@@ -2,6 +2,8 @@ all: fmt vet
 
 # Always keep the future version here, so we won't overwrite latest released manifests
 VERSION ?= 0.4.0
+# Always keep the last released version here
+VERSION_REPLACES ?= 0.3.0
 
 DEPLOY_DIR ?= manifests
 
@@ -43,6 +45,7 @@ cluster-clean:
 # Default images can be found in pkg/components/components.go
 generate-manifests:
 	VERSION=$(VERSION) \
+	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
 	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
 	CONTAINER_TAG=$(IMAGE_TAG) \
