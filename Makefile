@@ -35,10 +35,10 @@ cluster-down:
 	./cluster/down.sh
 
 cluster-sync:
-	./cluster/sync.sh
+	VERSION=$(VERSION) ./cluster/sync.sh
 
 cluster-clean:
-	./cluster/clean.sh
+	VERSION=$(VERSION) ./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
 generate-manifests:

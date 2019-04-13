@@ -3,11 +3,13 @@
 registry_port=$(./cluster/cli.sh ports registry | tr -d '\r')
 registry=localhost:$registry_port
 
-IMAGE_REGISTRY=registry:5000 DEPLOY_DIR=_out make manifests
+# Cleanup previously generated manifests
+rm -rf _out/
+IMAGE_REGISTRY=registry:5000 DEPLOY_DIR=_out make generate-manifests
 
-./cluster/clean.sh
+make cluster-clean
 
-IMAGE_REGISTRY=$registry make docker-build docker-push
+IMAGE_REGISTRY=$registry make docker-build-operator docker-push-operator
 
 for i in $(seq 1 ${CLUSTER_NUM_NODES}); do
     ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" 'sudo docker pull registry:5000/cluster-network-addons-operator'
@@ -16,6 +18,6 @@ for i in $(seq 1 ${CLUSTER_NUM_NODES}); do
     ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" 'sudo sysctl -w user.max_user_namespaces=1024'
 done
 
-./cluster/kubectl.sh create -f _out/namespace.yaml
-./cluster/kubectl.sh create -f _out/crds/network-addons-config.crd.yaml
-./cluster/kubectl.sh create -f _out/operator.yaml
+./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/namespace.yaml
+./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/network-addons-config.crd.yaml
+./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/operator.yaml
