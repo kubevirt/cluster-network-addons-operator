@@ -3,7 +3,7 @@ all: fmt vet
 # Always keep the future version here, so we won't overwrite latest released manifests
 VERSION ?= 0.4.0
 # Always keep the last released version here
-VERSION_REPLACES ?= 0.3.0
+VERSION_REPLACES ?= v0.3.0
 
 DEPLOY_DIR ?= manifests
 

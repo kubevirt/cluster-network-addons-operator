@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: cluster-network-addons-operator.v{{.Version}}
+  name: cluster-network-addons-operator.{{.Version}}
   namespace: placeholder
   annotations:
     capabilities: "Full Lifecycle"
@@ -42,7 +42,7 @@ spec:
   version: {{.Version}}
   maturity: alpha
 {{if .VersionReplaces}}
-  replaces: cluster-network-addons-operator.v{{.VersionReplaces}}
+  replaces: cluster-network-addons-operator.{{.VersionReplaces}}
 {{end}}
   maintainers:
     - name: KubeVirt project

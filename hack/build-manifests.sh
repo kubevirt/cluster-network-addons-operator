@@ -18,7 +18,7 @@ for template in $templates; do
 	mkdir -p ${dir}
 
 	file="${dir}/$(basename -s .in $template)"
-	file=${file/VERSION/v$VERSION}
+	file=${file/VERSION/$VERSION}
 	rendered=$( \
 		${PROJECT_ROOT}/tools/manifest-templator/manifest-templator \
 		--version=${VERSION} \

@@ -244,7 +244,7 @@ spec:
   name: cluster-network-addons
   source: cluster-network-addons
   sourceNamespace: openshift-operator-lifecycle-manager
-  startingCSV: cluster-network-addons-operator.v0.0.0
+  startingCSV: cluster-network-addons-operator.0.3.0
 EOF
 ```
 
