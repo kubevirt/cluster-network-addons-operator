@@ -8,6 +8,7 @@ DEPLOY_DIR ?= manifests
 IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
 OPERATOR_IMAGE ?= cluster-network-addons-operator
+REGISTRY_IMAGE ?= cluster-network-addons-registry
 
 vet:
 	go vet ./pkg/... ./cmd/...
@@ -15,11 +16,17 @@ vet:
 fmt:
 	go fmt ./pkg/... ./cmd/...
 
-docker-build:
-	docker build -f build/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
+docker-build-operator:
+	docker build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
 
-docker-push:
+docker-build-registry:
+	docker build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
+
+docker-push-operator:
 	docker push $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
+
+docker-push-registry:
+	docker push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
 cluster-up:
 	./cluster/up.sh
@@ -34,7 +41,7 @@ cluster-clean:
 	./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
-manifests:
+generate-manifests:
 	VERSION=$(VERSION) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
 	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
@@ -47,10 +54,12 @@ manifests:
 		./hack/build-manifests.sh
 
 .PHONY:
-	docker-build \
-	docker-push \
+	docker-build-operator \
+	docker-push-operator \
+	docker-build-registry \
+	docker-push-registry \
 	cluster-up \
 	cluster-down \
 	cluster-sync \
 	cluster-clean \
-	manifests
+	generate-manifests

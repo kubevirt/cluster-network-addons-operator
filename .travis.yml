@@ -5,7 +5,9 @@ services:
 - docker
 
 install: true
-script: make docker-build
+script:
+- make docker-build-operator
+- make docker-build-registry
 
 deploy:
 - provider: script
