@@ -9,6 +9,9 @@ ENV ENTRYPOINT=/entrypoint \
     OPERATOR=/cluster-network-addons-operator \
     USER_UID=1001 \
     USER_NAME=cluster-network-addons-operator
+RUN \
+    yum -y update \
+    yum clean all
 COPY --from=builder /go/src/github.com/kubevirt/cluster-network-addons-operator/build/operator/bin/user_setup /user_setup
 RUN /user_setup
 COPY --from=builder /go/src/github.com/kubevirt/cluster-network-addons-operator/data /data
