@@ -282,6 +282,9 @@ make generate-manifests
 operator-sdk generate k8s
 
 # build images (uses multi-stage builds and therefore requires Docker >= 17.05)
+make docker-build
+
+# or build only a specific image
 make docker-build-operator
 make docker-build-registry
 

@@ -18,11 +18,15 @@ vet:
 fmt:
 	go fmt ./pkg/... ./cmd/...
 
+docker-build: docker-build-operator docker-build-registry
+
 docker-build-operator:
 	docker build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
 
 docker-build-registry:
 	docker build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
+
+docker-push: docker-push-operator docker-push-registry
 
 docker-push-operator:
 	docker push $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
@@ -57,6 +61,8 @@ generate-manifests:
 		./hack/build-manifests.sh
 
 .PHONY:
+	docker-build \
+	docker-push \
 	docker-build-operator \
 	docker-push-operator \
 	docker-build-registry \
