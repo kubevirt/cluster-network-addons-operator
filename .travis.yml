@@ -11,12 +11,12 @@ script:
 
 deploy:
 - provider: script
-  script: docker login -u="$DOCKER_USER" -p="$DOCKER_PASS" quay.io && make docker-build docker-push
+  script: docker login -u="$DOCKER_USER" -p="$DOCKER_PASS" quay.io && make docker-build-operator docker-push-operator docker-build-registry docker-push-registry
   skip_cleanup: true
   on:
     branch: master
 - provider: script
-  script: docker login -u="$DOCKER_USER" -p="$DOCKER_PASS" quay.io && make docker-build docker-push IMAGE_TAG=$TRAVIS_TAG 
+  script: docker login -u="$DOCKER_USER" -p="$DOCKER_PASS" quay.io && make docker-build-operator docker-push-operator docker-build-registry docker-push-registry IMAGE_TAG=$TRAVIS_TAG 
   skip_cleanup: true
   on:
     tags: true
