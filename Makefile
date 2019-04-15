@@ -1,10 +1,16 @@
 all: fmt vet
 
-DEPLOY_DIR ?= deploy
+# Always keep the future version here, so we won't overwrite latest released manifests
+VERSION ?= 0.4.0
+# Always keep the last released version here
+VERSION_REPLACES ?= v0.3.0
+
+DEPLOY_DIR ?= manifests
 
 IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
 OPERATOR_IMAGE ?= cluster-network-addons-operator
+REGISTRY_IMAGE ?= cluster-network-addons-registry
 
 vet:
 	go vet ./pkg/... ./cmd/...
@@ -12,11 +18,21 @@ vet:
 fmt:
 	go fmt ./pkg/... ./cmd/...
 
-docker-build:
-	docker build -f build/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
+docker-build: docker-build-operator docker-build-registry
 
-docker-push:
+docker-build-operator:
+	docker build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
+
+docker-build-registry:
+	docker build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
+
+docker-push: docker-push-operator docker-push-registry
+
+docker-push-operator:
 	docker push $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
+
+docker-push-registry:
+	docker push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
 cluster-up:
 	./cluster/up.sh
@@ -25,13 +41,15 @@ cluster-down:
 	./cluster/down.sh
 
 cluster-sync:
-	./cluster/sync.sh
+	VERSION=$(VERSION) ./cluster/sync.sh
 
 cluster-clean:
-	./cluster/clean.sh
+	VERSION=$(VERSION) ./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
-manifests:
+generate-manifests:
+	VERSION=$(VERSION) \
+	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
 	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
 	CONTAINER_TAG=$(IMAGE_TAG) \
@@ -45,8 +63,12 @@ manifests:
 .PHONY:
 	docker-build \
 	docker-push \
+	docker-build-operator \
+	docker-push-operator \
+	docker-build-registry \
+	docker-push-registry \
 	cluster-up \
 	cluster-down \
 	cluster-sync \
 	cluster-clean \
-	manifests
+	generate-manifests

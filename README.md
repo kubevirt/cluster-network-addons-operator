@@ -151,16 +151,16 @@ spec:
 First install the operator itself:
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/crds/network-addons-config.crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/operator.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.3.0/namespace.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.3.0/network-addons-config.crd.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.3.0/operator.yaml
 ```
 
 Then you need to create a configuration for the operator [example
-CR](deploy/crds/network-addons-config-example.cr.yaml):
+CR](manifests/cluster-network-addons/0.3.0/network-addons-config-example.cr.yaml):
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/deploy/crds/network-addons-config-example.cr.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.3.0/network-addons-config-example.cr.yaml
 ```
 
 Finally you can wait for the operator to finish deployment:
@@ -177,47 +177,6 @@ kubectl get networkaddonsconfig cluster -o yaml
 
 For more information about the configuration format check [configuring section](#configuration).
 
-# Development
-
-```shell
-# validate imports
-make vet
-
-# validate formatting
-make fmt
-
-# generate manifests
-make manifests
-
-# generate sources (requires operator-sdk installed on your host)
-operator-sdk generate k8s
-
-# build image (uses multi-stage builds and therefore requires Docker >= 17.05)
-make docker-build
-
-# bring up a local cluster with Kubernetes
-make cluster-up
-
-# bridge up a local cluster with OpenShift 3
-export CLUSTER_PROVIDER='os-3.11.0'
-make cluster-up
-
-# deploy operator from sources on the cluster
-make cluster-sync
-
-# access kubernetes API on the cluster
-./cluster/kubectl.sh get nodes
-
-# ssh into the cluster's node
-./cluster/cli.sh ssh node01
-
-# clean up all resources created by the operator from the cluster
-make cluster-clean
-
-# delete the cluster
-make cluster-down
-```
-
 ## Deploy Using OLM
 
 For more information on the [Operator Lifecycle
@@ -232,10 +191,8 @@ Replace `<docker_org>` with your Docker organization.
 1) Build and push an operator-registry image.
 
 ```shell
-cd deploy
-export DOCKER_ORG=<docker_org>
-docker build --no-cache -t docker.io/$DOCKER_ORG/cna-registry:example -f Dockerfile .
-docker push docker.io/$DOCKER_ORG/cna-registry:example
+IMAGE_REGISTRY=docker.io/$DOCKER_ORG make docker-build-registry
+IMAGE_REGISTRY=docker.io/$DOCKER_ORG make docker-push-registry
 ```
 
 2) Create the cluster-network-addons-operator Namespace and OperatorGroup.
@@ -287,7 +244,7 @@ spec:
   name: cluster-network-addons
   source: cluster-network-addons
   sourceNamespace: openshift-operator-lifecycle-manager
-  startingCSV: cluster-network-addons-operator.v0.0.0
+  startingCSV: cluster-network-addons-operator.0.3.0
 EOF
 ```
 
@@ -308,3 +265,58 @@ spec:
   multus: {}
   sriov: {}
 ```
+
+# Development
+
+```shell
+# validate imports
+make vet
+
+# validate formatting
+make fmt
+
+# generate manifests
+make generate-manifests
+
+# generate sources (requires operator-sdk installed on your host)
+operator-sdk generate k8s
+
+# build images (uses multi-stage builds and therefore requires Docker >= 17.05)
+make docker-build
+
+# or build only a specific image
+make docker-build-operator
+make docker-build-registry
+
+# bring up a local cluster with Kubernetes
+make cluster-up
+
+# bridge up a local cluster with OpenShift 3
+export CLUSTER_PROVIDER='os-3.11.0'
+make cluster-up
+
+# deploy operator from sources on the cluster
+make cluster-sync
+
+# access kubernetes API on the cluster
+./cluster/kubectl.sh get nodes
+
+# ssh into the cluster's node
+./cluster/cli.sh ssh node01
+
+# clean up all resources created by the operator from the cluster
+make cluster-clean
+
+# delete the cluster
+make cluster-down
+```
+
+# Releasing
+
+Steps to create a new release:
+
+1. Test operator, make sure it deploys all components, exposes failures in NetworkAddonsConfig.Status field as well as progressing status of components and "Ready".
+2. Open a PR with two commits:
+    1. Update manifests with `make manifests`, add newly generated manifests to the source tree. Update links to manifests in [Deployment](#Deployment) section.
+    2. Bump `VERSION` and `VERSION_REPLACES` in `Makefile`.
+3. Once the PR is merged, tag its **first** commit with proper version name `x.y.z`. This can be done through [GitHub UI](https://github.com/kubevirt/cluster-network-addons-operator/releases/new).

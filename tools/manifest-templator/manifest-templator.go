@@ -49,9 +49,9 @@ type operatorData struct {
 }
 
 type templateData struct {
+	Version         string
+	VersionReplaces string
 	Namespace       string
-	CsvVersion      string
-	CsvReplaces     string
 	ContainerPrefix string
 	ContainerTag    string
 	ImagePullPolicy string
@@ -208,11 +208,11 @@ func getCNA(data *templateData) {
 }
 
 func main() {
+	version := flag.String("version", "", "")
+	versionReplaces := flag.String("version-replaces", "", "")
 	namespace := flag.String("namespace", "cluster-network-addons-operator", "")
 	containerPrefix := flag.String("container-prefix", "quay.io/kubevirt", "")
 	containerTag := flag.String("container-tag", "latest", "")
-	csvVersion := flag.String("csv-version", "latest", "")
-	csvReplaces := flag.String("csv-replaces", "", "")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "")
 	inputFile := flag.String("input-file", "", "")
 	multusImage := flag.String("multus-image", "", "")
@@ -225,9 +225,9 @@ func main() {
 	pflag.Parse()
 
 	data := templateData{
+		Version:         *version,
+		VersionReplaces: *versionReplaces,
 		Namespace:       *namespace,
-		CsvVersion:      *csvVersion,
-		CsvReplaces:     *csvReplaces,
 		ContainerPrefix: *containerPrefix,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
