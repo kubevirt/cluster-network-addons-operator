@@ -48,7 +48,7 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	return ai
 }
 
-func GetDeployment(repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
+func GetDeployment(namespace string, repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -57,7 +57,7 @@ func GetDeployment(repository string, tag string, imagePullPolicy string, addons
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
-			Namespace: Name,
+			Namespace: namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),
@@ -150,7 +150,7 @@ func GetDeployment(repository string, tag string, imagePullPolicy string, addons
 	return deployment
 }
 
-func GetRole() *rbacv1.Role {
+func GetRole(namespace string) *rbacv1.Role {
 	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -158,7 +158,7 @@ func GetRole() *rbacv1.Role {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
-			Namespace: Name,
+			Namespace: namespace,
 			Labels: map[string]string{
 				"name": Name,
 			},
