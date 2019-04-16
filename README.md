@@ -151,16 +151,16 @@ spec:
 First install the operator itself:
 
 ```shell
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.3.0/namespace.yaml
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.3.0/network-addons-config.crd.yaml
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.3.0/operator.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.4.0/namespace.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.4.0/network-addons-config.crd.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/blob/master/manifests/cluster-network-addons/0.4.0/operator.yaml
 ```
 
 Then you need to create a configuration for the operator [example
-CR](manifests/cluster-network-addons/0.3.0/network-addons-config-example.cr.yaml):
+CR](manifests/cluster-network-addons/0.4.0/network-addons-config-example.cr.yaml):
 
 ```shell
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.3.0/network-addons-config-example.cr.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/0.4.0/network-addons-config-example.cr.yaml
 ```
 
 Finally you can wait for the operator to finish deployment:
@@ -244,7 +244,7 @@ spec:
   name: cluster-network-addons
   source: cluster-network-addons
   sourceNamespace: openshift-operator-lifecycle-manager
-  startingCSV: cluster-network-addons-operator.0.3.0
+  startingCSV: cluster-network-addons-operator.0.4.0
 EOF
 ```
 
