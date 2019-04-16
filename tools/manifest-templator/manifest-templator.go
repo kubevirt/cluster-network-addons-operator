@@ -136,6 +136,7 @@ func getCNA(data *templateData) {
 
 	// Get CNA Deployment
 	cnadeployment := components.GetDeployment(
+		data.Namespace,
 		data.ContainerPrefix,
 		data.ContainerTag,
 		data.ImagePullPolicy,
@@ -153,7 +154,7 @@ func getCNA(data *templateData) {
 
 	// Get CNA Role
 	writer = strings.Builder{}
-	role := components.GetRole()
+	role := components.GetRole(data.Namespace)
 	marshallObject(role, &writer)
 	roleString := writer.String()
 
