@@ -2,6 +2,7 @@ package network
 
 import (
 	"crypto/rand"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -38,6 +39,19 @@ func validateKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 
 	if _, err := net.ParseMAC(conf.KubeMacPool.RangeEnd); err != nil {
 		return []error{errors.Errorf("failed to parse rangeEnd because the mac address is invalid")}
+	}
+
+	if err := checkRange(net.HardwareAddr(conf.KubeMacPool.RangeStart), net.HardwareAddr(conf.KubeMacPool.RangeEnd)); err != nil {
+		return []error{errors.Errorf("failed to set mac address range. Range end is lesser than its Start")}
+	}
+
+	rangeStart, _ := net.ParseMAC(conf.KubeMacPool.RangeStart)
+	if err := checkCast(rangeStart); err != nil {
+		return []error{errors.Errorf("failed to set RangeStart. %v", err)}
+	}
+	rangeEnd, _ := net.ParseMAC(conf.KubeMacPool.RangeEnd)
+	if err := checkCast(rangeEnd); err != nil {
+		return []error{errors.Errorf("failed to set RangeEnd. %v", err)}
 	}
 
 	return []error{}
@@ -94,4 +108,27 @@ func generateRandomMacPrefix() ([]byte, error) {
 	prefix := append([]byte{0x02}, suffix...)
 
 	return prefix, nil
+}
+
+func checkRange(startMac, endMac net.HardwareAddr) error {
+	for idx := 0; idx <= 5; idx++ {
+		if startMac[idx] < endMac[idx] {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid range start: %s end: %s", startMac.String(), endMac.String())
+}
+
+func checkCast(mac net.HardwareAddr) error {
+	bit := 1 & mac[0]
+	if bit == 1 {
+		return fmt.Errorf("invalid mac address. Multicast addressing is not supported. The first octet is %#0X", mac[0])
+	}
+	s := mac[0]
+	if s == 0x02 || s == 0x06 || s == 0x0A || s == 0x0E {
+		return nil
+	}
+
+	return fmt.Errorf("invalid mac address. Universally administered addresses are not supported. The first octet is %#0X", s)
 }
