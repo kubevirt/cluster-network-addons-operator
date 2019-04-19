@@ -316,7 +316,5 @@ make cluster-down
 Steps to create a new release:
 
 1. Test operator, make sure it deploys all components, exposes failures in NetworkAddonsConfig.Status field as well as progressing status of components and "Ready".
-2. Open a PR with two commits:
-    1. Update manifests with `make manifests`, add newly generated manifests to the source tree. Update links to manifests in [Deployment](#Deployment) section.
-    2. Bump `VERSION` and `VERSION_REPLACES` in `Makefile`.
+2. Open a new PR with two commits. The first of them adding new released manifests, the second bumping versions in `Makefile`. To make this easier, use `./hack/release.sh <released version> <future version> <origin remote> <fork remote>`
 3. Once the PR is merged, tag its **first** commit with proper version name `x.y.z`. This can be done through [GitHub UI](https://github.com/kubevirt/cluster-network-addons-operator/releases/new).
