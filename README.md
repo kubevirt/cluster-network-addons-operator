@@ -60,6 +60,10 @@ spec:
 Additionally, container image used to deliver this plugin can be set using
 `LINUX_BRIDGE_IMAGE` environment variable in operator deployment manifest.
 
+The bridge marker image used to deliver a bridge marker detecting the availability
+of linux bridges on nodes can be set using the `LINUX_BRIDGE_MARKER_IMAGE` environment
+variable in operator deployment manifest.
+
 ## SR-IOV
 
 The operator allows administrator to deploy SR-IOV
