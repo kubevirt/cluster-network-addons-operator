@@ -128,8 +128,8 @@ metadata:
   name: cluster
 spec:
   kubeMacPool:
-   startPoolRange: "02:00:00:00:00:00"
-   endPoolRange: "FD:FF:FF:FF:FF:FF"
+   rangeStart: "02:00:00:00:00:00"
+   rangeEnd: "FD:FF:FF:FF:FF:FF"
 ```
 
 ## Image Pull Policy
@@ -259,8 +259,8 @@ metadata:
 spec:
   imagePullPolicy: Always
   kubeMacPool:
-    endPoolRange: FD:FF:FF:FF:FF:FF
-    startPoolRange: "02:00:00:00:00:00"
+    rangeEnd: FD:FF:FF:FF:FF:FF
+    rangeStart: "02:00:00:00:00:00"
   linuxBridge: {}
   multus: {}
   sriov: {}
