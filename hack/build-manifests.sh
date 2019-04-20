@@ -7,7 +7,7 @@ CONTAINER_PREFIX="${CONTAINER_PREFIX:-quay.io/kubevirt}"
 CONTAINER_TAG="${CONTAINER_TAG:-latest}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Always}"
 
-(cd ${PROJECT_ROOT}/tools/manifest-templator/ && go build)
+go build -o ${PROJECT_ROOT}/tools/manifest-templator/manifest-templator github.com/kubevirt/cluster-network-addons-operator/tools/manifest-templator
 
 templates=$(cd ${PROJECT_ROOT}/templates && find . -type f -name "*.yaml.in")
 for template in $templates; do

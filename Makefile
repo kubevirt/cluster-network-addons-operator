@@ -43,6 +43,9 @@ cluster-down:
 cluster-sync:
 	VERSION=$(VERSION) ./cluster/sync.sh
 
+cluster-functest:
+	./cluster/functest.sh
+
 cluster-clean:
 	VERSION=$(VERSION) ./cluster/clean.sh
 
@@ -70,5 +73,6 @@ generate-manifests:
 	cluster-up \
 	cluster-down \
 	cluster-sync \
+	cluster-functest \
 	cluster-clean \
 	generate-manifests

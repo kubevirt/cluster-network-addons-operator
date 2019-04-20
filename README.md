@@ -298,6 +298,9 @@ make cluster-up
 # deploy operator from sources on the cluster
 make cluster-sync
 
+# run functional tests on the cluster
+make cluster-functest
+
 # access kubernetes API on the cluster
 ./cluster/kubectl.sh get nodes
 
