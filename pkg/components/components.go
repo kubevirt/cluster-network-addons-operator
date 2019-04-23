@@ -15,7 +15,7 @@ const Name = "cluster-network-addons-operator"
 
 const (
 	MultusImageDefault         = "docker.io/nfvpe/multus:latest"
-	LinuxBridgeCniImageDefault = "quay.io/kubevirt/cni-default-plugins:latest"
+	LinuxBridgeCniImageDefault = "quay.io/kubevirt/cni-default-plugins:v0.1.0"
 	SriovDpImageDefault        = "quay.io/booxter/sriov-device-plugin:latest"
 	SriovCniImageDefault       = "docker.io/nfvpe/sriov-cni:latest"
 	KubeMacPoolImageDefault    = "quay.io/kubevirt/kubemacpool:v0.2.0"
