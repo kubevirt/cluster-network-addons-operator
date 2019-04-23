@@ -11,6 +11,11 @@ required = [
   "sigs.k8s.io/controller-tools/pkg/crd/generator",
 ]
 
+# https://github.com/golang/dep/issues/1799
+[[override]]
+  source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
+  name = "gopkg.in/fsnotify.v1"
+  
 [[override]]
   name = "k8s.io/code-generator"
   # revision for tag "kubernetes-1.13.1"
