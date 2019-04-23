@@ -18,6 +18,9 @@ vet:
 fmt:
 	go fmt ./pkg/... ./cmd/...
 
+test:
+	go test ./pkg/... -v --ginkgo.v
+
 docker-build: docker-build-operator docker-build-registry
 
 docker-build-operator:
