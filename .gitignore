@@ -4,6 +4,7 @@ _out
 # Temporary build files
 build/operator/_output
 build/operator/_test
+build/_output
 
 # Temporary local cluster files
 cluster/.kubeconfig
