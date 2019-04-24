@@ -20,6 +20,7 @@ spec:
   linuxBridge: {}
   sriov: {}
   kubeMacPool: {}
+  nmstate: {}
   imagePullPolicy: Always
 ```
 
@@ -116,7 +117,7 @@ SR-IOV is requested in OpenShift cluster network operator, KubeVirt addons
 operator will return an error.
 
 ## Kubemacpool
-The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool)
+The operator allows administrator to deploy the [Kubemacpool](https://github.com/K8sNetworkPlumbingWG/kubemacpool).
 This project allow to allocate mac addresses from a pool to secondary interfaces using
 [Network Plumbing Working Group de-facto standard](https://github.com/K8sNetworkPlumbingWG/multi-net-spec).
 
@@ -135,6 +136,12 @@ spec:
    rangeStart: "02:00:00:00:00:00"
    rangeEnd: "FD:FF:FF:FF:FF:FF"
 ```
+
+## Nmstate
+
+The operator allows the administrator to deploy the [NmState State Controller](https://github.com/nmstate/nmstate) as a daemonset across all of one's nodes.
+This project manages host networking settings in a declarative manner. The networking state is described by a pre-defined schema. Reporting of current state and changes to it (desired state) both conform to the schema.
+Nmstate is aimed to satisfy enterprise needs to manage host networking through a northbound declarative API and multi provider support on the southbound. NetworkManager acts as the main (and currently the only) provider supported.
 
 ## Image Pull Policy
 
@@ -268,6 +275,7 @@ spec:
   linuxBridge: {}
   multus: {}
   sriov: {}
+  nmstate: {}
 ```
 
 # Development
