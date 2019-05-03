@@ -14,11 +14,11 @@ import (
 const Name = "cluster-network-addons-operator"
 
 const (
-	MultusImageDefault            = "docker.io/nfvpe/multus:latest"
+	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.1.0"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.1.0"
 	SriovDpImageDefault           = "quay.io/booxter/sriov-device-plugin:latest"
-	SriovCniImageDefault          = "docker.io/nfvpe/sriov-cni:latest"
+	SriovCniImageDefault          = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.2.0"
 )
 
