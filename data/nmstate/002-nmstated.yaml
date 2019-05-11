@@ -19,7 +19,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: state-controller
-          image: {{ .NMStateHandlerImage }}
+          image: {{ .NMStateStateHandlerImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           args: ["-execution-type", "controller"]
           volumeMounts:
