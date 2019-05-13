@@ -51,6 +51,7 @@ spec:
   linuxBridge: {}
   multus: {}
   sriov: {}
+  nmstate: {}
 EOF
 assert_condition Progressing 60s
 assert_condition Ready 300s
