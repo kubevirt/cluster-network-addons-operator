@@ -21,7 +21,7 @@ func validateImagePullPolicy(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	return []error{}
 }
 
-func fillDefaultsImagePullPolicy(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) {
+func fillDefaultsImagePullPolicy(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) error {
 	if conf.ImagePullPolicy == "" {
 		if previous != nil && previous.ImagePullPolicy != "" {
 			conf.ImagePullPolicy = previous.ImagePullPolicy
@@ -29,6 +29,8 @@ func fillDefaultsImagePullPolicy(conf, previous *opv1alpha1.NetworkAddonsConfigS
 			conf.ImagePullPolicy = defaultImagePullPolicy
 		}
 	}
+
+	return nil
 }
 
 func changeSafeImagePullPolicy(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {

@@ -56,19 +56,6 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 		return nil, nil
 	}
 
-	if conf.KubeMacPool.RangeStart == "" || conf.KubeMacPool.RangeEnd == "" {
-		prefix, err := generateRandomMacPrefix()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate random mac address prefix")
-		}
-
-		rangeStart := net.HardwareAddr(append(prefix, 0x00, 0x00, 0x00))
-		conf.KubeMacPool.RangeStart = rangeStart.String()
-
-		rangeEnd := net.HardwareAddr(append(prefix, 0xFF, 0xFF, 0xFF))
-		conf.KubeMacPool.RangeEnd = rangeEnd.String()
-	}
-
 	// render the manifests on disk
 	data := render.MakeRenderData()
 	data.Data["KubeMacPoolImage"] = os.Getenv("KUBEMACPOOL_IMAGE")
@@ -82,6 +69,28 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 	}
 
 	return objs, nil
+}
+
+func fillDefaultsKubeMacPool(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) error {
+	if conf.KubeMacPool.RangeStart == "" || conf.KubeMacPool.RangeEnd == "" {
+		if previous != nil && previous.KubeMacPool != nil {
+			conf.KubeMacPool = previous.KubeMacPool
+			return nil
+		}
+
+		prefix, err := generateRandomMacPrefix()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate random mac address prefix")
+		}
+
+		rangeStart := net.HardwareAddr(append(prefix, 0x00, 0x00, 0x00))
+		conf.KubeMacPool.RangeStart = rangeStart.String()
+
+		rangeEnd := net.HardwareAddr(append(prefix, 0xFF, 0xFF, 0xFF))
+		conf.KubeMacPool.RangeEnd = rangeEnd.String()
+	}
+
+	return nil
 }
 
 func generateRandomMacPrefix() ([]byte, error) {
