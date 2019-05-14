@@ -43,23 +43,22 @@ func validateKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	return []error{}
 }
 
-func changeSafeKubeMacPool(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
-	if prev.KubeMacPool != nil && !reflect.DeepEqual(prev.KubeMacPool, next.KubeMacPool) {
-		return []error{errors.Errorf("cannot modify KubeMacPool configuration once it is deployed")}
-	}
-	return nil
-}
-
-// renderLinuxBridge generates the manifests of Linux Bridge
-func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
+func fillDefaultsKubeMacPool(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	if conf.KubeMacPool == nil {
-		return nil, nil
+		return []error{}
 	}
 
+	// If user hasn't explicitly requested a range, we try to reuse previously applied range
 	if conf.KubeMacPool.RangeStart == "" || conf.KubeMacPool.RangeEnd == "" {
+		if previous != nil && previous.KubeMacPool != nil {
+			conf.KubeMacPool = previous.KubeMacPool
+			return []error{}
+		}
+
+		// If no range was specified, we generated a random prefix
 		prefix, err := generateRandomMacPrefix()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to generate random mac address prefix")
+			return []error{errors.Wrap(err, "failed to generate random mac address prefix")}
 		}
 
 		rangeStart := net.HardwareAddr(append(prefix, 0x00, 0x00, 0x00))
@@ -67,6 +66,22 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 
 		rangeEnd := net.HardwareAddr(append(prefix, 0xFF, 0xFF, 0xFF))
 		conf.KubeMacPool.RangeEnd = rangeEnd.String()
+	}
+
+	return []error{}
+}
+
+func changeSafeKubeMacPool(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
+	if prev.KubeMacPool != nil && !reflect.DeepEqual(prev.KubeMacPool, next.KubeMacPool) {
+		return []error{errors.Errorf("cannot modify KubeMacPool configuration once it is deployed")}
+	}
+	return []error{}
+}
+
+// renderLinuxBridge generates the manifests of Linux Bridge
+func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
+	if conf.KubeMacPool == nil {
+		return nil, nil
 	}
 
 	// render the manifests on disk
