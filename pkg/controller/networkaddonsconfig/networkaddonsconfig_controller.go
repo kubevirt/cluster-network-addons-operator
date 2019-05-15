@@ -241,7 +241,11 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 	}
 
 	// Fill all defaults explicitly
-	network.FillDefaults(&networkAddonsConfig.Spec, prev)
+	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
+		log.Printf("failed to fill defaults: %v", err)
+		errors.Wrapf(err, "failed to fill defaults: %v", err)
+		return objs, err
+	}
 
 	// Compare against previous applied configuration to see if this change
 	// is safe.
