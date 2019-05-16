@@ -143,6 +143,13 @@ The operator allows the administrator to deploy the [NmState State Controller](h
 This project manages host networking settings in a declarative manner. The networking state is described by a pre-defined schema. Reporting of current state and changes to it (desired state) both conform to the schema.
 Nmstate is aimed to satisfy enterprise needs to manage host networking through a northbound declarative API and multi provider support on the southbound. NetworkManager acts as the main (and currently the only) provider supported.
 
+It communicate with a NetworkManager instance running on the node using D-Bus. Make sure that NetworkManager is installed and running on each node.
+
+```shell
+yum install NetworkManager
+systemctl start NetworkManager
+```
+
 ## Image Pull Policy
 
 Administrator can specify [image pull policy](https://kubernetes.io/docs/concepts/containers/images/)
