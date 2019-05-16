@@ -54,4 +54,4 @@ spec:
   nmstate: {}
 EOF
 assert_condition Progressing 60s
-assert_condition Ready 300s
+assert_condition Ready 600s
