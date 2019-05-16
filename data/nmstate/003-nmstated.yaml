@@ -1,13 +1,17 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: nm-state-controller
   namespace: nmstate
 spec:
+  selector:
+    matchLabels:
+      name: nm-state-controller
   template:
     metadata:
       labels:
+        name: nm-state-controller
         nmstate.io: state-controller
     spec:
       serviceAccountName: nmstate-state-controller
@@ -26,6 +30,10 @@ spec:
           - name: dbus-socket
             mountPath: /run/dbus/system_bus_socket
           env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
           - name: POD_NAME
             valueFrom:
               fieldRef:
