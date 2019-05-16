@@ -45,7 +45,7 @@ func Add(mgr manager.Manager, status *clusteroperator.StatusManager) error {
 	return add(mgr, newReconciler(mgr, status))
 }
 
-// newReconciler returns a new ReconcileNetworkConfig
+// newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager, status *clusteroperator.StatusManager) *ReconcileNetworkConfig {
 	configv1.Install(mgr.GetScheme())
 	return &ReconcileNetworkConfig{
@@ -57,7 +57,7 @@ func newReconciler(mgr manager.Manager, status *clusteroperator.StatusManager) *
 	}
 }
 
-// add adds a new Controller to mgr with r as the ReconcileNetworkConfig
+// add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r *ReconcileNetworkConfig) error {
 	// Create a new controller
 	c, err := controller.New("networkconfig-controller", mgr, controller.Options{Reconciler: r})

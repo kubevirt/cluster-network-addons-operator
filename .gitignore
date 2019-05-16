@@ -9,3 +9,6 @@ build/_output
 # Temporary local cluster files
 cluster/.kubeconfig
 cluster/.kubectl
+
+# Cover file
+cover.out

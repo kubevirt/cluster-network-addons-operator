@@ -2,6 +2,7 @@ package network
 
 import (
 	"crypto/rand"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -32,12 +33,26 @@ func validateKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 		return []error{errors.Errorf("both or none of the KubeMacPool ranges needs to be configured")}
 	}
 
-	if _, err := net.ParseMAC(conf.KubeMacPool.RangeStart); err != nil {
+	rangeStart, err := net.ParseMAC(conf.KubeMacPool.RangeStart)
+	if err != nil {
 		return []error{errors.Errorf("failed to parse rangeStart because the mac address is invalid")}
 	}
 
-	if _, err := net.ParseMAC(conf.KubeMacPool.RangeEnd); err != nil {
+	rangeEnd, err := net.ParseMAC(conf.KubeMacPool.RangeEnd)
+	if err != nil {
 		return []error{errors.Errorf("failed to parse rangeEnd because the mac address is invalid")}
+	}
+
+	if err := validateRange(rangeStart, rangeEnd); err != nil {
+		return []error{errors.Errorf("failed to set mac address range: %v", err)}
+	}
+
+	if err := validateUnicast(rangeStart); err != nil {
+		return []error{errors.Errorf("failed to set RangeStart: %v", err)}
+	}
+
+	if err := validateUnicast(rangeEnd); err != nil {
+		return []error{errors.Errorf("failed to set RangeEnd: %v", err)}
 	}
 
 	return []error{}
@@ -93,7 +108,7 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to render kubemacpool manifests")
+		return nil, errors.Wrap(err, "failed to render kubeMacPool manifests")
 	}
 
 	return objs, nil
@@ -109,4 +124,25 @@ func generateRandomMacPrefix() ([]byte, error) {
 	prefix := append([]byte{0x02}, suffix...)
 
 	return prefix, nil
+}
+
+func validateRange(startMac, endMac net.HardwareAddr) error {
+	for idx := 0; idx <= 5; idx++ {
+		if startMac[idx] < endMac[idx] {
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid range. Range end is lesser than or equal to its start. start: %v end: %v", startMac, endMac)
+}
+
+func validateUnicast(mac net.HardwareAddr) error {
+	// A bitwise AND between 00000001 and the mac address first octet.
+	multicastBit := 1 & mac[0]
+
+	// In case where the LSB of the first octet (the multicast bit) is on, it will return 1, and 0 otherwise.
+	if multicastBit == 1 {
+		return fmt.Errorf("invalid mac address. Multicast addressing is not supported. Unicast addressing must be used. The first octet is %#0X", mac[0])
+	}
+
+	return nil
 }
