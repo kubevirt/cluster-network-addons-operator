@@ -68,3 +68,10 @@ echo 'Wait until all nodes are ready'
 until [[ $(./cluster/kubectl.sh get nodes --no-headers | wc -l) -eq $(./cluster/kubectl.sh get nodes --no-headers | grep ' Ready' | wc -l) ]]; do
     sleep 1
 done
+
+echo 'Install NetworkManager on nodes'
+for i in $(seq 1 ${KUBEVIRT_NUM_NODES}); do
+    ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" -- sudo yum install -y NetworkManager
+    ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" -- sudo systemctl daemon-reload
+    ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" -- sudo systemctl restart NetworkManager
+done
