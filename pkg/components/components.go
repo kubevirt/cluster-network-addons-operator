@@ -15,7 +15,7 @@ const Name = "cluster-network-addons-operator"
 
 const (
 	MultusImageDefault              = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
-	LinuxBridgeCniImageDefault      = "quay.io/kubevirt/cni-default-plugins:v0.1.0"
+	LinuxBridgeCniImageDefault      = "quay.io/kubevirt/cni-default-plugins:v0.2.0"
 	LinuxBridgeMarkerImageDefault   = "quay.io/kubevirt/bridge-marker:0.1.0"
 	SriovDpImageDefault             = "quay.io/kubevirt/cluster-network-addon-sriov-device-plugin:v2.0.0-1.git9a20829"
 	SriovCniImageDefault            = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
