@@ -175,6 +175,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
+			// Reset list of tracked objects.
+			// TODO: This can be dropped once we implement a finalizer waiting for all components to be removed
+			r.trackDeployedObjects([]*unstructured.Unstructured{})
+
 			// Owned objects are automatically garbage collected. Return and don't requeue
 			return reconcile.Result{}, nil
 		}
