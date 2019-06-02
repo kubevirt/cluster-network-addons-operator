@@ -1,4 +1,4 @@
-all: fmt vet
+all: fmt vet test
 
 # Always keep the future version here, so we won't overwrite latest released manifests
 VERSION ?= 0.10.0
@@ -19,7 +19,7 @@ fmt:
 	go fmt ./pkg/... ./cmd/...
 
 test:
-	go test -v -race ./pkg/... ./cmd/... -coverprofile cover.out 
+	go test -v -race ./pkg/... ./cmd/... -coverprofile cover.out
 
 docker-build: docker-build-operator docker-build-registry
 

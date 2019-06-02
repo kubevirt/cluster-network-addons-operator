@@ -288,10 +288,10 @@ spec:
 # Development
 
 ```shell
-# validate imports
+# examine go source code for suspicious constructs
 make vet
 
-# validate formatting
+# validate go source code formatting
 make fmt
 
 # generate manifests
@@ -299,6 +299,9 @@ make generate-manifests
 
 # generate sources (requires operator-sdk installed on your host)
 operator-sdk generate k8s
+
+# run unit tests
+make test
 
 # build images (uses multi-stage builds and therefore requires Docker >= 17.05)
 make docker-build
