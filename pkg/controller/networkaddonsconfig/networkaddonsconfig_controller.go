@@ -175,6 +175,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
+			// Reset list of tracked objects.
+			// TODO: This can be dropped once we implement a finalizer waiting for all components to be removed
+			r.trackDeployedObjects([]*unstructured.Unstructured{})
+
 			// Owned objects are automatically garbage collected. Return and don't requeue
 			return reconcile.Result{}, nil
 		}
@@ -206,7 +210,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	r.statusManager.SetNotFailing(statusmanager.OperatorConfig)
 
 	// From now on, r.podReconciler takes over NetworkAddonsConfig handling, it will track deployed
-	// objects and set NetworkAddonsConfig.Status accordingly
+	// objects if needed and set NetworkAddonsConfig.Status accordingly. However, if no pod was
+	// deployed, there is nothing that would trigger initial reconciliation. Therefore, let's
+	// perform the first check manually.
+	r.statusManager.SetFromPods()
 
 	return reconcile.Result{}, nil
 }
