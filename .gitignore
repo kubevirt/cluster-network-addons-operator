@@ -12,3 +12,12 @@ cluster/.kubectl
 
 # Cover file
 cover.out
+
+# Makefile fake targets
+gen-k8s
+gen-k8s-check
+goimports
+goimports-check
+vet
+whitespace
+whitespace-check

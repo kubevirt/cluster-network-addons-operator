@@ -1,12 +1,12 @@
 language: go
-go: "1.10"
+go: "1.11"
 
 services:
 - docker
 
 install: true
 script:
-- make test 
+- make check
 - make docker-build
 
 deploy:
@@ -16,7 +16,7 @@ deploy:
   on:
     branch: master
 - provider: script
-  script: docker login -u="$DOCKER_USER" -p="$DOCKER_PASS" quay.io && make docker-build docker-push IMAGE_TAG=$TRAVIS_TAG 
+  script: docker login -u="$DOCKER_USER" -p="$DOCKER_PASS" quay.io && make docker-build docker-push IMAGE_TAG=$TRAVIS_TAG
   skip_cleanup: true
   on:
     tags: true
