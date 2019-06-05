@@ -7,7 +7,7 @@ registry=localhost:$registry_port
 rm -rf _out/
 # Copy release manifests as a base for generated ones, this should make it possible to upgrade
 cp -r manifests/ _out/
-IMAGE_REGISTRY=registry:5000 DEPLOY_DIR=_out make generate-manifests
+IMAGE_REGISTRY=registry:5000 DEPLOY_DIR=_out make gen-manifests
 
 make cluster-clean
 

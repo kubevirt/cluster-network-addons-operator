@@ -218,18 +218,17 @@ For more information about the configuration format check [configuring section](
 
 # Development
 
-```shell
-# validate imports
-make vet
+Make sure you have Docker >= 17.05 installed.
 
-# validate formatting
+```shell
+# run code validation and unit tests
+make check
+
+# perform auto-formatting on the source code (if not done by your IDE)
 make fmt
 
-# generate manifests
-make generate-manifests
-
-# generate sources (requires operator-sdk installed on your host)
-operator-sdk generate k8s
+# generate source code for API
+make gen-k8s
 
 # build images (uses multi-stage builds and therefore requires Docker >= 17.05)
 make docker-build

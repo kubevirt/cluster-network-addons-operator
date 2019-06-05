@@ -15,7 +15,7 @@ echo 'Checkout origin/master into release branch'
 git checkout ${origin_remote}/master -b release_${released_version}
 
 echo 'Build manifests for the new release'
-VERSION=${released_version} IMAGE_TAG=${released_version} make generate-manifests
+VERSION=${released_version} IMAGE_TAG=${released_version} make gen-manifests
 
 echo 'Add new manifests to the source tree'
 git add manifests/
