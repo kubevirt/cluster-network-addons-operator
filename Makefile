@@ -25,6 +25,8 @@ GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
 GINKGO ?= go run ./vendor/github.com/onsi/ginkgo/ginkgo
 
+OPERATOR_SDK := go run ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
@@ -87,8 +89,16 @@ cluster-down:
 cluster-sync:
 	VERSION=$(VERSION) ./cluster/sync.sh
 
+# To run profiling as well:
+#--go-test-flags '-v -timeout 2h -run TestDeployMultus -bench=. -benchmem -blockprofile block.out -cpuprofile profile.out'
 cluster-functest:
-	./cluster/functest.sh
+	$(OPERATOR_SDK) test \
+		local \
+		./test/e2e \
+		--namespace cluster-network-addons-operator \
+		--no-setup \
+		--kubeconfig ./cluster/.kubeconfig \
+		--go-test-flags '-v -timeout 2h -ginkgo.v'
 
 cluster-clean:
 	VERSION=$(VERSION) ./cluster/clean.sh
@@ -108,7 +118,7 @@ gen-manifests:
 		./hack/generate-manifests.sh
 
 gen-k8s: $(apis_sources)
-	go run ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk generate k8s
+	$(OPERATOR_SDK) generate k8s
 	touch $@
 
 gen-k8s-check: $(apis_sources)
