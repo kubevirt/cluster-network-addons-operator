@@ -21,6 +21,10 @@ TARGETS = \
 	whitespace \
 	whitespace-check
 
+GINKGO_EXTRA_ARGS ?=
+GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
+GINKGO ?= go run ./vendor/github.com/onsi/ginkgo/ginkgo
+
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
@@ -56,7 +60,7 @@ goimports-check: $(cmd_sources) $(pkg_sources)
 	touch $@
 
 test:
-	go test -v -race ./pkg/... ./cmd/... -coverprofile cover.out
+	$(GINKGO) $(GINKGO_ARGS) ./pkg/ ./cmd/
 
 docker-build: docker-build-operator docker-build-registry
 

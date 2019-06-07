@@ -675,12 +675,19 @@
   revision = "cca7078d478f8520f85629ad7c68962d31ed7682"
 
 [[projects]]
-  digest = "1:2eb15c4c677756acdf6c7b0062168b6275b3cc8785f345904619c4037a90a4ac"
+  digest = "1:dbc24dd0591271d269786adff7458f2c1437305091e41979c5495efe3df09ab8"
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
     "config",
     "extensions/table",
+    "ginkgo",
+    "ginkgo/convert",
+    "ginkgo/interrupthandler",
+    "ginkgo/nodot",
+    "ginkgo/testrunner",
+    "ginkgo/testsuite",
+    "ginkgo/watch",
     "internal/codelocation",
     "internal/containernode",
     "internal/failer",
@@ -1931,6 +1938,7 @@
     "github.com/ghodss/yaml",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
+    "github.com/onsi/ginkgo/ginkgo",
     "github.com/onsi/gomega",
     "github.com/openshift/api/operator/v1",
     "github.com/openshift/cluster-network-operator/pkg/names",
