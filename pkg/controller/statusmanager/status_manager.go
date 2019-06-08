@@ -247,9 +247,6 @@ func (status *StatusManager) SetFromPods() {
 		}
 	}
 
-	// If all pods are being created, mark deployment as not failing
-	status.SetNotFailing(PodDeployment)
-
 	// If there are any progressing Pods, list them in the condition with their state. Otherwise,
 	// mark NetworkAddonsConfig as "Ready".
 	if len(progressing) > 0 {
@@ -273,6 +270,9 @@ func (status *StatusManager) SetFromPods() {
 			},
 		)
 	}
+
+	// If all pods are being created, mark deployment as not failing
+	status.SetNotFailing(PodDeployment)
 }
 
 // Set condition in the Status field. In case condition with given Type already exists, update it.
