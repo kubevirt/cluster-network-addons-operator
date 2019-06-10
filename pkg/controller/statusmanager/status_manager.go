@@ -88,8 +88,7 @@ func (status *StatusManager) set(conditions ...opv1alpha1.NetworkAddonsCondition
 	// In case that the status field has been updated with "Progressing" condition, make sure that
 	// "Ready" condition is set to False, even when not explicitly set.
 	progressingCondition := getCondition(&config.Status, opv1alpha1.NetworkAddonsConditionProgressing)
-	availableCondition := getCondition(&config.Status, opv1alpha1.NetworkAddonsConditionAvailable)
-	if availableCondition == nil && progressingCondition != nil && progressingCondition.Status == corev1.ConditionTrue {
+	if progressingCondition != nil && progressingCondition.Status == corev1.ConditionTrue {
 		updateCondition(&config.Status,
 			opv1alpha1.NetworkAddonsCondition{
 				Type:    opv1alpha1.NetworkAddonsConditionAvailable,
