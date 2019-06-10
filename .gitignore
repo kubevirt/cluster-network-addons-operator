@@ -10,6 +10,9 @@ build/_output
 cluster/.kubeconfig
 cluster/.kubectl
 
+# Temporary test files
+deploy/test/
+
 # Cover file
 cover.out
 
