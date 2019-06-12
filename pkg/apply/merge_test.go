@@ -4,11 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"bytes"
-	"fmt"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
 )
@@ -299,16 +295,33 @@ secrets:
 	})
 })
 
-// unstructuredFromYaml creates an unstructured object from a raw yaml string
-func unstructuredFromYaml(obj string) *unstructured.Unstructured {
-	buf := bytes.NewBufferString(obj)
-	decoder := yaml.NewYAMLOrJSONDecoder(buf, 4096)
+var _ = Describe("MergeMetadataForUpdate", func() {
+	Context("when given current unstructured and empty updated", func() {
+		current := unstructuredFromYaml(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: foo
+  creationTimestamp: 2019-06-12T13:49:20Z
+  generation: 1
+  resourceVersion: "439"
+  selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/foo
+  uid: e0ecf168-8d18-11e9-b398-525500d15501
+`)
+		updated := unstructuredFromYaml(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: foo`)
 
-	u := unstructured.Unstructured{}
-	err := decoder.Decode(&u)
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse test yaml: %v", err))
-	}
-
-	return &u
-}
+		It("should merge metadate from current to updated", func() {
+			err := apply.MergeMetadataForUpdate(current, updated)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updated.GetCreationTimestamp()).To(Equal(current.GetCreationTimestamp()))
+			Expect(updated.GetGeneration()).To(Equal(current.GetGeneration()))
+			Expect(updated.GetResourceVersion()).To(Equal(current.GetResourceVersion()))
+			Expect(updated.GetSelfLink()).To(Equal(current.GetSelfLink()))
+			Expect(updated.GetUID()).To(Equal(current.GetUID()))
+		})
+	})
+})

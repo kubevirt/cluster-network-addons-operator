@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimanchinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
