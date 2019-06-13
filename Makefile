@@ -12,6 +12,8 @@ IMAGE_TAG ?= latest
 OPERATOR_IMAGE ?= cluster-network-addons-operator
 REGISTRY_IMAGE ?= cluster-network-addons-registry
 
+OLM_VERSION ?= 0.10.0
+
 TARGETS = \
 	gen-k8s \
 	gen-k8s-check \
@@ -86,8 +88,14 @@ cluster-up:
 cluster-down:
 	./cluster/down.sh
 
-cluster-sync:
-	VERSION=$(VERSION) ./cluster/sync.sh
+# The default way to deploy the operator during development
+cluster-sync: cluster-sync-operator
+
+cluster-sync-operator:
+	VERSION=$(VERSION) ./cluster/sync-operator.sh
+
+cluster-sync-olm:
+	OLM_VERSION=$(OLM_VERSION) ./cluster/sync-olm.sh
 
 # To run profiling as well:
 #--go-test-flags '-v -timeout 2h -run TestDeployMultus -bench=. -benchmem -blockprofile block.out -cpuprofile profile.out'
@@ -100,7 +108,9 @@ cluster-functest:
 		--kubeconfig ./cluster/.kubeconfig \
 		--go-test-flags '-v -timeout 2h -ginkgo.v'
 
-cluster-clean:
+cluster-clean: cluster-clean-operator
+
+cluster-clean-operator:
 	VERSION=$(VERSION) ./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
@@ -129,9 +139,12 @@ gen-k8s-check: $(apis_sources)
 	all \
 	check \
 	cluster-clean \
+	cluster-clean-operator \
 	cluster-down \
 	cluster-functest \
 	cluster-sync \
+	cluster-sync-olm \
+	cluster-sync-operator \
 	cluster-up \
 	docker-build \
 	docker-build-operator \

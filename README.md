@@ -245,7 +245,7 @@ export CLUSTER_PROVIDER='os-3.11.0'
 make cluster-up
 
 # deploy operator from sources on the cluster
-make cluster-sync
+make cluster-sync-operator
 
 # run functional tests on the cluster
 make cluster-functest
@@ -257,7 +257,7 @@ make cluster-functest
 ./cluster/cli.sh ssh node01
 
 # clean up all resources created by the operator from the cluster
-make cluster-clean
+make cluster-clean-operator
 
 # delete the cluster
 make cluster-down
