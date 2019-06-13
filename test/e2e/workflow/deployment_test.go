@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
@@ -158,6 +159,31 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			DeleteConfig()
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, 30*time.Second)
+		})
+	})
+
+	Context("when kubeMacPool is deployed", func() {
+		BeforeEach(func() {
+			By("Deploying KubeMacPool")
+			config := opv1alpha1.NetworkAddonsConfigSpec{KubeMacPool: &opv1alpha1.KubeMacPool{}}
+			CreateConfig(config)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+		})
+
+		It("should modify the MAC range after being redeployed ", func() {
+			oldRangeStart, oldRangeEnd := CheckUnicastAndValidity()
+			By("Redeploying KubeMacPool")
+			DeleteConfig()
+			CheckComponentsRemoval(AllComponents)
+
+			config := opv1alpha1.NetworkAddonsConfigSpec{KubeMacPool: &opv1alpha1.KubeMacPool{}}
+			CreateConfig(config)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			rangeStart, rangeEnd := CheckUnicastAndValidity()
+
+			By("Comparing the ranges")
+			Expect(rangeStart).ToNot(Equal(oldRangeStart))
+			Expect(rangeEnd).ToNot(Equal(oldRangeEnd))
 		})
 	})
 })
