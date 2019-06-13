@@ -22,7 +22,7 @@ var _ = Describe("ApplyObject", func() {
 			objs := []runtime.Object{}
 			client := fake.NewFakeClient(objs...)
 		}
-		
+
 		Context("and new object is applied", func() {
 			object := unstructuredFromYaml(`
 apiVersion: apps/v1
@@ -50,30 +50,38 @@ name: d1`)
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: foo
+  name: d1
   creationTimestamp: 2019-06-12T13:49:20Z
   generation: 1
   resourceVersion: "439"
-  selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/foo
+  selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/d1
   uid: e0ecf168-8d18-11e9-b398-525500d15501
 `)
 			objs := []runtime.Object{deployment}
 			client := fake.NewFakeClient(objs...)
 		}
-		
-		It("should update object", func() {
+
+		Context("and is given same object", func () {
 			object := unstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: d1`)
+  name: d1
+  annotations:
+	foo: A`)
 
-			err := apply.ApplyObject(context.Background(), client, object)
-			Expect(err).ToNot(HaveOccurred())
+			It("should succefully merge object", func() {
+				err := apply.ApplyObject(context.Background(), client, object)
+				Expect(err).ToNot(HaveOccurred())
 
-			err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, &appsv1.Deployment{})
-			Expect(err).ToNot(HaveOccurred())
+				found := &appsv1.Deployment{}
+				err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
+				Expect(err).ToNot(HaveOccurred())
+
+				//Expect(found.)
+			})
 		})
+
 
 		It()
 	})
