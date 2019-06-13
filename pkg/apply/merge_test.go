@@ -7,13 +7,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 var _ = Describe("MergeObjectForUpdate", func() {
 	// Namespaces use the "generic" logic; deployments and services
 	// have custom logic
 	Context("when given a generic object (Namespace)", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -25,7 +26,7 @@ metadata:
     a: cur
     b: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -61,7 +62,7 @@ metadata:
 	})
 
 	Context("when given a Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,7 +75,7 @@ metadata:
     a: cur
     b: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -113,7 +114,7 @@ metadata:
 	})
 
 	Context("when given a Service", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Service
 metadata:
@@ -121,7 +122,7 @@ metadata:
 spec:
   clusterIP: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Service
 metadata:
@@ -143,7 +144,7 @@ spec:
 	})
 
 	Context("when given a ServiceAccount", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -153,7 +154,7 @@ metadata:
 secrets:
 - foo`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -176,13 +177,13 @@ metadata:
 	})
 
 	Context("when merging an empty Deployment into an empty Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: d1`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -200,13 +201,13 @@ metadata:
 	})
 
 	Context("when merging a non-empty Deployment into an empty Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: d1`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -238,7 +239,7 @@ metadata:
 	})
 
 	Context("when merging an empty Deployment into a non-empty Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -250,7 +251,7 @@ metadata:
     a: cur
     b: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -278,7 +279,7 @@ metadata:
 
 var _ = Describe("IsObjectSupported", func() {
 	Context("when given a ServiceAccount with a secret", func() {
-		sa := unstructuredFromYaml(`
+		sa := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -297,7 +298,7 @@ secrets:
 
 var _ = Describe("MergeMetadataForUpdate", func() {
 	Context("when given current unstructured and empty updated", func() {
-		current := unstructuredFromYaml(`
+		current := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -308,7 +309,7 @@ metadata:
   selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/foo
   uid: e0ecf168-8d18-11e9-b398-525500d15501
 `)
-		updated := unstructuredFromYaml(`
+		updated := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Deployment
 metadata:

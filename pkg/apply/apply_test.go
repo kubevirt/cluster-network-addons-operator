@@ -6,47 +6,49 @@ import (
 
 	"context"
 
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 var _ = Describe("ApplyObject", func() {
 	Context("when server is empty", func() {
-		var client *k8sclient.Client
-		BeforeEach(){
+		var client k8sclient.Client
+		BeforeEach(func() {
 			objs := []runtime.Object{}
-			client := fake.NewFakeClient(objs...)
-		}
+			client = fake.NewFakeClient(objs...)
+		})
 
 		Context("and new object is applied", func() {
-			object := unstructuredFromYaml(`
+			object := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-name: d1`)
+  name: d1`)
 
-			BeforeEach() {
+			BeforeEach(func() {
 				err := apply.ApplyObject(context.Background(), client, object)
 				Expect(err).ToNot(HaveOccurred())
-			}
+			})
 
 			It("should create new object", func() {
-				err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, &appsv1.Deployment{})
+				err := client.Get(context.Background(), types.NamespacedName{Name: "d1"}, &appsv1.Deployment{})
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 	})
 
 	Context("when server has object", func() {
-		var client *k8sclient.Client
-		var originalDeployment *appsv1.Deployment
-		BeforeEach(){
-			originalDeployment = unstructuredFromYaml(`
+		var client k8sclient.Client
+		var originalDeployment *unstructured.Unstructured
+		BeforeEach(func() {
+			originalDeployment = k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Deployment
 metadata:
@@ -56,33 +58,66 @@ metadata:
   resourceVersion: "439"
   selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/d1
   uid: e0ecf168-8d18-11e9-b398-525500d15501
-`)
-			objs := []runtime.Object{deployment}
-			client := fake.NewFakeClient(objs...)
-		}
+  annotations:
+	foo: A`)
 
-		Context("and is given same object", func () {
-			object := unstructuredFromYaml(`
+			objs := []runtime.Object{originalDeployment}
+			client = fake.NewFakeClient(objs...)
+		})
+
+		Context("and is given the same object with same annotations", func() {
+			found := &appsv1.Deployment{}
+			object := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: d1
   annotations:
-	foo: A`)
+    foo: A`)
 
-			It("should succefully merge object", func() {
+			It("should succesfully merge", func() {
 				err := apply.ApplyObject(context.Background(), client, object)
 				Expect(err).ToNot(HaveOccurred())
+			})
 
-				found := &appsv1.Deployment{}
-				err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
+			It("should have the object", func() {
+				err := client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
 				Expect(err).ToNot(HaveOccurred())
+			})
 
-				//Expect(found.)
+			It("should have same annotations", func() {
+				Expect(found.GetAnnotations()).To(Equal(originalDeployment.GetAnnotations()))
+			})
+
+			It("should have the same metadata", func() {
+				Expect(found.GetCreationTimestamp()).To(Equal(originalDeployment.GetCreationTimestamp()))
+				Expect(found.GetGeneration()).To(Equal(originalDeployment.GetGeneration()))
+				Expect(found.GetResourceVersion()).To(Equal(originalDeployment.GetResourceVersion()))
+				Expect(found.GetSelfLink()).To(Equal(originalDeployment.GetSelfLink()))
+				Expect(found.GetUID()).To(Equal(originalDeployment.GetUID()))
 			})
 		})
 
+		Context("and is given the same object with different annotations", func() {
+			found := &appsv1.Deployment{}
+			object := k8s.UnstructuredFromYaml(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d1
+  annotations:
+    foo: B`)
 
-		It()
+			err := apply.ApplyObject(context.Background(), client, object)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
+			Expect(err).ToNot(HaveOccurred())
+
+			It("should have new annotations", func() {
+				Expect(found.GetAnnotations()).To(Equal(object.GetAnnotations()))
+			})
+		})
+
 	})
 })
