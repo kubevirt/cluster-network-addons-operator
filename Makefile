@@ -47,7 +47,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace-check vet goimports-check gen-k8s-check test
+check: whitespace-check vet goimports-check gen-k8s-check unit-test
 
 whitespace-check: $(all_sources)
 	./hack/whitespace.sh
@@ -61,7 +61,7 @@ goimports-check: $(cmd_sources) $(pkg_sources)
 	go run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 	touch $@
 
-test:
+unit-test:
 	$(GINKGO) $(GINKGO_ARGS) ./pkg/ ./cmd/
 
 docker-build: docker-build-operator docker-build-registry
@@ -140,4 +140,4 @@ gen-k8s-check: $(apis_sources)
 	docker-push-operator \
 	docker-push-registry \
 	gen-manifests \
-	test
+	unit-test
