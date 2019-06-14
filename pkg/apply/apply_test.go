@@ -49,7 +49,7 @@ metadata:
 		var originalDeployment *unstructured.Unstructured
 		BeforeEach(func() {
 			originalDeployment = k8s.UnstructuredFromYaml(`
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: d1
@@ -59,7 +59,7 @@ metadata:
   selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/d1
   uid: e0ecf168-8d18-11e9-b398-525500d15501
   annotations:
-	foo: A`)
+    foo: A`)
 
 			objs := []runtime.Object{originalDeployment}
 			client = fake.NewFakeClient(objs...)
@@ -76,20 +76,15 @@ metadata:
     foo: A`)
 
 			It("should succesfully merge", func() {
+				By("Apllying object to server")
 				err := apply.ApplyObject(context.Background(), client, object)
 				Expect(err).ToNot(HaveOccurred())
-			})
 
-			It("should have the object", func() {
-				err := client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
+				By("Finding the object in server")
+				err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
 				Expect(err).ToNot(HaveOccurred())
-			})
 
-			It("should have same annotations", func() {
-				Expect(found.GetAnnotations()).To(Equal(originalDeployment.GetAnnotations()))
-			})
-
-			It("should have the same metadata", func() {
+				By("Having same metadata")
 				Expect(found.GetCreationTimestamp()).To(Equal(originalDeployment.GetCreationTimestamp()))
 				Expect(found.GetGeneration()).To(Equal(originalDeployment.GetGeneration()))
 				Expect(found.GetResourceVersion()).To(Equal(originalDeployment.GetResourceVersion()))
@@ -108,16 +103,18 @@ metadata:
   annotations:
     foo: B`)
 
-			err := apply.ApplyObject(context.Background(), client, object)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
-			Expect(err).ToNot(HaveOccurred())
-
 			It("should have new annotations", func() {
+				By("Apllying object to server")
+				err := apply.ApplyObject(context.Background(), client, object)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Finding the object in server")
+				err = client.Get(context.Background(), types.NamespacedName{Name: "d1"}, found)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Having the updated annotations")
 				Expect(found.GetAnnotations()).To(Equal(object.GetAnnotations()))
 			})
 		})
-
 	})
 })
