@@ -4,20 +4,17 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"bytes"
-	"fmt"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 var _ = Describe("MergeObjectForUpdate", func() {
 	// Namespaces use the "generic" logic; deployments and services
 	// have custom logic
 	Context("when given a generic object (Namespace)", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -29,7 +26,7 @@ metadata:
     a: cur
     b: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -65,7 +62,7 @@ metadata:
 	})
 
 	Context("when given a Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -78,7 +75,7 @@ metadata:
     a: cur
     b: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -117,7 +114,7 @@ metadata:
 	})
 
 	Context("when given a Service", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Service
 metadata:
@@ -125,7 +122,7 @@ metadata:
 spec:
   clusterIP: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Service
 metadata:
@@ -147,7 +144,7 @@ spec:
 	})
 
 	Context("when given a ServiceAccount", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -157,7 +154,7 @@ metadata:
 secrets:
 - foo`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -180,13 +177,13 @@ metadata:
 	})
 
 	Context("when merging an empty Deployment into an empty Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: d1`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -204,13 +201,13 @@ metadata:
 	})
 
 	Context("when merging a non-empty Deployment into an empty Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: d1`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -242,7 +239,7 @@ metadata:
 	})
 
 	Context("when merging an empty Deployment into a non-empty Deployment", func() {
-		cur := unstructuredFromYaml(`
+		cur := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -254,7 +251,7 @@ metadata:
     a: cur
     b: cur`)
 
-		upd := unstructuredFromYaml(`
+		upd := k8s.UnstructuredFromYaml(`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -282,7 +279,7 @@ metadata:
 
 var _ = Describe("IsObjectSupported", func() {
 	Context("when given a ServiceAccount with a secret", func() {
-		sa := unstructuredFromYaml(`
+		sa := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -299,16 +296,33 @@ secrets:
 	})
 })
 
-// unstructuredFromYaml creates an unstructured object from a raw yaml string
-func unstructuredFromYaml(obj string) *unstructured.Unstructured {
-	buf := bytes.NewBufferString(obj)
-	decoder := yaml.NewYAMLOrJSONDecoder(buf, 4096)
+var _ = Describe("MergeMetadataForUpdate", func() {
+	Context("when given current unstructured and empty updated", func() {
+		current := k8s.UnstructuredFromYaml(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: foo
+  creationTimestamp: 2019-06-12T13:49:20Z
+  generation: 1
+  resourceVersion: "439"
+  selfLink: /apis/extensions/v1beta1/namespaces/kube-system/deployments/foo
+  uid: e0ecf168-8d18-11e9-b398-525500d15501
+`)
+		updated := k8s.UnstructuredFromYaml(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: foo`)
 
-	u := unstructured.Unstructured{}
-	err := decoder.Decode(&u)
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse test yaml: %v", err))
-	}
-
-	return &u
-}
+		It("should merge metadate from current to updated", func() {
+			err := apply.MergeMetadataForUpdate(current, updated)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updated.GetCreationTimestamp()).To(Equal(current.GetCreationTimestamp()))
+			Expect(updated.GetGeneration()).To(Equal(current.GetGeneration()))
+			Expect(updated.GetResourceVersion()).To(Equal(current.GetResourceVersion()))
+			Expect(updated.GetSelfLink()).To(Equal(current.GetSelfLink()))
+			Expect(updated.GetUID()).To(Equal(current.GetUID()))
+		})
+	})
+})
