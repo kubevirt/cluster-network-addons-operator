@@ -136,6 +136,7 @@ func getCNA(data *templateData) {
 
 	// Get CNA Deployment
 	cnadeployment := components.GetDeployment(
+		data.Version,
 		data.Namespace,
 		data.ContainerPrefix,
 		data.ContainerTag,
