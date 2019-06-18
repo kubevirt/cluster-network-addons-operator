@@ -23,7 +23,7 @@ metadata:
               "rangeEnd": "FD:FF:FF:FF:FF:FF"
             },
             "nmstate":{},
-            "imagePullPolicy": "Always"
+            "imagePullPolicy": "IfNotPresent"
           }
         }
       ]
@@ -42,6 +42,7 @@ spec:
     - KubeVirt
     - Virtualization
   version: {{.Version}}
+  minKubeVersion: 1.10.0
   maturity: alpha
 {{if .VersionReplaces}}
   replaces: cluster-network-addons-operator.{{.VersionReplaces}}

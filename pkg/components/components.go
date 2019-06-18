@@ -355,7 +355,7 @@ func GetCR() *cnav1alpha1.NetworkAddonsConfig {
 			Sriov:           &cnav1alpha1.Sriov{},
 			KubeMacPool:     &cnav1alpha1.KubeMacPool{},
 			NMState:         &cnav1alpha1.NMState{},
-			ImagePullPolicy: "Always",
+			ImagePullPolicy: corev1.PullIfNotPresent,
 		},
 	}
 }
