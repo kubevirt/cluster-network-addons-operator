@@ -42,6 +42,7 @@ spec:
     - Bridge
     - nmstate
   version: {{.Version}}
+  minKubeVersion: 1.10.0
   maturity: alpha
 {{if .VersionReplaces}}
   replaces: cluster-network-addons-operator.{{.VersionReplaces}}
