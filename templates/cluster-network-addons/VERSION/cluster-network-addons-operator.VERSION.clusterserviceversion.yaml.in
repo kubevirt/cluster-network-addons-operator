@@ -5,7 +5,7 @@ metadata:
   namespace: placeholder
   annotations:
     capabilities: "Full Lifecycle"
-    categories: "Network/Networking"
+    categories: "Networking"
     alm-examples: |
       [
         {
@@ -23,7 +23,7 @@ metadata:
               "rangeEnd": "FD:FF:FF:FF:FF:FF"
             },
             "nmstate":{},
-            "imagePullPolicy": "Always"
+            "imagePullPolicy": "IfNotPresent"
           }
         }
       ]
@@ -32,8 +32,6 @@ spec:
   displayName: Cluster Network Addons
   description: Deploy additional networking components for Kubernetes
   keywords:
-    - KubeVirt
-    - Virtualization
     - Networking
     - Multus
     - CNI
@@ -41,7 +39,10 @@ spec:
     - SR-IOV
     - Bridge
     - nmstate
+    - KubeVirt
+    - Virtualization
   version: {{.Version}}
+  minKubeVersion: 1.10.0
   maturity: alpha
 {{if .VersionReplaces}}
   replaces: cluster-network-addons-operator.{{.VersionReplaces}}
@@ -52,9 +53,7 @@ spec:
   provider:
     name: KubeVirt project
   links:
-    - name: KubeVirt
-      url: https://kubevirt.io
-    - name: Source Code
+    - name: Cluster Network Addons Operator
       url: https://github.com/kubevirt/cluster-network-addons-operator
   icon: []
   labels:
@@ -92,6 +91,7 @@ spec:
     owned:
       - name: {{.CNA.CRD.ObjectMeta.Name}}
         version: {{.CNA.CRD.Spec.Version}}
+        group: {{.CNA.CRD.Spec.Group}}
         kind: {{.CNA.CRD.Spec.Names.Kind}}
         displayName: Cluster Network Addons
         description: Cluster Network Addons
