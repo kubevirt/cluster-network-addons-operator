@@ -35,7 +35,10 @@ type Sriov struct{}
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
 type NetworkAddonsConfigStatus struct {
-	Conditions []NetworkAddonsCondition `json:"conditions,omitempty" optional:"true"`
+	OperatorVersion string                   `json:"operatorVersion,omitempty"`
+	ObservedVersion string                   `json:"observedVersion,omitempty"`
+	TargetVersion   string                   `json:"targetVersion,omitempty"`
+	Conditions      []NetworkAddonsCondition `json:"conditions,omitempty" optional:"true"`
 }
 
 // NetworkAddonsCondition represents a condition of a NetworkAddons deployment

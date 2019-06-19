@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -22,6 +23,12 @@ const (
 	conditionsUpdateRetries  = 10
 	conditionsUpdateCoolDown = 50 * time.Millisecond
 )
+
+var operatorVersion string
+
+func init() {
+	operatorVersion = os.Getenv("OPERATOR_VERSION")
+}
 
 // StatusLevel is used to sort priority of reported failure conditions. When operator is failing
 // on two levels (e.g. handling configuration and deploying pods), only the higher level will be
@@ -55,9 +62,9 @@ func New(client client.Client, name string) *StatusManager {
 // the status, calling set is tried several times.
 // TODO: Calling of Patch instead may save some problems. We can reiterate later,
 // current collision problem is detected by functional tests
-func (status *StatusManager) Set(conditions ...opv1alpha1.NetworkAddonsCondition) {
+func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...opv1alpha1.NetworkAddonsCondition) {
 	for i := 0; i < conditionsUpdateRetries; i++ {
-		err := status.set(conditions...)
+		err := status.set(reachedAvailableLevel, conditions...)
 		if err == nil {
 			log.Print("Successfully updated status conditions")
 			return
@@ -69,7 +76,7 @@ func (status *StatusManager) Set(conditions ...opv1alpha1.NetworkAddonsCondition
 }
 
 // set updates the NetworkAddonsConfig.Status with the provided conditions
-func (status *StatusManager) set(conditions ...opv1alpha1.NetworkAddonsCondition) error {
+func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...opv1alpha1.NetworkAddonsCondition) error {
 	// Read the current NetworkAddonsConfig
 	config := &opv1alpha1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
 	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
@@ -83,6 +90,13 @@ func (status *StatusManager) set(conditions ...opv1alpha1.NetworkAddonsCondition
 	// Update Status field with given conditions
 	for _, condition := range conditions {
 		updateCondition(&config.Status, condition)
+	}
+
+	config.Status.OperatorVersion = operatorVersion
+	config.Status.TargetVersion = operatorVersion
+
+	if reachedAvailableLevel {
+		config.Status.ObservedVersion = operatorVersion
 	}
 
 	// In case that the status field has been updated with "Progressing" condition, make sure that
@@ -116,11 +130,12 @@ func (status *StatusManager) set(conditions ...opv1alpha1.NetworkAddonsCondition
 func (status *StatusManager) syncFailing() {
 	for _, c := range status.failing {
 		if c != nil {
-			status.Set(*c)
+			status.Set(false, *c)
 			return
 		}
 	}
 	status.Set(
+		false,
 		opv1alpha1.NetworkAddonsCondition{
 			Type:   opv1alpha1.NetworkAddonsConditionFailing,
 			Status: corev1.ConditionFalse,
@@ -250,6 +265,7 @@ func (status *StatusManager) SetFromPods() {
 	// mark NetworkAddonsConfig as "Ready".
 	if len(progressing) > 0 {
 		status.Set(
+			false,
 			opv1alpha1.NetworkAddonsCondition{
 				Type:    opv1alpha1.NetworkAddonsConditionProgressing,
 				Status:  corev1.ConditionTrue,
@@ -259,6 +275,7 @@ func (status *StatusManager) SetFromPods() {
 		)
 	} else {
 		status.Set(
+			true,
 			opv1alpha1.NetworkAddonsCondition{
 				Type:   opv1alpha1.NetworkAddonsConditionProgressing,
 				Status: corev1.ConditionFalse,
