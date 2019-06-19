@@ -58,7 +58,7 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	return ai
 }
 
-func GetDeployment(namespace string, repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
+func GetDeployment(version string, namespace string, repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -137,6 +137,10 @@ func GetDeployment(namespace string, repository string, tag string, imagePullPol
 								{
 									Name:  "OPERATOR_NAME",
 									Value: Name,
+								},
+								{
+									Name:  "OPERATOR_VERSION",
+									Value: version,
 								},
 								{
 									Name: "OPERATOR_NAMESPACE",
