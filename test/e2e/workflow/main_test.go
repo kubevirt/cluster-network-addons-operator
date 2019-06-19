@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "E2E Test Suite")
+	RunSpecs(t, "E2E Workflow Test Suite")
 }
 
 var _ = BeforeSuite(func() {
