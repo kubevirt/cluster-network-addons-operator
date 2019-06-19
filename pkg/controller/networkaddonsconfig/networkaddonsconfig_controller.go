@@ -37,7 +37,13 @@ import (
 )
 
 // ManifestPath is the path to the manifest templates
-var ManifestPath = "./data"
+const ManifestPath = "./data"
+
+var operatorVersion string
+
+func init() {
+	operatorVersion = os.Getenv("OPERATOR_VERSION")
+}
 
 // Add creates a new NetworkAddonsConfig Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -286,6 +292,16 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 		return objs, err
 	}
 	objs = append([]*unstructured.Unstructured{applied}, objs...)
+
+	// Label objects with version of the operator they were created by
+	for _, obj := range objs {
+		labels := obj.GetLabels()
+		if labels == nil {
+			labels = map[string]string{}
+		}
+		labels[opv1alpha1.SchemeGroupVersion.Group+"/version"] = operatorVersion
+		obj.SetLabels(labels)
+	}
 
 	return objs, nil
 }
