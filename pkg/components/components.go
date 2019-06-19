@@ -11,7 +11,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const Name = "cluster-network-addons-operator"
+const (
+	Name      = "cluster-network-addons-operator"
+	Namespace = "cluster-network-addons-operator"
+)
 
 const (
 	MultusImageDefault              = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"

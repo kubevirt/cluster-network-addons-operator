@@ -70,6 +70,49 @@ func CheckConfigCondition(conditionType ConditionType, conditionStatus Condition
 	}
 }
 
+func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
+	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q", operatorVersion, observedVersion, targetVersion))
+	config := &opv1alpha1.NetworkAddonsConfig{}
+
+	getAndCheckVersions := func() error {
+		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+		if err != nil {
+			return err
+		}
+
+		errs := []error{}
+		errsAppend := func(err error) {
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
+
+		if config.Status.OperatorVersion != operatorVersion {
+			errsAppend(fmt.Errorf("OperatorVersion %q does not match expected %q", config.Status.OperatorVersion, operatorVersion))
+		}
+
+		if config.Status.ObservedVersion != observedVersion {
+			errsAppend(fmt.Errorf("ObservedVersion %q does not match expected %q", config.Status.ObservedVersion, observedVersion))
+		}
+
+		if config.Status.TargetVersion != targetVersion {
+			errsAppend(fmt.Errorf("TargetVersion %q does not match expected %q", config.Status.TargetVersion, targetVersion))
+		}
+
+		return errsToErr(errs)
+	}
+
+	if timeout != CheckImmediately {
+		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions, current config:\n%v", configToYaml(config)))
+	} else {
+		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state, current config:\n%v", configToYaml(config)))
+	}
+
+	if duration != CheckDoNotRepeat {
+		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v", configToYaml(config)))
+	}
+}
+
 func checkForComponent(component *Component) error {
 	errs := []error{}
 	errsAppend := func(err error) {
