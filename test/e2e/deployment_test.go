@@ -5,7 +5,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
-	v1 "k8s.io/api/core/v1"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
@@ -74,12 +73,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				NMStateComponent,
 			}
 			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				ImagePullPolicy: v1.PullAlways,
-				KubeMacPool:     &opv1alpha1.KubeMacPool{},
-				LinuxBridge:     &opv1alpha1.LinuxBridge{},
-				Multus:          &opv1alpha1.Multus{},
-				Sriov:           &opv1alpha1.Sriov{},
-				NMState:         &opv1alpha1.NMState{},
+				KubeMacPool: &opv1alpha1.KubeMacPool{},
+				LinuxBridge: &opv1alpha1.LinuxBridge{},
+				Multus:      &opv1alpha1.Multus{},
+				Sriov:       &opv1alpha1.Sriov{},
+				NMState:     &opv1alpha1.NMState{},
 			}
 			testConfigCreate(configSpec, components)
 		})
@@ -131,11 +129,10 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			//KubeMacPoolComponent,
 		}
 		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-			ImagePullPolicy: v1.PullAlways,
-			LinuxBridge:     &opv1alpha1.LinuxBridge{},
-			Multus:          &opv1alpha1.Multus{},
-			Sriov:           &opv1alpha1.Sriov{},
-			NMState:         &opv1alpha1.NMState{},
+			LinuxBridge: &opv1alpha1.LinuxBridge{},
+			Multus:      &opv1alpha1.Multus{},
+			Sriov:       &opv1alpha1.Sriov{},
+			NMState:     &opv1alpha1.NMState{},
 			// TODO https://github.com/kubevirt/cluster-network-addons-operator/issues/141
 			//KubeMacPool:     &opv1alpha1.KubeMacPool{},
 		}
