@@ -314,21 +314,55 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alp
 
 // Track current state of Deployments and DaemonSets deployed by the operator. This is needed to
 // keep state of NetworkAddonsConfig up-to-date, e.g. mark as Ready once all objects are successfully
-// created
+// created. This also exposes all containers and their images used by deployed components in Status.
 func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured.Unstructured) {
 	daemonSets := []types.NamespacedName{}
 	deployments := []types.NamespacedName{}
+	containers := []opv1alpha1.Container{}
 
 	for _, obj := range objs {
 		if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "DaemonSet" {
 			daemonSets = append(daemonSets, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
+
+			daemonSet, err := unstructuredToDaemonSet(obj)
+			if err != nil {
+				log.Printf("Failed to detect images used in DaemonSet %q: %v", obj.GetName(), err)
+				continue
+			}
+
+			for _, container := range daemonSet.Spec.Template.Spec.Containers {
+				containers = append(containers, opv1alpha1.Container{
+					Namespace:  daemonSet.GetNamespace(),
+					ParentKind: obj.GetKind(),
+					ParentName: daemonSet.GetName(),
+					Image:      container.Image,
+					Name:       container.Name,
+				})
+			}
 		} else if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "Deployment" {
 			deployments = append(deployments, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
+
+			deployment, err := unstructuredToDeployment(obj)
+			if err != nil {
+				log.Printf("Failed to detect images used in Deployment %q: %v", obj.GetName(), err)
+				continue
+			}
+
+			for _, container := range deployment.Spec.Template.Spec.Containers {
+				containers = append(containers, opv1alpha1.Container{
+					Namespace:  deployment.GetNamespace(),
+					ParentKind: obj.GetKind(),
+					ParentName: deployment.GetName(),
+					Image:      container.Image,
+					Name:       container.Name,
+				})
+			}
 		}
 	}
 
 	r.statusManager.SetDaemonSets(daemonSets)
 	r.statusManager.SetDeployments(deployments)
+	r.statusManager.SetContainers(containers)
 
 	allResources := []types.NamespacedName{}
 	allResources = append(allResources, daemonSets...)
@@ -389,4 +423,20 @@ func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*opv1alpha1.Network
 	}
 
 	return networkAddonsConfig, nil
+}
+
+func unstructuredToDaemonSet(obj *unstructured.Unstructured) (*appsv1.DaemonSet, error) {
+	daemonSet := &appsv1.DaemonSet{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, daemonSet); err != nil {
+		return nil, err
+	}
+	return daemonSet, nil
+}
+
+func unstructuredToDeployment(obj *unstructured.Unstructured) (*appsv1.Deployment, error) {
+	deployment := &appsv1.Deployment{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, deployment); err != nil {
+		return nil, err
+	}
+	return deployment, nil
 }
