@@ -27,6 +27,9 @@ GINKGO ?= go run ./vendor/github.com/onsi/ginkgo/ginkgo
 
 E2E_TEST_EXTRA_ARGS ?=
 E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 2h -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
+E2E_SUITES = \
+	test/e2e/lifecycle \
+	test/e2e/workflow
 
 OPERATOR_SDK := go run ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
 
@@ -89,13 +92,18 @@ cluster-up:
 cluster-down:
 	./cluster/down.sh
 
-cluster-sync:
-	VERSION=$(VERSION) ./cluster/sync.sh
+cluster-sync: cluster-operator-push cluster-operator-install
 
-test/e2e/workflow:
+cluster-operator-push:
+	VERSION=$(VERSION) ./cluster/operator-push.sh
+
+cluster-operator-install:
+	VERSION=$(VERSION) ./cluster/operator-install.sh
+
+$(E2E_SUITES):
 	$(OPERATOR_SDK) test \
 		local \
-		./test/e2e/workflow \
+		./$@ \
 		--namespace cluster-network-addons-operator \
 		--no-setup \
 		--kubeconfig ./cluster/.kubeconfig \
@@ -127,10 +135,13 @@ gen-k8s-check: $(apis_sources)
 	touch $@
 
 .PHONY: \
+	$(E2E_SUITES) \
 	all \
 	check \
 	cluster-clean \
 	cluster-down \
+	cluster-operator-install \
+	cluster-operator-push \
 	cluster-sync \
 	cluster-up \
 	docker-build \
@@ -140,5 +151,4 @@ gen-k8s-check: $(apis_sources)
 	docker-push-operator \
 	docker-push-registry \
 	gen-manifests \
-	test/e2e/workflow \
 	test/unit

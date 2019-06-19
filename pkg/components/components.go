@@ -9,6 +9,8 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 )
 
 const (
@@ -71,6 +73,9 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      Name,
 			Namespace: namespace,
+			Annotations: map[string]string{
+				opv1alpha1.SchemeGroupVersion.Group + "/version": version,
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),

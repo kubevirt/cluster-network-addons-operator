@@ -244,12 +244,19 @@ make cluster-up
 export CLUSTER_PROVIDER='os-3.11.0'
 make cluster-up
 
-# deploy operator from sources on the cluster
-make cluster-sync
+# build images and push them to the local cluster
+make cluster-operator-push
+
+# install operator on the local cluster
+make cluster-operator-install
 
 # run workflow e2e tests on the cluster, requires cluster with installed operator,
 # workflow covers deployment of operands
 make test/e2e/workflow
+
+# run lifecycle e2e tests on the cluster, requires cluster without operator installed,
+# lifecycle covers deployment of operator itself and its upgrades
+make test/e2e/lifecycle
 
 # access kubernetes API on the cluster
 ./cluster/kubectl.sh get nodes

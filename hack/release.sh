@@ -27,6 +27,13 @@ sed -i "s/\(.*startingCSV.*\)${previous_version}\(.*\)/\1${released_version}\2/g
 echo 'Add updated readme to the source tree'
 git add README.md
 
+echo 'Generating new release for workflow e2e tests'
+cp tests/releases/${released_version}.go tests/releases/${future_version}.go
+sed -i "s/Version: \"${released_version}\",/Version: \"${future_version}\",/" tests/releases/${future_version}.go
+
+echo 'Committing new master release module'
+git add tests/releases/${future_version}.go
+
 echo 'Commit new manifests, this commit is to be tagged with the new release'
 git commit -s -m "release ${released_version} - update manifests"
 

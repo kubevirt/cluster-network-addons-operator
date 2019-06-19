@@ -19,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
@@ -110,6 +111,17 @@ func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string,
 
 	if duration != CheckDoNotRepeat {
 		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v", configToYaml(config)))
+	}
+}
+
+func CheckOperatorIsReady(timeout time.Duration) {
+	By("Checking that the operator is up and running")
+	if timeout != CheckImmediately {
+		Eventually(func() error {
+			return checkForDeployment(components.Name, components.Namespace)
+		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
+	} else {
+		Expect(checkForDeployment(components.Name, components.Namespace)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
 }
 

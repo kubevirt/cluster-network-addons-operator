@@ -1,12 +1,19 @@
 #!/bin/bash -xe
 
 main() {
-    TARGET="$0"
-    TARGET="${TARGET#./}"
-    TARGET="${TARGET%.*}"
-    TARGET="${TARGET#*.}"
-    echo "TARGET=$TARGET"
-    export TARGET
+    CLUSTER_PROVIDER="$0"
+    CLUSTER_PROVIDER="${CLUSTER_PROVIDER#./}"
+    CLUSTER_PROVIDER="${CLUSTER_PROVIDER#*.*.}"
+    CLUSTER_PROVIDER="${CLUSTER_PROVIDER%.*}"
+    echo "CLUSTER_PROVIDER=$CLUSTER_PROVIDER"
+    export CLUSTER_PROVIDER
+
+    TEST_SUITE="$0"
+    TEST_SUITE="${TEST_SUITE#./}"
+    TEST_SUITE="${TEST_SUITE#*.}"
+    TEST_SUITE="${TEST_SUITE%%.*}"
+    echo "TEST_SUITE=$TEST_SUITE"
+    export TEST_SUITE
 
     echo "Setup Go paths"
     cd ..
