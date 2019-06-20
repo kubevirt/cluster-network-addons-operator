@@ -41,42 +41,27 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 
 		It("should keep reported versions while being changed", func() {
-			done := make(chan bool)
-
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				Multus:      &opv1alpha1.Multus{},
-				LinuxBridge: &opv1alpha1.LinuxBridge{},
+			versionRemainsTheSame := func() {
+				CheckConfigVersions(operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
 			}
 
-			// Run goroutine that will run update of the config on background,
-			// this is needed so we can continously verify reported versions throughout
-			// the setup.
-			go func() {
+			updatingConfig := func() {
+				configSpec := opv1alpha1.NetworkAddonsConfigSpec{
+					Multus:      &opv1alpha1.Multus{},
+					LinuxBridge: &opv1alpha1.LinuxBridge{},
+				}
+
 				// Give validator some time to verify original state
 				time.Sleep(3 * time.Second)
 
-				// Run update of the current spec
 				UpdateConfig(configSpec)
-
-				// Wait until the update is done
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
 
 				// Give validator some time to verify versions while we stay in updated config
 				time.Sleep(3 * time.Second)
-
-				// Finally close the validator
-				close(done)
-			}()
-
-			for {
-				select {
-				case <-done:
-					return
-				default:
-					CheckConfigVersions(operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
-				}
-				time.Sleep(time.Second)
 			}
+
+			KeepCheckingWhile(versionRemainsTheSame, updatingConfig)
 		})
 	})
 })

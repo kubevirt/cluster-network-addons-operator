@@ -113,6 +113,30 @@ func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string,
 	}
 }
 
+func KeepCheckingWhile(check func(), while func()) {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	done := make(chan bool)
+
+	go func() {
+		// Perform some long running operation
+		while()
+
+		// Finally close the validator
+		close(done)
+	}()
+
+	// Keep checking while the goroutine is running
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			check()
+		}
+	}
+}
+
 func checkForComponent(component *Component) error {
 	errs := []error{}
 	errsAppend := func(err error) {
