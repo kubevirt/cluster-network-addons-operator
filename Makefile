@@ -126,7 +126,7 @@ gen-k8s-check: $(apis_sources)
 	./hack/verify-codegen.sh
 	touch $@
 
-.PHONY:
+.PHONY: \
 	all \
 	check \
 	cluster-clean \
@@ -141,4 +141,4 @@ gen-k8s-check: $(apis_sources)
 	docker-push-registry \
 	gen-manifests \
 	test/e2e/workflow \
-	test/unit \
+	test/unit
