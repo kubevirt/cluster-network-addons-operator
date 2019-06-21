@@ -50,7 +50,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace-check vet goimports-check gen-k8s-check unit-test
+check: whitespace-check vet goimports-check gen-k8s-check test/unit
 
 whitespace-check: $(all_sources)
 	./hack/whitespace.sh
@@ -64,7 +64,7 @@ goimports-check: $(cmd_sources) $(pkg_sources)
 	go run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 	touch $@
 
-unit-test:
+test/unit:
 	$(GINKGO) $(GINKGO_ARGS) ./pkg/ ./cmd/
 
 docker-build: docker-build-operator docker-build-registry
@@ -92,10 +92,10 @@ cluster-down:
 cluster-sync:
 	VERSION=$(VERSION) ./cluster/sync.sh
 
-cluster-functest:
+test/e2e/workflow:
 	$(OPERATOR_SDK) test \
 		local \
-		./test/e2e \
+		./test/e2e/workflow \
 		--namespace cluster-network-addons-operator \
 		--no-setup \
 		--kubeconfig ./cluster/.kubeconfig \
@@ -131,7 +131,6 @@ gen-k8s-check: $(apis_sources)
 	check \
 	cluster-clean \
 	cluster-down \
-	cluster-functest \
 	cluster-sync \
 	cluster-up \
 	docker-build \
@@ -141,4 +140,5 @@ gen-k8s-check: $(apis_sources)
 	docker-push-operator \
 	docker-push-registry \
 	gen-manifests \
-	unit-test
+	test/e2e/workflow \
+	test/unit \

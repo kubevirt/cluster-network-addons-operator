@@ -247,8 +247,9 @@ make cluster-up
 # deploy operator from sources on the cluster
 make cluster-sync
 
-# run functional tests on the cluster
-make cluster-functest
+# run workflow e2e tests on the cluster, requires cluster with installed operator,
+# workflow covers deployment of operands
+make test/e2e/workflow
 
 # access kubernetes API on the cluster
 ./cluster/kubectl.sh get nodes
