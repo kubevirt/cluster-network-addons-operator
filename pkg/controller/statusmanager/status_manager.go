@@ -51,6 +51,8 @@ type StatusManager struct {
 
 	daemonSets  []types.NamespacedName
 	deployments []types.NamespacedName
+
+	containers []opv1alpha1.Container
 }
 
 func New(client client.Client, name string) *StatusManager {
@@ -112,6 +114,9 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...opv1a
 			},
 		)
 	}
+
+	// Make sure to expose deployed containers
+	config.Status.Containers = status.containers
 
 	if reflect.DeepEqual(oldStatus, config.Status) {
 		return nil
@@ -182,6 +187,7 @@ func (status *StatusManager) SetFromPods() {
 	// Iterate all owned DaemonSets and check whether they are progressing smoothly or have been
 	// already deployed.
 	for _, dsName := range status.daemonSets {
+
 		// First check whether DaemonSet namespace exists
 		ns := &corev1.Namespace{}
 		if err := status.client.Get(context.TODO(), types.NamespacedName{Name: dsName.Namespace}, ns); err != nil {
@@ -340,4 +346,8 @@ func getCondition(status *opv1alpha1.NetworkAddonsConfigStatus, conditionType op
 		}
 	}
 	return nil
+}
+
+func (status *StatusManager) SetContainers(containers []opv1alpha1.Container) {
+	status.containers = containers
 }

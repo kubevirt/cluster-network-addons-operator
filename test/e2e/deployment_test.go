@@ -17,6 +17,12 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			func(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
 				testConfigCreate(configSpec, components)
 
+				// KubeMacPool is known to restart shortly after first started, skip this initial restart
+				// https://github.com/kubevirt/cluster-network-addons-operator/issues/141
+				if configSpec.KubeMacPool != nil {
+					ignoreInitialKubeMacPoolRestart()
+				}
+
 				// Make sure that deployed components remain up and running
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
 			},
@@ -54,8 +60,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{NMStateComponent},
 			),
-			// TODO https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-			XEntry(
+			Entry(
 				KubeMacPoolComponent.ComponentName,
 				opv1alpha1.NetworkAddonsConfigSpec{
 					KubeMacPool: &opv1alpha1.KubeMacPool{},
@@ -99,13 +104,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			components = append(components, LinuxBridgeComponent)
 			testConfigUpdate(configSpec, components)
 
-			// TODO https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-			/*
-				// Add KubeMacPool component
-				configSpec.KubeMacPool = &opv1alpha1.KubeMacPool{}
-				components = append(components, KubeMacPoolComponent)
-				testConfigUpdate(configSpec, components)
-			*/
+			// Add KubeMacPool component
+			configSpec.KubeMacPool = &opv1alpha1.KubeMacPool{}
+			components = append(components, KubeMacPoolComponent)
+			testConfigUpdate(configSpec, components)
+			ignoreInitialKubeMacPoolRestart()
 
 			// Add SR-IOV component
 			configSpec.Sriov = &opv1alpha1.Sriov{}
@@ -125,21 +128,20 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			LinuxBridgeComponent,
 			SriovComponent,
 			NMStateComponent,
-			// TODO https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-			//KubeMacPoolComponent,
+			KubeMacPoolComponent,
 		}
 		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 			LinuxBridge: &opv1alpha1.LinuxBridge{},
 			Multus:      &opv1alpha1.Multus{},
 			Sriov:       &opv1alpha1.Sriov{},
 			NMState:     &opv1alpha1.NMState{},
-			// TODO https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-			//KubeMacPool:     &opv1alpha1.KubeMacPool{},
+			KubeMacPool: &opv1alpha1.KubeMacPool{},
 		}
 
 		BeforeEach(func() {
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			ignoreInitialKubeMacPoolRestart()
 		})
 
 		It("should remain in Available condition after applying the same config", func() {
@@ -187,4 +189,12 @@ func checkConfigChange(components []Component) {
 		// being deployed
 		CheckConfigCondition(ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
 	}
+}
+
+// KubeMacPool is known to restart shortly after first started, try to skip this initial restart
+// https://github.com/kubevirt/cluster-network-addons-operator/issues/141
+// TODO: This should be dropped once KubeMacPool fixes the issue
+func ignoreInitialKubeMacPoolRestart() {
+	By("Ignoring initial KubeMacPool restart")
+	time.Sleep(10 * time.Second)
 }
