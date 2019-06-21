@@ -214,6 +214,13 @@ func checkForDeployment(name string, namespace string) error {
 		return err
 	}
 
+	labels := deployment.GetLabels()
+	if labels != nil {
+		if _, operatorLabelSet := labels[opv1alpha1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+			return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
+		}
+	}
+
 	if deployment.Status.UnavailableReplicas > 0 || deployment.Status.AvailableReplicas == 0 {
 		manifest, err := yaml.Marshal(deployment)
 		if err != nil {
@@ -231,6 +238,13 @@ func checkForDaemonSet(name string, namespace string) error {
 	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &daemonSet)
 	if err != nil {
 		return err
+	}
+
+	labels := daemonSet.GetLabels()
+	if labels != nil {
+		if _, operatorLabelSet := labels[opv1alpha1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+			return fmt.Errorf("DaemonSet %s/%s is missing operator label", namespace, name)
+		}
 	}
 
 	if daemonSet.Status.NumberUnavailable > 0 || daemonSet.Status.NumberAvailable == 0 {
