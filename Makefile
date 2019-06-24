@@ -24,7 +24,7 @@ TARGETS = \
 
 GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
-GINKGO ?= go run ./vendor/github.com/onsi/ginkgo/ginkgo
+GINKGO ?= build/_output/bin/ginkgo
 
 E2E_TEST_EXTRA_ARGS ?=
 E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 2h -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
@@ -32,7 +32,13 @@ E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow
 
-OPERATOR_SDK := go run ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+OPERATOR_SDK ?= build/_output/bin/operator-sdk
+
+$(GINKGO): Gopkg.toml
+	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/onsi/ginkgo/ginkgo
+
+$(OPERATOR_SDK): Gopkg.toml
+	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -68,7 +74,7 @@ goimports-check: $(cmd_sources) $(pkg_sources)
 	go run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 	touch $@
 
-test/unit:
+test/unit: $(GINKGO)
 	$(GINKGO) $(GINKGO_ARGS) ./pkg/ ./cmd/
 
 docker-build: docker-build-operator docker-build-registry
@@ -101,7 +107,7 @@ cluster-operator-push:
 cluster-operator-install:
 	./cluster/operator-install.sh
 
-$(E2E_SUITES):
+$(E2E_SUITES): $(OPERATOR_SDK)
 	$(OPERATOR_SDK) test \
 		local \
 		./$@ \
@@ -126,7 +132,7 @@ gen-manifests:
 	KUBEMACPOOL_IMAGE=$(KUBEMACPOOL_IMAGE) \
 		./hack/generate-manifests.sh
 
-gen-k8s: $(apis_sources)
+gen-k8s: $(OPERATOR_SDK) $(apis_sources)
 	$(OPERATOR_SDK) generate k8s
 	touch $@
 
