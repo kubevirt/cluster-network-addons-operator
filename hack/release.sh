@@ -29,7 +29,7 @@ git add README.md
 
 echo 'Generating new release for workflow e2e tests'
 cp test/releases/${released_version}.go test/releases/${future_version}.go
-sed -i "s/Version: \"${released_version}\",/Version: \"${future_version}\",/" tests/releases/${future_version}.go
+sed -i "s/Version: \"${released_version}\",/Version: \"${future_version}\",/" test/releases/${future_version}.go
 
 echo 'Committing new master release module'
 git add test/releases/${future_version}.go
