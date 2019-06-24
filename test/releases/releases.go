@@ -37,9 +37,13 @@ func Releases() []Release {
 
 	sort.Slice(releases, func(a, b int) bool {
 		releaseAVersion, err := semver.Make(releases[a].Version)
-		Expect(err).NotTo(HaveOccurred())
+		if err != nil {
+			panic(err)
+		}
 		releaseBVersion, err := semver.Make(releases[b].Version)
-		Expect(err).NotTo(HaveOccurred())
+		if err != nil {
+			panic(err)
+		}
 		return releaseAVersion.LT(releaseBVersion)
 	})
 	releasesSorted = true
