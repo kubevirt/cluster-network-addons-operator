@@ -65,6 +65,18 @@ The bridge marker image used to deliver a bridge marker detecting the availabili
 of linux bridges on nodes can be set using the `LINUX_BRIDGE_MARKER_IMAGE` environment
 variable in operator deployment manifest.
 
+### Configure bridge on node
+
+Following snippets can be used to configure linux bridge on your node.
+
+```shell
+# create the bridge using NetworkManager
+nmcli con add type bridge ifname br10
+
+# allow traffic to go through the bridge between pods
+iptables -I FORWARD 1 -i br10 -j ACCEPT
+```
+
 ## SR-IOV
 
 The operator allows administrator to deploy SR-IOV
