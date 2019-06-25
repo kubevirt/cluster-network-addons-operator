@@ -2,6 +2,7 @@ all: fmt check
 
 # Always keep the future version here, so we won't overwrite latest released manifests
 VERSION ?= 0.11.0
+export VERSION := $(VERSION)
 # Always keep the last released version here
 VERSION_REPLACES ?= 0.10.0
 
@@ -95,10 +96,10 @@ cluster-down:
 cluster-sync: cluster-operator-push cluster-operator-install
 
 cluster-operator-push:
-	VERSION=$(VERSION) ./cluster/operator-push.sh
+	./cluster/operator-push.sh
 
 cluster-operator-install:
-	VERSION=$(VERSION) ./cluster/operator-install.sh
+	./cluster/operator-install.sh
 
 $(E2E_SUITES):
 	$(OPERATOR_SDK) test \
@@ -110,11 +111,10 @@ $(E2E_SUITES):
 		--go-test-flags "$(E2E_TEST_ARGS)"
 
 cluster-clean:
-	VERSION=$(VERSION) ./cluster/clean.sh
+	./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
 gen-manifests:
-	VERSION=$(VERSION) \
 	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
 	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
