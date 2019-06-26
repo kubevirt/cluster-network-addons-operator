@@ -17,6 +17,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
@@ -24,8 +25,9 @@ import (
 )
 
 const (
-	CheckImmediately = time.Microsecond
-	CheckDoNotRepeat = time.Microsecond
+	CheckImmediately   = time.Microsecond
+	CheckDoNotRepeat   = time.Microsecond
+	CheckIgnoreVersion = "IGNORE"
 )
 
 func CheckComponentsDeployment(components []Component) {
@@ -88,15 +90,15 @@ func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string,
 			}
 		}
 
-		if config.Status.OperatorVersion != operatorVersion {
+		if operatorVersion != CheckIgnoreVersion && config.Status.OperatorVersion != operatorVersion {
 			errsAppend(fmt.Errorf("OperatorVersion %q does not match expected %q", config.Status.OperatorVersion, operatorVersion))
 		}
 
-		if config.Status.ObservedVersion != observedVersion {
+		if observedVersion != CheckIgnoreVersion && config.Status.ObservedVersion != observedVersion {
 			errsAppend(fmt.Errorf("ObservedVersion %q does not match expected %q", config.Status.ObservedVersion, observedVersion))
 		}
 
-		if config.Status.TargetVersion != targetVersion {
+		if targetVersion != CheckIgnoreVersion && config.Status.TargetVersion != targetVersion {
 			errsAppend(fmt.Errorf("TargetVersion %q does not match expected %q", config.Status.TargetVersion, targetVersion))
 		}
 
@@ -123,6 +125,62 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	} else {
 		Expect(checkForDeployment(components.Name, components.Namespace)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
+}
+
+func CheckForLeftoverObjects(currentVersion string) {
+	listOptions := client.ListOptions{}
+	key := opv1alpha1.SchemeGroupVersion.Group + "/version"
+	listOptions.SetLabelSelector(fmt.Sprintf("%s,%s != %s", key, key, currentVersion))
+
+	deployments := appsv1.DeploymentList{}
+	err := framework.Global.Client.List(context.Background(), &listOptions, &deployments)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(deployments.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	daemonSets := appsv1.DaemonSetList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &daemonSets)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(daemonSets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	configMaps := corev1.ConfigMapList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &configMaps)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(configMaps.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	namespaces := corev1.NamespaceList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &namespaces)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(namespaces.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	secrets := corev1.SecretList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &secrets)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(secrets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	clusterRoles := rbacv1.ClusterRoleList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &clusterRoles)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(clusterRoles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	clusterRoleBindings := rbacv1.ClusterRoleList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &clusterRoleBindings)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(clusterRoleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	roles := rbacv1.RoleList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &roles)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(roles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	roleBindings := rbacv1.RoleBindingList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &roleBindings)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(roleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+	serviceAccounts := corev1.ServiceAccountList{}
+	err = framework.Global.Client.List(context.Background(), &listOptions, &serviceAccounts)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(serviceAccounts.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 }
 
 func KeepCheckingWhile(check func(), while func()) {
