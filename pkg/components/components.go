@@ -19,23 +19,23 @@ const (
 )
 
 const (
-	MultusImageDefault              = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
-	LinuxBridgeCniImageDefault      = "quay.io/kubevirt/cni-default-plugins:v0.8.0"
-	LinuxBridgeMarkerImageDefault   = "quay.io/kubevirt/bridge-marker:0.1.0"
-	SriovDpImageDefault             = "quay.io/kubevirt/cluster-network-addon-sriov-device-plugin:v2.0.0-1.git9a20829"
-	SriovCniImageDefault            = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
-	KubeMacPoolImageDefault         = "quay.io/kubevirt/kubemacpool:v0.3.0"
-	NMStateStateHandlerImageDefault = "quay.io/nmstate/kubernetes-nmstate-state-handler:v0.2.0"
+	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
+	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.0"
+	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.1.0"
+	SriovDpImageDefault           = "quay.io/kubevirt/cluster-network-addon-sriov-device-plugin:v2.0.0-1.git9a20829"
+	SriovCniImageDefault          = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
+	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.3.0"
+	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.3.0"
 )
 
 type AddonsImages struct {
-	Multus              string
-	LinuxBridgeCni      string
-	LinuxBridgeMarker   string
-	SriovDp             string
-	SriovCni            string
-	KubeMacPool         string
-	NMStateStateHandler string
+	Multus            string
+	LinuxBridgeCni    string
+	LinuxBridgeMarker string
+	SriovDp           string
+	SriovCni          string
+	KubeMacPool       string
+	NMStateHandler    string
 }
 
 func (ai *AddonsImages) FillDefaults() *AddonsImages {
@@ -57,8 +57,8 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.KubeMacPool == "" {
 		ai.KubeMacPool = KubeMacPoolImageDefault
 	}
-	if ai.NMStateStateHandler == "" {
-		ai.NMStateStateHandler = NMStateStateHandlerImageDefault
+	if ai.NMStateHandler == "" {
+		ai.NMStateHandler = NMStateHandlerImageDefault
 	}
 	return ai
 }
@@ -119,8 +119,8 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 									Value: addonsImages.SriovCni,
 								},
 								{
-									Name:  "NMSTATE_STATE_HANDLER_IMAGE",
-									Value: addonsImages.NMStateStateHandler,
+									Name:  "NMSTATE_HANDLER_IMAGE",
+									Value: addonsImages.NMStateHandler,
 								},
 								{
 									Name:  "SRIOV_ROOT_DEVICES",

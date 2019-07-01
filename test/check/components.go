@@ -40,10 +40,10 @@ var (
 	NMStateComponent = Component{
 		ComponentName:              "NMState",
 		Namespace:                  "nmstate",
-		ClusterRoleBinding:         "nmstate-state-controller",
-		ClusterRole:                "nmstate-state-controller",
+		ClusterRoleBinding:         "nmstate-handler",
+		ClusterRole:                "nmstate-handler",
 		SecurityContextConstraints: "nmstate",
-		DaemonSets:                 []string{"nm-state-controller"},
+		DaemonSets:                 []string{"nmstate-handler"},
 	}
 	SriovComponent = Component{
 		ComponentName:              "SR-IOV",
