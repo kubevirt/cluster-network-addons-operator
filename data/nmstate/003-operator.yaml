@@ -2,19 +2,19 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: nm-state-controller
+  name: nmstate-handler
   namespace: nmstate
 spec:
   selector:
     matchLabels:
-      name: nm-state-controller
+      name: nmstate-handler
   template:
     metadata:
       labels:
-        name: nm-state-controller
-        nmstate.io: state-controller
+        app: kubernetes-nmstate
+        name: nmstate-handler
     spec:
-      serviceAccountName: nmstate-state-controller
+      serviceAccountName: nmstate-handler
       nodeSelector:
         beta.kubernetes.io/arch: amd64
       tolerations:
@@ -22,26 +22,27 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - name: state-controller
-          image: {{ .NMStateStateHandlerImage }}
+        - name: nmstate-handler
+          image:  {{ .NMStateHandlerImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
-          args: ["-execution-type", "controller"]
+          command:
+          - kubernetes-nmstate
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "nmstate-handler"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           volumeMounts:
           - name: dbus-socket
             mountPath: /run/dbus/system_bus_socket
-          env:
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
           securityContext:
             privileged: true
       volumes:
@@ -49,4 +50,3 @@ spec:
         hostPath:
           path: /run/dbus/system_bus_socket
           type: Socket
-

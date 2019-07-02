@@ -2,65 +2,102 @@
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: nmstate-state-controller
+  name: nmstate-handler
   namespace: nmstate
   labels:
     nmstate.io: ""
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: nmstate-state-controller
+  name: nmstate-handler
   namespace: nmstate
-  labels:
-    nmstate.io: ""
+subjects:
+- kind: ServiceAccount
+  name: nmstate-handler
+  namespace: nmstate
+roleRef:
+  kind: Role
+  name: nmstate-handler
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: nmstate-handler
+  namespace: nmstate
+subjects:
+- kind: ServiceAccount
+  name: nmstate-handler
+  namespace: nmstate
 roleRef:
   kind: ClusterRole
-  name: nmstate-state-controller
+  name: nmstate-handler
   apiGroup: rbac.authorization.k8s.io
-subjects:
-  - kind: ServiceAccount
-    name: nmstate-state-controller
-    namespace: nmstate
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: nmstate-handler
+  namespace: nmstate
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - apps
+  resourceNames:
+  - nmstate-handler
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: nmstate-state-controller
+  creationTimestamp: null
+  name: nmstate-handler
   namespace: nmstate
-  labels:
-    nmstate.io: ""
 rules:
-  - apiGroups:
-      - ''
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - ''
-    resources:
-      - nodes
-    verbs:
-      - list
-  - apiGroups:
-      - ''
-    resources:
-      - events
-    verbs:
-      - update
-      - create
-      - patch
-  - apiGroups:
-      - nmstate.io
-    resources:
-      - nodenetworkstates
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
+- apiGroups:
+  - nmstate.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
 {{ if .EnableSCC }}
 ---
 apiVersion: security.openshift.io/v1
@@ -74,5 +111,5 @@ runAsUser:
 seLinuxContext:
   type: RunAsAny
 users:
-- system:serviceaccount:nmstate:nmstate-state-controller
+- system:serviceaccount:nmstate:nmstate-handler
 {{ end }}
