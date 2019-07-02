@@ -23,12 +23,10 @@ spec:
           effect: NoSchedule
       containers:
         - name: nmstate-handler
-          # Replace this with the built image name
           image:  {{ .NMStateHandlerImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           command:
           - kubernetes-nmstate
-          imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
               value: ""

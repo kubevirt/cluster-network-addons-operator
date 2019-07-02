@@ -10,8 +10,7 @@ spec:
     plural: nodenetworkstates
     singular: nodenetworkstate
     shortNames:
-    - net-state
-    - net-states
+    - nns
   scope: Cluster
   subresources:
     status: {}
