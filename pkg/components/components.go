@@ -28,6 +28,16 @@ const (
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.3.0"
 )
 
+const (
+	SriovNameDefault = "sriov-network"
+	SriovTypeDefault = "sriov"
+)
+
+type NetworkAttachmentDefinition struct {
+	SriovName string
+	SriovType string
+}
+
 type AddonsImages struct {
 	Multus            string
 	LinuxBridgeCni    string
@@ -36,6 +46,16 @@ type AddonsImages struct {
 	SriovCni          string
 	KubeMacPool       string
 	NMStateHandler    string
+}
+
+func (nad *NetworkAttachmentDefinition) FillDefaults() *NetworkAttachmentDefinition {
+	if nad.SriovName == "" {
+		nad.SriovName = SriovNameDefault
+	}
+	if nad.SriovType == "" {
+		nad.SriovType = SriovTypeDefault
+	}
+	return nad
 }
 
 func (ai *AddonsImages) FillDefaults() *AddonsImages {
@@ -63,7 +83,7 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	return ai
 }
 
-func GetDeployment(version string, namespace string, repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
+func GetDeployment(version string, namespace string, repository string, tag string, imagePullPolicy string, addonsImages *AddonsImages, networkAttachmentDefinition *NetworkAttachmentDefinition) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, Name, tag)
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -128,11 +148,11 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 								},
 								{
 									Name:  "SRIOV_NETWORK_NAME",
-									Value: "sriov-network",
+									Value: networkAttachmentDefinition.SriovName,
 								},
 								{
 									Name:  "SRIOV_NETWORK_TYPE",
-									Value: "sriov",
+									Value: networkAttachmentDefinition.SriovType,
 								},
 								{
 									Name:  "KUBEMACPOOL_IMAGE",

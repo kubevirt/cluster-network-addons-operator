@@ -49,14 +49,15 @@ type operatorData struct {
 }
 
 type templateData struct {
-	Version         string
-	VersionReplaces string
-	Namespace       string
-	ContainerPrefix string
-	ContainerTag    string
-	ImagePullPolicy string
-	CNA             *operatorData
-	AddonsImages    *components.AddonsImages
+	Version                     string
+	VersionReplaces             string
+	Namespace                   string
+	ContainerPrefix             string
+	ContainerTag                string
+	ImagePullPolicy             string
+	CNA                         *operatorData
+	AddonsImages                *components.AddonsImages
+	NetworkAttachmentDefinition *components.NetworkAttachmentDefinition
 }
 
 func check(err error) {
@@ -142,6 +143,7 @@ func getCNA(data *templateData) {
 		data.ContainerTag,
 		data.ImagePullPolicy,
 		data.AddonsImages,
+		data.NetworkAttachmentDefinition,
 	)
 	err := marshallObject(cnadeployment, &writer)
 	check(err)
@@ -223,6 +225,8 @@ func main() {
 	sriovDpImage := flag.String("sriov-dp-image", "", "")
 	sriovCniImage := flag.String("sriov-cni-image", "", "")
 	kubeMacPoolImage := flag.String("kubemacpool-image", "", "")
+	sriovName := flag.String("sriov-name", "", "")
+	sriovType := flag.String("sriov-type", "", "")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
 	pflag.Parse()
@@ -241,6 +245,10 @@ func main() {
 			SriovDp:           *sriovDpImage,
 			SriovCni:          *sriovCniImage,
 			KubeMacPool:       *kubeMacPoolImage,
+		}).FillDefaults(),
+		NetworkAttachmentDefinition: (&components.NetworkAttachmentDefinition{
+			SriovName: *sriovName,
+			SriovType: *sriovType,
 		}).FillDefaults(),
 	}
 
