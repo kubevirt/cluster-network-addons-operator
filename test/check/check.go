@@ -2,8 +2,10 @@ package check
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -413,4 +415,47 @@ func configToYaml(config *opv1alpha1.NetworkAddonsConfig) string {
 		panic(err)
 	}
 	return string(manifest)
+}
+
+// CheckUnicast return an error in case that the given addresses support multicast or is invalid.
+func CheckUnicastAndValidity() (string, string) {
+	rangeStart, rangeEnd := retrieveRange()
+	parsedRangeStart, err := net.ParseMAC(rangeStart)
+	Expect(err).ToNot(HaveOccurred())
+	checkUnicast(parsedRangeStart)
+
+	parsedRangeEnd, err := net.ParseMAC(rangeEnd)
+	Expect(err).ToNot(HaveOccurred())
+	checkUnicast(parsedRangeEnd)
+	return rangeStart, rangeEnd
+}
+
+func checkUnicast(mac net.HardwareAddr) {
+	// A bitwise AND between 00000001 and the mac address first octet.
+	// In case where the LSB of the first octet (the multicast bit) is on, it will return 1, and 0 otherwise.
+	multicastBit := 1 & mac[0]
+	Expect(multicastBit).ToNot(BeNumerically("==", 1), "invalid mac address. Multicast addressing is not supported. Unicast addressing must be used. The first octet is %#0X", mac[0])
+}
+
+func retrieveRange() (string, string) {
+	configMap := &corev1.ConfigMap{}
+	Eventually(func() error {
+
+		return framework.Global.Client.Get(context.TODO(),
+			types.NamespacedName{Namespace: components.Namespace, Name: names.APPLIED_PREFIX + names.OPERATOR_CONFIG}, configMap)
+
+	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())
+
+	appliedData, exist := configMap.Data["applied"]
+	Expect(exist).To(BeTrue(), "applied data not found in configMap")
+
+	appliedConfig := &opv1alpha1.NetworkAddonsConfigSpec{}
+	err := json.Unmarshal([]byte(appliedData), appliedConfig)
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(appliedConfig.KubeMacPool).ToNot(BeNil(), "kubemacpool config doesn't exist")
+
+	rangeStart := appliedConfig.KubeMacPool.RangeStart
+	rangeEnd := appliedConfig.KubeMacPool.RangeEnd
+	return rangeStart, rangeEnd
 }
