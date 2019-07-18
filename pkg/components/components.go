@@ -26,6 +26,8 @@ const (
 	SriovCniImageDefault          = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.3.0"
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.3.0"
+	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.4.0"
+	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.4.0"
 )
 
 type AddonsImages struct {
@@ -36,6 +38,8 @@ type AddonsImages struct {
 	SriovCni          string
 	KubeMacPool       string
 	NMStateHandler    string
+	OvsCni            string
+	OvsMarker         string
 }
 
 func (ai *AddonsImages) FillDefaults() *AddonsImages {
@@ -59,6 +63,12 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	}
 	if ai.NMStateHandler == "" {
 		ai.NMStateHandler = NMStateHandlerImageDefault
+	}
+	if ai.OvsCni == "" {
+		ai.OvsCni = OvsCniImageDefault
+	}
+	if ai.OvsMarker == "" {
+		ai.OvsMarker = OvsMarkerImageDefault
 	}
 	return ai
 }
@@ -121,6 +131,14 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 								{
 									Name:  "NMSTATE_HANDLER_IMAGE",
 									Value: addonsImages.NMStateHandler,
+								},
+								{
+									Name:  "OVS_CNI_IMAGE",
+									Value: addonsImages.OvsCni,
+								},
+								{
+									Name:  "OVS_MARKER_IMAGE",
+									Value: addonsImages.OvsMarker,
 								},
 								{
 									Name:  "SRIOV_ROOT_DEVICES",
@@ -367,6 +385,7 @@ func GetCR() *cnav1alpha1.NetworkAddonsConfig {
 			Sriov:           &cnav1alpha1.Sriov{},
 			KubeMacPool:     &cnav1alpha1.KubeMacPool{},
 			NMState:         &cnav1alpha1.NMState{},
+			Ovs:             &cnav1alpha1.Ovs{},
 			ImagePullPolicy: corev1.PullIfNotPresent,
 		},
 	}
