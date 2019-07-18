@@ -53,7 +53,7 @@ apis_sources=$(call rwildcard,pkg/apis,*.go)
 fmt: whitespace goimports
 
 goimports: $(cmd_sources) $(pkg_sources)
-	go run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd
+	go run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/
 	touch $@
 
 whitespace: $(all_sources)
@@ -67,7 +67,7 @@ whitespace-check: $(all_sources)
 	touch $@
 
 vet: $(cmd_sources) $(pkg_sources)
-	go vet ./pkg/... ./cmd/...
+	go vet ./pkg/... ./cmd/... ./test/...
 	touch $@
 
 goimports-check: $(cmd_sources) $(pkg_sources)
