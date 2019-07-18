@@ -68,6 +68,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{KubeMacPoolComponent},
 			),
+			Entry(
+				OvsComponent.ComponentName,
+				opv1alpha1.NetworkAddonsConfigSpec{
+					Ovs: &opv1alpha1.Ovs{},
+				},
+				[]Component{OvsComponent},
+			),
 		)
 
 		It("should be able to deploy all components at once", func() {
@@ -77,6 +84,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				KubeMacPoolComponent,
 				SriovComponent,
 				NMStateComponent,
+				OvsComponent,
 			}
 			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 				KubeMacPool: &opv1alpha1.KubeMacPool{},
@@ -84,6 +92,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Multus:      &opv1alpha1.Multus{},
 				Sriov:       &opv1alpha1.Sriov{},
 				NMState:     &opv1alpha1.NMState{},
+				Ovs:         &opv1alpha1.Ovs{},
 			}
 			testConfigCreate(configSpec, components)
 		})
@@ -120,6 +129,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.NMState = &opv1alpha1.NMState{}
 			components = append(components, NMStateComponent)
 			testConfigUpdate(configSpec, components)
+
+			// Add Ovs component
+			configSpec.Ovs = &opv1alpha1.Ovs{}
+			components = append(components, OvsComponent)
+			testConfigUpdate(configSpec, components)
 		})
 	})
 
@@ -130,6 +144,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			SriovComponent,
 			NMStateComponent,
 			KubeMacPoolComponent,
+			OvsComponent,
 		}
 		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 			LinuxBridge: &opv1alpha1.LinuxBridge{},
@@ -137,6 +152,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			Sriov:       &opv1alpha1.Sriov{},
 			NMState:     &opv1alpha1.NMState{},
 			KubeMacPool: &opv1alpha1.KubeMacPool{},
+			Ovs:         &opv1alpha1.Ovs{},
 		}
 
 		BeforeEach(func() {
