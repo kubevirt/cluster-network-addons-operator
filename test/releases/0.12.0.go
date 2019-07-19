@@ -34,7 +34,7 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool:v0.3.0",
+				Image:      "quay.io/kubevirt/kubemacpool:v0.4.0",
 			},
 		},
 		SupportedSpec: opv1alpha1.NetworkAddonsConfigSpec{
