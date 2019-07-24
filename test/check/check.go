@@ -155,9 +155,16 @@ func CheckForLeftoverObjects(currentVersion string) {
 	Expect(namespaces.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	secrets := corev1.SecretList{}
+	copyList := []corev1.Secret{}
 	err = framework.Global.Client.List(context.Background(), &listOptions, &secrets)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(secrets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+	// TODO: remove this after fixing https://github.com/kubevirt/cluster-network-addons-operator/issues/190
+	for _, secret := range secrets.Items {
+		if secret.Name != "kubemacpool-webhook-secret" {
+			copyList = append(copyList, secret)
+		}
+	}
+	Expect(copyList).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	clusterRoles := rbacv1.ClusterRoleList{}
 	err = framework.Global.Client.List(context.Background(), &listOptions, &clusterRoles)

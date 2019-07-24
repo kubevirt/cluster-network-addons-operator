@@ -51,12 +51,6 @@ var _ = Context("Cluster Network Addons Operator", func() {
 				// Wait until the configuration reaches Available state
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
 
-				// KubeMacPool is known to restart shortly after first started, try to skip this initial restart
-				// https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-				// TODO: This should be dropped once KubeMacPool fixes the issue
-				By("Ignoring initial KubeMacPool restart")
-				time.Sleep(10 * time.Second)
-
 				// Make sure that configuration stays available during operator's reinstallation
 				KeepCheckingWhile(configIsAvailable, reinstallingOperator)
 			})
