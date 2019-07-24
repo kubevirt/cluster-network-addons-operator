@@ -54,11 +54,22 @@ var (
 			"kube-sriov-device-plugin",
 		},
 	}
+	OvsComponent = Component{
+		ComponentName:              "Ovs",
+		Namespace:                  "ovs",
+		ClusterRole:                "ovs-cni-marker-cr",
+		ClusterRoleBinding:         "ovs-cni-marker-crb",
+		SecurityContextConstraints: "ovs-cni-marker",
+		DaemonSets: []string{
+			"ovs-cni-amd64",
+		},
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
 		MultusComponent,
 		NMStateComponent,
 		SriovComponent,
+		OvsComponent,
 	}
 )

@@ -1,0 +1,98 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ovs-cni-amd64
+  namespace: ovs
+  labels:
+    tier: node
+    app: ovs-cni
+spec:
+  selector:
+    matchLabels:
+      app: ovs-cni
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: ovs-cni
+    spec:
+      serviceAccountName: ovs-cni-marker
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+{{ if .EnableSCC }}
+      initContainers:
+        - name: ovs-vsctl
+          command:
+            - /bin/bash
+            - -c
+            - |
+              cp /usr/bin/ovs-vsctl /host/usr/local/bin/_ovs-vsctl
+              echo '#!/usr/bin/bash
+              _ovs-vsctl --db unix:///run/openvswitch/db.sock $@
+              ' > /host/usr/local/bin/ovs-vsctl
+              chmod +x /host/usr/local/bin/ovs-vsctl
+          image: docker.io/openshift/origin-node:v3.10.0-rc.0
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"
+            limits:
+              cpu: "100m"
+              memory: "50Mi"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: localbin
+              mountPath: /host/usr/local/bin
+{{ end }}
+      containers:
+        - name: ovs-cni-plugin
+          image: {{ .OvsCNIImage }}
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"
+            limits:
+              cpu: "100m"
+              memory: "50Mi"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: cnibin
+              mountPath: /host/opt/cni/bin
+        - name: ovs-cni-marker
+          image: {{ .OvsMarkerImage }}
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          securityContext:
+            privileged: true
+          args:
+            - -node-name
+            - $(NODE_NAME)
+            - -ovs-socket
+            - unix:///host/run/openvswitch/db.sock
+          volumeMounts:
+            - name: ovs-run
+              mountPath: /host/run/openvswitch
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+      volumes:
+        - name: localbin
+          hostPath:
+            path: /usr/local/bin
+        - name: cnibin
+          hostPath:
+            path: {{ .CNIBinDir }}
+        - name: ovs-run
+          hostPath:
+            path: /run/openvswitch

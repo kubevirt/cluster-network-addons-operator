@@ -24,6 +24,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					LinuxBridge: &opv1alpha1.LinuxBridge{},
 					Multus:      &opv1alpha1.Multus{},
 					Sriov:       &opv1alpha1.Sriov{},
+					Ovs:         &opv1alpha1.Ovs{},
+					NMState:     &opv1alpha1.NMState{},
 				}
 				CreateConfig(configSpec)
 			})
