@@ -18,12 +18,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			func(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
 				testConfigCreate(configSpec, components)
 
-				// KubeMacPool is known to restart shortly after first started, skip this initial restart
-				// https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-				if configSpec.KubeMacPool != nil {
-					ignoreInitialKubeMacPoolRestart()
-				}
-
 				// Make sure that deployed components remain up and running
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
 			},
@@ -118,7 +112,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.KubeMacPool = &opv1alpha1.KubeMacPool{}
 			components = append(components, KubeMacPoolComponent)
 			testConfigUpdate(configSpec, components)
-			ignoreInitialKubeMacPoolRestart()
 
 			// Add SR-IOV component
 			configSpec.Sriov = &opv1alpha1.Sriov{}
@@ -158,7 +151,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		BeforeEach(func() {
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
-			ignoreInitialKubeMacPoolRestart()
 		})
 
 		It("should remain in Available condition after applying the same config", func() {
@@ -231,12 +223,4 @@ func checkConfigChange(components []Component) {
 		// being deployed
 		CheckConfigCondition(ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
 	}
-}
-
-// KubeMacPool is known to restart shortly after first started, try to skip this initial restart
-// https://github.com/kubevirt/cluster-network-addons-operator/issues/141
-// TODO: This should be dropped once KubeMacPool fixes the issue
-func ignoreInitialKubeMacPoolRestart() {
-	By("Ignoring initial KubeMacPool restart")
-	time.Sleep(10 * time.Second)
 }
