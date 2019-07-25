@@ -21,6 +21,7 @@ spec:
   sriov: {}
   kubeMacPool: {}
   nmstate: {}
+  ovs: {}
   imagePullPolicy: Always
 ```
 
@@ -181,6 +182,20 @@ Make sure that NetworkManager is installed and running on each node.
 ```shell
 yum install NetworkManager
 systemctl start NetworkManager
+```
+
+## Open vSwitch
+
+The operator allows administrator to deploy [OVS CNI plugin](https://github.com/kubevirt/ovs-cni/)
+simply by adding `ovs` attribute to `NetworkAddonsConfig`.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  ovs: {}
 ```
 
 ## Image Pull Policy
