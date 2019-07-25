@@ -34,7 +34,12 @@ var _ = Context("Cluster Network Addons Operator", func() {
 					UninstallRelease(oldRelease)
 					InstallRelease(newRelease)
 					CheckOperatorIsReady(podsDeploymentTimeout)
-					ignoreInitialKubeMacPoolRestart()
+
+					// Check that operator and target versions will be set to the newer.
+					expectedOperatorVersion := newRelease.Version
+					expectedObservedVersion := newRelease.Version
+					expectedTargetVersion := newRelease.Version
+					CheckConfigVersions(expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, podsDeploymentTimeout, CheckDoNotRepeat)
 				})
 
 				It("it should report expected deployed container images", func() {
