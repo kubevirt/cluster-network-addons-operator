@@ -284,6 +284,19 @@ func GetClusterRole() *rbacv1.ClusterRole {
 			},
 			{
 				APIGroups: []string{
+					"operator.openshift.io",
+				},
+				Resources: []string{
+					"networks",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+				},
+			},
+			{
+				APIGroups: []string{
 					"networkaddonsoperator.network.kubevirt.io",
 				},
 				Resources: []string{

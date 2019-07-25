@@ -406,7 +406,7 @@ func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.N
 // Check whether running on OpenShift 4 by looking for operator objects that has been introduced
 // only in OpenShift 4
 func isRunningOnOpenShift4(c kubernetes.Interface) (bool, error) {
-	return isResourceAvailable(c, "configs", "imageregistry.operator.openshift.io", "v1")
+	return isResourceAvailable(c, "networks", "operator.openshift.io", "v1")
 }
 
 func isSCCAvailable(c kubernetes.Interface) (bool, error) {
