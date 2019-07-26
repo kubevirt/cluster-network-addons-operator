@@ -20,7 +20,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 			}
 			CreateConfig(configSpec)
-			CheckConfigCondition(ConditionFailing, ConditionTrue, 5*time.Second, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionDegraded, ConditionTrue, 5*time.Second, CheckDoNotRepeat)
 		})
 
 		Context("and it is updated with a valid config", func() {
@@ -31,7 +31,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 			It("should turn from Failing to Available", func() {
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 5*time.Second, CheckDoNotRepeat)
-				CheckConfigCondition(ConditionFailing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionDegraded, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
 		})
 	})
