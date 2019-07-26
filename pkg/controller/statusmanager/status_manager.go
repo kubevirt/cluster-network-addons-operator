@@ -95,16 +95,42 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		conditionsv1.SetStatusCondition(&config.Status.Conditions, condition)
 	}
 
-	config.Status.OperatorVersion = operatorVersion
-	config.Status.TargetVersion = operatorVersion
+	// Glue condition logic together
+	if status.failing[OperatorConfig] != nil {
+		// In case the operator is failing, we should not report it as being ready. This has
+		// to be done even when the operator is running fine based on the previous configuration
+		// and the only failing thing is validation of new config.
+		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:    conditionsv1.ConditionAvailable,
+				Status:  corev1.ConditionFalse,
+				Reason:  "Failing",
+				Message: "Unable to apply desired configuration",
+			},
+		)
 
-	if reachedAvailableLevel {
-		config.Status.ObservedVersion = operatorVersion
-	}
-
-	// In case that the status field has been updated with "Progressing" condition, make sure that
-	// "Ready" condition is set to False, even when not explicitly set.
-	if conditionsv1.IsStatusConditionTrue(config.Status.Conditions, conditionsv1.ConditionProgressing) {
+		// Implicitly mark as not Progressing, that indicates that human interaction is needed
+		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:    conditionsv1.ConditionProgressing,
+				Status:  corev1.ConditionFalse,
+				Reason:  "InvalidConfiguration",
+				Message: "Human interaction is needed, please fix the desired configuration",
+			},
+		)
+	} else if status.failing[PodDeployment] != nil {
+		// In case pod deployment is in progress, implicitly mark as not Available
+		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:    conditionsv1.ConditionAvailable,
+				Status:  corev1.ConditionFalse,
+				Reason:  "Failing",
+				Message: "Some problems occurred while deploying components' pods",
+			},
+		)
+	} else if conditionsv1.IsStatusConditionTrue(config.Status.Conditions, conditionsv1.ConditionProgressing) {
+		// In case that the status field has been updated with "Progressing" condition, make sure that
+		// "Ready" condition is set to False, even when not explicitly set.
 		conditionsv1.SetStatusCondition(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionAvailable,
@@ -113,10 +139,23 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 				Message: "Configuration is in process",
 			},
 		)
+	} else if reachedAvailableLevel {
+		// If successfully deployed all components and is not failing on anything, mark as Available
+		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:   conditionsv1.ConditionAvailable,
+				Status: corev1.ConditionTrue,
+			},
+		)
+		config.Status.ObservedVersion = operatorVersion
 	}
 
 	// Make sure to expose deployed containers
 	config.Status.Containers = status.containers
+
+	// Expose currently handled version
+	config.Status.OperatorVersion = operatorVersion
+	config.Status.TargetVersion = operatorVersion
 
 	if reflect.DeepEqual(oldStatus, config.Status) {
 		return nil
@@ -268,7 +307,7 @@ func (status *StatusManager) SetFromPods() {
 	}
 
 	// If there are any progressing Pods, list them in the condition with their state. Otherwise,
-	// mark NetworkAddonsConfig as "Ready".
+	// mark Progressing condition as False.
 	if len(progressing) > 0 {
 		status.Set(
 			false,
@@ -281,20 +320,21 @@ func (status *StatusManager) SetFromPods() {
 		)
 	} else {
 		status.Set(
-			true,
+			false,
 			conditionsv1.Condition{
 				Type:   conditionsv1.ConditionProgressing,
 				Status: corev1.ConditionFalse,
-			},
-			conditionsv1.Condition{
-				Type:   conditionsv1.ConditionAvailable,
-				Status: corev1.ConditionTrue,
 			},
 		)
 	}
 
 	// If all pods are being created, mark deployment as not failing
 	status.SetNotFailing(PodDeployment)
+
+	// Finally, if all containers are deployed, mark as Available
+	if len(progressing) == 0 {
+		status.Set(true)
+	}
 }
 
 func (status *StatusManager) SetContainers(containers []opv1alpha1.Container) {
