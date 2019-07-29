@@ -37,7 +37,7 @@ spec:
               _ovs-vsctl --db unix:///run/openvswitch/db.sock $@
               ' > /host/usr/local/bin/ovs-vsctl
               chmod +x /host/usr/local/bin/ovs-vsctl
-          image: docker.io/openshift/origin-node:v3.10.0-rc.0
+          image: {{ .OvsCNIImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           resources:
             requests:
