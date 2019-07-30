@@ -210,19 +210,22 @@ func getCNA(data *templateData) {
 }
 
 func main() {
-	version := flag.String("version", "", "")
-	versionReplaces := flag.String("version-replaces", "", "")
-	namespace := flag.String("namespace", components.Namespace, "")
-	containerPrefix := flag.String("container-prefix", "quay.io/kubevirt", "")
-	containerTag := flag.String("container-tag", "latest", "")
-	imagePullPolicy := flag.String("image-pull-policy", "Always", "")
-	inputFile := flag.String("input-file", "", "")
-	multusImage := flag.String("multus-image", "", "")
-	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", "", "")
-	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", "", "")
-	sriovDpImage := flag.String("sriov-dp-image", "", "")
-	sriovCniImage := flag.String("sriov-cni-image", "", "")
-	kubeMacPoolImage := flag.String("kubemacpool-image", "", "")
+	version := flag.String("version", "", "The csv version")
+	versionReplaces := flag.String("version-replaces", "", "The csv version this replaces")
+	namespace := flag.String("namespace", components.Namespace, "Namespace used by csv")
+	containerPrefix := flag.String("container-prefix", "quay.io/kubevirt", "The container repository used for the operator image")
+	containerTag := flag.String("container-tag", "latest", "The operator image's container tag")
+	imagePullPolicy := flag.String("image-pull-policy", "Always", "The pull policy to use on the operator image")
+	multusImage := flag.String("multus-image", components.MultusImageDefault, "The multus image managed by CNA")
+	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", components.LinuxBridgeCniImageDefault, "The linux bridge cni image managed by CNA")
+	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
+	sriovDpImage := flag.String("sriov-dp-image", components.SriovDpImageDefault, "The sriov-dp-image managed by CNA")
+	sriovCniImage := flag.String("sriov-cni-image", components.SriovCniImageDefault, "The sriov-cni-image managed by CNA")
+	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
+	nmStateHandlerImage := flag.String("nm-state-handler-image", components.NMStateHandlerImageDefault, "The nmstate handler image managed by CNA")
+	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
+	ovsMarkerImage := flag.String("ovs-marker-image", components.OvsMarkerImageDefault, "The ovs marker image managed by CNA")
+	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
 	pflag.Parse()
@@ -241,6 +244,9 @@ func main() {
 			SriovDp:           *sriovDpImage,
 			SriovCni:          *sriovCniImage,
 			KubeMacPool:       *kubeMacPoolImage,
+			NMStateHandler:    *nmStateHandlerImage,
+			OvsCni:            *ovsCniImage,
+			OvsMarker:         *ovsMarkerImage,
 		}).FillDefaults(),
 	}
 
