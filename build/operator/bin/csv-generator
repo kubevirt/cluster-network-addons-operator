@@ -1,0 +1,4 @@
+#!/bin/sh -e
+
+
+exec ${MANIFEST_TEMPLATOR} --input-file=${CSV_TEMPLATE} $@
