@@ -11,7 +11,7 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
 )
 
-const podsDeploymentTimeout = 10 * time.Minute
+const podsDeploymentTimeout = 15 * time.Minute
 
 var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
@@ -20,7 +20,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 				InstallRelease(oldRelease)
 				CheckOperatorIsReady(podsDeploymentTimeout)
 				CreateConfig(oldRelease.SupportedSpec)
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 				ignoreInitialKubeMacPoolRestart()
 				CheckReleaseUsesExpectedContainerImages(oldRelease)
 				expectedOperatorVersion := oldRelease.Version
