@@ -18,7 +18,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 		})
 
 		It("successfully turns ready", func() {
-			CheckOperatorIsReady(10 * time.Minute)
+			CheckOperatorIsReady(15 * time.Minute)
 		})
 
 		Context("and when NodeNetworkConfig with supported spec is created", func() {
@@ -27,7 +27,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			})
 
 			It("reaches Available condition with all containers using expected images", func() {
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 				CheckReleaseUsesExpectedContainerImages(masterRelease)
 			})
 
@@ -42,14 +42,14 @@ var _ = Context("Cluster Network Addons Operator", func() {
 
 					UninstallRelease(masterRelease)
 					InstallRelease(masterRelease)
-					CheckOperatorIsReady(10 * time.Minute)
+					CheckOperatorIsReady(15 * time.Minute)
 
 					// Give validator some time to verify conditions while the new installation is operating
 					time.Sleep(3 * time.Second)
 				}
 
 				// Wait until the configuration reaches Available state
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 
 				// Make sure that configuration stays available during operator's reinstallation
 				KeepCheckingWhile(configIsAvailable, reinstallingOperator)

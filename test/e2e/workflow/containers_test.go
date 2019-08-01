@@ -19,7 +19,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 		BeforeEach(func() {
 			CreateConfig(configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should report non-empty list of deployed containers", func() {

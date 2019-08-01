@@ -26,7 +26,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 
 		It("should set observedVersion once turns it Available", func() {
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 			CheckConfigVersions(operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
 		})
 	})
@@ -37,7 +37,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Multus: &opv1alpha1.Multus{},
 			}
 			CreateConfig(configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should keep reported versions while being changed", func() {
@@ -55,7 +55,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				time.Sleep(3 * time.Second)
 
 				UpdateConfig(configSpec)
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 
 				// Give validator some time to verify versions while we stay in updated config
 				time.Sleep(3 * time.Second)

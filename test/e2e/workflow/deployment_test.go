@@ -150,7 +150,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 		BeforeEach(func() {
 			CreateConfig(configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should remain in Available condition after applying the same config", func() {
@@ -166,7 +166,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		It("should be able to remove the config and create it again", func() {
 			DeleteConfig()
 			CreateConfig(configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, 30*time.Second)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
 		})
 	})
 
@@ -175,7 +175,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			By("Deploying KubeMacPool")
 			config := opv1alpha1.NetworkAddonsConfigSpec{KubeMacPool: &opv1alpha1.KubeMacPool{}}
 			CreateConfig(config)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should modify the MAC range after being redeployed ", func() {
@@ -186,7 +186,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 			config := opv1alpha1.NetworkAddonsConfigSpec{KubeMacPool: &opv1alpha1.KubeMacPool{}}
 			CreateConfig(config)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 			rangeStart, rangeEnd := CheckUnicastAndValidity()
 
 			By("Comparing the ranges")
@@ -213,7 +213,7 @@ func checkConfigChange(components []Component) {
 
 		// Wait until Available condition is reported. It may take a few minutes the first time
 		// we are pulling component images to the Node
-		CheckConfigCondition(ConditionAvailable, ConditionTrue, 10*time.Minute, CheckDoNotRepeat)
+		CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		CheckConfigCondition(ConditionProgressing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 
 		// Check that all requested components have been deployed
