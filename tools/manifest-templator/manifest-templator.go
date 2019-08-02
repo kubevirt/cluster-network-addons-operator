@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -225,6 +226,7 @@ func main() {
 	nmStateHandlerImage := flag.String("nm-state-handler-image", components.NMStateHandlerImageDefault, "The nmstate handler image managed by CNA")
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
 	ovsMarkerImage := flag.String("ovs-marker-image", components.OvsMarkerImageDefault, "The ovs marker image managed by CNA")
+	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
@@ -260,4 +262,8 @@ func main() {
 	manifestTemplate := template.Must(template.ParseFiles(*inputFile))
 	err := manifestTemplate.Execute(os.Stdout, data)
 	check(err)
+
+	if *dumpOperatorCRD {
+		fmt.Printf(data.CNA.CRDString)
+	}
 }
