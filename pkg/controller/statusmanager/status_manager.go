@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -47,7 +48,7 @@ type StatusManager struct {
 	client client.Client
 	name   string
 
-	failing [maxStatusLevel]*opv1alpha1.NetworkAddonsCondition
+	failing [maxStatusLevel]*conditionsv1.Condition
 
 	daemonSets  []types.NamespacedName
 	deployments []types.NamespacedName
@@ -64,7 +65,7 @@ func New(client client.Client, name string) *StatusManager {
 // the status, calling set is tried several times.
 // TODO: Calling of Patch instead may save some problems. We can reiterate later,
 // current collision problem is detected by functional tests
-func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...opv1alpha1.NetworkAddonsCondition) {
+func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) {
 	for i := 0; i < conditionsUpdateRetries; i++ {
 		err := status.set(reachedAvailableLevel, conditions...)
 		if err == nil {
@@ -78,7 +79,7 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...opv1a
 }
 
 // set updates the NetworkAddonsConfig.Status with the provided conditions
-func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...opv1alpha1.NetworkAddonsCondition) error {
+func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) error {
 	// Read the current NetworkAddonsConfig
 	config := &opv1alpha1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
 	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
@@ -91,7 +92,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...opv1a
 
 	// Update Status field with given conditions
 	for _, condition := range conditions {
-		updateCondition(&config.Status, condition)
+		conditionsv1.SetStatusCondition(&config.Status.Conditions, condition)
 	}
 
 	config.Status.OperatorVersion = operatorVersion
@@ -103,11 +104,10 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...opv1a
 
 	// In case that the status field has been updated with "Progressing" condition, make sure that
 	// "Ready" condition is set to False, even when not explicitly set.
-	progressingCondition := getCondition(&config.Status, opv1alpha1.NetworkAddonsConditionProgressing)
-	if progressingCondition != nil && progressingCondition.Status == corev1.ConditionTrue {
-		updateCondition(&config.Status,
-			opv1alpha1.NetworkAddonsCondition{
-				Type:    opv1alpha1.NetworkAddonsConditionAvailable,
+	if conditionsv1.IsStatusConditionTrue(config.Status.Conditions, conditionsv1.ConditionProgressing) {
+		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:    conditionsv1.ConditionAvailable,
 				Status:  corev1.ConditionFalse,
 				Reason:  "Startup",
 				Message: "Configuration is in process",
@@ -141,8 +141,8 @@ func (status *StatusManager) syncFailing() {
 	}
 	status.Set(
 		false,
-		opv1alpha1.NetworkAddonsCondition{
-			Type:   opv1alpha1.NetworkAddonsConditionFailing,
+		conditionsv1.Condition{
+			Type:   conditionsv1.ConditionDegraded,
 			Status: corev1.ConditionFalse,
 		},
 	)
@@ -151,8 +151,8 @@ func (status *StatusManager) syncFailing() {
 // SetFailing marks the operator as Failing with the given reason and message. If it
 // is not already failing for a lower-level reason, the operator's status will be updated.
 func (status *StatusManager) SetFailing(level StatusLevel, reason, message string) {
-	status.failing[level] = &opv1alpha1.NetworkAddonsCondition{
-		Type:    opv1alpha1.NetworkAddonsConditionFailing,
+	status.failing[level] = &conditionsv1.Condition{
+		Type:    conditionsv1.ConditionDegraded,
 		Status:  corev1.ConditionTrue,
 		Reason:  reason,
 		Message: message,
@@ -272,8 +272,8 @@ func (status *StatusManager) SetFromPods() {
 	if len(progressing) > 0 {
 		status.Set(
 			false,
-			opv1alpha1.NetworkAddonsCondition{
-				Type:    opv1alpha1.NetworkAddonsConditionProgressing,
+			conditionsv1.Condition{
+				Type:    conditionsv1.ConditionProgressing,
 				Status:  corev1.ConditionTrue,
 				Reason:  "Deploying",
 				Message: strings.Join(progressing, "\n"),
@@ -282,12 +282,12 @@ func (status *StatusManager) SetFromPods() {
 	} else {
 		status.Set(
 			true,
-			opv1alpha1.NetworkAddonsCondition{
-				Type:   opv1alpha1.NetworkAddonsConditionProgressing,
+			conditionsv1.Condition{
+				Type:   conditionsv1.ConditionProgressing,
 				Status: corev1.ConditionFalse,
 			},
-			opv1alpha1.NetworkAddonsCondition{
-				Type:   opv1alpha1.NetworkAddonsConditionAvailable,
+			conditionsv1.Condition{
+				Type:   conditionsv1.ConditionAvailable,
 				Status: corev1.ConditionTrue,
 			},
 		)
@@ -295,57 +295,6 @@ func (status *StatusManager) SetFromPods() {
 
 	// If all pods are being created, mark deployment as not failing
 	status.SetNotFailing(PodDeployment)
-}
-
-// Set condition in the Status field. In case condition with given Type already exists, update it.
-// This function also takes care of setting timestamps of LastProbeTime and LastTransitionTime.
-func updateCondition(status *opv1alpha1.NetworkAddonsConfigStatus, condition opv1alpha1.NetworkAddonsCondition) {
-	originalCondition := getCondition(status, condition.Type)
-
-	// Check whether the condition is to be added or updated
-	isNew := originalCondition == nil
-
-	// Check whether there are any changes compared to the original condition
-	transition := (!isNew && (condition.Status != originalCondition.Status || condition.Reason != originalCondition.Reason || condition.Message != originalCondition.Message))
-
-	// Update Condition's timestamps
-	now := time.Now()
-
-	// LastProbeTime indicates the last time the condition has been checked
-	condition.LastProbeTime = metav1.Time{
-		Time: now,
-	}
-
-	// LastTransitionTime indicates the last time the condition has been changed or it has been added
-	if isNew || transition {
-		condition.LastTransitionTime = metav1.Time{
-			Time: now,
-		}
-	} else {
-		condition.LastTransitionTime = originalCondition.LastTransitionTime
-	}
-
-	// Update or add desired condition to the Status field
-	if isNew {
-		status.Conditions = append(status.Conditions, condition)
-	} else {
-		for i := range status.Conditions {
-			if status.Conditions[i].Type == condition.Type {
-				status.Conditions[i] = condition
-				break
-			}
-		}
-	}
-}
-
-// Get conditition of given type from NetworkAddonsConfig.Status
-func getCondition(status *opv1alpha1.NetworkAddonsConfigStatus, conditionType opv1alpha1.NetworkAddonsConditionType) *opv1alpha1.NetworkAddonsCondition {
-	for _, condition := range status.Conditions {
-		if condition.Type == conditionType {
-			return &condition
-		}
-	}
-	return nil
 }
 
 func (status *StatusManager) SetContainers(containers []opv1alpha1.Container) {

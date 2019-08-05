@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,35 +45,9 @@ type NetworkAddonsConfigStatus struct {
 	OperatorVersion string                   `json:"operatorVersion,omitempty"`
 	ObservedVersion string                   `json:"observedVersion,omitempty"`
 	TargetVersion   string                   `json:"targetVersion,omitempty"`
-	Conditions      []NetworkAddonsCondition `json:"conditions,omitempty" optional:"true"`
+	Conditions      []conditionsv1.Condition `json:"conditions,omitempty"  patchStrategy:"merge" patchMergeKey:"type"`
 	Containers      []Container              `json:"containers,omitempty"`
 }
-
-// NetworkAddonsCondition represents a condition of a NetworkAddons deployment
-// ---
-// +k8s:openapi-gen=true
-type NetworkAddonsCondition struct {
-	Type               NetworkAddonsConditionType `json:"type"`
-	Status             corev1.ConditionStatus     `json:"status"`
-	LastProbeTime      metav1.Time                `json:"lastProbeTime,omitempty"`
-	LastTransitionTime metav1.Time                `json:"lastTransitionTime,omitempty"`
-	Reason             string                     `json:"reason,omitempty"`
-	Message            string                     `json:"message,omitempty"`
-}
-
-// ---
-// +k8s:openapi-gen=true
-type NetworkAddonsConditionType string
-
-// These are the valid NetworkAddons condition types
-const (
-	// Whether operator failed during deployment
-	NetworkAddonsConditionFailing NetworkAddonsConditionType = "Failing"
-	// Whether is the deployment progressing
-	NetworkAddonsConditionProgressing NetworkAddonsConditionType = "Progressing"
-	// Whether all components were ready
-	NetworkAddonsConditionAvailable NetworkAddonsConditionType = "Ready"
-)
 
 type Container struct {
 	Namespace  string `json:"namespace"`

@@ -11,6 +11,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
@@ -396,7 +397,7 @@ func isNotFound(componentType string, componentName string, clientGetOutput erro
 
 func checkConfigCondition(conf *opv1alpha1.NetworkAddonsConfig, conditionType ConditionType, conditionStatus ConditionStatus) error {
 	for _, condition := range conf.Status.Conditions {
-		if condition.Type == opv1alpha1.NetworkAddonsConditionType(conditionType) {
+		if condition.Type == conditionsv1.ConditionType(conditionType) {
 			if condition.Status == corev1.ConditionStatus(conditionStatus) {
 				return nil
 			}

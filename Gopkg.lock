@@ -766,6 +766,14 @@
   revision = "ca122b5aa28a375e9cb365e76b980bb8cad7a5f2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f4a2b3be9fe012a2e6aa27f5110bbee6953ee96991d2f4d0f7d925d701cc37b4"
+  name = "github.com/openshift/custom-resource-status"
+  packages = ["conditions/v1"]
+  pruneopts = "NUT"
+  revision = "a3f1373825c788339bfb03e81a15951ed11497d7"
+
+[[projects]]
   digest = "1:95582b8c9cedd77c5d8f7be55be509cbff5ec78441eacdb73aae24ce28f2bbc8"
   name = "github.com/openshift/origin"
   packages = ["pkg/security/apis/security"]
@@ -1961,6 +1969,7 @@
     "github.com/onsi/gomega",
     "github.com/openshift/api/operator/v1",
     "github.com/openshift/cluster-network-operator/pkg/names",
+    "github.com/openshift/custom-resource-status/conditions/v1",
     "github.com/openshift/origin/pkg/security/apis/security",
     "github.com/operator-framework/operator-sdk/cmd/operator-sdk",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
