@@ -401,7 +401,7 @@ func checkConfigCondition(conf *opv1alpha1.NetworkAddonsConfig, conditionType Co
 			if condition.Status == corev1.ConditionStatus(conditionStatus) {
 				return nil
 			}
-			return fmt.Errorf("condition %q is not in expected state %q", conditionType, conditionStatus)
+			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q, obtained config %v", conditionType, conditionStatus, condition.Status, configToYaml(conf))
 		}
 	}
 

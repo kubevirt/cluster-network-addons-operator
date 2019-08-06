@@ -25,7 +25,7 @@ const (
 	SriovDpImageDefault           = "quay.io/kubevirt/cluster-network-addon-sriov-device-plugin:v2.0.0-1.git9a20829"
 	SriovCniImageDefault          = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.4.0"
-	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.3.0"
+	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.6.0"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.5.0"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.5.0"
 )
