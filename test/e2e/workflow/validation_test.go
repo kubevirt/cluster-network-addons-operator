@@ -31,7 +31,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should report Failing condition and Available must be set to False", func() {
-				CheckConfigCondition(ConditionDegraded, ConditionTrue, time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionFailing, ConditionTrue, time.Minute, CheckDoNotRepeat)
 				CheckConfigCondition(ConditionAvailable, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
 		})
@@ -53,7 +53,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should report Failing condition and remain Available", func() {
-				CheckConfigCondition(ConditionDegraded, ConditionTrue, time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionFailing, ConditionTrue, time.Minute, CheckDoNotRepeat)
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, CheckDoNotRepeat)
 			})
 		})

@@ -232,7 +232,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addo
 Finally you can wait for the operator to finish deployment:
 
 ```shell
-kubectl wait networkaddonsconfig cluster --for condition=Available
+kubectl wait networkaddonsconfig cluster --for condition=Ready
 ```
 
 In case something failed, you can find the error in the NetworkAddonsConfig Status field:
