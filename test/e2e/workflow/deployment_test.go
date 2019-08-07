@@ -39,7 +39,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					Multus: &opv1alpha1.Multus{},
 				},
 				[]Component{MultusComponent},
-			),			
+			),
 			Entry(
 				NMStateComponent.ComponentName,
 				opv1alpha1.NetworkAddonsConfigSpec{
