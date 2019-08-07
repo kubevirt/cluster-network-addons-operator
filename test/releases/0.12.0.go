@@ -20,7 +20,7 @@ func init() {
 				ParentName: "bridge-marker",
 				ParentKind: "DaemonSet",
 				Name:       "bridge-marker",
-				Image:      "quay.io/kubevirt/bridge-marker:0.1.0",
+				Image:      "quay.io/kubevirt/bridge-marker:0.2.0",
 			},
 			opv1alpha1.Container{
 				Namespace:  "linux-bridge",
