@@ -220,8 +220,6 @@ func main() {
 	multusImage := flag.String("multus-image", components.MultusImageDefault, "The multus image managed by CNA")
 	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", components.LinuxBridgeCniImageDefault, "The linux bridge cni image managed by CNA")
 	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
-	sriovDpImage := flag.String("sriov-dp-image", components.SriovDpImageDefault, "The sriov-dp-image managed by CNA")
-	sriovCniImage := flag.String("sriov-cni-image", components.SriovCniImageDefault, "The sriov-cni-image managed by CNA")
 	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
 	nmStateHandlerImage := flag.String("nm-state-handler-image", components.NMStateHandlerImageDefault, "The nmstate handler image managed by CNA")
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
@@ -243,8 +241,6 @@ func main() {
 			Multus:            *multusImage,
 			LinuxBridgeCni:    *linuxBridgeCniImage,
 			LinuxBridgeMarker: *linuxBridgeMarkerImage,
-			SriovDp:           *sriovDpImage,
-			SriovCni:          *sriovCniImage,
 			KubeMacPool:       *kubeMacPoolImage,
 			NMStateHandler:    *nmStateHandlerImage,
 			OvsCni:            *ovsCniImage,

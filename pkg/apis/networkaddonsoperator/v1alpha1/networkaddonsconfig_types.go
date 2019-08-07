@@ -12,7 +12,6 @@ type NetworkAddonsConfigSpec struct {
 	Multus          *Multus           `json:"multus,omitempty"`
 	LinuxBridge     *LinuxBridge      `json:"linuxBridge,omitempty"`
 	Ovs             *Ovs              `json:"ovs,omitempty"`
-	Sriov           *Sriov            `json:"sriov,omitempty"`
 	KubeMacPool     *KubeMacPool      `json:"kubeMacPool,omitempty"`
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 	NMState         *NMState          `json:"nmstate,omitempty"`
@@ -35,9 +34,6 @@ type KubeMacPool struct {
 	RangeStart string `json:"rangeStart,omitempty"`
 	RangeEnd   string `json:"rangeEnd,omitempty"`
 }
-
-// +k8s:openapi-gen=true
-type Sriov struct{}
 
 // NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
