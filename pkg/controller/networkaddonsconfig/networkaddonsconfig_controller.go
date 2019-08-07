@@ -211,15 +211,15 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// Track state of all deployed pods
 	r.trackDeployedObjects(objs)
 
+	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
+	// previous runs.
+	r.statusManager.SetNotFailing(statusmanager.OperatorConfig)
+
 	// From now on, r.podReconciler takes over NetworkAddonsConfig handling, it will track deployed
 	// objects if needed and set NetworkAddonsConfig.Status accordingly. However, if no pod was
 	// deployed, there is nothing that would trigger initial reconciliation. Therefore, let's
 	// perform the first check manually.
 	r.statusManager.SetFromPods()
-
-	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
-	// previous runs.
-	r.statusManager.SetNotFailing(statusmanager.OperatorConfig)
 
 	return reconcile.Result{}, nil
 }
@@ -385,6 +385,9 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 	allResources = append(allResources, deployments...)
 
 	r.podReconciler.SetResources(allResources)
+
+	// Trigger status manager to notice the change
+	r.statusManager.SetFromPods()
 }
 
 func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.Network, error) {

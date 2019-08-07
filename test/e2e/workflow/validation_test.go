@@ -52,9 +52,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				UpdateConfig(configSpec)
 			})
 
-			It("should report Failing condition and remain Available", func() {
+			It("should report Failing condition and remain stop being Available", func() {
 				CheckConfigCondition(ConditionDegraded, ConditionTrue, time.Minute, CheckDoNotRepeat)
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionAvailable, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
 		})
 	})
