@@ -23,6 +23,7 @@ metadata:
               "rangeEnd": "FD:FF:FF:FF:FF:FF"
             },
             "nmstate":{},
+            "ovs": {},
             "imagePullPolicy": "IfNotPresent"
           }
         }
