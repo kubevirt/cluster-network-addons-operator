@@ -27,7 +27,7 @@ func init() {
 				ParentName: "kube-cni-linux-bridge-plugin",
 				ParentKind: "DaemonSet",
 				Name:       "cni-plugins",
-				Image:      "quay.io/kubevirt/cni-default-plugins:v0.8.0",
+				Image:      "quay.io/kubevirt/cni-default-plugins:v0.8.1",
 			},
 			opv1alpha1.Container{
 				Namespace:  "kubemacpool-system",
