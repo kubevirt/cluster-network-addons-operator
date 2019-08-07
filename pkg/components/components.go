@@ -22,8 +22,6 @@ const (
 	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.1"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.1.0"
-	SriovDpImageDefault           = "quay.io/kubevirt/cluster-network-addon-sriov-device-plugin:v2.0.0-1.git9a20829"
-	SriovCniImageDefault          = "quay.io/kubevirt/cluster-network-addon-sriov-cni:v1.1.0-1.git9e4c973"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.4.0"
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.6.0"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.6.0"
@@ -34,8 +32,6 @@ type AddonsImages struct {
 	Multus            string
 	LinuxBridgeCni    string
 	LinuxBridgeMarker string
-	SriovDp           string
-	SriovCni          string
 	KubeMacPool       string
 	NMStateHandler    string
 	OvsCni            string
@@ -51,12 +47,6 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	}
 	if ai.LinuxBridgeMarker == "" {
 		ai.LinuxBridgeMarker = LinuxBridgeMarkerImageDefault
-	}
-	if ai.SriovDp == "" {
-		ai.SriovDp = SriovDpImageDefault
-	}
-	if ai.SriovCni == "" {
-		ai.SriovCni = SriovCniImageDefault
 	}
 	if ai.KubeMacPool == "" {
 		ai.KubeMacPool = KubeMacPoolImageDefault
@@ -121,14 +111,6 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 									Value: addonsImages.LinuxBridgeMarker,
 								},
 								{
-									Name:  "SRIOV_DP_IMAGE",
-									Value: addonsImages.SriovDp,
-								},
-								{
-									Name:  "SRIOV_CNI_IMAGE",
-									Value: addonsImages.SriovCni,
-								},
-								{
 									Name:  "NMSTATE_HANDLER_IMAGE",
 									Value: addonsImages.NMStateHandler,
 								},
@@ -139,18 +121,6 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 								{
 									Name:  "OVS_MARKER_IMAGE",
 									Value: addonsImages.OvsMarker,
-								},
-								{
-									Name:  "SRIOV_ROOT_DEVICES",
-									Value: "",
-								},
-								{
-									Name:  "SRIOV_NETWORK_NAME",
-									Value: "sriov-network",
-								},
-								{
-									Name:  "SRIOV_NETWORK_TYPE",
-									Value: "sriov",
 								},
 								{
 									Name:  "KUBEMACPOOL_IMAGE",
@@ -395,7 +365,6 @@ func GetCR() *cnav1alpha1.NetworkAddonsConfig {
 		Spec: cnav1alpha1.NetworkAddonsConfigSpec{
 			Multus:          &cnav1alpha1.Multus{},
 			LinuxBridge:     &cnav1alpha1.LinuxBridge{},
-			Sriov:           &cnav1alpha1.Sriov{},
 			KubeMacPool:     &cnav1alpha1.KubeMacPool{},
 			NMState:         &cnav1alpha1.NMState{},
 			Ovs:             &cnav1alpha1.Ovs{},

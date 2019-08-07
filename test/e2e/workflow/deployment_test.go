@@ -39,15 +39,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					Multus: &opv1alpha1.Multus{},
 				},
 				[]Component{MultusComponent},
-			),
-			Entry(
-				SriovComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					Sriov:  &opv1alpha1.Sriov{},
-					Multus: &opv1alpha1.Multus{},
-				},
-				[]Component{SriovComponent, MultusComponent},
-			),
+			),			
 			Entry(
 				NMStateComponent.ComponentName,
 				opv1alpha1.NetworkAddonsConfigSpec{
@@ -76,7 +68,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				MultusComponent,
 				LinuxBridgeComponent,
 				KubeMacPoolComponent,
-				SriovComponent,
 				NMStateComponent,
 				OvsComponent,
 			}
@@ -84,7 +75,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				KubeMacPool: &opv1alpha1.KubeMacPool{},
 				LinuxBridge: &opv1alpha1.LinuxBridge{},
 				Multus:      &opv1alpha1.Multus{},
-				Sriov:       &opv1alpha1.Sriov{},
 				NMState:     &opv1alpha1.NMState{},
 				Ovs:         &opv1alpha1.Ovs{},
 			}
@@ -113,11 +103,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			components = append(components, KubeMacPoolComponent)
 			testConfigUpdate(configSpec, components)
 
-			// Add SR-IOV component
-			configSpec.Sriov = &opv1alpha1.Sriov{}
-			components = append(components, SriovComponent)
-			testConfigUpdate(configSpec, components)
-
 			// Add NMState component
 			configSpec.NMState = &opv1alpha1.NMState{}
 			components = append(components, NMStateComponent)
@@ -134,7 +119,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		components := []Component{
 			MultusComponent,
 			LinuxBridgeComponent,
-			SriovComponent,
 			NMStateComponent,
 			KubeMacPoolComponent,
 			OvsComponent,
@@ -142,7 +126,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 			LinuxBridge: &opv1alpha1.LinuxBridge{},
 			Multus:      &opv1alpha1.Multus{},
-			Sriov:       &opv1alpha1.Sriov{},
 			NMState:     &opv1alpha1.NMState{},
 			KubeMacPool: &opv1alpha1.KubeMacPool{},
 			Ovs:         &opv1alpha1.Ovs{},

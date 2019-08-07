@@ -66,7 +66,6 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 
 	errs = append(errs, changeSafeMultus(prev, next)...)
 	errs = append(errs, changeSafeLinuxBridge(prev, next)...)
-	errs = append(errs, changeSafeSriov(prev, next)...)
 	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
 	errs = append(errs, changeSafeNMState(prev, next)...)
@@ -91,13 +90,6 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 
 	// render Linux Bridge
 	o, err = renderLinuxBridge(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render SR-IOV
-	o, err = renderSriov(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
