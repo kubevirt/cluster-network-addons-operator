@@ -26,6 +26,7 @@ const (
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.6.0"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.6.0"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.6.0"
+	OvsBinaryImageDefault         = "docker.io/openshift/origin-node:v3.11"
 )
 
 type AddonsImages struct {
@@ -36,6 +37,7 @@ type AddonsImages struct {
 	NMStateHandler    string
 	OvsCni            string
 	OvsMarker         string
+	OvsBinary         string
 }
 
 func (ai *AddonsImages) FillDefaults() *AddonsImages {
@@ -59,6 +61,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	}
 	if ai.OvsMarker == "" {
 		ai.OvsMarker = OvsMarkerImageDefault
+	}
+	if ai.OvsBinary == "" {
+		ai.OvsBinary = OvsBinaryImageDefault
 	}
 	return ai
 }
@@ -121,6 +126,10 @@ func GetDeployment(version string, namespace string, repository string, tag stri
 								{
 									Name:  "OVS_MARKER_IMAGE",
 									Value: addonsImages.OvsMarker,
+								},
+								{
+									Name:  "OVS_BINARY_IMAGE",
+									Value: addonsImages.OvsBinary,
 								},
 								{
 									Name:  "KUBEMACPOOL_IMAGE",

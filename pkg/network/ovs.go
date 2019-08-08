@@ -29,13 +29,18 @@ func renderOvs(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, clu
 	// render the manifests on disk
 	data := render.MakeRenderData()
 	data.Data["OvsCNIImage"] = os.Getenv("OVS_CNI_IMAGE")
+	data.Data["OvsImage"] = os.Getenv("OVS_BINARY_IMAGE")
 	data.Data["OvsMarkerImage"] = os.Getenv("OVS_MARKER_IMAGE")
-	data.Data["OvsImage"] = os.Getenv("OVS_IMAGE")
+
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	if clusterInfo.OpenShift4 {
 		data.Data["CNIBinDir"] = cni.BinDirOpenShift4
+		// For ocp 4 running on CoreOS we cant copy the ovs binary to /usr/bin
+		// This directory is read only
+		data.Data["OvsBinDir"] = cni.OvsBinaryDirOpenShift4
 	} else {
 		data.Data["CNIBinDir"] = cni.BinDir
+		data.Data["OvsBinDir"] = cni.OvsBinaryDirOpenShift3
 	}
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 
