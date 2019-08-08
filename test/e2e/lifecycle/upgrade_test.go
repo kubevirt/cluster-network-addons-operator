@@ -41,6 +41,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 				BeforeEach(func() {
 					UninstallRelease(oldRelease)
 					InstallRelease(newRelease)
+					UpdateConfig(newRelease.SupportedSpec)
 					CheckOperatorIsReady(podsDeploymentTimeout)
 
 					// Check that operator and target versions will be set to the newer.
