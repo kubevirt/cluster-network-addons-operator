@@ -1,4 +1,4 @@
-FROM quay.io/openshift/origin-operator-registry
+FROM quay.io/openshift/origin-operator-registry:4.1.0
 
 COPY manifests /registry
 
