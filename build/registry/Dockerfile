@@ -1,13 +1,13 @@
-FROM quay.io/openshift/origin-operator-registry:4.1.0
+FROM quay.io/openshift/origin-operator-registry:4.2.0
 
-COPY manifests /registry
+COPY manifests manifests
 
 # Bundle should include only manifests related to the CSV,
 # drop all additional files.
-RUN find /registry/cluster-network-addons/*/ -type f ! -name '*.crd.*' ! -name '*.clusterserviceversion.*' -exec rm -f {} \;
+RUN find manifests/cluster-network-addons/*/ -type f ! -name '*.crd.*' ! -name '*.clusterserviceversion.*' -exec rm -f {} \;
 
 # Initialize the database
-RUN initializer --manifests /registry --output bundles.db
+RUN initializer --manifests manifests --output bundles.db
 
 # There are multiple binaries in the origin-operator-registry
 # We want the registry-server
