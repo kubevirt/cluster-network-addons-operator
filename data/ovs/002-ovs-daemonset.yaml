@@ -25,33 +25,6 @@ spec:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
-{{ if .EnableSCC }}
-      initContainers:
-        - name: ovs-vsctl
-          command:
-            - /bin/bash
-            - -c
-            - |
-              cp /usr/bin/ovs-vsctl /host/usr/local/bin/_ovs-vsctl
-              echo '#!/usr/bin/bash
-              _ovs-vsctl --db unix:///run/openvswitch/db.sock $@
-              ' > /host/usr/local/bin/ovs-vsctl
-              chmod +x /host/usr/local/bin/ovs-vsctl
-          image: {{ .OvsCNIImage }}
-          imagePullPolicy: {{ .ImagePullPolicy }}
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "50Mi"
-            limits:
-              cpu: "100m"
-              memory: "50Mi"
-          securityContext:
-            privileged: true
-          volumeMounts:
-            - name: localbin
-              mountPath: /host/usr/local/bin
-{{ end }}
       containers:
         - name: ovs-cni-plugin
           image: {{ .OvsCNIImage }}
