@@ -152,7 +152,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
 		})
 	})
-
+	//2178
 	Context("when kubeMacPool is deployed", func() {
 		BeforeEach(func() {
 			By("Deploying KubeMacPool")
