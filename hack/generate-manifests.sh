@@ -23,6 +23,7 @@ for template in $templates; do
 		${PROJECT_ROOT}/tools/manifest-templator/manifest-templator \
 		--version=${VERSION} \
 		--version-replaces=${VERSION_REPLACES} \
+		--operator-version=${VERSION} \
 		--container-prefix=${CONTAINER_PREFIX} \
 		--container-tag=${CONTAINER_TAG} \
 		--image-pull-policy=${IMAGE_PULL_POLICY} \
