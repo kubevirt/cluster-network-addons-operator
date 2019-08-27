@@ -8,7 +8,7 @@ metadata:
   name: kubemacpool-mac-controller-manager
   namespace: kubemacpool-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       control-plane: mac-controller-manager
@@ -19,41 +19,56 @@ spec:
         control-plane: mac-controller-manager
         controller-tools.k8s.io: "1.0"
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: control-plane
+                  operator: In
+                  values:
+                  - mac-controller-manager
+              topologyKey: kubernetes.io/hostname
+            weight: 1
       containers:
-        - args:
-            - --v=production
-          command:
-            - /manager
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: SECRET_NAME
-              value: kubemacpool-webhook-secret
-            - name: RANGE_START
-              valueFrom:
-                configMapKeyRef:
-                  key: RANGE_START
-                  name: kubemacpool-mac-range-config
-            - name: RANGE_END
-              valueFrom:
-                configMapKeyRef:
-                  key: RANGE_END
-                  name: kubemacpool-mac-range-config
-          image: {{ .KubeMacPoolImage }}
-          imagePullPolicy: {{ .ImagePullPolicy }}
-          name: manager
-          ports:
-            - containerPort: 9876
-              name: webhook-server
-              protocol: TCP
-          resources:
-            limits:
-              cpu: 300m
-              memory: 800Mi
-            requests:
-              cpu: 100m
-              memory: 500Mi
+      - args:
+        - --v=production
+        - --wait-time=600
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: RANGE_START
+          valueFrom:
+            configMapKeyRef:
+              key: RANGE_START
+              name: kubemacpool-mac-range-config
+        - name: RANGE_END
+          valueFrom:
+            configMapKeyRef:
+              key: RANGE_END
+              name: kubemacpool-mac-range-config
+        image: {{ .KubeMacPoolImage }}
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        name: manager
+        ports:
+        - containerPort: 9876
+          name: webhook-server
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 300m
+            memory: 600Mi
+          requests:
+            cpu: 100m
+            memory: 300Mi
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
