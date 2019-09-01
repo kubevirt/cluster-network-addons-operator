@@ -34,7 +34,14 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	// Get existing
 	existing := &uns.Unstructured{}
 	existing.SetGroupVersionKind(gvk)
-	err := client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, existing)
+	var err error
+	if obj.GetKind() == "PodDisruptionBudget" {
+		// When using PodDisruptionBudget the namespace should be default
+		err = client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: "default"}, existing)
+		obj.SetNamespace("default")
+	} else {
+		err = client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, existing)
+	}
 
 	if err != nil && apierrors.IsNotFound(err) {
 		log.Printf("does not exist, creating %s", objDesc)
