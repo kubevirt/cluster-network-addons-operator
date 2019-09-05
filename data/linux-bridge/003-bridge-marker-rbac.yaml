@@ -25,13 +25,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: bridge-marker
-  namespace: linux-bridge
+  namespace: {{ .Namespace }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: bridge-marker
-  namespace: linux-bridge
+  namespace: {{ .Namespace }}
 {{ if .EnableSCC }}
 ---
 apiVersion: security.openshift.io/v1
@@ -44,5 +44,5 @@ runAsUser:
 seLinuxContext:
   type: RunAsAny
 users:
-- system:serviceaccount:linux-bridge:bridge-marker
+- system:serviceaccount:{{ .Namespace }}:bridge-marker
 {{ end }}

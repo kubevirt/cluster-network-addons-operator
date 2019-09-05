@@ -111,7 +111,7 @@ $(E2E_SUITES): $(OPERATOR_SDK)
 	$(OPERATOR_SDK) test \
 		local \
 		./$@ \
-		--namespace cluster-network-addons-operator \
+		--namespace cluster-network-addons \
 		--no-setup \
 		--kubeconfig ./cluster/.kubeconfig \
 		--go-test-flags "$(E2E_TEST_ARGS)"

@@ -1,6 +1,4 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: ovs
-  labels:
-    name: ovs
+  name: {{ .Namespace }}

@@ -3,7 +3,7 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: nmstate-handler
-  namespace: nmstate
+  namespace: {{ .Namespace }}
   labels:
     nmstate.io: ""
 ---
@@ -11,11 +11,11 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nmstate-handler
-  namespace: nmstate
+  namespace: {{ .Namespace }}
 subjects:
 - kind: ServiceAccount
   name: nmstate-handler
-  namespace: nmstate
+  namespace: {{ .Namespace }}
 roleRef:
   kind: Role
   name: nmstate-handler
@@ -25,11 +25,10 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nmstate-handler
-  namespace: nmstate
 subjects:
 - kind: ServiceAccount
   name: nmstate-handler
-  namespace: nmstate
+  namespace: {{ .Namespace }}
 roleRef:
   kind: ClusterRole
   name: nmstate-handler
@@ -40,7 +39,7 @@ kind: Role
 metadata:
   creationTimestamp: null
   name: nmstate-handler
-  namespace: nmstate
+  namespace: {{ .Namespace }}
 rules:
 - apiGroups:
   - ""
@@ -83,7 +82,7 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: nmstate-handler
-  namespace: nmstate
+  namespace: {{ .Namespace }}
 rules:
 - apiGroups:
   - nmstate.io
@@ -112,5 +111,5 @@ runAsUser:
 seLinuxContext:
   type: RunAsAny
 users:
-- system:serviceaccount:nmstate:nmstate-handler
+- system:serviceaccount:{{ .Namespace }}:nmstate-handler
 {{ end }}
