@@ -32,7 +32,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					LinuxBridge: &opv1alpha1.LinuxBridge{},
 				},
 				[]Component{LinuxBridgeComponent},
-			),
+			),//2303
 			Entry(
 				MultusComponent.ComponentName,
 				opv1alpha1.NetworkAddonsConfigSpec{
@@ -62,7 +62,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				[]Component{OvsComponent},
 			),
 		)
-
+		//2264
 		It("should be able to deploy all components at once", func() {
 			components := []Component{
 				MultusComponent,
@@ -80,7 +80,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			}
 			testConfigCreate(configSpec, components)
 		})
-
+		//2304
 		It("should be able to deploy all components one by one", func() {
 			configSpec := opv1alpha1.NetworkAddonsConfigSpec{}
 			components := []Component{}
@@ -135,17 +135,17 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
-
+		//2305
 		It("should remain in Available condition after applying the same config", func() {
 			UpdateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, 30*time.Second)
 		})
-
+		//2281
 		It("should be able to remove all of them by removing the config", func() {
 			DeleteConfig()
 			CheckComponentsRemoval(components)
 		})
-
+		//2300
 		It("should be able to remove the config and create it again", func() {
 			DeleteConfig()
 			CreateConfig(configSpec)
