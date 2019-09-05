@@ -29,13 +29,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: multus
-  namespace: multus
+  namespace: {{ .Namespace }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: multus
-  namespace: multus
+  namespace: {{ .Namespace }}
 {{ if .EnableSCC }}
 ---
 apiVersion: security.openshift.io/v1
@@ -49,5 +49,5 @@ runAsUser:
 seLinuxContext:
   type: RunAsAny
 users:
-- system:serviceaccount:multus:multus
+- system:serviceaccount:{{ .Namespace }}:multus
 {{ end }}

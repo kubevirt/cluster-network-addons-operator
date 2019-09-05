@@ -9,4 +9,4 @@ metadata:
     control-plane: mac-controller-manager
     controller-tools.k8s.io: "1.0"
   name: kubemacpool-mac-range-config
-  namespace: kubemacpool-system
+  namespace: {{ .Namespace }}

@@ -3,7 +3,7 @@ apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: mac-controller-manager
-  namespace: kubemacpool-system
+  namespace: {{ .Namespace }}
 spec:
   minAvailable: 1
   selector:
