@@ -25,13 +25,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: ovs-cni-marker
-    namespace: ovs
+    namespace: {{ .Namespace }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: ovs-cni-marker
-  namespace: ovs
+  namespace: {{ .Namespace }}
 {{ if .EnableSCC }}
 ---
 apiVersion: security.openshift.io/v1
@@ -46,5 +46,5 @@ runAsUser:
 seLinuxContext:
   type: RunAsAny
 users:
-  - system:serviceaccount:ovs:ovs-cni-marker
+  - system:serviceaccount:{{ .Namespace }}:ovs-cni-marker
 {{ end }}

@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: ovs-cni-amd64
-  namespace: ovs
+  namespace: {{ .Namespace }}
   labels:
     tier: node
     app: ovs-cni

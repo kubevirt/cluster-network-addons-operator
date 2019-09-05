@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: bridge-marker
-  namespace: linux-bridge
+  namespace: {{ .Namespace }}
   labels:
     tier: node
     app: bridge-marker

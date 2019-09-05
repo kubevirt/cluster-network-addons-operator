@@ -15,7 +15,7 @@ import (
 
 const (
 	Name      = "cluster-network-addons-operator"
-	Namespace = "cluster-network-addons-operator"
+	Namespace = "cluster-network-addons"
 )
 
 const (
@@ -140,6 +140,14 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								},
 								{
 									Name: "OPERATOR_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+								{
+									Name: "OPERAND_NAMESPACE",
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
 											FieldPath: "metadata.namespace",

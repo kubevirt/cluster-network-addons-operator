@@ -115,4 +115,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: kubemacpool-system
+    namespace: {{ .Namespace }}

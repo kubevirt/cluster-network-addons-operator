@@ -6,7 +6,7 @@ metadata:
     control-plane: mac-controller-manager
     controller-tools.k8s.io: "1.0"
   name: kubemacpool-mac-controller-manager
-  namespace: kubemacpool-system
+  namespace: {{ .Namespace }}
 spec:
   replicas: 2
   selector:
