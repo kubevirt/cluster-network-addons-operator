@@ -39,13 +39,6 @@ spec:
               cp -rf /usr/src/containernetworking/plugins/bin/*tuning /opt/cni/bin/
               echo "Entering sleep... (success)"
               sleep infinity
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "50Mi"
-            limits:
-              cpu: "100m"
-              memory: "50Mi"
           securityContext:
             privileged: true
           volumeMounts:
