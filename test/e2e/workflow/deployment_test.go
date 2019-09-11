@@ -32,7 +32,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					LinuxBridge: &opv1alpha1.LinuxBridge{},
 				},
 				[]Component{LinuxBridgeComponent},
-			),//2303
+			), //2303
 			Entry(
 				MultusComponent.ComponentName,
 				opv1alpha1.NetworkAddonsConfigSpec{
