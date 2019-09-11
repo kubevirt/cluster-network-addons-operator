@@ -10,6 +10,7 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
+
 //2297
 var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when invalid config is applied", func() {
