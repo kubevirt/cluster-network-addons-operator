@@ -84,6 +84,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 					"name": Name,
 				},
 			},
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.RecreateDeploymentStrategyType,
+			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
