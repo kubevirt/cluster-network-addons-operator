@@ -193,6 +193,12 @@ kubectl get networkaddonsconfig cluster -o yaml
 
 For more information about the configuration format check [configuring section](#configuration).
 
+# Upgrades
+
+Starting with version `0.16.0`, this operator supports upgrades to any newer
+version. If you wish to upgrade, remove old operator (`operator.yaml`) and
+install new, operands will remain available during the operator's downtime.
+
 # Development
 
 Make sure you have Docker >= 17.05 installed.
