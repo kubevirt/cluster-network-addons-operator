@@ -5,6 +5,7 @@ metadata:
   labels:
     control-plane: mac-controller-manager
     controller-tools.k8s.io: "1.0"
+    app: kubemacpool
   name: kubemacpool-mac-controller-manager
   namespace: {{ .Namespace }}
 spec:
@@ -18,6 +19,7 @@ spec:
       labels:
         control-plane: mac-controller-manager
         controller-tools.k8s.io: "1.0"
+        app: kubemacpool
     spec:
       affinity:
         podAntiAffinity:
