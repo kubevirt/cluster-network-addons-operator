@@ -21,6 +21,13 @@ kubevirtci::install
 
 $(kubevirtci::path)/cluster-up/up.sh
 
+if [[ "$KUBEVIRT_PROVIDER" =~ okd- ]]; then
+    echo 'Remove components we do not need to save some resources'
+    ./cluster/kubectl.sh delete ns openshift-monitoring --wait=false
+    ./cluster/kubectl.sh delete ns openshift-marketplace --wait=false
+    ./cluster/kubectl.sh delete ns openshift-cluster-samples-operator --wait=false
+fi
+
 if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
     echo 'Install NetworkManager on nodes'
     for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do

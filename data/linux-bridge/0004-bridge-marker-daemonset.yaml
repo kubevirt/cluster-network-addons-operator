@@ -29,6 +29,13 @@ spec:
       - name: bridge-marker
         image: {{ .LinuxBridgeMarkerImage }}
         imagePullPolicy: {{ .ImagePullPolicy }}
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "40Mi"
+          limits:
+            cpu: "100m"
+            memory: "40Mi"
         args:
           - -node-name
           - $(NODE_NAME)
