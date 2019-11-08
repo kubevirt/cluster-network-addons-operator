@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# Copyright 2018-2019 Red Hat, Inc.
+# This file is part of the KubeVirt project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Copyright 2017-2019 Red Hat, Inc.
+
+set -ex
 
 source ./cluster/kubevirtci.sh
-kubevirtci::install
 
-$(kubevirtci::path)/cluster-up/kubectl.sh "$@"
+${OPERATOR_SDK} test \
+    local \
+    ./${TEST_SUITE} \
+    --namespace cluster-network-addons \
+    --no-setup \
+    --kubeconfig $(kubevirtci::kubeconfig) \
+    --go-test-flags "${TEST_ARGS}"

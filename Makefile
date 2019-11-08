@@ -108,13 +108,7 @@ cluster-operator-install:
 	./cluster/operator-install.sh
 
 $(E2E_SUITES): $(OPERATOR_SDK)
-	$(OPERATOR_SDK) test \
-		local \
-		./$@ \
-		--namespace cluster-network-addons \
-		--no-setup \
-		--kubeconfig ./cluster/.kubeconfig \
-		--go-test-flags "$(E2E_TEST_ARGS)"
+	OPERATOR_SDK=$(OPERATOR_SDK) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
 
 cluster-clean:
 	./cluster/clean.sh
