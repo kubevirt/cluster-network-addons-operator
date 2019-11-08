@@ -119,7 +119,7 @@ $(E2E_SUITES): $(OPERATOR_SDK)
 cluster-clean:
 	./cluster/clean.sh
 
-# Default images can be found in pkg/components/components.go
+# Default images can be found in DEPENDENCIES.env
 gen-manifests:
 	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \

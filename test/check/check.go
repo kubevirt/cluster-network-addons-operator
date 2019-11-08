@@ -23,7 +23,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
@@ -123,10 +122,10 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	By("Checking that the operator is up and running")
 	if timeout != CheckImmediately {
 		Eventually(func() error {
-			return checkForDeployment(components.Name)
+			return checkForDeployment(names.NAME)
 		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
 	} else {
-		Expect(checkForDeployment(components.Name)).ShouldNot(HaveOccurred(), "Operator is not ready")
+		Expect(checkForDeployment(names.NAME)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
 }
 
@@ -294,7 +293,7 @@ func checkForSecurityContextConstraints(name string) error {
 func checkForDeployment(name string) error {
 	deployment := appsv1.Deployment{}
 
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &deployment)
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: names.NAMESPACE}, &deployment)
 	if err != nil {
 		return err
 	}
@@ -302,7 +301,7 @@ func checkForDeployment(name string) error {
 	labels := deployment.GetLabels()
 	if labels != nil {
 		if _, operatorLabelSet := labels[opv1alpha1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
-			return fmt.Errorf("Deployment %s/%s is missing operator label", components.Namespace, name)
+			return fmt.Errorf("Deployment %s/%s is missing operator label", names.NAMESPACE, name)
 		}
 	}
 
@@ -311,7 +310,7 @@ func checkForDeployment(name string) error {
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v", components.Namespace, name, string(manifest))
+		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v", names.NAMESPACE, name, string(manifest))
 	}
 
 	return nil
@@ -320,7 +319,7 @@ func checkForDeployment(name string) error {
 func checkForDaemonSet(name string) error {
 	daemonSet := appsv1.DaemonSet{}
 
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &daemonSet)
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: names.NAMESPACE}, &daemonSet)
 	if err != nil {
 		return err
 	}
@@ -328,7 +327,7 @@ func checkForDaemonSet(name string) error {
 	labels := daemonSet.GetLabels()
 	if labels != nil {
 		if _, operatorLabelSet := labels[opv1alpha1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
-			return fmt.Errorf("DaemonSet %s/%s is missing operator label", components.Namespace, name)
+			return fmt.Errorf("DaemonSet %s/%s is missing operator label", names.NAMESPACE, name)
 		}
 	}
 
@@ -337,7 +336,7 @@ func checkForDaemonSet(name string) error {
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("DaemonSet %s/%s is not ready, current state:\n%v", components.Namespace, name, string(manifest))
+		return fmt.Errorf("DaemonSet %s/%s is not ready, current state:\n%v", names.NAMESPACE, name, string(manifest))
 	}
 
 	return nil
@@ -426,7 +425,7 @@ func retrieveRange() (string, string) {
 	Eventually(func() error {
 
 		return framework.Global.Client.Get(context.TODO(),
-			types.NamespacedName{Namespace: components.Namespace, Name: names.APPLIED_PREFIX + names.OPERATOR_CONFIG}, configMap)
+			types.NamespacedName{Namespace: names.NAMESPACE, Name: names.APPLIED_PREFIX + names.OPERATOR_CONFIG}, configMap)
 
 	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())
 

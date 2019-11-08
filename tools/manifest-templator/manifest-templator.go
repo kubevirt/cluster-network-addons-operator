@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	components "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
@@ -55,7 +56,7 @@ type templateData struct {
 	OperatorVersion string
 	Namespace       string
 	ContainerPrefix string
-	ImageName	string
+	ImageName       string
 	ContainerTag    string
 	ImagePullPolicy string
 	CNA             *operatorData
@@ -218,9 +219,9 @@ func main() {
 	version := flag.String("version", "", "The csv version")
 	versionReplaces := flag.String("version-replaces", "", "The csv version this replaces")
 	operatorVersion := flag.String("operator-version", "", "The operator version")
-	namespace := flag.String("namespace", components.Namespace, "Namespace used by csv")
+	namespace := flag.String("namespace", names.NAMESPACE, "Namespace used by csv")
 	containerPrefix := flag.String("container-prefix", "quay.io/kubevirt", "The container repository used for the operator image")
-	imageName := flag.String("image-name", components.Name, "The operator image's name")
+	imageName := flag.String("image-name", names.NAME, "The operator image's name")
 	containerTag := flag.String("container-tag", "latest", "The operator image's container tag")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "The pull policy to use on the operator image")
 	multusImage := flag.String("multus-image", components.MultusImageDefault, "The multus image managed by CNA")
@@ -242,7 +243,7 @@ func main() {
 		OperatorVersion: *operatorVersion,
 		Namespace:       *namespace,
 		ContainerPrefix: *containerPrefix,
-		ImageName:	 *imageName,
+		ImageName:       *imageName,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
 		AddonsImages: (&components.AddonsImages{
