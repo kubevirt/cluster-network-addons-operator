@@ -1,8 +1,8 @@
 sub-stages:
-  - lifecycle.k8s-1.13.3
-  - lifecycle.os-3.11.0
-  - workflow.k8s-1.13.3
-  - workflow.os-3.11.0
+  - e2e-lifecycle-k8s
+  - e2e-lifecycle-okd
+  - e2e-workflow-k8s
+  - e2e-workflow-okd
 
 runtime_requirements:
   support_nesting_level: 2

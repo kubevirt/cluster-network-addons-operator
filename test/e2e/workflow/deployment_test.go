@@ -9,6 +9,7 @@ import (
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
+	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
@@ -190,7 +191,16 @@ func testConfigUpdate(configSpec opv1alpha1.NetworkAddonsConfigSpec, components 
 }
 
 func checkConfigChange(components []Component) {
-	if len(components) > 0 {
+	// On OpenShift 4, Multus is already deployed by default
+	onlyMultusOnOKDCluster := (len(components) == 1 &&
+		IsOnOKDCluster() &&
+		components[0].ComponentName == MultusComponent.ComponentName)
+	noComponentToDeploy := len(components) == 0 || onlyMultusOnOKDCluster
+	if noComponentToDeploy {
+		// Wait until Available condition is reported. Should be fast when no components are
+		// being deployed
+		CheckConfigCondition(ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
+	} else {
 		// If there are any components to deploy wait until Progressing condition is reported
 		CheckConfigCondition(ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
 
@@ -201,9 +211,5 @@ func checkConfigChange(components []Component) {
 
 		// Check that all requested components have been deployed
 		CheckComponentsDeployment(components)
-	} else {
-		// Wait until Available condition is reported. Should be fast when no components are
-		// being deployed
-		CheckConfigCondition(ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
 	}
 }
