@@ -1,77 +1,44 @@
-#!/bin/bash -e
+#!/bin/bash
+#
+# Copyright 2018-2019 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-KUBERNETES_IMAGE="k8s-1.13.3@sha256:afbdd9b4208e5ce2ec327f302c336cea3ed3c22488603eab63b92c3bfd36d6cd"
-OPENSHIFT_IMAGE="os-3.11.0-crio@sha256:3f11a6f437fcdf2d70de4fcc31e0383656f994d0d05f9a83face114ea7254bc0"
+set -ex
 
-CLUSTER_PROVIDER=${CLUSTER_PROVIDER:-k8s-1.13.3}
-CLUSTER_MEMORY_SIZE=${CLUSTER_MEMORY_SIZE:-5120M}
-CLUSTER_NUM_NODES=${CLUSTER_NUM_NODES:-1}
+source ./cluster/kubevirtci.sh
+kubevirtci::install
 
-SECONDARY_NICS_NUM=${SECONDARY_NICS_NUM:-1}
+$(kubevirtci::path)/cluster-up/up.sh
 
-if ! [[ $CLUSTER_NUM_NODES =~ '^-?[0-9]+$' ]] || [[ $CLUSTER_NUM_NODES -lt 1 ]] ; then
-    CLUSTER_NUM_NODES=1
+if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
+    echo 'Install NetworkManager on nodes'
+    for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
+        ./cluster/cli.sh ssh ${node} sudo -- yum install -y yum-plugin-copr
+        ./cluster/cli.sh ssh ${node} sudo -- yum copr enable -y networkmanager/NetworkManager-1.20
+        ./cluster/cli.sh ssh ${node} sudo -- yum install -y NetworkManager NetworkManager-ovs
+        ./cluster/cli.sh ssh ${node} sudo -- systemctl daemon-reload
+        ./cluster/cli.sh ssh ${node} sudo -- systemctl restart NetworkManager
+        echo "Check NetworkManager is working fine on node $node"
+        ./cluster/cli.sh ssh ${node} -- nmcli device show > /dev/null
+    done
 fi
 
-case "${CLUSTER_PROVIDER}" in
-    'k8s-1.13.3')
-        image=$KUBERNETES_IMAGE
-        ;;
-    'os-3.11.0')
-        image=$OPENSHIFT_IMAGE
-        ;;
-esac
-
-CREATE_SECONDARY_NICS=""
-for i in $(seq 1 ${SECONDARY_NICS_NUM}); do
-    CREATE_SECONDARY_NICS+=" -device virtio-net-pci,netdev=secondarynet$i -netdev tap,id=secondarynet$i,ifname=stap$i,script=no,downscript=no"
-done
-
-echo "Install cluster from image: ${image}"
-if [[ $image == $KUBERNETES_IMAGE ]]; then
-    # Run Kubernetes cluster image
-    ./cluster/cli.sh run --random-ports --nodes ${CLUSTER_NUM_NODES} --memory ${CLUSTER_MEMORY_SIZE} --background --qemu-args "'${CREATE_SECONDARY_NICS}'" kubevirtci/${image}
-
-    # Copy kubectl tool and configuration file
-    ./cluster/cli.sh scp /usr/bin/kubectl - > ./cluster/.kubectl
-    chmod u+x ./cluster/.kubectl
-    ./cluster/cli.sh scp /etc/kubernetes/admin.conf - > ./cluster/.kubeconfig
-
-    # Configure insecure access to Kubernetes cluster
-    cluster_port=$(./cluster/cli.sh ports k8s | tr -d '\r')
-    ./cluster/kubectl.sh config set-cluster kubernetes --server=https://127.0.0.1:$cluster_port
-    ./cluster/kubectl.sh config set-cluster kubernetes --insecure-skip-tls-verify=true
-elif [[ $image == $OPENSHIFT_IMAGE ]]; then
-    # If on a developer setup, expose ocp on 8443, so that the openshift web console can be used (the port is important because of auth redirects)
-    if [ -z "${JOB_NAME}" ]; then
-        CLUSTER_PROVIDER_EXTRA_ARGS="${CLUSTER_PROVIDER_EXTRA_ARGS} --ocp-port 8443"
-    fi
-
-    # Run OpenShift cluster image
-    ./cluster/cli.sh run --random-ports --reverse --nodes ${CLUSTER_NUM_NODES} --memory ${CLUSTER_MEMORY_SIZE} --background --qemu-args "'${CREATE_SECONDARY_NICS}'" kubevirtci/${image} ${CLUSTER_PROVIDER_EXTRA_ARGS}
-    ./cluster/cli.sh scp /etc/origin/master/admin.kubeconfig - > ./cluster/.kubeconfig
-    ./cluster/cli.sh ssh node01 -- sudo cp /etc/origin/master/admin.kubeconfig ~vagrant/
-    ./cluster/cli.sh ssh node01 -- sudo chown vagrant:vagrant ~vagrant/admin.kubeconfig
-
-    # Copy oc tool and configuration file
-    ./cluster/cli.sh scp /usr/bin/oc - > ./cluster/.kubectl
-    chmod u+x ./cluster/.kubectl
-    ./cluster/cli.sh scp /etc/origin/master/admin.kubeconfig - > ./cluster/.kubeconfig
-
-    # Update Kube config to support unsecured connection
-    cluster_port=$(./cluster/cli.sh ports ocp | tr -d '\r')
-    ./cluster/kubectl.sh config set-cluster node01:8443 --server=https://127.0.0.1:$cluster_port
-    ./cluster/kubectl.sh config set-cluster node01:8443 --insecure-skip-tls-verify=true
+if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
+    echo 'Installing Open vSwitch on nodes'
+    for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
+        ./cluster/cli.sh ssh ${node} -- sudo yum install -y http://cbs.centos.org/kojifiles/packages/openvswitch/2.9.2/1.el7/x86_64/openvswitch-2.9.2-1.el7.x86_64.rpm http://cbs.centos.org/kojifiles/packages/openvswitch/2.9.2/1.el7/x86_64/openvswitch-devel-2.9.2-1.el7.x86_64.rpm http://cbs.centos.org/kojifiles/packages/dpdk/17.11/3.el7/x86_64/dpdk-17.11-3.el7.x86_64.rpm
+        ./cluster/cli.sh ssh ${node} -- sudo systemctl daemon-reload
+        ./cluster/cli.sh ssh ${node} -- sudo systemctl restart openvswitch
+    done
 fi
-
-echo 'Wait until all nodes are ready'
-until [[ $(./cluster/kubectl.sh get nodes --no-headers | wc -l) -eq $(./cluster/kubectl.sh get nodes --no-headers | grep ' Ready' | wc -l) ]]; do
-    sleep 1
-done
-
-echo 'Install NetworkManager on nodes'
-for i in $(seq 1 ${KUBEVIRT_NUM_NODES}); do
-    ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" -- sudo yum install -y NetworkManager
-    ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" -- sudo systemctl daemon-reload
-    ./cluster/cli.sh ssh "node$(printf "%02d" ${i})" -- sudo systemctl restart NetworkManager
-done

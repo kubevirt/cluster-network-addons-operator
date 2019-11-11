@@ -7,8 +7,7 @@ build/operator/_test
 build/_output
 
 # Temporary local cluster files
-cluster/.kubeconfig
-cluster/.kubectl
+_kubevirtci/
 
 # Temporary test files
 deploy/test/
