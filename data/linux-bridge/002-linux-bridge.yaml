@@ -46,11 +46,11 @@ spec:
               sleep infinity
           resources:
             requests:
-              cpu: "100m"
-              memory: "50Mi"
+              cpu: "60m"
+              memory: "30Mi"
             limits:
-              cpu: "100m"
-              memory: "50Mi"
+              cpu: "60m"
+              memory: "30Mi"
           securityContext:
             privileged: true
           volumeMounts:
