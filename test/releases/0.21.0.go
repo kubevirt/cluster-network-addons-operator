@@ -15,6 +15,12 @@ func init() {
 				Image:      "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002",
 			},
 			opv1alpha1.Container{
+				ParentName: "multus-controller",
+				ParentKind: "Deployment",
+				Name:       "multus-controller",
+				Image:      "quay.io/hlinacz/k8s-net-attach-def-controller:latest",
+			},
+			opv1alpha1.Container{
 				ParentName: "bridge-marker",
 				ParentKind: "DaemonSet",
 				Name:       "bridge-marker",
