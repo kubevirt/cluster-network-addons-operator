@@ -55,7 +55,7 @@ type templateData struct {
 	OperatorVersion string
 	Namespace       string
 	ContainerPrefix string
-	ImageName	string
+	ImageName       string
 	ContainerTag    string
 	ImagePullPolicy string
 	CNA             *operatorData
@@ -224,6 +224,7 @@ func main() {
 	containerTag := flag.String("container-tag", "latest", "The operator image's container tag")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "The pull policy to use on the operator image")
 	multusImage := flag.String("multus-image", components.MultusImageDefault, "The multus image managed by CNA")
+	multusControlerImage := flag.String("multus-controller-image", components.MultusControllerImageDefault, "The multus controller image managed by CNA")
 	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", components.LinuxBridgeCniImageDefault, "The linux bridge cni image managed by CNA")
 	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
 	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
@@ -242,11 +243,12 @@ func main() {
 		OperatorVersion: *operatorVersion,
 		Namespace:       *namespace,
 		ContainerPrefix: *containerPrefix,
-		ImageName:	 *imageName,
+		ImageName:       *imageName,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
 		AddonsImages: (&components.AddonsImages{
 			Multus:            *multusImage,
+			MultusController:  *multusControlerImage,
 			LinuxBridgeCni:    *linuxBridgeCniImage,
 			LinuxBridgeMarker: *linuxBridgeMarkerImage,
 			KubeMacPool:       *kubeMacPoolImage,

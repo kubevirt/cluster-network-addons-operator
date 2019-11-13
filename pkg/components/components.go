@@ -20,6 +20,7 @@ const (
 
 const (
 	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
+	MultusControllerImageDefault  = "quay.io/hlinacz/k8s-net-attach-def-controller:latest"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.1"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.2.0"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.8.0"
@@ -30,6 +31,7 @@ const (
 
 type AddonsImages struct {
 	Multus            string
+	MultusController  string
 	LinuxBridgeCni    string
 	LinuxBridgeMarker string
 	KubeMacPool       string
@@ -104,6 +106,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MULTUS_IMAGE",
 									Value: addonsImages.Multus,
+								},
+								{
+									Name:  "MULTUS_CONTROLLER_IMAGE",
+									Value: addonsImages.MultusController,
 								},
 								{
 									Name:  "LINUX_BRIDGE_IMAGE",

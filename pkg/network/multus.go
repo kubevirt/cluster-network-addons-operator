@@ -46,6 +46,7 @@ func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, 
 	data := render.MakeRenderData()
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["MultusImage"] = os.Getenv("MULTUS_IMAGE")
+	data.Data["MultusControllerImage"] = os.Getenv("MULTUS_CONTROLLER_IMAGE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	if clusterInfo.OpenShift4 {
 		data.Data["CNIConfigDir"] = cni.ConfigDirOpenShift4

@@ -1,0 +1,24 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: multus-controller
+  namespace: {{ .Namespace }}
+  labels:
+    app: multus-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multus-controller
+  template:
+    metadata:
+      labels:
+        app: multus-controller
+    spec:
+      serviceAccount: multus-controller
+      containers:
+      - name: multus-controller
+        image: {{ .MultusControllerImage }}
+        imagePullPolicy: {{ .ImagePullPolicy }}
+        command: [ "/bin/sh", "-c", "--" ]
+        args: [ "k8s-net-attach-def-controller --logtostderr 10;" ]

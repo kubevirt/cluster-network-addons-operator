@@ -1,0 +1,33 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: multus-controller
+  namespace: {{ .Namespace }}
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: secondary-endpoints-controller
+rules:
+- apiGroups: [""]
+  resources: ["services", "pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""]
+  resources: ["endpoints", "events"]
+  verbs: ["*"]
+- apiGroups: ["k8s.cni.cncf.io"]
+  resources: ["network-attachment-definitions"]
+  verbs: ["*"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: control-secondary-endpoints
+subjects:
+- kind: ServiceAccount
+  name: multus-controller
+  namespace: {{ .Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: secondary-endpoints-controller
+  apiGroup: rbac.authorization.k8s.io
