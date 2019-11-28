@@ -57,10 +57,10 @@ spec:
             - -node-name
             - $(NODE_NAME)
             - -ovs-socket
-            - unix:///host/run/openvswitch/db.sock
+            - /host/var/run/openvswitch/db.sock
           volumeMounts:
-            - name: ovs-run
-              mountPath: /host/run/openvswitch
+            - name: ovs-var-run
+              mountPath: /host/var/run/openvswitch
           env:
             - name: NODE_NAME
               valueFrom:
@@ -73,6 +73,6 @@ spec:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
-        - name: ovs-run
+        - name: ovs-var-run
           hostPath:
-            path: /run/openvswitch
+            path: /var/run/openvswitch
