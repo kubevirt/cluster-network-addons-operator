@@ -136,8 +136,7 @@ systemctl start NetworkManager
 
 The operator allows administrator to deploy [OVS CNI plugin](https://github.com/kubevirt/ovs-cni/)
 simply by adding `ovs` attribute to `NetworkAddonsConfig`. Please note that
-in order to use this plugin, `ovs-vsctl` binary has to be available on
-the node.
+in order to use this plugin, openvswitch have to be up and running at nodes.
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
