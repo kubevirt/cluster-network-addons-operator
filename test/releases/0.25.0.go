@@ -9,7 +9,7 @@ func init() {
 		Version: "0.25.0",
 		Containers: []opv1alpha1.Container{
 			opv1alpha1.Container{
-				ParentName: "kube-multus-ds-amd64",
+				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "kube-multus",
 				Image:      "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002",

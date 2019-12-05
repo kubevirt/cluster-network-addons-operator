@@ -31,7 +31,7 @@ var (
 		ClusterRole:                "multus",
 		ClusterRoleBinding:         "multus",
 		SecurityContextConstraints: "multus",
-		DaemonSets:                 []string{"kube-multus-ds-amd64"},
+		DaemonSets:                 []string{"multus"},
 	}
 	NMStateComponent = Component{
 		ComponentName:              "NMState",
