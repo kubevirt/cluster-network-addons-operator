@@ -14,7 +14,7 @@
 
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.14.6'}
 
-KUBEVIRTCI_VERSION='0e5b027098796137a9b95aed57943061e185bfcd'
+KUBEVIRTCI_VERSION='eb9addac961a83dde1ef4f80db131cab58dda1fc'
 KUBEVIRTCI_PATH="${PWD}/_kubevirtci"
 
 function kubevirtci::install() {
