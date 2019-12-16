@@ -286,6 +286,13 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 		return objs, err
 	}
 
+	// Perform any special object changes that are impossible to do with regular Apply. e.g. Remove outdated objects
+	// and objects that cannot be modified by Apply method due to incompatible changes.
+	if err := network.SpecialCleanUp(&networkAddonsConfig.Spec, r.client); err != nil {
+		log.Printf("failed to Clean Up outdated objects: %v", err)
+		return objs, err
+	}
+
 	// The first object we create should be the record of our applied configuration
 	applied, err := appliedConfiguration(networkAddonsConfig, r.namespace)
 	if err != nil {

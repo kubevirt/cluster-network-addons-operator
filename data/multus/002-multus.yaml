@@ -24,7 +24,7 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: kube-multus-ds-amd64
+  name: multus
   namespace: {{ .Namespace }}
   labels:
     tier: node

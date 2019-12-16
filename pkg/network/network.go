@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"log"
 	"reflect"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 )
@@ -45,6 +47,20 @@ func FillDefaults(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) error {
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
+	}
+
+	return nil
+}
+
+// specialCleanUp checks if there are any specific outdated objects or ones that are no longer compatible and deletes them.
+func SpecialCleanUp(conf *opv1alpha1.NetworkAddonsConfigSpec, client k8sclient.Client) error {
+	errs := []error{}
+	ctx := context.TODO()
+
+	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
+
+	if len(errs) > 0 {
+		return errors.Errorf("invalid configuration:\n%v", errorListToMultiLineString(errs))
 	}
 
 	return nil
