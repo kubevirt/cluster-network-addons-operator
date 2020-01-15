@@ -50,6 +50,7 @@ rules:
   - events
   - configmaps
   - secrets
+  - pods
   verbs:
   - '*'
 - apiGroups:
@@ -94,9 +95,11 @@ rules:
   - ""
   resources:
   - nodes
+  - namespaces
   verbs:
   - get
   - list
+  - watch
 {{ if .EnableSCC }}
 ---
 apiVersion: security.openshift.io/v1

@@ -9,14 +9,15 @@ spec:
     kind: NodeNetworkState
     listKind: NodeNetworkStateList
     plural: nodenetworkstates
-    singular: nodenetworkstate
     shortNames:
     - nns
+    singular: nodenetworkstate
   scope: Cluster
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
+      description: NodeNetworkState is the Schema for the nodenetworkstates API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -30,10 +31,42 @@ spec:
           type: string
         metadata:
           type: object
-        spec:
-          type: object
         status:
+          description: NodeNetworkStateStatus is the status of the NodeNetworkState
+            of a specific node
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastHearbeatTime:
+                    format: date-time
+                    type: string
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            currentState:
+              description: "State contains the namestatectl yaml [1] as string instead
+                of golang struct so we don't need to be in sync with the schema. \n
+                [1] https://github.com/nmstate/nmstate/blob/master/libnmstate/schemas/operational-state.yaml"
+              type: object
+            lastSuccessfulUpdateTime:
+              format: date-time
+              type: string
           type: object
+      type: object
   version: v1alpha1
   versions:
   - name: v1alpha1
@@ -58,6 +91,8 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
+      description: NodeNetworkConfigurationPolicy is the Schema for the nodenetworkconfigurationpolicies
+        API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -72,6 +107,8 @@ spec:
         metadata:
           type: object
         spec:
+          description: NodeNetworkConfigurationPolicySpec defines the desired state
+            of NodeNetworkConfigurationPolicy
           properties:
             desiredState:
               description: The desired configuration of the policy
@@ -83,14 +120,106 @@ spec:
                 policy to be applied to the node. Selector which must match a node''s
                 labels for the policy to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/'
               type: object
-            priority:
-              description: In case of multiple policies applying for the same node
-                this priority define the order from low to high
-              format: int64
-              type: integer
           type: object
         status:
+          description: NodeNetworkConfigurationPolicyStatus defines the observed state
+            of NodeNetworkConfigurationPolicy
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastHearbeatTime:
+                    format: date-time
+                    type: string
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
           type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: nodenetworkconfigurationenactments.nmstate.io
+spec:
+  group: nmstate.io
+  names:
+    kind: NodeNetworkConfigurationEnactment
+    listKind: NodeNetworkConfigurationEnactmentList
+    plural: nodenetworkconfigurationenactments
+    shortNames:
+    - nnce
+    singular: nodenetworkconfigurationenactment
+  scope: Cluster
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: NodeNetworkConfigurationEnactment is the Schema for the nodenetworkconfigurationenactments
+        API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        status:
+          description: NodeNetworkConfigurationEnactmentStatus defines the observed
+            state of NodeNetworkConfigurationEnactment
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastHearbeatTime:
+                    format: date-time
+                    type: string
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            desiredState:
+              description: The desired state rendered for the enactment's node using
+                the policy desiredState as template
+              type: object
+          type: object
+      type: object
   version: v1alpha1
   versions:
   - name: v1alpha1
