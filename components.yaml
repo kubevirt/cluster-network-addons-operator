@@ -1,19 +1,19 @@
-componenets:
+components:
   multus:
-    version: "bf61002b4c83fcc0ca29c271108ca6afa381998f"
-    upstreamUrl: "https://github.com/intel/multus-cni"
+    url: "https://github.com/intel/multus-cni"
+    commit: "bf61002b4c83fcc0ca29c271108ca6afa381998f"
   linux-bridge:
-    version: "v0.8.1"
-    upstreamUrl: "https://github.com/containernetworking/plugins"
+    url: "https://github.com/containernetworking/plugins"
+    commit: "fe60fcddb897079746ec1523fd1837ab05b1e689" # v0.8.1
   bridge-marker:
-    version: "0.2.0"
-    upstreamUrl: "https://github.com/kubevirt/bridge-marker"
-  kube-macpool:
-    version: "v0.8.0"
-    upstreamUrl: "https://github.com/k8snetworkplumbingwg/kubemacpool"
+    url: "https://github.com/kubevirt/bridge-marker"
+    commit: "2c01b100bcae0061a622d8b82e2c4db4ac092b4c" # 0.2.0
+  kubemacpool:
+    url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
+    commit: "c5b86d4394aedf3cb88d2711587cb1582eb466e1" # v0.8.0
   nmstate:
-    version: "v0.13.0"
-    upstreamUrl: "https://github.com/nmstate/kubernetes-nmstate"
+    url: "https://github.com/nmstate/kubernetes-nmstate"
+    commit: "8ad83bd92a19934ac177cfd954db75376042bd17" # v0.13.0
   ovs-cni:
-    version: "v0.9.0"
-    upstreamUrl: "https://github.com/kubevirt/ovs-cni"
+    url: "https://github.com/kubevirt/ovs-cni"
+    commit: "eb476056025d1ac070f57a35fb2a2d433a8a7e70" # v0.9.0
