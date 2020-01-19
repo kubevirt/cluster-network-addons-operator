@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: mac-controller-manager
-    controller-tools.k8s.io: "1.0"
-    kubemacpool/ignoreAdmission: "true"
-  name: {{ .Namespace }}
