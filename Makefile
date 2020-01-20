@@ -27,7 +27,7 @@ GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
 GINKGO ?= build/_output/bin/ginkgo
 
 E2E_TEST_EXTRA_ARGS ?=
-E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 2h -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
+E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 3h -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
 E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow

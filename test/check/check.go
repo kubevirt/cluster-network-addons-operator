@@ -26,6 +26,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 
+	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 )
 
@@ -323,7 +324,7 @@ func checkForDeployment(name string) error {
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v", components.Namespace, name, string(manifest))
+		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v\ndescribe all:\n%v", components.Namespace, name, string(manifest), describeAll())
 	}
 
 	return nil
@@ -389,7 +390,7 @@ func checkConfigCondition(conf *opv1alpha1.NetworkAddonsConfig, conditionType Co
 			if condition.Status == corev1.ConditionStatus(conditionStatus) {
 				return nil
 			}
-			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q, obtained config %v", conditionType, conditionStatus, condition.Status, configToYaml(conf))
+			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q, obtained config:\n%vdescribe all:\n%v", conditionType, conditionStatus, condition.Status, configToYaml(conf), describeAll())
 		}
 	}
 
@@ -399,6 +400,12 @@ func checkConfigCondition(conf *opv1alpha1.NetworkAddonsConfig, conditionType Co
 	}
 
 	return fmt.Errorf("condition %q has not been found in the config", conditionType)
+}
+
+func describeAll() string {
+	description, err := Kubectl("-n", components.Namespace, "describe", "all")
+	Expect(err).ToNot(HaveOccurred())
+	return description
 }
 
 func isNotSupportedKind(err error) bool {
