@@ -27,6 +27,7 @@ type ReconcilePods struct {
 	resources     []types.NamespacedName
 }
 
+// SetResources updates context's resources
 func (r *ReconcilePods) SetResources(resources []types.NamespacedName) {
 	r.resources = resources
 }
