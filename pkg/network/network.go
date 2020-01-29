@@ -93,47 +93,52 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	return nil
 }
 
-func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+func Render(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, []*unstructured.Unstructured, error) {
 	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
+	objsToRemove := []*unstructured.Unstructured{}
 
 	// render Multus
 	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, clusterInfo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	objs = append(objs, o...)
 
 	// render Linux Bridge
 	o, err = renderLinuxBridge(conf, manifestDir, clusterInfo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	objs = append(objs, o...)
 
 	// render kubeMacPool
 	o, err = renderKubeMacPool(conf, manifestDir)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	objs = append(objs, o...)
 
 	// render NMState
-	o, err = renderNMState(conf, manifestDir, clusterInfo)
+	o, objsToRemove, err = renderNMState(prev, conf, manifestDir, clusterInfo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	objs = append(objs, o...)
+	if o != nil {
+		objs = append(objs, o...)
+	} else {
+		objsToRemove = append(objsToRemove, o...)
+	}
 
 	// render Ovs
 	o, err = renderOvs(conf, manifestDir, clusterInfo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	objs = append(objs, o...)
 
-	log.Printf("render phase done, rendered %d objects", len(objs))
-	return objs, nil
+	log.Printf("render phase done, rendered %d objects, %d objects to remove", len(objs), len(objsToRemove))
+	return objs, objsToRemove, nil
 }
 
 func errorListToMultiLineString(errs []error) string {

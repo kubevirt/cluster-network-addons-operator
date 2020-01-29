@@ -1,6 +1,7 @@
 package network
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,15 +15,20 @@ import (
 
 func changeSafeNMState(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	if prev.NMState != nil && !reflect.DeepEqual(prev.NMState, next.NMState) {
+		if !(prev.NMState != nil && next.NMState == nil) {
 		return []error{errors.Errorf("cannot modify NMState state handler configuration once it is deployed")}
+		}
+		log.Printf("DBGDBG Detected that NMState was removed")
 	}
+
 	return nil
 }
 
 // renderNMState generates the manifests of NMState handler
-func renderNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
-	if conf.NMState == nil {
-		return nil, nil
+func renderNMState(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, []*unstructured.Unstructured, error) {
+	if conf.NMState == nil && prev.NMState == nil {
+	//if conf.NMState == nil {
+		return nil, nil, nil
 	}
 
 	// render the manifests on disk
@@ -34,8 +40,11 @@ func renderNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string,
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "nmstate"), &data)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to render nmstate state handler manifests")
+		return nil, nil, errors.Wrap(err, "failed to render nmstate state handler manifests")
 	}
 
-	return objs, nil
+	if conf.NMState == nil && prev.NMState != nil {
+		return nil, objs, nil
+	}
+	return objs, nil, nil
 }

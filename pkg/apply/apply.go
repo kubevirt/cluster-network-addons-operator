@@ -16,7 +16,7 @@ import (
 
 // ApplyObject applies the desired object against the apiserver,
 // merging it with any existing objects if already present.
-func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstructured) error {
+func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstructured, Delete bool) error {
 	name := obj.GetName()
 	namespace := obj.GetNamespace()
 	if name == "" {
@@ -36,46 +36,65 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	existing.SetGroupVersionKind(gvk)
 	err := client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, existing)
 
-	if err != nil && apierrors.IsNotFound(err) {
-		log.Printf("does not exist, creating %s", objDesc)
-		err := client.Create(ctx, obj)
-		if err != nil {
-			return errors.Wrapf(err, "could not create %s", objDesc)
+	if Delete == false {
+		if err != nil && apierrors.IsNotFound(err) {
+			log.Printf("does not exist, creating %s", objDesc)
+			err := client.Create(ctx, obj)
+			if err != nil {
+				return errors.Wrapf(err, "could not create %s", objDesc)
+			}
+			log.Printf("successfully created %s", objDesc)
+			return nil
 		}
-		log.Printf("successfully created %s", objDesc)
-		return nil
-	}
-	if err != nil {
-		return errors.Wrapf(err, "could not retrieve existing %s", objDesc)
-	}
+		if err != nil {
+			return errors.Wrapf(err, "could not retrieve existing %s", objDesc)
+		}
 
-	// Merge the desired object with what actually exists
-	if err := MergeObjectForUpdate(existing, obj); err != nil {
-		return errors.Wrapf(err, "could not merge object %s with existing", objDesc)
-	}
-	if !equality.Semantic.DeepEqual(existing, obj) {
-		if err := client.Update(ctx, obj); err != nil {
-			// In older versions of the operator, we used daemon sets of type 'extensions/v1beta1', later we
-			// changed that to 'apps/v1'. Because of this change, we are not able to seamlessly upgrade using
-			// only Update methods. Following code handles this exception by deleting the old daemon set and
-			// creating a new one.
-			// TODO: Upgrade transaction should be handled by each component module separately. Once we make
-			// that possible, this exception should be dropped.
-			bridgeMarkerDaemonSetUpdateError := "DaemonSet.apps \"bridge-marker\" is invalid: spec.selector: Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"name\":\"bridge-marker\"}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable"
-			if strings.Contains(err.Error(), bridgeMarkerDaemonSetUpdateError) {
-				log.Print("update failed due to change in DaemonSet API group; removing original object and recreating")
-				if err := client.Delete(ctx, existing); err != nil {
-					return errors.Wrapf(err, "could not delete %s", objDesc)
+		// Merge the desired object with what actually exists
+		if err := MergeObjectForUpdate(existing, obj); err != nil {
+			return errors.Wrapf(err, "could not merge object %s with existing", objDesc)
+		}
+		if !equality.Semantic.DeepEqual(existing, obj) {
+			if err := client.Update(ctx, obj); err != nil {
+				// In older versions of the operator, we used daemon sets of type 'extensions/v1beta1', later we
+				// changed that to 'apps/v1'. Because of this change, we are not able to seamlessly upgrade using
+				// only Update methods. Following code handles this exception by deleting the old daemon set and
+				// creating a new one.
+				// TODO: Upgrade transaction should be handled by each component module separately. Once we make
+				// that possible, this exception should be dropped.
+				bridgeMarkerDaemonSetUpdateError := "DaemonSet.apps \"bridge-marker\" is invalid: spec.selector: Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"name\":\"bridge-marker\"}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable"
+				if strings.Contains(err.Error(), bridgeMarkerDaemonSetUpdateError) {
+					log.Print("update failed due to change in DaemonSet API group; removing original object and recreating")
+					if err := client.Delete(ctx, existing); err != nil {
+						return errors.Wrapf(err, "could not delete %s", objDesc)
+					}
+					if err := client.Create(ctx, obj); err != nil {
+						return errors.Wrapf(err, "could not create %s", objDesc)
+					}
+					log.Print("update of conflicting DaemonSet was successful")
 				}
-				if err := client.Create(ctx, obj); err != nil {
-					return errors.Wrapf(err, "could not create %s", objDesc)
+
+				return errors.Wrapf(err, "could not update object %s", objDesc)
+			} else {
+				log.Print("update was successful")
+			}
+		}
+	} else {
+		log.Printf("DBGDBG at delete %v A1", name)
+		if name != "cluster-network-addons" {
+			if err != nil {
+				if !apierrors.IsNotFound(err) {
+					return errors.Wrapf(err, "TODO CHANGE error - could not retrieve existing %s", objDesc)
 				}
-				log.Print("update of conflicting DaemonSet was successful")
+				return nil
 			}
 
-			return errors.Wrapf(err, "could not update object %s", objDesc)
-		} else {
-			log.Print("update was successful")
+			log.Printf("DBGDBG at delete %v A2", name)
+
+			if err := client.Delete(ctx, existing); err != nil {
+				return errors.Wrapf(err, "could not delete %s", objDesc)
+			}
+			log.Printf("DBGDBG at delete %v A3", name)
 		}
 	}
 

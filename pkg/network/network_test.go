@@ -94,7 +94,7 @@ var _ = Describe("Testing network", func() {
 			clusterInfo := &ClusterInfo{SCCAvailable: true, OpenShift4: false}
 
 			It("should successfully render a set of objects", func() {
-				objs, err := Render(conf, manifestDir, openshiftNetworkConf, clusterInfo)
+				objs, _, err := Render(nil, conf, manifestDir, openshiftNetworkConf, clusterInfo)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(objs).NotTo(BeEmpty())
 			})
@@ -107,7 +107,7 @@ var _ = Describe("Testing network", func() {
 			clusterInfo := &ClusterInfo{SCCAvailable: true, OpenShift4: false}
 
 			It("should return an error since it's unable to load templates for render", func() {
-				_, err := Render(conf, manifestDir, openshiftNetworkConf, clusterInfo)
+				_, _, err := Render(nil, conf, manifestDir, openshiftNetworkConf, clusterInfo)
 				Expect(err).To(HaveOccurred())
 			})
 		})

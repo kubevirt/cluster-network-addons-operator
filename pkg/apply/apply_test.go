@@ -33,7 +33,7 @@ metadata:
   name: d1`)
 
 			BeforeEach(func() {
-				err := apply.ApplyObject(context.Background(), client, object)
+				err := apply.ApplyObject(context.Background(), client, object, false)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -77,7 +77,7 @@ metadata:
 
 			It("should succesfully merge", func() {
 				By("Apllying object to server")
-				err := apply.ApplyObject(context.Background(), client, object)
+				err := apply.ApplyObject(context.Background(), client, object, false)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Finding the object in server")
@@ -105,7 +105,7 @@ metadata:
 
 			It("should have new annotations", func() {
 				By("Apllying object to server")
-				err := apply.ApplyObject(context.Background(), client, object)
+				err := apply.ApplyObject(context.Background(), client, object, false)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Finding the object in server")
