@@ -132,6 +132,9 @@ gen-k8s-check: $(apis_sources)
 	./hack/verify-codegen.sh
 	touch $@
 
+components:
+	./hack/components.sh
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -149,4 +152,5 @@ gen-k8s-check: $(apis_sources)
 	docker-push-operator \
 	docker-push-registry \
 	gen-manifests \
+	components \
 	test/unit

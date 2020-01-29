@@ -9,6 +9,9 @@ build/_output
 # Temporary local cluster files
 _kubevirtci/
 
+# Temporary components update files
+_components/
+
 # Temporary test files
 deploy/test/
 
