@@ -65,6 +65,12 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 
 func GetDeployment(version string, operatorVersion string, namespace string, repository string, imageName string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, imageName, tag)
+
+	// In case SHA is used for the version, we need to trim it to fit into labels
+	if len(operatorVersion) > 63 {
+		operatorVersion = operatorVersion[0:63]
+	}
+
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
