@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -70,6 +71,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 	if len(operatorVersion) > 63 {
 		operatorVersion = operatorVersion[0:63]
 	}
+
+	// We also need to remove characters that are not allowed, e.g. :
+	operatorVersion = strings.Replace(operatorVersion, ":", "_", -1)
 
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
