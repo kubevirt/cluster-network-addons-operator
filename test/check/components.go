@@ -38,7 +38,9 @@ var (
 		ClusterRoleBinding:         "nmstate-handler",
 		ClusterRole:                "nmstate-handler",
 		SecurityContextConstraints: "nmstate",
-		DaemonSets:                 []string{"nmstate-handler"},
+		DaemonSets:                 []string{
+			"nmstate-handler",
+			"nmstate-handler-worker"},
 	}
 	OvsComponent = Component{
 		ComponentName:              "Ovs",
