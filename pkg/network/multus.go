@@ -63,7 +63,7 @@ func cleanUpMultusOldName(ctx context.Context, client k8sclient.Client) []error 
 	existing := &unstructured.Unstructured{}
 	gvk := schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "DaemonSet"}
 	existing.SetGroupVersionKind(gvk)
-	namespace := "cluster-network-addons"
+	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "kube-multus-ds-amd64"
 
 	err := client.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, existing)
