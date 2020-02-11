@@ -345,7 +345,7 @@ func checkForDaemonSet(name string) error {
 		}
 	}
 
-	if daemonSet.Status.NumberUnavailable > 0 || daemonSet.Status.NumberAvailable == 0 {
+	if daemonSet.Status.NumberUnavailable > 0 || (daemonSet.Status.NumberAvailable == 0 && daemonSet.Status.DesiredNumberScheduled != 0) {
 		manifest, err := yaml.Marshal(daemonSet)
 		if err != nil {
 			panic(err)
