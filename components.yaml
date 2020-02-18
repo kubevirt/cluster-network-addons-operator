@@ -13,7 +13,7 @@ components:
     commit: "49c2f54a8613dee80d08ca473a894adeb1bb6e1d" # v0.8.1
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
-    commit: "e0f9911f55df07a16ecafd14fe0ddce7607ed443" # v0.15.0
+    commit: "fb260b4a9a14cb3c2ff534ac51e5dfd5192b800b" # v0.15.1
   ovs-cni:
     url: "https://github.com/kubevirt/ovs-cni"
     commit: "d61bd2b26f6c1df8ed38a4572b2ab4adaf48245d" # v0.10.0
