@@ -135,6 +135,10 @@ gen-k8s-check: $(apis_sources)
 components:
 	./hack/components.sh
 
+bump-kubevirtci:
+	rm -rf _kubevirtci
+	./hack/bump-kubevirtci.sh
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -153,4 +157,5 @@ components:
 	docker-push-registry \
 	gen-manifests \
 	components \
-	test/unit
+	test/unit \
+	bump-kubevirtci
