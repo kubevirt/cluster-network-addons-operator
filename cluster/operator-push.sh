@@ -17,7 +17,7 @@
 set -ex
 
 registry_port=$(./cluster/cli.sh ports registry | tr -d '\r')
-if [[ "${KUBEVIRT_PROVIDER}" =~ ^okd-.*$ ]]; then \
+if [[ "${KUBEVIRT_PROVIDER}" =~ ^(okd|ocp)-.*$ ]]; then \
 		registry=localhost:$(./cluster/cli.sh ports --container-name=cluster registry | tr -d '\r')
 else
     registry=localhost:$(./cluster/cli.sh ports registry | tr -d '\r')
