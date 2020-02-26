@@ -6,7 +6,7 @@ import (
 
 func init() {
 	release := Release{
-		Version: "0.28.0",
+		Version: "0.27.2",
 		Containers: []opv1alpha1.Container{
 			opv1alpha1.Container{
 				ParentName: "multus",
