@@ -154,6 +154,7 @@ spec:
   template:
     metadata:
       labels:
+        app: kubemacpool
         control-plane: mac-controller-manager
         controller-tools.k8s.io: "1.0"
     spec:
