@@ -105,43 +105,4 @@ var _ = Describe("Testing multus", func() {
 			})
 		})
 	})
-
-	Describe("changeSafeMultus", func() {
-		Context("when it is kept disabled", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{}
-			It("should pass", func() {
-				errorList := changeSafeMultus(prev, new)
-				Expect(errorList).To(BeEmpty())
-			})
-		})
-
-		Context("when there is no previous value", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{Multus: &opv1alpha1.Multus{}}
-			It("should accept any configuration", func() {
-				errorList := changeSafeMultus(prev, new)
-				Expect(errorList).To(BeEmpty())
-			})
-		})
-
-		Context("when the previous and new configuration match", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{Multus: &opv1alpha1.Multus{}}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{Multus: &opv1alpha1.Multus{}}
-			It("should accept the configuration", func() {
-				errorList := changeSafeMultus(prev, new)
-				Expect(errorList).To(BeEmpty())
-			})
-		})
-
-		Context("when there is previous value, but the new one is empty (removing component)", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{Multus: &opv1alpha1.Multus{}}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{}
-			It("should fail", func() {
-				errorList := changeSafeMultus(prev, new)
-				Expect(len(errorList)).To(Equal(1), "validation failed due to an unexpected error: %v", errorList)
-				Expect(errorList[0].Error()).To(Equal("cannot modify Multus configuration once it is deployed"))
-			})
-		})
-	})
 })
