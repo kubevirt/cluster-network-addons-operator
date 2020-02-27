@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"log"
+	"os"
 	"reflect"
 	"strings"
 
@@ -80,12 +81,8 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 
 	errs := []error{}
 
-	errs = append(errs, changeSafeMultus(prev, next)...)
-	errs = append(errs, changeSafeLinuxBridge(prev, next)...)
 	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
-	errs = append(errs, changeSafeNMState(prev, next)...)
-	errs = append(errs, changeSafeOvs(prev, next)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
@@ -93,6 +90,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 	return nil
 }
 
+// Render creates a list of components to be created
 func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
@@ -134,6 +132,69 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 
 	log.Printf("render phase done, rendered %d objects", len(objs))
 	return objs, nil
+}
+
+// RenderObjsToRemove creates list of components to be removed
+func RenderObjsToRemove(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+	log.Print("starting rendering objects to delete phase")
+	objsToRemove := []*unstructured.Unstructured{}
+	objsToRemoveWithoutNamespace := []*unstructured.Unstructured{}
+
+	if prev == nil {
+		return nil, nil
+	}
+
+	if conf.Multus == nil {
+		o, err := renderMultus(prev, manifestDir, openshiftNetworkConfig, clusterInfo)
+		if err != nil {
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	if conf.LinuxBridge == nil {
+		o, err := renderLinuxBridge(prev, manifestDir, clusterInfo)
+		if err != nil {
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	if conf.KubeMacPool == nil {
+		o, err := renderKubeMacPool(prev, manifestDir)
+		if err != nil {
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	if conf.NMState == nil {
+		o, err := renderNMState(prev, manifestDir, clusterInfo)
+		if err != nil {
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	if conf.Ovs == nil {
+		o, err := renderOvs(prev, manifestDir, clusterInfo)
+		if err != nil {
+		return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	// Remove OPERAND_NAMESPACE occurences
+	// TODO cleanup OPERAND_NAMESPACE once there are no components using it.
+	operandNamespace := os.Getenv("OPERAND_NAMESPACE")
+	for _, obj := range objsToRemove {
+		if !(obj.GetName() == operandNamespace && obj.GetKind() == "Namespace") {
+			objsToRemoveWithoutNamespace = append(objsToRemoveWithoutNamespace, obj)
+		}
+	}
+
+	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemoveWithoutNamespace))
+	return objsToRemoveWithoutNamespace, nil
 }
 
 func errorListToMultiLineString(errs []error) string {

@@ -3,7 +3,6 @@ package network
 import (
 	"os"
 	"path/filepath"
-	"reflect"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 	"github.com/pkg/errors"
@@ -12,13 +11,6 @@ import (
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network/cni"
 )
-
-func changeSafeOvs(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
-	if prev.Ovs != nil && !reflect.DeepEqual(prev.Ovs, next.Ovs) {
-		return []error{errors.Errorf("cannot modify Ovs configuration once it is deployed")}
-	}
-	return nil
-}
 
 // renderOvs generates the manifests of Ovs
 func renderOvs(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
