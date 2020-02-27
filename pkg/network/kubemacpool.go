@@ -87,9 +87,10 @@ func fillDefaultsKubeMacPool(conf, previous *opv1alpha1.NetworkAddonsConfigSpec)
 }
 
 func changeSafeKubeMacPool(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
-	if prev.KubeMacPool != nil && !reflect.DeepEqual(prev.KubeMacPool, next.KubeMacPool) {
+	if prev.KubeMacPool != nil && next.KubeMacPool != nil && !reflect.DeepEqual(prev.KubeMacPool, next.KubeMacPool) {
 		return []error{errors.Errorf("cannot modify KubeMacPool configuration once it is deployed")}
 	}
+
 	return []error{}
 }
 
