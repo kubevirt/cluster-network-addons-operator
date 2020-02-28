@@ -44,8 +44,8 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               value: ""
-            - name: RUN_WEBHOOK_SERVER
-              value: ""
+            #- name: RUN_WEBHOOK_SERVER
+            #  value: ""
             - name: POD_NAME
               valueFrom:
                 fieldRef:
