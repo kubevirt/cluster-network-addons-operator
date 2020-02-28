@@ -404,8 +404,7 @@ func checkConfigCondition(conf *opv1alpha1.NetworkAddonsConfig, conditionType Co
 
 func describeAll() string {
 	description, err := Kubectl("-n", components.Namespace, "describe", "all")
-	Expect(err).ToNot(HaveOccurred())
-	return description
+	return fmt.Sprintf("description:\n%v\nerror:\n%v", description, err)
 }
 
 func isNotSupportedKind(err error) bool {
