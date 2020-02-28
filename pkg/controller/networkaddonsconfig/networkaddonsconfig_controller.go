@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	osv1 "github.com/openshift/api/operator/v1"
 	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
@@ -265,7 +266,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// perform the first check manually.
 	r.statusManager.SetFromPods()
 
-	return reconcile.Result{}, nil
+	// Kubernetes sometimes fails to apply objects while we remove and recreate
+	// components, despite reporting success. In order to self-heal after these
+	// incidents, keep requeing.
+	return reconcile.Result{RequeueAfter: time.Minute}, nil
 }
 
 // Render objects for all desired components
