@@ -1,7 +1,6 @@
 all: fmt check
 
-# Always keep the future version here, so we won't overwrite latest released manifests
-VERSION ?= 0.28.0
+VERSION ?= 99.0.0
 export VERSION := $(VERSION)
 # Always keep the last released version here
 VERSION_REPLACES ?= 0.27.0
@@ -139,6 +138,13 @@ bump-kubevirtci:
 	rm -rf _kubevirtci
 	./hack/bump-kubevirtci.sh
 
+prepare-patch:
+	./hack/prepare-release.sh patch
+prepare-minor:
+	./hack/prepare-release.sh minor
+prepare-major:
+	./hack/prepare-release.sh major
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -158,4 +164,7 @@ bump-kubevirtci:
 	gen-manifests \
 	components \
 	test/unit \
-	bump-kubevirtci
+	bump-kubevirtci \
+	prepare-patch \
+	prepare-minor \
+	prepare-major
