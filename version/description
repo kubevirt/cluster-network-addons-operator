@@ -1,0 +1,13 @@
+0.28.0
+
+Features:
+* bump kubemacpool to 0.8.2 (#306)
+* bump ovs to v0.10.0 (#298)
+
+Bugs:
+* rename multus daemon set in variable namespace (#291)
+* self-heal by re-reconciling (#321)
+* don't fail the test if we fail to list all objects (#320)
+* Merge pull request #316 from kubevirt/drop_knmstate_webhook_manifests
+* Fix ocp make cluster-sync (#304)
+* knmstate: Add missing rbac for webhook (#296)
