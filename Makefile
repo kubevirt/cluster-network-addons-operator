@@ -33,11 +33,16 @@ E2E_SUITES = \
 
 OPERATOR_SDK ?= build/_output/bin/operator-sdk
 
+GITHUB_RELEASE ?= build/_output/bin/github-release
+
 $(GINKGO): Gopkg.toml
 	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/onsi/ginkgo/ginkgo
 
 $(OPERATOR_SDK): Gopkg.toml
 	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+
+$(GITHUB_RELEASE): Gopkg.toml
+	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/aktau/github-release
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -145,6 +150,14 @@ prepare-minor:
 prepare-major:
 	./hack/prepare-release.sh major
 
+release: $(GITHUB_RELEASE)
+	DESCRIPTION=version/description \
+	GITHUB_RELEASE=$(GITHUB_RELEASE) \
+	TAG=$(shell hack/version.sh) \
+	  hack/release.sh \
+	    manifests/cluster-network-addons.package.yaml \
+	    $(shell find manifests/$(shell hack/version.sh) -type f)
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -167,4 +180,5 @@ prepare-major:
 	bump-kubevirtci \
 	prepare-patch \
 	prepare-minor \
-	prepare-major
+	prepare-major \
+	release

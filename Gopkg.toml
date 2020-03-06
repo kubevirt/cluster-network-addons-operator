@@ -10,6 +10,7 @@ required = [
   "k8s.io/gengo/args",
   "sigs.k8s.io/controller-tools/pkg/crd/generator",
   "github.com/operator-framework/operator-sdk/cmd/operator-sdk",
+  "github.com/aktau/github-release",
   "golang.org/x/tools/cmd/goimports",
   "github.com/onsi/ginkgo/ginkgo",
 ]
