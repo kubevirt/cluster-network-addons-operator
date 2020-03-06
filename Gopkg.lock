@@ -100,6 +100,17 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  digest = "1:3f0fd0e02a52a4f27d23a0c799dd72cf58e4616bbe4ec6322dbbe2a9795e7201"
+  name = "github.com/aktau/github-release"
+  packages = [
+    ".",
+    "github",
+  ]
+  pruneopts = "NUT"
+  revision = "744a70ee16ff8e6be45bfabb8b233d7f1e058a2b"
+  version = "v0.7.2"
+
+[[projects]]
   digest = "1:680b63a131506e668818d630d3ca36123ff290afa0afc9f4be21940adca3f27d"
   name = "github.com/appscode/jsonpatch"
   packages = ["."]
@@ -226,6 +237,14 @@
   ]
   pruneopts = "NUT"
   revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
+
+[[projects]]
+  digest = "1:b7ffca49e9cfd3dfb04a8e0a59347708c6f78f68476a32c5e0a0edca5d1b258c"
+  name = "github.com/dustin/go-humanize"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:aab9e95808c688b75757e520e59c48eb954991693dfc5441f0e87d1f9cb8b7bb"
@@ -1056,6 +1075,22 @@
   pruneopts = "NUT"
   revision = "a5dbd03a2245d554160e3ae6bfdcf969fe58b431"
   version = "0.2.0"
+
+[[projects]]
+  digest = "1:5cf4eb1ceaa1b2c96fd9779fef101def21e68932b33809913563a312e2f88275"
+  name = "github.com/tomnomnom/linkheader"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "6953a30d444317754766fccdd3f7f000edc874f6"
+  version = "0.1.0"
+
+[[projects]]
+  digest = "1:6768f02ca4f35f487593d777433ea4a259a6f082f558ca39f8acfd0beb98e52b"
+  name = "github.com/voxelbrain/goptions"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "26cb8b04692384f4dc269de3b5fcf3e2ef78573e"
+  version = "2.5.11"
 
 [[projects]]
   digest = "1:58f2854b50ff8862eb6a347f20dedaac83e1166f4040472e17bc37736841a12f"
@@ -1961,6 +1996,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Masterminds/sprig",
+    "github.com/aktau/github-release",
     "github.com/blang/semver",
     "github.com/ghodss/yaml",
     "github.com/onsi/ginkgo",
