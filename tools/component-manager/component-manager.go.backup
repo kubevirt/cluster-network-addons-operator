@@ -1,0 +1,114 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"strings"
+
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
+	"gopkg.in/yaml.v2"
+)
+
+type componentsConfig struct {
+	Components map[string]componentConfig `json:"components"`
+}
+
+type componentConfig struct {
+	Repository   string       `yaml:"url"`
+	Branch       string       `yaml:"branch"`
+	Commit       string       `yaml:"commit"`
+	Description  string       `yaml:"description"`
+	UpdatePolicy updatePolicy `yaml:"updatePolicy"`
+}
+
+type updatePolicy string
+
+const (
+	updatePolicyTagged = "tagged"
+)
+
+func main() {
+	githubToken, ok := os.LookupEnv("GITHUB_TOKEN")
+	if !ok {
+		log.Fatal("Environment variable GITHUB_TOKEN has to be set")
+	}
+
+	cnaoOrg := flag.String("cnao-org", "kubevirt", "GitHub organization of CNAO (optional)")
+	cnaoRepo := flag.String("cnao-repo", "cluster-network-addons-operator", "GitHub repo of CNAO (optional)")
+	componentName := flag.String("component", "", "Name of the component to be revised")
+	componentsConfigPath := flag.String("config", "", "Path to components.yaml file")
+	githubUser := flag.String("github-user", "", "GitHub user used to push revision PRs")
+
+	flag.Parse()
+
+	if *cnaoOrg == "" || *cnaoRepo == "" || *componentName == "" || *componentsConfigPath == "" || *githubUser == "" {
+		flag.PrintDefaults()
+		log.Fatal("Required attributes were not provided")
+	}
+
+	fmt.Printf("Attributes: %v %v %v %v\n", githubUser, githubToken, *componentName, *componentsConfigPath)
+
+	///////////////////////////////
+
+	var config componentsConfig
+
+	configFile, err := ioutil.ReadFile(*componentsConfigPath)
+	if err != nil {
+		log.Fatalf("Failed to read the config file: %v", err)
+	}
+
+	err = yaml.Unmarshal(configFile, &config)
+	if err != nil {
+		log.Fatalf("Failed to parse the config file: %v", err)
+	}
+
+	fmt.Printf("Repository: %v\n", config.Components[*componentName].Repository)
+	fmt.Printf("Branch: %v\n", config.Components[*componentName].Branch)
+	fmt.Printf("Commit: %v\n", config.Components[*componentName].Commit)
+	fmt.Printf("Description: %v\n", config.Components[*componentName].Description)
+
+	///////////////////////////////
+
+	repoSplit := strings.Split(config.Components[*componentName].Repository, "/")
+	org := repoSplit[len(repoSplit)-2]
+	repo := repoSplit[len(repoSplit)-1]
+	fmt.Printf("Org: %v\n", org)
+	fmt.Printf("Repo: %v\n", repo)
+
+	///////////////////////////////
+
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: githubToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	// list all repositories for the authenticated user
+	prs, _, err := client.PullRequests.List(ctx, *cnaoOrg, *cnaoRepo, &github.PullRequestListOptions{Base: "master", State: "all"})
+
+	fmt.Printf("List error: %v\n", err)
+
+	for _, pr := range prs {
+		fmt.Printf("PR number: %v\n", *pr.Number)
+	}
+
+	fmt.Printf("Len PR: %v\n", len(prs))
+
+	// list all repositories for the authenticated user
+	releases, _, err := client.Repositories.ListReleases(ctx, org, repo, nil)
+
+	fmt.Printf("List error: %v\n", err)
+
+	for _, release := range releases {
+		fmt.Printf("Release: %v\n", release)
+	}
+
+	// - list all new tags since the commit
+}

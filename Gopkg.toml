@@ -67,6 +67,10 @@ required = [
   name = "github.com/coreos/prometheus-operator"
   version = "=v0.26.0"
 
+[[override]]
+  name = "golang.org/x/net"
+  revision = "6afb5195e5aab057fda82e27171243402346b0ad"
+
 [prune]
   go-tests = true
   non-go = true

@@ -258,6 +258,21 @@
   version = "v2.9.0"
 
 [[projects]]
+  digest = "1:b498b36dbb2b306d1c5205ee5236c9e60352be8f9eea9bf08186723a9f75b4f3"
+  name = "github.com/emirpasic/gods"
+  packages = [
+    "containers",
+    "lists",
+    "lists/arraylist",
+    "trees",
+    "trees/binaryheap",
+    "utils",
+  ]
+  pruneopts = "NUT"
+  revision = "1615341f118ae12f353cc8a983f35b584342c9b3"
+  version = "v1.12.0"
+
+[[projects]]
   digest = "1:db115eee0ae265dab922fecbb7966c3fcdc4eae3c2e9caae302fdcba3ba422c7"
   name = "github.com/evanphx/json-patch"
   packages = ["."]
@@ -427,6 +442,22 @@
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
 
 [[projects]]
+  digest = "1:09fa06250b4e0c69472fadcdf07a29ffcdbd92da94845f8f3cd0dcd19c5f1334"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  pruneopts = "NUT"
+  revision = "2e3e74fa920e7d6278b7a9737ab5c8b7b1480294"
+  version = "v29.0.3"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "NUT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:52c5834e2bebac9030c97cc0798ac11c3aa8a39f098aeb419f142533da6cd3cc"
   name = "github.com/google/gofuzz"
@@ -578,6 +609,14 @@
   version = "v1.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:62fe3a7ea2050ecbd753a71889026f83d73329337ada66325cbafd5dea5f713d"
+  name = "github.com/jbenet/go-context"
+  packages = ["io"]
+  pruneopts = "NUT"
+  revision = "d14ea06fba99483203c19d92cfcd13ebe73135f4"
+
+[[projects]]
   digest = "1:da62aa6632d04e080b8a8b85a59ed9ed1550842a0099a55f3ae3a20d02a3745a"
   name = "github.com/joho/godotenv"
   packages = ["."]
@@ -592,6 +631,14 @@
   pruneopts = "NUT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
   version = "v1.1.5"
+
+[[projects]]
+  digest = "1:dae921a7328d7e20912287d561a899398e4d943cfbeb4122dd99333b052400e0"
+  name = "github.com/kevinburke/ssh_config"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "6cfae18c12b8934b1afba3ce8159476fdef666ba"
+  version = "1.0"
 
 [[projects]]
   digest = "1:58999a98719fddbac6303cb17e8d85b945f60b72f48e3a2df6b950b97fa926f1"
@@ -1069,6 +1116,19 @@
   version = "v1.4.0"
 
 [[projects]]
+  digest = "1:89fd77d603a74a6540d60067debad9397865bf040955d907362c95d364baeba6"
+  name = "github.com/src-d/gcfg"
+  packages = [
+    ".",
+    "scanner",
+    "token",
+    "types",
+  ]
+  pruneopts = "NUT"
+  revision = "1ac3a1ac202429a54835fe8408a92880156b489d"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:58dfc16edf3b9550f92cdabbe23c8cb7043516e366d4d7bf7409a75193b8ecbd"
   name = "github.com/technosophos/moniker"
   packages = ["."]
@@ -1091,6 +1151,14 @@
   pruneopts = "NUT"
   revision = "26cb8b04692384f4dc269de3b5fcf3e2ef78573e"
   version = "2.5.11"
+
+[[projects]]
+  digest = "1:3148cb3478c26a92b4c1a18abb9428234b281e278af6267840721a24b6cbc6a3"
+  name = "github.com/xanzy/ssh-agent"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "6a3e2ff9e7c564f36873c2e36413f634534f1c44"
+  version = "v0.2.1"
 
 [[projects]]
   digest = "1:58f2854b50ff8862eb6a347f20dedaac83e1166f4040472e17bc37736841a12f"
@@ -1152,12 +1220,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:23b971c6946511f672b593a36ae2cb6e17087229ee82b3ce77a84dab2983d301"
+  digest = "1:ed0e268ddbbd7883bddc4b9d15b27352ee0442977e6b5313e33942648a190141"
   name = "golang.org/x/crypto"
   packages = [
     "cast5",
+    "curve25519",
     "ed25519",
     "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "internal/subtle",
     "openpgp",
     "openpgp/armor",
     "openpgp/clearsign",
@@ -1166,15 +1237,18 @@
     "openpgp/packet",
     "openpgp/s2k",
     "pbkdf2",
+    "poly1305",
     "scrypt",
+    "ssh",
+    "ssh/agent",
+    "ssh/knownhosts",
     "ssh/terminal",
   ]
   pruneopts = "NUT"
   revision = "31a38585487a4b1fd6ff4f8f3db26f1fb296ac82"
 
 [[projects]]
-  branch = "master"
-  digest = "1:3ab919e2ecb38ed7d1ff3d2c1f211d3d8377deefb474bb93e97571e0e94384f1"
+  digest = "1:35129a9a98f14c37043d6279acc91af2b3f2b4fcdf5e6dcf934f2b6c0b68be40"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -1186,11 +1260,13 @@
     "http2",
     "http2/hpack",
     "idna",
+    "internal/socks",
     "internal/timeseries",
+    "proxy",
     "trace",
   ]
   pruneopts = "NUT"
-  revision = "c95aed5357e77a4bf7d3955c46740000a17adee1"
+  revision = "6afb5195e5aab057fda82e27171243402346b0ad"
 
 [[projects]]
   branch = "master"
@@ -1402,12 +1478,84 @@
   version = "v2.3.1"
 
 [[projects]]
+  digest = "1:2ce3f67deab5c58327bb2ea93f3a78e7095fd23043d250898ec6660894945d13"
+  name = "gopkg.in/src-d/go-billy.v4"
+  packages = [
+    ".",
+    "helper/chroot",
+    "helper/polyfill",
+    "osfs",
+    "util",
+  ]
+  pruneopts = "NUT"
+  revision = "780403cfc1bc95ff4d07e7b26db40a6186c5326e"
+  version = "v4.3.2"
+
+[[projects]]
+  digest = "1:dccfd140a36fe95e670b90aa33f96d9fdeec5dc38031f15db25cdccd60e7465e"
+  name = "gopkg.in/src-d/go-git.v4"
+  packages = [
+    ".",
+    "config",
+    "internal/revision",
+    "internal/url",
+    "plumbing",
+    "plumbing/cache",
+    "plumbing/filemode",
+    "plumbing/format/config",
+    "plumbing/format/diff",
+    "plumbing/format/gitignore",
+    "plumbing/format/idxfile",
+    "plumbing/format/index",
+    "plumbing/format/objfile",
+    "plumbing/format/packfile",
+    "plumbing/format/pktline",
+    "plumbing/object",
+    "plumbing/protocol/packp",
+    "plumbing/protocol/packp/capability",
+    "plumbing/protocol/packp/sideband",
+    "plumbing/revlist",
+    "plumbing/storer",
+    "plumbing/transport",
+    "plumbing/transport/client",
+    "plumbing/transport/file",
+    "plumbing/transport/git",
+    "plumbing/transport/http",
+    "plumbing/transport/internal/common",
+    "plumbing/transport/server",
+    "plumbing/transport/ssh",
+    "storage",
+    "storage/filesystem",
+    "storage/filesystem/dotgit",
+    "storage/memory",
+    "utils/binary",
+    "utils/diff",
+    "utils/ioutil",
+    "utils/merkletrie",
+    "utils/merkletrie/filesystem",
+    "utils/merkletrie/index",
+    "utils/merkletrie/internal/frame",
+    "utils/merkletrie/noder",
+  ]
+  pruneopts = "NUT"
+  revision = "0d1a009cbb604db18be960db5f1525b99a55d727"
+  version = "v4.13.1"
+
+[[projects]]
   branch = "v1"
   digest = "1:8fb1ccb16a6cfecbfdfeb84d8ea1cc7afa8f9ef16526bc2326f72d993e32cef1"
   name = "gopkg.in/tomb.v1"
   packages = ["."]
   pruneopts = "NUT"
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
+
+[[projects]]
+  digest = "1:b233ad4ec87ac916e7bf5e678e98a2cb9e8b52f6de6ad3e11834fc7a71b8e3bf"
+  name = "gopkg.in/warnings.v0"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ec4a0fea49c7b46c2aeb0b51aac55779c607e52b"
+  version = "v0.1.2"
 
 [[projects]]
   digest = "1:18108594151654e9e696b27b181b953f9a90b16bf14d253dd1b397b025a1487f"
@@ -1999,6 +2147,7 @@
     "github.com/aktau/github-release",
     "github.com/blang/semver",
     "github.com/ghodss/yaml",
+    "github.com/google/go-github/github",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
     "github.com/onsi/ginkgo/ginkgo",
@@ -2015,7 +2164,12 @@
     "github.com/operator-framework/operator-sdk/version",
     "github.com/pkg/errors",
     "github.com/spf13/pflag",
+    "golang.org/x/oauth2",
     "golang.org/x/tools/cmd/goimports",
+    "gopkg.in/src-d/go-git.v4",
+    "gopkg.in/src-d/go-git.v4/plumbing",
+    "gopkg.in/src-d/go-git.v4/plumbing/object",
+    "gopkg.in/src-d/go-git.v4/storage/memory",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
