@@ -1,6 +1,6 @@
-# Prepare environment for CNAO end to end testing. This includes temporary Go paths and binaries.
+# Prepare environment for CNAO testing and automation. This includes temporary Go paths and binaries.
 #
-# source automation/check-patch.e2e.setup.sh
+# source automation/check-patch.setup.sh
 # cd ${TMP_PROJECT_PATH}
 
 echo 'Setup Go paths'
