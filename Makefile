@@ -155,8 +155,8 @@ release: $(GITHUB_RELEASE)
 	GITHUB_RELEASE=$(GITHUB_RELEASE) \
 	TAG=$(shell hack/version.sh) \
 	  hack/release.sh \
-	    manifests/cluster-network-addons.package.yaml \
-	    $(shell find manifests/$(shell hack/version.sh) -type f)
+	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
+	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
 .PHONY: \
 	$(E2E_SUITES) \
