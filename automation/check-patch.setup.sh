@@ -21,7 +21,7 @@ echo 'Install operator repository under the temporary Go path'
 TMP_PROJECT_PATH=${GOPATH}/src/github.com/kubevirt/cluster-network-addons-operator
 rm -rf ${TMP_PROJECT_PATH}
 mkdir -p ${TMP_PROJECT_PATH}
-cp -rf $(pwd)/* ${TMP_PROJECT_PATH}
+cp -rf $(pwd)/. ${TMP_PROJECT_PATH}
 
 echo 'Exporting temporary project path'
 export TMP_PROJECT_PATH
