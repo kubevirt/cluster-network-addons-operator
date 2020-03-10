@@ -11,11 +11,24 @@ teardown() {
     make cluster-down
 }
 
+versionChanged() {
+    git diff --name-only HEAD HEAD~1 | grep version/version.go
+}
+
 main() {
     export KUBEVIRT_PROVIDER='k8s-1.17.0'
 
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
+
+    if versionChanged; then
+        # Since we cannot test upgrade of to-be-released version, drop it from the lifecycle tests
+        to_be_released=$(hack/version)
+        export RELEASES_DESELECTOR="${to_be_released}"
+    else
+        # Don't run all upgrade tests in regular PRs, stick to those released under HCO
+        export RELEASES_SELECTOR="{0.18.0,0.23.0,0.27.0,99.0.0}"
+    fi
 
     make cluster-down
     make cluster-up

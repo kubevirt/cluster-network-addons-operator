@@ -1999,6 +1999,7 @@
     "github.com/aktau/github-release",
     "github.com/blang/semver",
     "github.com/ghodss/yaml",
+    "github.com/gobwas/glob",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
     "github.com/onsi/ginkgo/ginkgo",
