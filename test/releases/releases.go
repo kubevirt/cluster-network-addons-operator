@@ -2,10 +2,12 @@ package releases
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/gobwas/glob"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -28,14 +30,45 @@ type Release struct {
 
 // Releases are populated by respective release modules using init()
 var releases = []Release{}
-var releasesSorted = false
+var releasesProcessed = false
 
 // Returns list of releases sorted from oldest to newest
 func Releases() []Release {
-	if releasesSorted {
+	if releasesProcessed {
 		return releases
 	}
 
+	// Keep only releases matching the selector
+	if releasesSelectorRaw, found := os.LookupEnv("RELEASES_SELECTOR"); found {
+		releasesSelector := glob.MustCompile(releasesSelectorRaw)
+
+		filteredReleases := []Release{}
+
+		for _, release := range releases {
+			if releasesSelector.Match(release.Version) {
+				filteredReleases = append(filteredReleases, release)
+			}
+		}
+
+		releases = filteredReleases
+	}
+
+	// Drop all releases matching the selector
+	if releasesDeselectorRaw, found := os.LookupEnv("RELEASES_DESELECTOR"); found {
+		releasesDeselector := glob.MustCompile(releasesDeselectorRaw)
+
+		filteredReleases := []Release{}
+
+		for _, release := range releases {
+			if !releasesDeselector.Match(release.Version) {
+				filteredReleases = append(filteredReleases, release)
+			}
+		}
+
+		releases = filteredReleases
+	}
+
+	// Sort releases in ascending order
 	sort.Slice(releases, func(a, b int) bool {
 		releaseAVersion, err := semver.Make(releases[a].Version)
 		if err != nil {
@@ -47,7 +80,8 @@ func Releases() []Release {
 		}
 		return releaseAVersion.LT(releaseBVersion)
 	})
-	releasesSorted = true
+
+	releasesProcessed = true
 
 	return releases
 }
