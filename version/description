@@ -1,6 +1,5 @@
-0.29.0
+0.30.0
 
-Bump versions of dependencies.
-
-Features:
-* automate GitHub releasing (#330)
+Bugs:
+* Add cniVersion to multus CNI (#336)
+* include .git while copying to TMP_PROJECT_PATH
