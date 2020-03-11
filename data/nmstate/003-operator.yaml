@@ -44,8 +44,8 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               value: ""
-            #- name: RUN_WEBHOOK_SERVER
-            #  value: ""
+            - name: RUN_WEBHOOK_SERVER
+              value: ""
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -66,6 +66,8 @@ spec:
                 configMapKeyRef:
                   name: nmstate-config
                   key: interfaces_filter
+            - name: WEBHOOK_PORT
+              value: "54874"
             - name: ENABLE_PROFILER
               value: "False"
             - name: PROFILER_PORT
@@ -173,59 +175,59 @@ metadata:
 data:
   node_network_state_refresh_interval: "5"
   interfaces_filter: "veth*"
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: nmstate-webhook
-#  namespace: {{ .Namespace }}
-#  labels:
-#    app: kubernetes-nmstate
-#spec:
-#  publishNotReadyAddresses: true
-#  ports:
-#    - port: 443
-#      targetPort: 8443
-#  selector:
-#    name: nmstate-handler
-#---
-#apiVersion: admissionregistration.k8s.io/v1beta1
-#kind: MutatingWebhookConfiguration
-#metadata:
-#  name: nmstate
-#  labels:
-#    app: kubernetes-nmstate
-#webhooks:
-#  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
-#    clientConfig:
-#      service:
-#        name: nmstate-webhook
-#        namespace: {{ .Namespace }}
-#        path: "/nodenetworkconfigurationpolicies-mutate"
-#    rules:
-#      - operations: ["CREATE", "UPDATE"]
-#        apiGroups: ["*"]
-#        apiVersions: ["v1alpha1"]
-#        resources: ["nodenetworkconfigurationpolicies"]
-#  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
-#    clientConfig:
-#      service:
-#        name: nmstate-webhook
-#        namespace: {{ .Namespace }}
-#        path: "/nodenetworkconfigurationpolicies-status-mutate"
-#    rules:
-#      - operations: ["CREATE", "UPDATE"]
-#        apiGroups: ["*"]
-#        apiVersions: ["v1alpha1"]
-#        resources: ["nodenetworkconfigurationpolicies/status"]
-#  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
-#    clientConfig:
-#      service:
-#        name: nmstate-webhook
-#        namespace: {{ .Namespace }}
-#        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
-#    rules:
-#      - operations: ["CREATE", "UPDATE"]
-#        apiGroups: ["*"]
-#        apiVersions: ["v1alpha1"]
-#        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nmstate-webhook
+  namespace: {{ .Namespace }}
+  labels:
+    app: kubernetes-nmstate
+spec:
+  publishNotReadyAddresses: true
+  ports:
+    - port: 443
+      targetPort: 54874
+  selector:
+    name: nmstate-handler
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: nmstate
+  labels:
+    app: kubernetes-nmstate
+webhooks:
+  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
+    clientConfig:
+      service:
+        name: nmstate-webhook
+        namespace: {{ .Namespace }}
+        path: "/nodenetworkconfigurationpolicies-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies"]
+  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
+    clientConfig:
+      service:
+        name: nmstate-webhook
+        namespace: {{ .Namespace }}
+        path: "/nodenetworkconfigurationpolicies-status-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies/status"]
+  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
+    clientConfig:
+      service:
+        name: nmstate-webhook
+        namespace: {{ .Namespace }}
+        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
