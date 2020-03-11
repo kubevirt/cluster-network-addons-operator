@@ -25,8 +25,8 @@ const (
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.2.0"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.8.2"
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.14.0"
-	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.10.0"
-	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.10.0"
+	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.11.0"
+	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.11.0"
 )
 
 type AddonsImages struct {
