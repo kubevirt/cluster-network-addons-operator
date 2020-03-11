@@ -23,7 +23,7 @@ main() {
 
     if versionChanged; then
         # Since we cannot test upgrade of to-be-released version, drop it from the lifecycle tests
-        to_be_released=$(hack/version)
+        to_be_released=$(hack/version.sh)
         export RELEASES_DESELECTOR="${to_be_released}"
     else
         # Don't run all upgrade tests in regular PRs, stick to those released under HCO

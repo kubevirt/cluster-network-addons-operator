@@ -1,4 +1,4 @@
 packageName: cluster-network-addons
 channels:
 - name: alpha
-  currentCSV: cluster-network-addons-operator.0.30.0
+  currentCSV: cluster-network-addons-operator.0.31.0
