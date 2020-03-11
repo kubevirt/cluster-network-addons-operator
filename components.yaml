@@ -16,4 +16,4 @@ components:
     commit: "e0f9911f55df07a16ecafd14fe0ddce7607ed443" # v0.15.0
   ovs-cni:
     url: "https://github.com/kubevirt/ovs-cni"
-    commit: "d61bd2b26f6c1df8ed38a4572b2ab4adaf48245d" # v0.10.0
+    commit: "23d572171e383009aefa693832d1d8a7b8d04b22" # v0.11.0
