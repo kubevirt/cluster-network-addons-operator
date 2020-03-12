@@ -166,16 +166,16 @@ spec:
 First install the operator itself:
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.4/namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.4/network-addons-config.crd.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.4/operator.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.5/namespace.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.5/network-addons-config.crd.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.5/operator.yaml
 ```
 
 Then you need to create a configuration for the operator [example
 CR](manifests/cluster-network-addons/0.4.0/network-addons-config-example.cr.yaml):
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.4/network-addons-config-example.cr.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator/master/manifests/cluster-network-addons/0.27.5/network-addons-config-example.cr.yaml
 ```
 
 Finally you can wait for the operator to finish deployment:
