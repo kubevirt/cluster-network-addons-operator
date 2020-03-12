@@ -36,9 +36,6 @@ spec:
             requests:
               cpu: "200m"
               memory: "120Mi"
-            limits:
-              cpu: "200m"
-              memory: "120Mi"
           command:
           - kubernetes-nmstate
           env:
@@ -124,9 +121,6 @@ spec:
           imagePullPolicy: {{ .ImagePullPolicy }}
           resources:
             requests:
-              cpu: "200m"
-              memory: "120Mi"
-            limits:
               cpu: "200m"
               memory: "120Mi"
           command:

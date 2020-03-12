@@ -33,9 +33,6 @@ spec:
             requests:
               cpu: "60m"
               memory: "30Mi"
-            limits:
-              cpu: "60m"
-              memory: "30Mi"
           securityContext:
             privileged: true
           volumeMounts:
@@ -46,9 +43,6 @@ spec:
           imagePullPolicy: {{ .ImagePullPolicy }}
           resources:
             requests:
-              cpu: "100m"
-              memory: "40Mi"
-            limits:
               cpu: "100m"
               memory: "40Mi"
           securityContext:
