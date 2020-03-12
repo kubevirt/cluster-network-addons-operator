@@ -51,11 +51,21 @@ var (
 			"ovs-cni-amd64",
 		},
 	}
+	MacvtapComponent = Component{
+		ComponentName:              "Macvtap",
+		ClusterRole:                "",
+		ClusterRoleBinding:         "",
+		SecurityContextConstraints: "macvtap-cni",
+		DaemonSets: []string{
+			"macvtap-cni",
+		},
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
 		MultusComponent,
 		NMStateComponent,
 		OvsComponent,
+		MacvtapComponent,
 	}
 )

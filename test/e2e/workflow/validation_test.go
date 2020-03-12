@@ -25,6 +25,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					Multus:      &opv1alpha1.Multus{},
 					Ovs:         &opv1alpha1.Ovs{},
 					NMState:     &opv1alpha1.NMState{},
+					MacvtapCni:  &opv1alpha1.MacvtapCni{},
 				}
 				CreateConfig(configSpec)
 			})
