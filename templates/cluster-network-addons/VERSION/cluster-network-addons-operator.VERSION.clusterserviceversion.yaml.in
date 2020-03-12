@@ -23,6 +23,7 @@ metadata:
             },
             "nmstate":{},
             "ovs": {},
+            "macvtap": {},
             "imagePullPolicy": "IfNotPresent"
           }
         }
