@@ -27,6 +27,7 @@ const (
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.17.0"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.11.0"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.11.0"
+	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni:v0.1.0"
 )
 
 type AddonsImages struct {
@@ -37,6 +38,7 @@ type AddonsImages struct {
 	NMStateHandler    string
 	OvsCni            string
 	OvsMarker         string
+	MacvtapCni        string
 }
 
 func (ai *AddonsImages) FillDefaults() *AddonsImages {
@@ -60,6 +62,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	}
 	if ai.OvsMarker == "" {
 		ai.OvsMarker = OvsMarkerImageDefault
+	}
+	if ai.MacvtapCni == "" {
+		ai.MacvtapCni = MacvtapCniImageDefault
 	}
 	return ai
 }
@@ -138,6 +143,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "KUBEMACPOOL_IMAGE",
 									Value: addonsImages.KubeMacPool,
+								},
+								{
+									Name:  "MACVTAP_CNI_IMAGE",
+									Value: addonsImages.MacvtapCni,
 								},
 								{
 									Name:  "OPERATOR_IMAGE",
@@ -389,6 +398,7 @@ func GetCR() *cnav1alpha1.NetworkAddonsConfig {
 			KubeMacPool:     &cnav1alpha1.KubeMacPool{},
 			NMState:         &cnav1alpha1.NMState{},
 			Ovs:             &cnav1alpha1.Ovs{},
+			MacvtapCni:      &cnav1alpha1.MacvtapCni{},
 			ImagePullPolicy: corev1.PullIfNotPresent,
 		},
 	}

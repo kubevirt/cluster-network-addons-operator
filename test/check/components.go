@@ -38,7 +38,7 @@ var (
 		ClusterRoleBinding:         "nmstate-handler",
 		ClusterRole:                "nmstate-handler",
 		SecurityContextConstraints: "nmstate",
-		DaemonSets:                 []string{
+		DaemonSets: []string{
 			"nmstate-handler",
 			"nmstate-handler-worker"},
 	}
