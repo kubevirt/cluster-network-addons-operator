@@ -56,9 +56,6 @@ spec:
           requests:
             cpu: "60m"
             memory: "30Mi"
-          limits:
-            cpu: "60m"
-            memory: "30Mi"
         securityContext:
           privileged: true
         volumeMounts:
