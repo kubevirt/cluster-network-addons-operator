@@ -186,7 +186,7 @@ func RenderObjsToRemove(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifest
 	if conf.Ovs == nil {
 		o, err := renderOvs(prev, manifestDir, clusterInfo)
 		if err != nil {
-		return nil, err
+			return nil, err
 		}
 		objsToRemove = append(objsToRemove, o...)
 	}
