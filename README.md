@@ -21,6 +21,7 @@ spec:
   kubeMacPool: {}
   nmstate: {}
   ovs: {}
+  macvtap: {}
   imagePullPolicy: Always
 ```
 
@@ -146,6 +147,31 @@ metadata:
 spec:
   ovs: {}
 ```
+
+## Macvtap
+
+**Note:** This feature is **experimental**. Macvtap-cni is unstable and its API
+may change.
+
+The operator allows the administrator to deploy the
+[macvtap CNI plugin](https://github.com/kubevirt/macvtap-cni/), simply by
+adding `mavtap` attribute to `NetworkAddonsConfig`.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  macvtap: {}
+```
+
+Macvtap-cni must be explicitly configured by the administrator, indicating the
+interfaces on top of which logical networks can be created.
+
+A simple example on how to do so, the user must deploy a `ConfigMap`, such as in [this example](https://github.com/kubevirt/macvtap-cni/blob/master/examples/macvtap-deviceplugin-config.yaml).
+
+Currently, this configuration is not dynamic.
 
 ## Image Pull Policy
 
