@@ -181,16 +181,26 @@ var _ = Describe("NetworkAddonsConfig", func() {
 })
 
 func testConfigCreate(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
-	CreateConfig(configSpec)
-	checkConfigChange(components)
+	checkConfigChange(components, func() {
+		CreateConfig(configSpec)
+	})
 }
 
 func testConfigUpdate(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
-	UpdateConfig(configSpec)
-	checkConfigChange(components)
+	checkConfigChange(components, func() {
+		UpdateConfig(configSpec)
+	})
 }
 
-func checkConfigChange(components []Component) {
+func checkConfigChange(components []Component, while func()) {
+
+	// Start the function with a little delay to give the Progressing check a better chance
+	// of catching the event
+	go func() {
+		time.Sleep(time.Second)
+		while()
+	}()
+
 	// On OpenShift 4, Multus is already deployed by default
 	onlyMultusOnOKDCluster := (len(components) == 1 &&
 		IsOnOKDCluster() &&
