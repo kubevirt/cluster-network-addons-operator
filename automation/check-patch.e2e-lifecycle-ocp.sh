@@ -1,22 +1,18 @@
 #!/bin/bash -xe
 
-# This script should be able to execute lifecycle functional tests against
-# Kubernetes cluster on any environment with basic dependencies listed in
-# check-patch.packages installed and docker running.
+# This script should be able to execute functional tests against OCP cluster on
+# any environment with basic dependencies listed in check-patch.packages
+# installed and docker running.
 #
 # yum -y install automation/check-patch.packages
-# automation/check-patch.e2e-lifecycle-k8s.sh
+# automation/check-patch.e2e-lifecycle-ocp.sh
 
 teardown() {
     make cluster-down
 }
 
-versionChanged() {
-    git diff --name-only HEAD HEAD~1 | grep version/version.go
-}
-
 main() {
-    export KUBEVIRT_PROVIDER='k8s-1.17'
+    export KUBEVIRT_PROVIDER='ocp-4.3'
 
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
