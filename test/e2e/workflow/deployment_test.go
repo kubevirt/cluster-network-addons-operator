@@ -192,6 +192,14 @@ func testConfigUpdate(configSpec opv1alpha1.NetworkAddonsConfigSpec, components 
 	})
 }
 
+// checkConfigChange verifies that given components transition through
+// Progressing to Available state while and after the given callback function is
+// executed. We start the monitoring sooner than the callback to ensure we catch
+// all transitions from the very beginning.
+//
+// TODO This should be replaced by a solution based around `Watch` once it is
+// available on operator-sdk test framework:
+// https://github.com/operator-framework/operator-sdk/issues/2655
 func checkConfigChange(components []Component, while func()) {
 
 	// Start the function with a little delay to give the Progressing check a better chance
