@@ -1,7 +1,7 @@
 components:
   multus:
     url: "https://github.com/intel/multus-cni"
-    commit: "bf61002b4c83fcc0ca29c271108ca6afa381998f"
+    commit: "bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a" # v3.4.1
   linux-bridge:
     url: "https://github.com/containernetworking/plugins"
     commit: "fe60fcddb897079746ec1523fd1837ab05b1e689" # v0.8.1

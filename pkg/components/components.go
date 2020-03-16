@@ -20,7 +20,7 @@ const (
 )
 
 const (
-	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002"
+	MultusImageDefault            = "nfvpe/multus:v3.4.1"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.1"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.2.0"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.8.3"
