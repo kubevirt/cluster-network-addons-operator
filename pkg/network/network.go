@@ -130,6 +130,13 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 	}
 	objs = append(objs, o...)
 
+	// render MacvtapCni
+	o, err = renderMacvtapCni(conf, manifestDir, clusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
 	log.Printf("render phase done, rendered %d objects", len(objs))
 	return objs, nil
 }
@@ -179,7 +186,16 @@ func RenderObjsToRemove(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifest
 	if conf.Ovs == nil {
 		o, err := renderOvs(prev, manifestDir, clusterInfo)
 		if err != nil {
-		return nil, err
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	// render MacvtapCni
+	if conf.MacvtapCni == nil {
+		o, err := renderMacvtapCni(conf, manifestDir, clusterInfo)
+		if err != nil {
+			return nil, err
 		}
 		objsToRemove = append(objsToRemove, o...)
 	}

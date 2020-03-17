@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Copyright 2018 Red Hat, Inc.
+ * Copyright 2018-2020 Red Hat, Inc.
  *
  */
 
@@ -55,7 +55,7 @@ type templateData struct {
 	OperatorVersion string
 	Namespace       string
 	ContainerPrefix string
-	ImageName	string
+	ImageName       string
 	ContainerTag    string
 	ImagePullPolicy string
 	CNA             *operatorData
@@ -230,6 +230,7 @@ func main() {
 	nmStateHandlerImage := flag.String("nm-state-handler-image", components.NMStateHandlerImageDefault, "The nmstate handler image managed by CNA")
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
 	ovsMarkerImage := flag.String("ovs-marker-image", components.OvsMarkerImageDefault, "The ovs marker image managed by CNA")
+	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -242,7 +243,7 @@ func main() {
 		OperatorVersion: *operatorVersion,
 		Namespace:       *namespace,
 		ContainerPrefix: *containerPrefix,
-		ImageName:	 *imageName,
+		ImageName:       *imageName,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
 		AddonsImages: (&components.AddonsImages{
@@ -253,6 +254,7 @@ func main() {
 			NMStateHandler:    *nmStateHandlerImage,
 			OvsCni:            *ovsCniImage,
 			OvsMarker:         *ovsMarkerImage,
+			MacvtapCni:        *macvtapCniImage,
 		}).FillDefaults(),
 	}
 

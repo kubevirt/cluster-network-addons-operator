@@ -38,7 +38,7 @@ var (
 		ClusterRoleBinding:         "nmstate-handler",
 		ClusterRole:                "nmstate-handler",
 		SecurityContextConstraints: "nmstate",
-		DaemonSets:                 []string{
+		DaemonSets: []string{
 			"nmstate-handler",
 			"nmstate-handler-worker"},
 	}
@@ -51,11 +51,21 @@ var (
 			"ovs-cni-amd64",
 		},
 	}
+	MacvtapComponent = Component{
+		ComponentName:              "Macvtap",
+		ClusterRole:                "",
+		ClusterRoleBinding:         "",
+		SecurityContextConstraints: "macvtap-cni",
+		DaemonSets: []string{
+			"macvtap-cni",
+		},
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
 		MultusComponent,
 		NMStateComponent,
 		OvsComponent,
+		MacvtapComponent,
 	}
 )

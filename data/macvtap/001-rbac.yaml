@@ -1,0 +1,16 @@
+{{ if .EnableSCC }}
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: macvtap-cni
+allowHostNetwork: true
+allowPrivilegedContainer: true
+allowHostDirVolumePlugin: true
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+users:
+  - system:serviceaccount:{{ .Namespace }}:macvtap-cni
+{{ end }}

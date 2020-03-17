@@ -62,6 +62,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{OvsComponent},
 			),
+			Entry(
+				MacvtapComponent.ComponentName,
+				opv1alpha1.NetworkAddonsConfigSpec{
+					MacvtapCni: &opv1alpha1.MacvtapCni{},
+				},
+				[]Component{MacvtapComponent},
+			),
 		)
 		//2264
 		It("should be able to deploy all components at once", func() {
@@ -71,6 +78,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				KubeMacPoolComponent,
 				NMStateComponent,
 				OvsComponent,
+				MacvtapComponent,
 			}
 			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 				KubeMacPool: &opv1alpha1.KubeMacPool{},
@@ -78,6 +86,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Multus:      &opv1alpha1.Multus{},
 				NMState:     &opv1alpha1.NMState{},
 				Ovs:         &opv1alpha1.Ovs{},
+				MacvtapCni:  &opv1alpha1.MacvtapCni{},
 			}
 			testConfigCreate(configSpec, components)
 		})
@@ -113,6 +122,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.Ovs = &opv1alpha1.Ovs{}
 			components = append(components, OvsComponent)
 			testConfigUpdate(configSpec, components)
+
+			// Add Macvtap component
+			configSpec.MacvtapCni = &opv1alpha1.MacvtapCni{}
+			components = append(components, MacvtapComponent)
+			testConfigUpdate(configSpec, components)
 		})
 	})
 
@@ -123,6 +137,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			NMStateComponent,
 			KubeMacPoolComponent,
 			OvsComponent,
+			MacvtapComponent,
 		}
 		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 			LinuxBridge: &opv1alpha1.LinuxBridge{},
@@ -130,6 +145,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			NMState:     &opv1alpha1.NMState{},
 			KubeMacPool: &opv1alpha1.KubeMacPool{},
 			Ovs:         &opv1alpha1.Ovs{},
+			MacvtapCni:  &opv1alpha1.MacvtapCni{},
 		}
 
 		BeforeEach(func() {
