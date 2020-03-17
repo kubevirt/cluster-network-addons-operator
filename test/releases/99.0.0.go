@@ -12,7 +12,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "kube-multus",
-				Image:      "quay.io/kubevirt/cluster-network-addon-multus:v3.2.0-1.gitbf61002",
+				Image:      "nfvpe/multus:v3.4.1",
 			},
 			opv1alpha1.Container{
 				ParentName: "bridge-marker",
