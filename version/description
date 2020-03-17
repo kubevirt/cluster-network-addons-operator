@@ -1,6 +1,11 @@
-0.31.0
+0.32.0
 
 Features:
-* bump knmstate to 0.17.0 (#339)
-* bump ovs cni to 0.11.0 (#340)
-* limit versions tested in lifecycle lane (#338)
+* Bump multus to 3.4.1 (#352)
+* Integrate macvtap cni (#346)
+* bump kubemacpool to 0.8.3 (#345)
+* drop limitations of resources (#342)
+
+Bugs:
+* drop limitations of resources (#342)
+
