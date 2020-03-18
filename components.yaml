@@ -17,3 +17,6 @@ components:
   ovs-cni:
     url: "https://github.com/kubevirt/ovs-cni"
     commit: "23d572171e383009aefa693832d1d8a7b8d04b22" # v0.11.0
+  macvtap-cni:
+    url: "https://github.com/kubevirt/macvtap-cni"
+    commit: "0c1d111aab4b8222ac2b341d0ce53981649ba2a3" # v0.1.0
