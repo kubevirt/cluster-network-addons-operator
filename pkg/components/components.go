@@ -24,7 +24,7 @@ const (
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.1"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.2.0"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.8.3"
-	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.15.3"
+	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.15.4"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin:v0.10.0"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker:v0.10.0"
 )
