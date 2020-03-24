@@ -4,7 +4,7 @@ all: fmt check
 VERSION ?= 0.28.0
 export VERSION := $(VERSION)
 # Always keep the last released version here
-VERSION_REPLACES ?= 0.27.5
+VERSION_REPLACES ?= 0.27.6
 
 DEPLOY_DIR ?= manifests
 
@@ -27,7 +27,7 @@ GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
 GINKGO ?= build/_output/bin/ginkgo
 
 E2E_TEST_EXTRA_ARGS ?=
-E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 3h -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
+E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 3h -ginkgo.v -ginkgo.failFast $(E2E_TEST_EXTRA_ARGS))
 E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow
