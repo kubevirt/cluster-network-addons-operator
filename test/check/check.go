@@ -19,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -146,55 +147,57 @@ func CheckOperatorIsReady(timeout time.Duration) {
 func CheckForLeftoverObjects(currentVersion string) {
 	listOptions := client.ListOptions{}
 	key := opv1alpha1.SchemeGroupVersion.Group + "/version"
-	listOptions.SetLabelSelector(fmt.Sprintf("%s,%s != %s", key, key, currentVersion))
+	labelSelector, err := k8slabels.Parse(fmt.Sprintf("%s,%s != %s", key, key, currentVersion))
+	Expect(err).NotTo(HaveOccurred())
+	listOptions.LabelSelector = labelSelector
 
 	deployments := appsv1.DeploymentList{}
-	err := framework.Global.Client.List(context.Background(), &listOptions, &deployments)
+	err = framework.Global.Client.List(context.Background(), &deployments, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(deployments.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	daemonSets := appsv1.DaemonSetList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &daemonSets)
+	err = framework.Global.Client.List(context.Background(), &daemonSets, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(daemonSets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	configMaps := corev1.ConfigMapList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &configMaps)
+	err = framework.Global.Client.List(context.Background(), &configMaps, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(configMaps.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	namespaces := corev1.NamespaceList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &namespaces)
+	err = framework.Global.Client.List(context.Background(), &namespaces, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(namespaces.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	secrets := corev1.SecretList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &secrets)
+	err = framework.Global.Client.List(context.Background(), &secrets, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(secrets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	clusterRoles := rbacv1.ClusterRoleList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &clusterRoles)
+	err = framework.Global.Client.List(context.Background(), &clusterRoles, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(clusterRoles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	clusterRoleBindings := rbacv1.ClusterRoleList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &clusterRoleBindings)
+	err = framework.Global.Client.List(context.Background(), &clusterRoleBindings, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(clusterRoleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	roles := rbacv1.RoleList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &roles)
+	err = framework.Global.Client.List(context.Background(), &roles, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(roles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	roleBindings := rbacv1.RoleBindingList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &roleBindings)
+	err = framework.Global.Client.List(context.Background(), &roleBindings, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(roleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	serviceAccounts := corev1.ServiceAccountList{}
-	err = framework.Global.Client.List(context.Background(), &listOptions, &serviceAccounts)
+	err = framework.Global.Client.List(context.Background(), &serviceAccounts, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(serviceAccounts.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 }
