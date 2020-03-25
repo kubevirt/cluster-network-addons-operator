@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"log"
 	"os"
 	"runtime"
@@ -14,6 +15,8 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -25,8 +28,9 @@ import (
 )
 
 var (
-	metricsHost       = "0.0.0.0"
-	metricsPort int32 = 8383
+	metricsHost               = "0.0.0.0"
+	metricsPort         int32 = 8383
+	operatorMetricsPort int32 = 8686
 )
 
 func printVersion() {
@@ -94,9 +98,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	servicePorts := []v1.ServicePort{
+		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
+		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
+	}
+
 	// Create Service object to expose the metrics port.
-	if _, err = metrics.ExposeMetricsPort(ctx, metricsPort); err != nil {
-		log.Printf("failed to expose metrics: %v", err)
+	if _, err = metrics.CreateMetricsService(ctx, cfg, servicePorts); err != nil {
+		log.Printf("failed to create metrics server: %v", err)
 		os.Exit(1)
 	}
 

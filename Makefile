@@ -21,6 +21,9 @@ TARGETS = \
 	whitespace \
 	whitespace-check
 
+export GOFLAGS=-mod=vendor
+export GO111MODULE=on
+
 GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
 GINKGO ?= build/_output/bin/ginkgo
@@ -35,13 +38,13 @@ OPERATOR_SDK ?= build/_output/bin/operator-sdk
 
 GITHUB_RELEASE ?= build/_output/bin/github-release
 
-$(GINKGO): Gopkg.toml
+$(GINKGO): go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/onsi/ginkgo/ginkgo
 
-$(OPERATOR_SDK): Gopkg.toml
+$(OPERATOR_SDK): go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
 
-$(GITHUB_RELEASE): Gopkg.toml
+$(GITHUB_RELEASE): go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/aktau/github-release
 
 # Make does not offer a recursive wildcard function, so here's one:
@@ -112,7 +115,7 @@ cluster-operator-install:
 	./cluster/operator-install.sh
 
 $(E2E_SUITES): $(OPERATOR_SDK)
-	OPERATOR_SDK=$(OPERATOR_SDK) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
+	unset GOFLAGS && OPERATOR_SDK=$(OPERATOR_SDK) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
 
 cluster-clean:
 	./cluster/clean.sh
@@ -159,6 +162,10 @@ release: $(GITHUB_RELEASE)
 	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
 	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
+vendor:
+	go mod tidy
+	go mod vendor
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -182,4 +189,6 @@ release: $(GITHUB_RELEASE)
 	prepare-patch \
 	prepare-minor \
 	prepare-major \
+	vendor \
+	gen-k8s \
 	release
