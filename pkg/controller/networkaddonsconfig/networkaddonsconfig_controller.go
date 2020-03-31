@@ -363,9 +363,9 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alp
 		// Mark the object to be GC'd if the owner is deleted.
 		// Don't set owner reference on namespaces if they are used by the operator itself
 		// Don't set owner reference on CRDs, they should survive removal of the operator
-		operatorNamespace := obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace
-		crd := obj.GetKind() == "CustomResourceDefinition"
-		if !crd && !operatorNamespace {
+		isOperatorNamespace := obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace
+		isCRD := obj.GetKind() == "CustomResourceDefinition"
+		if !isCRD && !isOperatorNamespace {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
 				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 				err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
