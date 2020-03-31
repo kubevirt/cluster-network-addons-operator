@@ -360,8 +360,12 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig
 // are removed when NetworkAddonsConfig config is
 func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, objs []*unstructured.Unstructured) error {
 	for _, obj := range objs {
-		// Mark the object to be GC'd if the owner is deleted. Don't set owner reference on namespaces if they are used by the operator itself
-		if !(obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace) {
+		// Mark the object to be GC'd if the owner is deleted.
+		// Don't set owner reference on namespaces if they are used by the operator itself
+		// Don't set owner reference on CRDs, they should survive removal of the operator
+		operatorNamespace := obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace
+		crd := obj.GetKind() == "CustomResourceDefinition"
+		if !crd && !operatorNamespace {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
 				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 				err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
