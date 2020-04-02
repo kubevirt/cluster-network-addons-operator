@@ -138,7 +138,6 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 func RenderObjsToRemove(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	log.Print("starting rendering objects to delete phase")
 	objsToRemove := []*unstructured.Unstructured{}
-	objsToRemoveWithoutNamespace := []*unstructured.Unstructured{}
 
 	if prev == nil {
 		return nil, nil
@@ -186,15 +185,27 @@ func RenderObjsToRemove(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifest
 
 	// Remove OPERAND_NAMESPACE occurences
 	// TODO cleanup OPERAND_NAMESPACE once there are no components using it.
+	objsToRemoveWithoutNamespace := []*unstructured.Unstructured{}
 	operandNamespace := os.Getenv("OPERAND_NAMESPACE")
 	for _, obj := range objsToRemove {
 		if !(obj.GetName() == operandNamespace && obj.GetKind() == "Namespace") {
 			objsToRemoveWithoutNamespace = append(objsToRemoveWithoutNamespace, obj)
 		}
 	}
+	objsToRemove = objsToRemoveWithoutNamespace
 
-	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemoveWithoutNamespace))
-	return objsToRemoveWithoutNamespace, nil
+	// Do not remove CustomResourceDefinitions, they should be kept even after
+	// removal of the operator
+	objsToRemoveWithoutCRDs := []*unstructured.Unstructured{}
+	for _, obj := range objsToRemove {
+		if obj.GetKind() != "CustomResourceDefinition" {
+			objsToRemoveWithoutCRDs = append(objsToRemoveWithoutCRDs, obj)
+		}
+	}
+	objsToRemove = objsToRemoveWithoutCRDs
+
+	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemove))
+	return objsToRemove, nil
 }
 
 func errorListToMultiLineString(errs []error) string {
