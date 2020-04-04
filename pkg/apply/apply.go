@@ -74,9 +74,39 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 			}
 
 			return errors.Wrapf(err, "could not update object %s", objDesc)
-		} else {
-			log.Print("update was successful")
 		}
+		log.Print("update was successful")
+	}
+
+	return nil
+}
+
+// DeleteObject deletes an object in the apiserver
+func DeleteObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstructured) error {
+	name := obj.GetName()
+	namespace := obj.GetNamespace()
+	if name == "" {
+		return errors.Errorf("object %s has no name", obj.GroupVersionKind().String())
+	}
+
+	gvk := obj.GroupVersionKind()
+	// used for logging and errors
+	objDesc := fmt.Sprintf("(%s) %s/%s", gvk.String(), namespace, name)
+	log.Printf("Handling deletion of %s", objDesc)
+
+	// Get existing
+	existing := &uns.Unstructured{}
+	existing.SetGroupVersionKind(gvk)
+	err := client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, existing)
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(err, "could not retrieve existing %s", objDesc)
+		}
+		return nil
+	}
+
+	if err := client.Delete(ctx, existing); err != nil {
+		return errors.Wrapf(err, "could not delete %s", objDesc)
 	}
 
 	return nil

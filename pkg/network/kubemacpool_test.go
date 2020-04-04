@@ -220,5 +220,16 @@ var _ = Describe("Testing kubeMacPool", func() {
 				Expect(errorList[0].Error()).To(Equal("cannot modify KubeMacPool configuration once it is deployed"))
 			})
 		})
+
+		Context("When trying to remove kubeMacPool", func() {
+			It("should NOT return an error", func() {
+				previousClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{
+					KubeMacPool: &opv1alpha1.KubeMacPool{RangeStart: "02:00:00:00:00:00", RangeEnd: "0A:FF:FF:FF:FF:FF"}}
+				currentClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{}
+
+				errorList := changeSafeKubeMacPool(previousClusterConfig, currentClusterConfig)
+				Expect(errorList).To(BeEmpty())
+			})
+		})
 	})
 })

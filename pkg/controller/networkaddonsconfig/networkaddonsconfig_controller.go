@@ -194,11 +194,45 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, err
 	}
 
+	// Convert to a canonicalized form
+	network.Canonicalize(&networkAddonsConfig.Spec)
+
+	// Read OpenShift network operator configuration (if exists)
+	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
+	if err != nil {
+		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
+		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig: %v", err)
+		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToGetOpenShiftNetworkConfig", err.Error())
+		return reconcile.Result{}, err
+	}
+
+	// Validate the configuration
+	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
+		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
+		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec: %v", err)
+		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToValidate", err.Error())
+		return reconcile.Result{}, err
+	}
+
+	prev, err := r.getPreviousConfigSpec(networkAddonsConfig)
+	if err != nil {
+		// If failed, set NetworkAddonsConfig to failing and requeue
+		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToGetPreviousConfigSpec", err.Error())
+		return reconcile.Result{}, err
+	}
+
 	// Canonicalize and validate NetworkAddonsConfig, finally render objects of requested components
-	objs, err := r.renderObjects(networkAddonsConfig)
+	objs, err := r.renderObjects(networkAddonsConfig, openshiftNetworkConfig)
 	if err != nil {
 		// If failed, set NetworkAddonsConfig to failing and requeue
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToRender", err.Error())
+		return reconcile.Result{}, err
+	}
+
+	objsToRemove, err := r.renderObjectsToDelete(networkAddonsConfig, openshiftNetworkConfig, prev)
+	if err != nil {
+		// If failed, set NetworkAddonsConfig to failing and requeue
+		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToRenderDelete", err.Error())
 		return reconcile.Result{}, err
 	}
 
@@ -207,6 +241,14 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	if err != nil {
 		// If failed, set NetworkAddonsConfig to failing and requeue
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToApply", err.Error())
+		return reconcile.Result{}, err
+	}
+
+	// Delete generated objsToRemove on Kubernetes API server
+	err = r.deleteObjects(objsToRemove)
+	if err != nil {
+		// If failed, set NetworkAddonsConfig to failing and requeue
+		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToDeleteObjects", err.Error())
 		return reconcile.Result{}, err
 	}
 
@@ -226,60 +268,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	return reconcile.Result{}, nil
 }
 
-// Handle NetworkAddonsConfig object. Canonicalize, validate and finally render objects for all
-// desired components. Please note that this function has side effects, it reads config map
-// containing previously saved NetworkAddonsConfig and OpenShift's Network operator config.
-func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig) ([]*unstructured.Unstructured, error) {
-	objs := []*unstructured.Unstructured{}
-
-	// Convert to a canonicalized form
-	network.Canonicalize(&networkAddonsConfig.Spec)
-
-	// Read OpenShift network operator configuration (if exists)
-	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
-	if err != nil {
-		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
-		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig: %v", err)
-		return objs, err
-	}
-
-	// Validate the configuration
-	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
-		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
-		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec: %v", err)
-		return objs, err
-	}
-
-	// Retrieve the previously applied operator configuration
-	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
-	if err != nil {
-		log.Printf("failed to retrieve previously applied configuration: %v", err)
-		err = errors.Wrapf(err, "failed to retrieve previously applied configuration: %v", err)
-		return objs, err
-	}
-
-	// Fill all defaults explicitly
-	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
-		log.Printf("failed to fill defaults: %v", err)
-		err = errors.Wrapf(err, "failed to fill defaults: %v", err)
-		return objs, err
-	}
-
-	// Compare against previous applied configuration to see if this change
-	// is safe.
-	if prev != nil {
-		// We may need to fill defaults here -- sort of as a poor-man's
-		// upconversion scheme -- if we add additional fields to the config.
-		err = network.IsChangeSafe(prev, &networkAddonsConfig.Spec)
-		if err != nil {
-			log.Printf("not applying unsafe change: %v", err)
-			err = errors.Wrapf(err, "not applying unsafe change")
-			return objs, err
-		}
-	}
-
+// Render objects for all desired components
+func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network) ([]*unstructured.Unstructured, error) {
 	// Generate the objects
-	objs, err = network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
+	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
 		log.Printf("failed to render: %v", err)
 		err = errors.Wrapf(err, "failed to render")
@@ -315,12 +307,61 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 	return objs, nil
 }
 
+// Validate and returns the previous configuration spec
+func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig) (*opv1alpha1.NetworkAddonsConfigSpec, error) {
+	// Retrieve the previously applied operator configuration
+	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
+	if err != nil {
+		log.Printf("failed to retrieve previously applied configuration: %v", err)
+		err = errors.Wrapf(err, "failed to retrieve previously applied configuration: %v", err)
+		return nil, err
+	}
+
+	// Fill all defaults explicitly
+	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
+		log.Printf("failed to fill defaults: %v", err)
+		err = errors.Wrapf(err, "failed to fill defaults: %v", err)
+		return nil, err
+	}
+
+	// Compare against previous applied configuration to see if this change
+	// is safe.
+	if prev != nil {
+		// We may need to fill defaults here -- sort of as a poor-man's
+		// upconversion scheme -- if we add additional fields to the config.
+		err = network.IsChangeSafe(prev, &networkAddonsConfig.Spec)
+		if err != nil {
+			log.Printf("not applying unsafe change: %v", err)
+			err = errors.Wrapf(err, "not applying unsafe change")
+			return nil, err
+		}
+	}
+
+	return prev, nil
+}
+
+// Generate the removal object list
+func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *opv1alpha1.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
+	objsToRemove, err := network.RenderObjsToRemove(prev, &networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
+	if err != nil {
+		log.Printf("failed to render for removal: %v", err)
+		err = errors.Wrapf(err, "failed to render for removal")
+		return objsToRemove, err
+	}
+
+	return objsToRemove, nil
+}
+
 // Apply the objects to the cluster. Set their controller reference to NetworkAddonsConfig, so they
 // are removed when NetworkAddonsConfig config is
 func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, objs []*unstructured.Unstructured) error {
 	for _, obj := range objs {
-		// Mark the object to be GC'd if the owner is deleted. Don't set owner reference on namespaces if they are used by the operator itself
-		if !(obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace) {
+		// Mark the object to be GC'd if the owner is deleted.
+		// Don't set owner reference on namespaces if they are used by the operator itself
+		// Don't set owner reference on CRDs, they should survive removal of the operator
+		isOperatorNamespace := obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace
+		isCRD := obj.GetKind() == "CustomResourceDefinition"
+		if !isCRD && !isOperatorNamespace {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
 				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 				err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
@@ -332,6 +373,19 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alp
 		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
 			log.Printf("could not apply (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Delete removed objects
+func (r *ReconcileNetworkAddonsConfig) deleteObjects(objs []*unstructured.Unstructured) error {
+	for _, obj := range objs {
+		if err := apply.DeleteObject(context.TODO(), r.client, obj); err != nil {
+			log.Printf("could not delete (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+			err = errors.Wrapf(err, "could not delete (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 			return err
 		}
 	}

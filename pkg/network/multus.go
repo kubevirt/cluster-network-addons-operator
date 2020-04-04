@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
 
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
@@ -34,13 +33,6 @@ func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkCo
 	}
 
 	return []error{}
-}
-
-func changeSafeMultus(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
-	if prev.Multus != nil && !reflect.DeepEqual(prev.Multus, next.Multus) {
-		return []error{errors.Errorf("cannot modify Multus configuration once it is deployed")}
-	}
-	return nil
 }
 
 // cleanUpMultus checks specific multus outdated objects or ones that are no longer compatible and deletes them.

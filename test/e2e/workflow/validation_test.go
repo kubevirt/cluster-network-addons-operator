@@ -40,20 +40,23 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		BeforeEach(func() {
 			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
 				LinuxBridge: &opv1alpha1.LinuxBridge{},
+				NMState:     &opv1alpha1.NMState{},
 			}
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, time.Minute, CheckDoNotRepeat)
 		})
 
-		Context("and a component which does not support removal is removed from the Spec", func() {
+		Context("and a component which does support removal is removed from the Spec", func() {
 			BeforeEach(func() {
-				configSpec := opv1alpha1.NetworkAddonsConfigSpec{}
+				configSpec := opv1alpha1.NetworkAddonsConfigSpec{
+					LinuxBridge: &opv1alpha1.LinuxBridge{},
+				}
 				UpdateConfig(configSpec)
 			})
 
-			It("should report Failing condition and remain stop being Available", func() {
-				CheckConfigCondition(ConditionDegraded, ConditionTrue, time.Minute, CheckDoNotRepeat)
-				CheckConfigCondition(ConditionAvailable, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+			It("should remain at Available condition", func() {
+				CheckConfigCondition(ConditionAvailable, ConditionTrue, time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(ConditionDegraded, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
 		})
 	})
