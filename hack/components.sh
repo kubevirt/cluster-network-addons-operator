@@ -29,6 +29,8 @@ function get_component_tag() {
     )
 }
 
+PUSH_IMAGES=${PUSH_IMAGES:-}
+
 CNAO_VERSION=${VERSION} # Exported from Makefile
 
 echo 'Setup temporary Go path'
@@ -126,3 +128,48 @@ MACVTAP_IMAGE_TAGGED=${MACVTAP_IMAGE}:${MACVTAP_TAG}
 sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" pkg/components/components.go
 # TODO: uncomment the following line *once* there is macvtap upgrade is supported
 #sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" test/releases/${CNAO_VERSION}.go
+
+echo 'linux-bridge'
+LINUX_BRIDGE_URL=$(cat components.yaml | shyaml get-value components.linux-bridge.url)
+LINUX_BRIDGE_COMMIT=$(cat components.yaml | shyaml get-value components.linux-bridge.commit)
+LINUX_BRIDGE_REPO=$(echo ${LINUX_BRIDGE_URL} | sed 's#https://\(.*\)#\1#')
+LINUX_BRIDGE_PATH=${GOPATH}/src/${LINUX_BRIDGE_REPO}
+
+echo 'Fetch linux-bridge sources'
+fetch_component ${LINUX_BRIDGE_PATH} ${LINUX_BRIDGE_URL} ${LINUX_BRIDGE_COMMIT}
+
+echo 'Get linux-bridge tag'
+LINUX_BRIDGE_TAG=$(get_component_tag ${LINUX_BRIDGE_PATH})
+
+echo 'Build container image with linux-bridge binaries'
+LINUX_BRIDGE_IMAGE=quay.io/kubevirt/cni-default-plugins
+LINUX_BRIDGE_IMAGE_TAGGED=${LINUX_BRIDGE_IMAGE}:${LINUX_BRIDGE_TAG}
+(
+    cd ${LINUX_BRIDGE_PATH}
+    cat <<EOF > Dockerfile
+FROM golang:1.13 AS builder
+ENV GOPATH=/go
+COPY . /go/src/github.com/containernetworking/plugins/
+WORKDIR /go/src/github.com/containernetworking/plugins/
+RUN ./build_linux.sh
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal
+RUN mkdir -p /usr/src/containernetworking/plugins/bin
+RUN microdnf install -y findutils
+COPY --from=builder /go/src/github.com/containernetworking/plugins/bin/bridge /usr/src/containernetworking/plugins/bin/bridge
+COPY --from=builder /go/src/github.com/containernetworking/plugins/bin/tuning /usr/src/containernetworking/plugins/bin/tuning
+EOF
+    docker build -t ${LINUX_BRIDGE_IMAGE_TAGGED} .
+)
+
+echo 'Push the image to KubeVirt repo'
+(
+    if [ ! -z ${PUSH_IMAGES} ]; then
+        docker push ${LINUX_BRIDGE_IMAGE_TAGGED}
+    fi
+)
+
+echo 'Update macvtap-cni references under CNAO'
+sed -i "s#\"${LINUX_BRIDGE_IMAGE}:.*\"#\"${LINUX_BRIDGE_IMAGE_TAGGED}\"#" pkg/components/components.go
+sed -i "s#\"${LINUX_BRIDGE_IMAGE}:.*\"#\"${LINUX_BRIDGE_IMAGE_TAGGED}\"#" test/releases/${CNAO_VERSION}.go
+

@@ -21,7 +21,7 @@ const (
 
 const (
 	MultusImageDefault            = "nfvpe/multus:v3.4.1"
-	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.1"
+	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins:v0.8.6"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker:0.2.0"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool:v0.14.0"
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler:v0.21.0"
