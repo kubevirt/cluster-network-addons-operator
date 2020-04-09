@@ -17,6 +17,10 @@ KUBEMACPOOL_PATH=${GOPATH}/src/${KUBEMACPOOL_REPO}
 
 echo 'Fetch kubemacpool sources'
 (
+    if [ ! -d ${KUBEMACPOOL_PATH} ]; then
+        mkdir -p ${KUBEMACPOOL_PATH}
+        git clone ${KUBEMACPOOL_URL} ${KUBEMACPOOL_PATH}
+    fi
     go get ${KUBEMACPOOL_REPO} || true
     cd ${KUBEMACPOOL_PATH}
     git fetch origin
@@ -80,7 +84,10 @@ MACVTAP_PATH=${GOPATH}/src/${MACVTAP_REPO}
 
 echo 'Fetch macvtap-cni sources'
 (
-    go get ${MACVTAP_REPO} || true
+    if [ ! -d ${MACVTAP_PATH} ]; then
+        mkdir -p ${MACVTAP_PATH}
+        git clone ${MACVTAP_URL} ${MACVTAP_PATH}
+    fi
     cd ${MACVTAP_PATH}
     git fetch origin
     git reset --hard
