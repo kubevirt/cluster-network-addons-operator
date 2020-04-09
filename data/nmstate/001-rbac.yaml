@@ -1,45 +1,47 @@
+{{define "handlerPrefix"}}{{with $prefix := .HandlerPrefix}}{{$prefix | printf "%s-"}}{{end -}}{{end}}
 ---
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: nmstate-handler
-  namespace: {{ .Namespace }}
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
   labels:
     nmstate.io: ""
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: nmstate-handler
-  namespace: {{ .Namespace }}
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
 subjects:
 - kind: ServiceAccount
-  name: nmstate-handler
-  namespace: {{ .Namespace }}
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
 roleRef:
   kind: Role
-  name: nmstate-handler
+  name: {{template "handlerPrefix" .}}nmstate-handler
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: nmstate-handler
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
 subjects:
 - kind: ServiceAccount
-  name: nmstate-handler
-  namespace: {{ .Namespace }}
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
 roleRef:
   kind: ClusterRole
-  name: nmstate-handler
+  name: {{template "handlerPrefix" .}}nmstate-handler
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   creationTimestamp: null
-  name: nmstate-handler
-  namespace: {{ .Namespace }}
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
 rules:
 - apiGroups:
   - ""
@@ -82,8 +84,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: nmstate-handler
-  namespace: {{ .Namespace }}
+  name: {{template "handlerPrefix" .}}nmstate-handler
+  namespace: {{ .HandlerNamespace }}
 rules:
 - apiGroups:
   - certificates.k8s.io
@@ -107,6 +109,7 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
   - nodes
   - namespaces
   verbs:

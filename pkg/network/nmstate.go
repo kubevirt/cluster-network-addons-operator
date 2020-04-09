@@ -19,9 +19,10 @@ func renderNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string,
 
 	// render the manifests on disk
 	data := render.MakeRenderData()
-	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
-	data.Data["NMStateHandlerImage"] = os.Getenv("NMSTATE_HANDLER_IMAGE")
-	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
+	data.Data["HandlerPrefix"] = ""
+	data.Data["HandlerNamespace"] = os.Getenv("OPERAND_NAMESPACE")
+	data.Data["HandlerImage"] = os.Getenv("NMSTATE_HANDLER_IMAGE")
+	data.Data["HandlerPullPolicy"] = conf.ImagePullPolicy
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "nmstate"), &data)
