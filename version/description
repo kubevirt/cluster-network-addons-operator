@@ -1,11 +1,12 @@
-0.32.0
+0.33.0
 
 Features:
-* Bump multus to 3.4.1 (#352)
-* Integrate macvtap cni (#346)
-* bump kubemacpool to 0.8.3 (#345)
-* drop limitations of resources (#342)
+* bump kubernetes-nmstate to 0.18.0 (#364)
+* don't remove CRDs when their comonents are gone (#357)
+* Migrate to go modules and operator-skd 0.12.x (#356)
+* tests: try to catch progressing state more reliably (#351)
+* drop stdci .mounts and .packages (#349)
+* Make components macvtap (#348)
 
 Bugs:
-* drop limitations of resources (#342)
-
+* tests: try to catch progressing state more reliably (#351)
