@@ -2,7 +2,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: macvtap-dp-config
+  name: macvtap-deviceplugin-config
   namespace: {{ .Namespace }}
 data:
   DP_MACVTAP_CONF: "[]"
@@ -28,7 +28,7 @@ spec:
         command: [ "/macvtap-deviceplugin", "-v", "3", "-logtostderr"]
         envFrom:
           - configMapRef:
-              name: macvtap-dp-config
+              name: macvtap-deviceplugin-config
         image: {{ .MacvtapImage }}
         imagePullPolicy: {{ .ImagePullPolicy }}
         resources:
