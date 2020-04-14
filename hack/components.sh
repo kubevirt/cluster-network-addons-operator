@@ -2,6 +2,33 @@
 
 set -xe
 
+function fetch_component() {
+    destination=$1
+    url=$2
+    commit=$3
+
+    if [ ! -d ${destination} ]; then
+        mkdir -p ${destination}
+        git clone ${url} ${destination}
+    fi
+
+    (
+        cd ${destination}
+        git fetch origin
+        git reset --hard
+        git checkout ${commit}
+    )
+}
+
+function get_component_tag() {
+    component_dir=$1
+
+    (
+        cd ${component_dir}
+        git describe --tags
+    )
+}
+
 CNAO_VERSION=${VERSION} # Exported from Makefile
 
 echo 'Setup temporary Go path'
@@ -16,17 +43,7 @@ KUBEMACPOOL_REPO=$(echo ${KUBEMACPOOL_URL} | sed 's#https://\(.*\)#\1#')
 KUBEMACPOOL_PATH=${GOPATH}/src/${KUBEMACPOOL_REPO}
 
 echo 'Fetch kubemacpool sources'
-(
-    if [ ! -d ${KUBEMACPOOL_PATH} ]; then
-        mkdir -p ${KUBEMACPOOL_PATH}
-        git clone ${KUBEMACPOOL_URL} ${KUBEMACPOOL_PATH}
-    fi
-    go get ${KUBEMACPOOL_REPO} || true
-    cd ${KUBEMACPOOL_PATH}
-    git fetch origin
-    git reset --hard
-    git checkout ${KUBEMACPOOL_COMMIT}
-)
+fetch_component ${KUBEMACPOOL_PATH} ${KUBEMACPOOL_URL} ${KUBEMACPOOL_COMMIT}
 
 echo 'Configure kustomize for CNAO templates and save the rendered manifest under CNAO data'
 (
@@ -67,10 +84,7 @@ rm -rf data/kubemacpool/*
 ) > data/kubemacpool/kubemacpool.yaml
 
 echo 'Get kubemacpool image name and update it under CNAO'
-KUBEMACPOOL_TAG=$(
-    cd $KUBEMACPOOL_PATH
-    git describe --tags
-)
+KUBEMACPOOL_TAG=$(get_component_tag ${KUBEMACPOOL_PATH})
 KUBEMACPOOL_IMAGE=quay.io/kubevirt/kubemacpool
 KUBEMACPOOL_IMAGE_TAGGED=${KUBEMACPOOL_IMAGE}:${KUBEMACPOOL_TAG}
 sed -i "s#\"${KUBEMACPOOL_IMAGE}:.*\"#\"${KUBEMACPOOL_IMAGE_TAGGED}\"#" pkg/components/components.go
@@ -83,16 +97,7 @@ MACVTAP_REPO=$(echo ${MACVTAP_URL} | sed 's#https://\(.*\)#\1#')
 MACVTAP_PATH=${GOPATH}/src/${MACVTAP_REPO}
 
 echo 'Fetch macvtap-cni sources'
-(
-    if [ ! -d ${MACVTAP_PATH} ]; then
-        mkdir -p ${MACVTAP_PATH}
-        git clone ${MACVTAP_URL} ${MACVTAP_PATH}
-    fi
-    cd ${MACVTAP_PATH}
-    git fetch origin
-    git reset --hard
-    git checkout ${MACVTAP_COMMIT}
-)
+fetch_component ${MACVTAP_PATH} ${MACVTAP_URL} ${MACVTAP_COMMIT}
 
 rm -rf data/macvtap/*
 echo 'Copy the templates from the macvtap-cni repo ...'
@@ -114,10 +119,7 @@ EOF
 cat ${MACVTAP_PATH}/templates/macvtap.yaml.in >> data/macvtap/002-macvtap-daemonset.yaml
 
 echo 'Get macvtap-cni image name and update it under CNAO'
-MACVTAP_TAG=$(
-    cd ${MACVTAP_PATH}
-    git describe --tags
-)
+MACVTAP_TAG=$(get_component_tag ${MACVTAP_PATH})
 MACVTAP_IMAGE=quay.io/kubevirt/macvtap-cni
 MACVTAP_IMAGE_TAGGED=${MACVTAP_IMAGE}:${MACVTAP_TAG}
 sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" pkg/components/components.go
