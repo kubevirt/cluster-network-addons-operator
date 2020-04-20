@@ -359,6 +359,7 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 
 			Validation: &extv1beta1.CustomResourceValidation{
 				OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{
+					Type: "object",
 					Properties: map[string]extv1beta1.JSONSchemaProps{
 						"apiVersion": extv1beta1.JSONSchemaProps{
 							Type: "string",
