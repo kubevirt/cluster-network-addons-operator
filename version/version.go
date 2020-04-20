@@ -1,7 +1,7 @@
 package version
 
 var (
-	Version = "0.35.0"
+	Version = "0.35.1"
 )
 
 // * Force release after fixing automation scripts
