@@ -1,4 +1,5 @@
-0.35.1
+0.36.0
 
-Bugs:
-* add JSONSchema type to the root of our CRD (#373)
+Features:
+* Knmstate v0.20.0 (#375)
+* Bump github-release 0.8.1 (#376)
