@@ -40,7 +40,7 @@ var (
 		SecurityContextConstraints: "nmstate",
 		DaemonSets: []string{
 			"nmstate-handler",
-			"nmstate-handler-worker"},
+		},
 	}
 	OvsComponent = Component{
 		ComponentName:              "Ovs",

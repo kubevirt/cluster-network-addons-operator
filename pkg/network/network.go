@@ -59,6 +59,7 @@ func SpecialCleanUp(conf *opv1alpha1.NetworkAddonsConfigSpec, client k8sclient.C
 	ctx := context.TODO()
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
+	errs = append(errs, cleanUpNMState(conf, ctx, client)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%v", errorListToMultiLineString(errs))

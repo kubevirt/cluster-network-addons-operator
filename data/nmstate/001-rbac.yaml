@@ -51,10 +51,22 @@ rules:
   - persistentvolumeclaims
   - events
   - configmaps
-  - secrets
   - pods
+  - events
   verbs:
-  - '*'
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - list
+  - get
+  - create
+  - update
+  - watch
 - apiGroups:
   - apps
   resources:
@@ -88,19 +100,6 @@ metadata:
   namespace: {{ .HandlerNamespace }}
 rules:
 - apiGroups:
-  - certificates.k8s.io
-  resources:
-  - certificatesigningrequests
-  - certificatesigningrequests/approval
-  verbs:
-  - "*"
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  verbs:
-  - '*'
-- apiGroups:
   - nmstate.io
   resources:
   - '*'
@@ -112,9 +111,18 @@ rules:
   - pods
   - nodes
   - namespaces
+  - events
   verbs:
-  - get
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
   - list
+  - get
+  - create
+  - update
   - watch
 - apiGroups:
   - ""
