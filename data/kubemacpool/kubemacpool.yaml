@@ -4,10 +4,77 @@ metadata:
   labels:
     control-plane: mac-controller-manager
     controller-tools.k8s.io: "1.0"
-    kubemacpool/ignoreAdmission: "true"
     openshift.io/run-level: "0"
     runlevel: "0"
   name: {{ .Namespace }}
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  labels: null
+  name: kubemacpool-mutator
+webhooks:
+- clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: {{ .Namespace }}
+      path: /mutate-pods
+  failurePolicy: Fail
+  name: mutatepods.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    matchLabels:
+      mutatepods.kubemacpool.io: allocateForAll
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+- clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: {{ .Namespace }}
+      path: /mutate-virtualmachines
+  failurePolicy: Fail
+  name: mutatevirtualmachines.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    matchLabels:
+      mutatevirtualmachines.kubemacpool.io: allocateForAll
+  rules:
+  - apiGroups:
+    - kubevirt.io
+    apiVersions:
+    - v1alpha3
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachines
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -16,18 +83,19 @@ metadata:
   name: kubemacpool-manager-role
 rules:
 - apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  - certificatesigningrequests/approval
+  verbs:
+  - '*'
+- apiGroups:
   - admissionregistration.k8s.io
   resources:
   - mutatingwebhookconfigurations
   - validatingwebhookconfigurations
   verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+  - '*'
 - apiGroups:
   - ""
   resources:
@@ -45,12 +113,7 @@ rules:
   resources:
   - configmaps
   verbs:
-  - get
-  - list
-  - watch
-  - update
-  - create
-  - delete
+  - '*'
 - apiGroups:
   - ""
   resources:
@@ -112,6 +175,12 @@ rules:
   - create
   - update
   - patch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -138,6 +207,29 @@ metadata:
     controller-tools.k8s.io: "1.0"
   name: kubemacpool-mac-range-config
   namespace: '{{ .Namespace }}'
+---
+apiVersion: v1
+data:
+  tls.crt: YmFkIGNlcnRpZmljYXRlCg==
+  tls.key: YmFkIGtleQo=
+kind: Secret
+metadata:
+  name: kubemacpool-service
+  namespace: '{{ .Namespace }}'
+type: kubernetes.io/tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubemacpool-service
+  namespace: '{{ .Namespace }}'
+spec:
+  ports:
+  - port: 443
+    targetPort: 8000
+  publishNotReadyAddresses: true
+  selector:
+    kubemacpool-leader: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -197,13 +289,27 @@ spec:
             configMapKeyRef:
               key: RANGE_END
               name: kubemacpool-mac-range-config
+        - name: HEALTH_PROBE_HOST
+          value: 0.0.0.0
+        - name: HEALTH_PROBE_PORT
+          value: "9440"
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
         ports:
-        - containerPort: 9876
+        - containerPort: 8000
           name: webhook-server
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Content-Type
+              value: application/json
+            path: /readyz
+            port: webhook-server
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          periodSeconds: 10
         resources:
           limits:
             cpu: 300m
@@ -211,8 +317,16 @@ spec:
           requests:
             cpu: 100m
             memory: 300Mi
+        volumeMounts:
+        - mountPath: /etc/webhook/certs
+          name: tls-key-pair
+          readOnly: true
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
+      volumes:
+      - name: tls-key-pair
+        secret:
+          secretName: kubemacpool-service
 ---
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
