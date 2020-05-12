@@ -65,6 +65,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mac-controller-manager
+  namespace: system
 spec:
   template:
     spec:
@@ -78,7 +79,7 @@ rm -rf data/kubemacpool/*
 (
     cd $KUBEMACPOOL_PATH
     kustomize build config/cnao | \
-        sed 's/name: kubemacpool-system/name: {{ .Namespace }}/' | \
+        sed 's/kubemacpool-system/{{ .Namespace }}/' | \
         sed 's/RANGE_START: .*/RANGE_START: {{ .RangeStart }}/' | \
         sed 's/RANGE_END: .*/RANGE_END: {{ .RangeEnd }}/'
 ) > data/kubemacpool/kubemacpool.yaml
