@@ -1,0 +1,7 @@
+/github-release
+/go-app
+
+*.exe
+
+/bin
+/var/cache
