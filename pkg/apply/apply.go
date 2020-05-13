@@ -49,6 +49,11 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 		return errors.Wrapf(err, "could not retrieve existing %s", objDesc)
 	}
 
+	if isTLSSecret(obj) {
+		log.Printf("Ignoring TLS secret at reconcile", obj.GetName())
+		return nil
+	}
+
 	// Merge the desired object with what actually exists
 	if err := MergeObjectForUpdate(existing, obj); err != nil {
 		return errors.Wrapf(err, "could not merge object %s with existing", objDesc)
@@ -110,4 +115,20 @@ func DeleteObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruc
 	}
 
 	return nil
+}
+
+func isTLSSecret(obj *uns.Unstructured) bool {
+	if obj.GetKind() != "Secret" {
+		return false
+	}
+
+	typez, found, err := uns.NestedString(obj.Object, "type")
+	if err != nil {
+		return false
+	}
+	if !found {
+		return false
+	}
+
+	return typez == "kubernetes.io/tls"
 }
