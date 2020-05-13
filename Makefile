@@ -45,7 +45,7 @@ $(OPERATOR_SDK): go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
 
 $(GITHUB_RELEASE): go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/aktau/github-release
+	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/github-release/github-release
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
