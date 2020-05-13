@@ -34,18 +34,26 @@ E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow
 
-OPERATOR_SDK ?= build/_output/bin/operator-sdk
+BIN_DIR = $(CURDIR)/build/_output/bin/
+GOBIN = $(BIN_DIR)/go/bin/
 
-GITHUB_RELEASE ?= build/_output/bin/github-release
+OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
 
-$(GINKGO): go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/onsi/ginkgo/ginkgo
+GITHUB_RELEASE ?= $(BIN_DIR)/github-release
 
-$(OPERATOR_SDK): go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+GO := $(GOBIN)/go
 
-$(GITHUB_RELEASE): go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ go install ./vendor/github.com/github-release/github-release
+$(GO):
+	hack/install-go.sh $(BIN_DIR)
+
+$(GINKGO): $(GO) go.mod
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/onsi/ginkgo/ginkgo
+
+$(OPERATOR_SDK): $(GO) go.mod
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+
+$(GITHUB_RELEASE): $(GO) go.mod
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -60,7 +68,7 @@ apis_sources=$(call rwildcard,pkg/apis,*.go)
 fmt: whitespace goimports
 
 goimports: $(cmd_sources) $(pkg_sources)
-	go run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/
+	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/
 	touch $@
 
 whitespace: $(all_sources)
@@ -73,20 +81,26 @@ whitespace-check: $(all_sources)
 	./hack/whitespace.sh
 	touch $@
 
-vet: $(cmd_sources) $(pkg_sources)
-	go vet ./pkg/... ./cmd/... ./test/...
+vet: $(GO) $(cmd_sources) $(pkg_sources)
+	$(GO) vet ./pkg/... ./cmd/... ./test/...
 	touch $@
 
-goimports-check: $(cmd_sources) $(pkg_sources)
-	go run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
+goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
+	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 	touch $@
 
 test/unit: $(GINKGO)
 	$(GINKGO) $(GINKGO_ARGS) ./pkg/ ./cmd/
 
+manager: $(GO)
+	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./cmd/...
+
+manifest-templator: $(GO)
+	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./tools/manifest-templator/...
+
 docker-build: docker-build-operator docker-build-registry
 
-docker-build-operator:
+docker-build-operator: manager manifest-templator
 	docker build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
 
 docker-build-registry:
@@ -121,7 +135,7 @@ cluster-clean:
 	./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
-gen-manifests:
+gen-manifests: manifest-templator
 	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
 	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
@@ -162,9 +176,9 @@ release: $(GITHUB_RELEASE)
 	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
 	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
-vendor:
-	go mod tidy
-	go mod vendor
+vendor: $(GO)
+	$(GO) mod tidy
+	$(GO) mod vendor
 
 .PHONY: \
 	$(E2E_SUITES) \
@@ -176,6 +190,8 @@ vendor:
 	cluster-operator-push \
 	cluster-sync \
 	cluster-up \
+	manager \
+	manifests-templator \
 	docker-build \
 	docker-build-operator \
 	docker-build-registry \
