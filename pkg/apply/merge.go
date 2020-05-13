@@ -38,6 +38,10 @@ func MergeObjectForUpdate(current, updated *unstructured.Unstructured) error {
 		return err
 	}
 
+	if err := MergeWebhookConfiguration(current, updated); err != nil {
+		return err
+	}
+
 	// For all object types, merge metadata.
 	// Run this last, in case any of the more specific merge logic has
 	// changed "updated"
@@ -108,6 +112,51 @@ func MergeServiceAccountForUpdate(current, updated *unstructured.Unstructured) e
 		if ok {
 			unstructured.SetNestedField(updated.Object, curSecrets, "secrets")
 		}
+	}
+	return nil
+}
+
+// MergeWebhookConfiguration ensure caBundle is keept at webhooks's clientConfig
+func MergeWebhookConfiguration(current, updated *unstructured.Unstructured) error {
+	gvk := updated.GroupVersionKind()
+	if gvk.Kind == "MutatingWebhookConfiguration" || gvk.Kind == "ValidatingWebhookConfiguration" {
+		currentWebhooks, found, err := unstructured.NestedSlice(current.Object, "webhooks")
+		if err != nil {
+			return errors.Wrap(err, "failed searching for webhooks at current configuration")
+		}
+		if !found {
+			return nil
+		}
+
+		updatedWebhooks, found, err := unstructured.NestedSlice(updated.Object, "webhooks")
+		if err != nil {
+			return errors.Wrap(err, "failed searching for webhooks at updated configuration")
+		}
+		if !found {
+			return nil
+		}
+		for ci, _ := range currentWebhooks {
+			currentWebhook := currentWebhooks[ci].(map[string]interface{})
+			for ui, _ := range updatedWebhooks {
+				updatedWebhook := updatedWebhooks[ui].(map[string]interface{})
+				if updatedWebhook["name"] == currentWebhook["name"] {
+					caBundle, found, err := unstructured.NestedString(currentWebhook, "clientConfig", "caBundle")
+					if err != nil {
+						return errors.Wrap(err, "failed searching for webhooks at updated configuration")
+					}
+					if !found {
+						continue
+					}
+					err = unstructured.SetNestedField(updatedWebhook, caBundle, "clientConfig", "caBundle")
+					if err != nil {
+						return errors.Wrap(err, "failed copying caBundle from current config to updated config")
+					}
+				}
+			}
+		}
+
+		err = unstructured.SetNestedSlice(updated.Object, updatedWebhooks, "webhooks")
+
 	}
 	return nil
 }

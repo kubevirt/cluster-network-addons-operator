@@ -326,3 +326,115 @@ metadata:
 		})
 	})
 })
+
+var _ = Describe("MergeWebhookConfiguration", func() {
+	Context("when current has non empty casBundle and update is empty", func() {
+		current := k8s.UnstructuredFromYaml(`
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: nmstate
+  labels:
+    app: kubernetes-nmstate
+webhooks:
+  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
+    clientConfig:
+      caBundle: nodenetworkconfigurationpolicies-mutate.nmstate.io-ca
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies"]
+  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
+    clientConfig:
+      caBundle: nodenetworkconfigurationpolicies-status-mutate.nmstate.io-ca
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-status-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies/status"]
+  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
+    clientConfig:
+      caBundle: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io-ca
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
+`)
+		updated := k8s.UnstructuredFromYaml(`
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: nmstate
+  labels:
+    app: kubernetes-nmstate
+webhooks:
+  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
+    clientConfig:
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies"]
+  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
+    clientConfig:
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-status-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies/status"]
+  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
+    clientConfig:
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
+`)
+
+		It("should copy caBundle from current webhooks to updated ones", func() {
+			err := apply.MergeWebhookConfiguration(current, updated)
+			Expect(err).ToNot(HaveOccurred())
+			updatedWebhooks, found, err := unstructured.NestedSlice(updated.Object, "webhooks")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(found).To(BeTrue())
+			for i, _ := range updatedWebhooks {
+				updatedWebhook := updatedWebhooks[i].(map[string]interface{})
+				name, found, err := unstructured.NestedString(updatedWebhook, "name")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(found).To(BeTrue())
+
+				caBundle, found, err := unstructured.NestedString(updatedWebhook, "clientConfig", "caBundle")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(found).To(BeTrue())
+
+				Expect(caBundle).To(Equal(name + "-ca"))
+			}
+		})
+	})
+})
