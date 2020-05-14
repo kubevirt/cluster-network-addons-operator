@@ -16,22 +16,31 @@
 
 set -ex
 
-registry_port=$(./cluster/cli.sh ports registry | tr -d '\r')
-if [[ "${KUBEVIRT_PROVIDER}" =~ ^(okd|ocp)-.*$ ]]; then \
-		registry=localhost:$(./cluster/cli.sh ports --container-name=cluster registry | tr -d '\r')
+if [[ "${KUBEVIRT_PROVIDER}" == external ]]; then
+    if [[ ! -v DEV_IMAGE_REGISTRY ]]; then
+        echo "Missing DEV_IMAGE_REGISTRY variable"
+        return 1
+    fi
+    manifest_registry=$DEV_IMAGE_REGISTRY
+    push_registry=$manifest_registry
 else
-    registry=localhost:$(./cluster/cli.sh ports registry | tr -d '\r')
+    manifest_registry=registry:5000
+    if [[ "${KUBEVIRT_PROVIDER}" =~ ^(okd|ocp)-.*$ ]]; then \
+		push_registry=localhost:$(./cluster/cli.sh ports --container-name=cluster registry | tr -d '\r')
+    else
+        push_registry=localhost:$(./cluster/cli.sh ports registry | tr -d '\r')
+    fi
 fi
 
 # Cleanup previously generated manifests
 rm -rf _out/
 # Copy release manifests as a base for generated ones, this should make it possible to upgrade
 cp -r manifests/ _out/
-IMAGE_REGISTRY=registry:5000 DEPLOY_DIR=_out make gen-manifests
+IMAGE_REGISTRY=$manifest_registry DEPLOY_DIR=_out make gen-manifests
 
 make cluster-clean
 
-IMAGE_REGISTRY=$registry make docker-build-operator docker-push-operator
+IMAGE_REGISTRY=$push_registry make docker-build-operator docker-push-operator
 
 ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/namespace.yaml
 ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/network-addons-config.crd.yaml
