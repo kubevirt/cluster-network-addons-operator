@@ -1,6 +1,8 @@
 package apply_test
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -323,6 +325,69 @@ metadata:
 			Expect(updated.GetResourceVersion()).To(Equal(current.GetResourceVersion()))
 			Expect(updated.GetSelfLink()).To(Equal(current.GetSelfLink()))
 			Expect(updated.GetUID()).To(Equal(current.GetUID()))
+		})
+	})
+	Context("when current has non empty caBundle and update is empty", func() {
+		template := `
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: nmstate
+  labels:
+    app: %s
+  annotations: {}
+webhooks:
+  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
+    clientConfig:
+      %s
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies"]
+  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
+    clientConfig:
+      %s
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-status-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies/status"]
+  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
+    clientConfig:
+      %s
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
+`
+		var (
+			updated *unstructured.Unstructured
+			current *unstructured.Unstructured
+		)
+		BeforeEach(func() {
+			updated = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "", "", ""))
+			current = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-1", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
+		})
+		It("should now overwrite existing caBundle in webhook configuration", func() {
+			expected := k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
+			err := apply.MergeObjectForUpdate(current, updated)
+			Expect(err).ToNot(HaveOccurred(), "should successfully execut merge function")
+			Expect(*updated).To(Equal(*expected))
+
 		})
 	})
 })
