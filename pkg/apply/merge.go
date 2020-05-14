@@ -140,42 +140,62 @@ func indexWebhooksByName(configuration *unstructured.Unstructured) (map[string]m
 	return webhooksByName, nil
 }
 
-// mergeWebhookConfiguration ensure caBundle is keept at webhooks's clientConfig
+// mergeWebhookConfiguration ensure caBundle is kept at webhooks's clientConfig
 func mergeWebhookConfiguration(current, updated *unstructured.Unstructured) error {
 	gvk := updated.GroupVersionKind()
 	if gvk.Kind != "MutatingWebhookConfiguration" && gvk.Kind != "ValidatingWebhookConfiguration" {
 		return nil
 	}
 
+	// Keep current webhooks in a map by their names for easier access
 	currentWebhooksByName, err := indexWebhooksByName(current)
 	if err != nil {
 		return errors.Wrap(err, "failed indexing current configuration webhooks by name")
 	}
 
-	updatedWebhooksByName, err := indexWebhooksByName(updated)
+	// Read the list of the newly set webhooks
+	updatedWebhooks, found, err := unstructured.NestedSlice(updated.Object, "webhooks")
 	if err != nil {
-		return errors.Wrap(err, "failed indexing updated configuration webhooks by name")
+		return errors.Wrap(err, "failed searching for 'webhooks' field at configuration")
+	}
+	if !found {
+		return nil
 	}
 
-	updatedWebhooks := []interface{}{}
-	for updatedWebhookName, updatedWebhook := range updatedWebhooksByName {
-		currentWebhook, present := currentWebhooksByName[updatedWebhookName]
-		if present {
-			caBundle, found, err := unstructured.NestedString(currentWebhook, "clientConfig", "caBundle")
-			if err != nil {
-				return errors.Wrapf(err, "failed searching caBundle 'field' at webhook %s", updatedWebhookName)
-			}
-			if found {
-				err = unstructured.SetNestedField(updatedWebhook, caBundle, "clientConfig", "caBundle")
-				if err != nil {
-					return errors.Wrapf(err, "failed copying caBundle from current config to updated config at webhook %s", updatedWebhookName)
-				}
-			}
+	// Merge values we want to preserve from the current webhooks into the new ones
+	mergedWebhooks := []interface{}{}
+	for _, updatedWebhook := range updatedWebhooks {
+		updatedWebhookName, found, err := unstructured.NestedString(updatedWebhook.(map[string]interface{}), "name")
+		if err != nil {
+			return errors.Wrapf(err, "failed reading 'name' in webhook config")
 		}
-		updatedWebhooks = append(updatedWebhooks, updatedWebhook)
+		if !found {
+			continue
+		}
+
+		currentWebhook, found := currentWebhooksByName[updatedWebhookName]
+		if !found {
+			continue
+		}
+
+		// If there is caBundle set in the current config, we want to keep that value
+		caBundle, found, err := unstructured.NestedString(currentWebhook, "clientConfig", "caBundle")
+		if err != nil {
+			return errors.Wrapf(err, "failed searching caBundle 'field' at webhook %s", updatedWebhookName)
+		}
+		if !found {
+			continue
+		}
+
+		err = unstructured.SetNestedField(updatedWebhook.(map[string]interface{}), caBundle, "clientConfig", "caBundle")
+		if err != nil {
+			return errors.Wrapf(err, "failed copying caBundle from current config to updated config at webhook %s", updatedWebhookName)
+		}
+
+		mergedWebhooks = append(mergedWebhooks, updatedWebhook)
 	}
 
-	err = unstructured.SetNestedSlice(updated.Object, updatedWebhooks, "webhooks")
+	err = unstructured.SetNestedSlice(updated.Object, mergedWebhooks, "webhooks")
 	if err != nil {
 		return errors.Wrap(err, "failed changing 'webhooks' field at updated configuration")
 	}
