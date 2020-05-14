@@ -386,8 +386,8 @@ webhooks:
 			expected := k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
 			err := apply.MergeObjectForUpdate(current, updated)
 			Expect(err).ToNot(HaveOccurred(), "should successfully execut merge function")
-			Expect(*updated).To(Equal(*expected))
 
+			Expect(*updated).To(Equal(*expected), "the object should be updated as expected, with original caBundles left intact")
 		})
 	})
 })
