@@ -183,13 +183,11 @@ func mergeWebhookConfiguration(current, updated *unstructured.Unstructured) erro
 		if err != nil {
 			return errors.Wrapf(err, "failed searching caBundle 'field' at webhook %s", updatedWebhookName)
 		}
-		if !found {
-			continue
-		}
-
-		err = unstructured.SetNestedField(updatedWebhook.(map[string]interface{}), caBundle, "clientConfig", "caBundle")
-		if err != nil {
-			return errors.Wrapf(err, "failed copying caBundle from current config to updated config at webhook %s", updatedWebhookName)
+		if found {
+			err = unstructured.SetNestedField(updatedWebhook.(map[string]interface{}), caBundle, "clientConfig", "caBundle")
+			if err != nil {
+				return errors.Wrapf(err, "failed copying caBundle from current config to updated config at webhook %s", updatedWebhookName)
+			}
 		}
 
 		mergedWebhooks = append(mergedWebhooks, updatedWebhook)

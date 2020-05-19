@@ -277,29 +277,8 @@ metadata:
 			}))
 		})
 	})
-})
 
-var _ = Describe("IsObjectSupported", func() {
-	Context("when given a ServiceAccount with a secret", func() {
-		sa := k8s.UnstructuredFromYaml(`
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: d1
-  annotations:
-    a: cur
-secrets:
-- foo`)
-
-		It("should return an error", func() {
-			err := apply.IsObjectSupported(sa)
-			Expect(err).To(MatchError(ContainSubstring("cannot create ServiceAccount with secrets")))
-		})
-	})
-})
-
-var _ = Describe("MergeMetadataForUpdate", func() {
-	Context("when given current unstructured and empty updated", func() {
+	Context("when given current unstructured Deployment and empty updated Deployment", func() {
 		current := k8s.UnstructuredFromYaml(`
 apiVersion: v1
 kind: Deployment
@@ -327,8 +306,8 @@ metadata:
 			Expect(updated.GetUID()).To(Equal(current.GetUID()))
 		})
 	})
-	Context("when current has non empty caBundle and update is empty", func() {
-		template := `
+
+	template := `
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
@@ -378,6 +357,20 @@ webhooks:
 			updated *unstructured.Unstructured
 			current *unstructured.Unstructured
 		)
+	Context("when current and updated webhookConfiguration has no caBundle", func() {
+		BeforeEach(func() {
+			updated = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "", "", ""))
+			current = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-1", "", "", ""))
+		})
+		It("should now merge the existing in webhook configuration with no caBundle", func() {
+			expected := k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "", "", ""))
+			err := apply.MergeObjectForUpdate(current, updated)
+			Expect(err).ToNot(HaveOccurred(), "should successfully execute merge function")
+
+			Expect(*updated).To(Equal(*expected), "the object should be updated as expected, with original caBundles left intact")
+		})
+	})
+	Context("when current webhookConfiguration has non empty caBundle and update is empty webhookConfiguration", func() {
 		BeforeEach(func() {
 			updated = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "", "", ""))
 			current = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-1", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
@@ -385,9 +378,28 @@ webhooks:
 		It("should now overwrite existing caBundle in webhook configuration", func() {
 			expected := k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
 			err := apply.MergeObjectForUpdate(current, updated)
-			Expect(err).ToNot(HaveOccurred(), "should successfully execut merge function")
+			Expect(err).ToNot(HaveOccurred(), "should successfully execute merge function")
 
 			Expect(*updated).To(Equal(*expected), "the object should be updated as expected, with original caBundles left intact")
+		})
+	})
+})
+
+var _ = Describe("IsObjectSupported", func() {
+	Context("when given a ServiceAccount with a secret", func() {
+		sa := k8s.UnstructuredFromYaml(`
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: d1
+  annotations:
+    a: cur
+secrets:
+- foo`)
+
+		It("should return an error", func() {
+			err := apply.IsObjectSupported(sa)
+			Expect(err).To(MatchError(ContainSubstring("cannot create ServiceAccount with secrets")))
 		})
 	})
 })
