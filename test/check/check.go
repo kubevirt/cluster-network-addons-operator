@@ -286,6 +286,10 @@ func checkForComponentRemoval(component *Component) error {
 		errsAppend(checkForSecurityContextConstraintsRemoval(component.SecurityContextConstraints))
 	}
 
+	if component.Secret != "" {
+		errsAppend(checkForSecretRemoval(component.Secret))
+	}
+
 	return errsToErr(errs)
 }
 
@@ -392,6 +396,11 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 		return nil
 	}
 	return isNotFound("SecurityContextConstraints", name, err)
+}
+
+func checkForSecretRemoval(name string) error {
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name,Namespace: components.Namespace}, &corev1.Secret{})
+	return isNotFound("Secret", name, err)
 }
 
 func isNotFound(componentType string, componentName string, clientGetOutput error) error {
