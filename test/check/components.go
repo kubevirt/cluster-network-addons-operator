@@ -1,12 +1,13 @@
 package check
 
 type Component struct {
-	ComponentName              string
-	ClusterRole                string
-	ClusterRoleBinding         string
-	SecurityContextConstraints string
-	DaemonSets                 []string
-	Deployments                []string
+	ComponentName                string
+	ClusterRole                  string
+	ClusterRoleBinding           string
+	SecurityContextConstraints   string
+	DaemonSets                   []string
+	Deployments                  []string
+	Secret                       string
 }
 
 var (
