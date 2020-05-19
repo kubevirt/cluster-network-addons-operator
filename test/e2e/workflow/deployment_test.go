@@ -165,6 +165,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		//2300
 		It("should be able to remove the config and create it again", func() {
 			DeleteConfig()
+			//TODO: remove this checking after this [1] issue is resolved
+			// [1] https://github.com/kubevirt/cluster-network-addons-operator/issues/394
+			CheckComponentsRemoval(components)
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
 		})
