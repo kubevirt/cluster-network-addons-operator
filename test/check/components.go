@@ -8,6 +8,7 @@ type Component struct {
 	DaemonSets                   []string
 	Deployments                  []string
 	Secret                       string
+	MutatingWebhookConfiguration string
 }
 
 var (
