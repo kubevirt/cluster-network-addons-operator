@@ -13,10 +13,12 @@ type Component struct {
 
 var (
 	KubeMacPoolComponent = Component{
-		ComponentName:      "KubeMacPool",
-		ClusterRole:        "kubemacpool-manager-role",
-		ClusterRoleBinding: "kubemacpool-manager-rolebinding",
-		Deployments:        []string{"kubemacpool-mac-controller-manager"},
+		ComponentName:                "KubeMacPool",
+		ClusterRole:                  "kubemacpool-manager-role",
+		ClusterRoleBinding:           "kubemacpool-manager-rolebinding",
+		Deployments:                  []string{"kubemacpool-mac-controller-manager"},
+		Secret:                       "kubemacpool-service",
+		MutatingWebhookConfiguration: "kubemacpool-mutator",
 	}
 	LinuxBridgeComponent = Component{
 		ComponentName:              "Linux Bridge",
