@@ -254,6 +254,10 @@ func checkForComponent(component *Component) error {
 		errsAppend(checkForDeployment(deployment))
 	}
 
+	if component.Secret != "" {
+		errsAppend(checkForSecret(component.Secret))
+	}
+
 	return errsToErr(errs)
 }
 
@@ -357,6 +361,10 @@ func checkForDaemonSet(name string) error {
 	}
 
 	return nil
+}
+
+func checkForSecret(name string) error {
+	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
 }
 
 func checkForClusterRoleRemoval(name string) error {
