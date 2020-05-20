@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -277,6 +278,141 @@ metadata:
 			}))
 		})
 	})
+	Context("when merging webhookconfiguration", func() {
+		type webhookConfig struct {
+			app string
+			wh1 string
+			wh2 string
+			wh3 string
+		}
+		type webhookConfigCase struct {
+			current  webhookConfig
+			updated  webhookConfig
+			expected webhookConfig
+		}
+		var (
+			template = `
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: nmstate
+  labels:
+    app: %s
+  annotations: {}
+webhooks:
+  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
+    clientConfig:
+      %s
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies"]
+  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
+    clientConfig:
+      %s
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-status-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies/status"]
+  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
+    clientConfig:
+      %s
+      service:
+        name: nmstate-webhook
+        namespace: nmstate
+        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["v1alpha1"]
+        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
+`
+			generateUnstructured = func(config webhookConfig) *unstructured.Unstructured {
+				return k8s.UnstructuredFromYaml(fmt.Sprintf(template, config.app, config.wh1, config.wh2, config.wh3))
+			}
+		)
+		DescribeTable("and have modified caBundle and app label", func(c webhookConfigCase) {
+			current := generateUnstructured(c.current)
+			updated := generateUnstructured(c.updated)
+			expected := generateUnstructured(c.expected)
+
+			err := apply.MergeObjectForUpdate(current, updated)
+			Expect(err).ToNot(HaveOccurred(), "should successfully execut merge function")
+
+			Expect(*updated).To(Equal(*expected), "the object should be updated as expected, with original caBundles left intact")
+		},
+			Entry("with caBundle non-empty at current config but not preset at updated one, should preserve caBundle and update app label", webhookConfigCase{
+				current: webhookConfig{
+					app: "kubemacpool-1",
+					wh1: "caBundle: cawh1",
+					wh2: "caBundle: cawh2",
+					wh3: "caBundle: cawh3",
+				},
+				updated: webhookConfig{
+					app: "kubemacpool-2",
+					wh1: "",
+					wh2: "",
+					wh3: "",
+				},
+				expected: webhookConfig{
+					app: "kubemacpool-2",
+					wh1: "caBundle: cawh1",
+					wh2: "caBundle: cawh2",
+					wh3: "caBundle: cawh3",
+				},
+			}),
+			Entry("with caBundle not present at current config and non-empty at updated one, should use updated caBundle", webhookConfigCase{
+				current: webhookConfig{
+					app: "kubemacpool-1",
+					wh1: "",
+					wh2: "",
+					wh3: "",
+				},
+				updated: webhookConfig{
+					app: "kubemacpool-2",
+					wh1: "caBundle: cawh1",
+					wh2: "caBundle: cawh2",
+					wh3: "caBundle: cawh3",
+				},
+				expected: webhookConfig{
+					app: "kubemacpool-2",
+					wh1: "caBundle: cawh1",
+					wh2: "caBundle: cawh2",
+					wh3: "caBundle: cawh3",
+				},
+			}),
+			Entry("with different caBundle at updated, should use the new one", webhookConfigCase{
+				current: webhookConfig{
+					app: "kubemacpool-1",
+					wh1: "caBundle: cawh1",
+					wh2: "caBundle: cawh2",
+					wh3: "caBundle: cawh3",
+				},
+				updated: webhookConfig{
+					app: "kubemacpool-2",
+					wh1: "caBundle: cawh1u",
+					wh2: "caBundle: cawh2u",
+					wh3: "caBundle: cawh3u",
+				},
+				expected: webhookConfig{
+					app: "kubemacpool-2",
+					wh1: "caBundle: cawh1u",
+					wh2: "caBundle: cawh2u",
+					wh3: "caBundle: cawh3u",
+				},
+			}),
+		)
+	})
 })
 
 var _ = Describe("IsObjectSupported", func() {
@@ -325,69 +461,6 @@ metadata:
 			Expect(updated.GetResourceVersion()).To(Equal(current.GetResourceVersion()))
 			Expect(updated.GetSelfLink()).To(Equal(current.GetSelfLink()))
 			Expect(updated.GetUID()).To(Equal(current.GetUID()))
-		})
-	})
-	Context("when current has non empty caBundle and update is empty", func() {
-		template := `
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: MutatingWebhookConfiguration
-metadata:
-  name: nmstate
-  labels:
-    app: %s
-  annotations: {}
-webhooks:
-  - name: nodenetworkconfigurationpolicies-mutate.nmstate.io
-    clientConfig:
-      %s
-      service:
-        name: nmstate-webhook
-        namespace: nmstate
-        path: "/nodenetworkconfigurationpolicies-mutate"
-    rules:
-      - operations: ["CREATE", "UPDATE"]
-        apiGroups: ["*"]
-        apiVersions: ["v1alpha1"]
-        resources: ["nodenetworkconfigurationpolicies"]
-  - name: nodenetworkconfigurationpolicies-status-mutate.nmstate.io
-    clientConfig:
-      %s
-      service:
-        name: nmstate-webhook
-        namespace: nmstate
-        path: "/nodenetworkconfigurationpolicies-status-mutate"
-    rules:
-      - operations: ["CREATE", "UPDATE"]
-        apiGroups: ["*"]
-        apiVersions: ["v1alpha1"]
-        resources: ["nodenetworkconfigurationpolicies/status"]
-  - name: nodenetworkconfigurationpolicies-timestamp-mutate.nmstate.io
-    clientConfig:
-      %s
-      service:
-        name: nmstate-webhook
-        namespace: nmstate
-        path: "/nodenetworkconfigurationpolicies-timestamp-mutate"
-    rules:
-      - operations: ["CREATE", "UPDATE"]
-        apiGroups: ["*"]
-        apiVersions: ["v1alpha1"]
-        resources: ["nodenetworkconfigurationpolicies", "nodenetworkconfigurationpolicies/status"]
-`
-		var (
-			updated *unstructured.Unstructured
-			current *unstructured.Unstructured
-		)
-		BeforeEach(func() {
-			updated = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "", "", ""))
-			current = k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-1", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
-		})
-		It("should now overwrite existing caBundle in webhook configuration", func() {
-			expected := k8s.UnstructuredFromYaml(fmt.Sprintf(template, "kubernetes-nmstate-2", "caBundle: ca1", "caBundle: ca2", "caBundle: ca3"))
-			err := apply.MergeObjectForUpdate(current, updated)
-			Expect(err).ToNot(HaveOccurred(), "should successfully execut merge function")
-
-			Expect(*updated).To(Equal(*expected), "the object should be updated as expected, with original caBundles left intact")
 		})
 	})
 })
