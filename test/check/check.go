@@ -290,6 +290,10 @@ func checkForComponentRemoval(component *Component) error {
 		errsAppend(checkForSecretRemoval(component.Secret))
 	}
 
+	if component.MutatingWebhookConfiguration != "" {
+		errsAppend(checkForMutatingWebhookConfigurationRemoval(component.MutatingWebhookConfiguration))
+	}
+
 	return errsToErr(errs)
 }
 
@@ -401,6 +405,11 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 func checkForSecretRemoval(name string) error {
 	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name,Namespace: components.Namespace}, &corev1.Secret{})
 	return isNotFound("Secret", name, err)
+}
+
+func checkForMutatingWebhookConfigurationRemoval(name string) error {
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &v1betav1.MutatingWebhookConfiguration{})
+	return isNotFound("MutatingWebhookConfiguration", name, err)
 }
 
 func isNotFound(componentType string, componentName string, clientGetOutput error) error {
