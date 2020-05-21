@@ -87,7 +87,7 @@ rm -rf data/kubemacpool/*
 echo 'Get kubemacpool image name and update it under CNAO'
 KUBEMACPOOL_TAG=$(get_component_tag ${KUBEMACPOOL_PATH})
 KUBEMACPOOL_IMAGE=quay.io/kubevirt/kubemacpool
-KUBEMACPOOL_IMAGE_TAGGED=${KUBEMACPOOL_IMAGE}:${KUBEMACPOOL_TAG}
+KUBEMACPOOL_IMAGE_TAGGED=${KUBEMACPOOL_IMAGE}:latest
 sed -i "s#\"${KUBEMACPOOL_IMAGE}:.*\"#\"${KUBEMACPOOL_IMAGE_TAGGED}\"#" pkg/components/components.go
 sed -i "s#\"${KUBEMACPOOL_IMAGE}:.*\"#\"${KUBEMACPOOL_IMAGE_TAGGED}\"#" test/releases/${CNAO_VERSION}.go
 
