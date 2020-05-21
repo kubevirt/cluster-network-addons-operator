@@ -279,6 +279,25 @@ make cluster-clean
 make cluster-down
 ```
 
+For developing at an external cluster:
+
+```bash
+export KUBEVIRT_PROVIDER=external
+
+export KUBECONFIG=[path to external's cluster kubeconfig]
+
+# This is the registry used to push and pull the dev image
+# it has to be accessible by the external cluster
+export DEV_IMAGE_REGISTRY=quay.io/$USER
+
+# Then is possible to follow normal dev flow
+
+make cluster-operator-push
+make cluster-operator-install
+make test/e2e/workflow
+make test/e2e/lifecycle
+```
+
 # Releasing
 
 1. Checkout a public branch
