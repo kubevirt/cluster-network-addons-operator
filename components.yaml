@@ -10,7 +10,7 @@ components:
     commit: "2c01b100bcae0061a622d8b82e2c4db4ac092b4c" # 0.2.0
   kubemacpool:
     url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
-    commit: "b3b7bde391b40c3f3f8446626a1efa0b62cf39c9" # v0.8.3
+    commit: "b186e7aee2036ca374d138528437ac0fc70a3e9d" # v0.13.0
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
     commit: "330667b2025f0ce489f54c24c2f6a3db86662ac5" # v0.20.0
