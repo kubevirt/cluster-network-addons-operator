@@ -15,6 +15,7 @@ import (
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
+	v1betav1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -254,6 +255,14 @@ func checkForComponent(component *Component) error {
 		errsAppend(checkForDeployment(deployment))
 	}
 
+	if component.Secret != "" {
+		errsAppend(checkForSecret(component.Secret))
+	}
+
+	if component.MutatingWebhookConfiguration != "" {
+		errsAppend(checkForMutatingWebhookConfiguration(component.MutatingWebhookConfiguration))
+	}
+
 	return errsToErr(errs)
 }
 
@@ -275,6 +284,14 @@ func checkForComponentRemoval(component *Component) error {
 
 	if component.SecurityContextConstraints != "" {
 		errsAppend(checkForSecurityContextConstraintsRemoval(component.SecurityContextConstraints))
+	}
+
+	if component.Secret != "" {
+		errsAppend(checkForSecretRemoval(component.Secret))
+	}
+
+	if component.MutatingWebhookConfiguration != "" {
+		errsAppend(checkForMutatingWebhookConfigurationRemoval(component.MutatingWebhookConfiguration))
 	}
 
 	return errsToErr(errs)
@@ -359,6 +376,14 @@ func checkForDaemonSet(name string) error {
 	return nil
 }
 
+func checkForSecret(name string) error {
+	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
+}
+
+func checkForMutatingWebhookConfiguration(name string) error {
+	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &v1betav1.MutatingWebhookConfiguration{})
+}
+
 func checkForClusterRoleRemoval(name string) error {
 	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRole{})
 	return isNotFound("ClusterRole", name, err)
@@ -375,6 +400,16 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 		return nil
 	}
 	return isNotFound("SecurityContextConstraints", name, err)
+}
+
+func checkForSecretRemoval(name string) error {
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name,Namespace: components.Namespace}, &corev1.Secret{})
+	return isNotFound("Secret", name, err)
+}
+
+func checkForMutatingWebhookConfigurationRemoval(name string) error {
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &v1betav1.MutatingWebhookConfiguration{})
+	return isNotFound("MutatingWebhookConfiguration", name, err)
 }
 
 func isNotFound(componentType string, componentName string, clientGetOutput error) error {
