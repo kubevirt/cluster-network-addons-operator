@@ -1,5 +1,20 @@
-0.36.0
+0.37.0
+
+This release re activate kubemacpool using version v0.13.0 to do so some adjustment
+have being needed at e2e since looks like there is a race at kubemacpool between
+Secret and pod startup.
+
 
 Features:
-* Knmstate v0.20.0 (#375)
-* Bump github-release 0.8.1 (#376)
+* Bump kubemacpool v0.13.0 (#397)
+
+Bugs:
+* Ensure components objects deletion and creation at e2e tests (#393)
+* Cover all use cases at caBundle (#390)
+* keep the order of webhooks while merging (#389)
+* status_manager: only require single ready pod for deployment (#388)
+* Preserve webhook configuration caBundle and TLS secrets at reconcile (#382)
+
+Infra:
+* Add github issue/PR templates (#396)
+* Use correct github path for github-release (#379)
