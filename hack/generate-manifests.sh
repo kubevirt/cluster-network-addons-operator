@@ -7,8 +7,6 @@ CONTAINER_PREFIX="${CONTAINER_PREFIX:-quay.io/kubevirt}"
 CONTAINER_TAG="${CONTAINER_TAG:-latest}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Always}"
 
-go build -o ${PROJECT_ROOT}/tools/manifest-templator/manifest-templator github.com/kubevirt/cluster-network-addons-operator/tools/manifest-templator
-
 templates=$(cd ${PROJECT_ROOT}/templates && find . -type f -name "*.yaml.in")
 for template in $templates; do
 	infile="${PROJECT_ROOT}/templates/${template}"
@@ -20,7 +18,7 @@ for template in $templates; do
 	file="${dir}/$(basename -s .in $template)"
 	file=${file/VERSION/$VERSION}
 	rendered=$( \
-		${PROJECT_ROOT}/tools/manifest-templator/manifest-templator \
+		${PROJECT_ROOT}/build/_output/bin/manifest-templator \
 		--version=${VERSION} \
 		--version-replaces=${VERSION_REPLACES} \
 		--operator-version=${VERSION} \
@@ -33,5 +31,3 @@ for template in $templates; do
 		echo -e "$rendered" > $file
 	fi
 done
-
-(cd ${PROJECT_ROOT}/tools/manifest-templator/ && go clean)
