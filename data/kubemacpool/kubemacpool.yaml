@@ -34,7 +34,7 @@ webhooks:
       - "0"
       - "1"
     matchLabels:
-      mutatepods.kubemacpool.io: allocateForAll
+      mutatepods.kubemacpool.io: allocate
   rules:
   - apiGroups:
     - ""
@@ -64,7 +64,7 @@ webhooks:
       - "0"
       - "1"
     matchLabels:
-      mutatevirtualmachines.kubemacpool.io: allocateForAll
+      mutatevirtualmachines.kubemacpool.io: allocate
   rules:
   - apiGroups:
     - kubevirt.io
