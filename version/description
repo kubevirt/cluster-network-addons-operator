@@ -1,5 +1,13 @@
-0.36.0
+0.38.0
+
+This release bumps kubemacpool to v0.14.0
 
 Features:
-* Knmstate v0.20.0 (#375)
-* Bump github-release 0.8.1 (#376)
+* bump kubemacpool to v0.14.0 (#401)
+
+Bugs:
+
+Infra:
+* Replace multistage with vendored go (#384)
+* Update kubevirtci hash and provider name (#400)
+* Add KUBEVIRT_PROVIDER=external support (#387)
