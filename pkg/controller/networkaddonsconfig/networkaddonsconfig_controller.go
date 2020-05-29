@@ -13,6 +13,7 @@ import (
 	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -415,14 +416,8 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 				continue
 			}
 
-			for _, container := range daemonSet.Spec.Template.Spec.Containers {
-				containers = append(containers, opv1alpha1.Container{
-					ParentKind: obj.GetKind(),
-					ParentName: daemonSet.GetName(),
-					Image:      container.Image,
-					Name:       container.Name,
-				})
-			}
+			containers = append(containers, collectContainersInfo(obj.GetKind(), daemonSet.GetName(), daemonSet.Spec.Template.Spec.InitContainers)...)
+			containers = append(containers, collectContainersInfo(obj.GetKind(), daemonSet.GetName(), daemonSet.Spec.Template.Spec.Containers)...)
 		} else if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "Deployment" {
 			deployments = append(deployments, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()})
 
@@ -432,14 +427,8 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 				continue
 			}
 
-			for _, container := range deployment.Spec.Template.Spec.Containers {
-				containers = append(containers, opv1alpha1.Container{
-					ParentKind: obj.GetKind(),
-					ParentName: deployment.GetName(),
-					Image:      container.Image,
-					Name:       container.Name,
-				})
-			}
+			containers = append(containers, collectContainersInfo(obj.GetKind(), deployment.GetName(), deployment.Spec.Template.Spec.InitContainers)...)
+			containers = append(containers, collectContainersInfo(obj.GetKind(), deployment.GetName(), deployment.Spec.Template.Spec.Containers)...)
 		}
 	}
 
@@ -455,6 +444,21 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 
 	// Trigger status manager to notice the change
 	r.statusManager.SetFromPods()
+}
+
+func collectContainersInfo(parentKind string, parentName string, containers []v1.Container) []opv1alpha1.Container {
+	containersInfo := []opv1alpha1.Container{}
+
+	for _, container := range containers {
+		containersInfo = append(containersInfo, opv1alpha1.Container{
+			ParentKind: parentKind,
+			ParentName: parentName,
+			Image:      container.Image,
+			Name:       container.Name,
+		})
+	}
+
+	return containersInfo
 }
 
 func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.Network, error) {
