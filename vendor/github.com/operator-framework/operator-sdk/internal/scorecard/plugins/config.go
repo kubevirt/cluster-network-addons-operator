@@ -15,45 +15,31 @@
 package scplugins
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
-)
-
-const (
-	NamespaceOpt          = "namespace"
-	KubeconfigOpt         = "kubeconfig"
-	InitTimeoutOpt        = "init-timeout"
-	OlmDeployedOpt        = "olm-deployed"
-	CSVPathOpt            = "csv-path"
-	NamespacedManifestOpt = "namespaced-manifest"
-	GlobalManifestOpt     = "global-manifest"
-	CRManifestOpt         = "cr-manifest"
-	ProxyImageOpt         = "proxy-image"
-	ProxyPullPolicyOpt    = "proxy-pull-policy"
-	CRDsDirOpt            = "crds-dir"
-	DeployDirOpt          = "deploy-dir"
-	BasicTestsOpt         = "basic-tests"
-	OLMTestsOpt           = "olm-tests"
 )
 
 type BasicAndOLMPluginConfig struct {
 	Namespace          string          `mapstructure:"namespace"`
 	Kubeconfig         string          `mapstructure:"kubeconfig"`
 	InitTimeout        int             `mapstructure:"init-timeout"`
-	OLMDeployed        bool            `mapstructure:"olm-deployed"`
 	NamespacedManifest string          `mapstructure:"namespaced-manifest"`
 	GlobalManifest     string          `mapstructure:"global-manifest"`
 	CRManifest         []string        `mapstructure:"cr-manifest"`
 	CSVManifest        string          `mapstructure:"csv-path"`
 	ProxyImage         string          `mapstructure:"proxy-image"`
+	ProxyPort          int             `mapstructure:"proxy-port"`
 	ProxyPullPolicy    v1.PullPolicy   `mapstructure:"proxy-pull-policy"`
 	CRDsDir            string          `mapstructure:"crds-dir"`
 	DeployDir          string          `mapstructure:"deploy-dir"`
+	Bundle             string          `mapstructure:"bundle"`
 	Selector           labels.Selector `mapstructure:"selector"`
 	Version            string          `mapstructure:"version"`
+	ListOpt            bool            `mapstructure:"list"`
+	OLMDeployed        bool            `mapstructure:"olm-deployed"`
 }
 
 func validateScorecardPluginFlags(config BasicAndOLMPluginConfig, pluginType PluginType) error {
@@ -68,7 +54,8 @@ func validateScorecardPluginFlags(config BasicAndOLMPluginConfig, pluginType Plu
 	}
 	pullPolicy := config.ProxyPullPolicy
 	if pullPolicy != v1.PullAlways && pullPolicy != v1.PullNever && pullPolicy != v1.PullIfNotPresent {
-		return fmt.Errorf("invalid proxy pull policy: (%s); valid values: %s, %s, %s", pullPolicy, v1.PullAlways, v1.PullNever, v1.PullIfNotPresent)
+		return fmt.Errorf("invalid proxy pull policy: (%s); valid values: %s, %s, %s", pullPolicy,
+			v1.PullAlways, v1.PullNever, v1.PullIfNotPresent)
 	}
 	return nil
 }

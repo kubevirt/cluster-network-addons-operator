@@ -15,9 +15,9 @@
 package genutil
 
 import (
-	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -25,7 +25,6 @@ import (
 	"github.com/operator-framework/operator-sdk/internal/util/k8sutil"
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	generatorargs "k8s.io/code-generator/cmd/deepcopy-gen/args"
 	"k8s.io/gengo/examples/deepcopy-gen/generators"
@@ -36,11 +35,21 @@ import (
 func K8sCodegen() error {
 	projutil.MustInProjectRoot()
 
+	goEnv, err := exec.Command("go", "env", "GOROOT").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to get GOROOT from go env: %w", err)
+	}
+	goRoot := strings.TrimSuffix(string(goEnv), "\n")
+	log.Debugf("Setting GOROOT=%s", goRoot)
+	if err := os.Setenv("GOROOT", goRoot); err != nil {
+		return fmt.Errorf("failed to set env GOROOT=%s: %w", goRoot, err)
+	}
+
 	repoPkg := projutil.GetGoPkg()
 
 	gvMap, err := k8sutil.ParseGroupSubpackages(scaffold.ApisDir)
 	if err != nil {
-		return fmt.Errorf("failed to parse group versions: (%v)", err)
+		return fmt.Errorf("failed to parse group versions: %v", err)
 	}
 	gvb := &strings.Builder{}
 	for g, vs := range gvMap {
@@ -65,7 +74,6 @@ func deepcopyGen(hf string, fqApis []string) error {
 	if err != nil {
 		return err
 	}
-	flag.Set("logtostderr", "true")
 	for _, api := range fqApis {
 		api = filepath.FromSlash(api)
 		// Use relative API path so the generator writes to the correct path.
@@ -89,7 +97,7 @@ func deepcopyGen(hf string, fqApis []string) error {
 		}
 
 		if err := generatorargs.Validate(args); err != nil {
-			return errors.Wrap(err, "deepcopy-gen argument validation error")
+			return fmt.Errorf("deepcopy-gen argument validation error: %v", err)
 		}
 
 		err = args.Execute(
@@ -98,7 +106,7 @@ func deepcopyGen(hf string, fqApis []string) error {
 			generators.Packages,
 		)
 		if err != nil {
-			return errors.Wrap(err, "deepcopy-gen generator error")
+			return fmt.Errorf("deepcopy-gen generator error: %v", err)
 		}
 	}
 	return nil

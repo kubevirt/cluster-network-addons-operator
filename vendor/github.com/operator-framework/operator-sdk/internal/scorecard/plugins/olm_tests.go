@@ -15,17 +15,23 @@
 package scplugins
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
+	apimanifests "github.com/operator-framework/api/pkg/manifests"
+	apivalidation "github.com/operator-framework/api/pkg/validation"
 	schelpers "github.com/operator-framework/operator-sdk/internal/scorecard/helpers"
 	"github.com/operator-framework/operator-sdk/internal/util/k8sutil"
-	scapiv1alpha1 "github.com/operator-framework/operator-sdk/pkg/apis/scorecard/v1alpha1"
+	scapiv1alpha2 "github.com/operator-framework/operator-sdk/pkg/apis/scorecard/v1alpha2"
+	"github.com/sirupsen/logrus"
 
-	olmapiv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	olmapiv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -33,16 +39,41 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// OLMTestConfig contains all variables required by the OLMTest schelpers.TestSuite
+const (
+	statusDescriptor string = "status"
+	specDescriptor   string = "spec"
+)
+
+// OLMTestConfig contains all variables required by the OLMTest tests
 type OLMTestConfig struct {
 	Client   client.Client
 	CR       *unstructured.Unstructured
 	CSV      *olmapiv1alpha1.ClusterServiceVersion
 	CRDsDir  string
 	ProxyPod *v1.Pod
+	Bundle   string
 }
 
 // Test Defintions
+
+// BundleValidationTest is a scorecard test that validates a bundle
+type BundleValidationTest struct {
+	schelpers.TestInfo
+	OLMTestConfig
+}
+
+// NewBundleValidationTest returns a new BundleValidationTest object
+func NewBundleValidationTest(conf OLMTestConfig) *BundleValidationTest {
+	return &BundleValidationTest{
+		OLMTestConfig: conf,
+		TestInfo: schelpers.TestInfo{
+			Name:        "Bundle Validation Test",
+			Description: "Validates bundle contents",
+			Labels: map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName,
+				testKey: getStructShortName(BundleValidationTest{})},
+		},
+	}
+}
 
 // CRDsHaveValidationTest is a scorecard test that verifies that all CRDs have a validation section
 type CRDsHaveValidationTest struct {
@@ -57,13 +88,13 @@ func NewCRDsHaveValidationTest(conf OLMTestConfig) *CRDsHaveValidationTest {
 		TestInfo: schelpers.TestInfo{
 			Name:        "Provided APIs have validation",
 			Description: "All CRDs have an OpenAPI validation subsection",
-			Cumulative:  true,
-			Labels:      map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName},
+			Labels: map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName,
+				testKey: getStructShortName(CRDsHaveValidationTest{})},
 		},
 	}
 }
 
-// CRDsHaveResourcesTest is a scorecard test that verifies that the CSV lists used resources in its owned CRDs secyion
+// CRDsHaveResourcesTest is a scorecard test that verifies that the CSV lists used resources in its owned CRDs section
 type CRDsHaveResourcesTest struct {
 	schelpers.TestInfo
 	OLMTestConfig
@@ -76,27 +107,8 @@ func NewCRDsHaveResourcesTest(conf OLMTestConfig) *CRDsHaveResourcesTest {
 		TestInfo: schelpers.TestInfo{
 			Name:        "Owned CRDs have resources listed",
 			Description: "All Owned CRDs contain a resources subsection",
-			Cumulative:  true,
-			Labels:      map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName},
-		},
-	}
-}
-
-// AnnotationsContainExamplesTest is a scorecard test that verifies that the CSV contains examples via the alm-examples annotation
-type AnnotationsContainExamplesTest struct {
-	schelpers.TestInfo
-	OLMTestConfig
-}
-
-// NewAnnotationsContainExamplesTest returns a new AnnotationsContainExamplesTest object
-func NewAnnotationsContainExamplesTest(conf OLMTestConfig) *AnnotationsContainExamplesTest {
-	return &AnnotationsContainExamplesTest{
-		OLMTestConfig: conf,
-		TestInfo: schelpers.TestInfo{
-			Name:        "CRs have at least 1 example",
-			Description: "The CSV's metadata contains an alm-examples section",
-			Cumulative:  true,
-			Labels:      map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName},
+			Labels: map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName,
+				testKey: getStructShortName(CRDsHaveResourcesTest{})},
 		},
 	}
 }
@@ -114,8 +126,8 @@ func NewSpecDescriptorsTest(conf OLMTestConfig) *SpecDescriptorsTest {
 		TestInfo: schelpers.TestInfo{
 			Name:        "Spec fields with descriptors",
 			Description: "All spec fields have matching descriptors in the CSV",
-			Cumulative:  true,
-			Labels:      map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName},
+			Labels: map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName,
+				testKey: getStructShortName(SpecDescriptorsTest{})},
 		},
 	}
 }
@@ -133,8 +145,8 @@ func NewStatusDescriptorsTest(conf OLMTestConfig) *StatusDescriptorsTest {
 		TestInfo: schelpers.TestInfo{
 			Name:        "Status fields with descriptors",
 			Description: "All status fields have matching descriptors in the CSV",
-			Cumulative:  true,
-			Labels:      map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName},
+			Labels: map[string]string{necessityKey: requiredNecessity, suiteKey: olmSuiteName,
+				testKey: getStructShortName(StatusDescriptorsTest{})},
 		},
 	}
 }
@@ -153,102 +165,181 @@ func matchKind(kind1, kind2 string) bool {
 	return strings.EqualFold(singularKind1, singularKind2)
 }
 
-// NewOLMTestSuite returns a new schelpers.TestSuite object containing CSV best practice checks
-func NewOLMTestSuite(conf OLMTestConfig) *schelpers.TestSuite {
-	ts := schelpers.NewTestSuite(
-		"OLM Tests",
-		"Test suite checks if an operator's CSV follows best practices",
-	)
-
-	ts.AddTest(NewCRDsHaveValidationTest(conf), 1.25)
-	ts.AddTest(NewCRDsHaveResourcesTest(conf), 1)
-	ts.AddTest(NewAnnotationsContainExamplesTest(conf), 1)
-	ts.AddTest(NewSpecDescriptorsTest(conf), 1)
-	ts.AddTest(NewStatusDescriptorsTest(conf), 1)
-
-	return ts
-}
-
 // Test Implentations
 
-// matchVersion checks if a CRD contains a specified version in a case insensitive manner
-func matchVersion(version string, crd *apiextv1beta1.CustomResourceDefinition) bool {
-	if strings.EqualFold(version, crd.Spec.Version) {
-		return true
+// Run - implements Test interface
+func (t *BundleValidationTest) Run(ctx context.Context) *schelpers.TestResult {
+	res := &schelpers.TestResult{Test: t, CRName: t.CR.GetName(), State: scapiv1alpha2.PassState}
+
+	if t.OLMTestConfig.Bundle == "" {
+		res.Errors = append(res.Errors,
+			errors.New("unable to find the OLM 'bundle' directory which is required for this test"))
+		res.State = scapiv1alpha2.ErrorState
+		return res
 	}
-	// crd.Spec.Version is deprecated, so check in crd.Spec.Versions as well
-	for _, currVer := range crd.Spec.Versions {
-		if strings.EqualFold(version, currVer.Name) {
-			return true
+
+	// Get the validation API log because it contains
+	// validation output that we include into the scorecard test output.
+	validationLogOutput := new(bytes.Buffer)
+	origOutput := logrus.StandardLogger().Out
+	logrus.SetOutput(validationLogOutput)
+	defer logrus.SetOutput(origOutput)
+
+	bundle, err := apimanifests.GetBundleFromDir(t.OLMTestConfig.Bundle)
+	if err != nil {
+		res.Errors = append(res.Errors, err)
+		res.State = scapiv1alpha2.ErrorState
+		return res
+	}
+
+	objs := []interface{}{bundle, bundle.CSV}
+	for _, crd := range bundle.V1CRDs {
+		objs = append(objs, crd)
+	}
+	for _, crd := range bundle.V1beta1CRDs {
+		objs = append(objs, crd)
+	}
+	validationResults := apivalidation.AllValidators.Validate(objs...)
+	for _, result := range validationResults {
+		for _, e := range result.Errors {
+			res.Errors = append(res.Errors, &e)
+			res.State = scapiv1alpha2.FailState
+		}
+
+		for _, w := range result.Warnings {
+			res.Suggestions = append(res.Suggestions, w.Error())
 		}
 	}
-	return false
+
+	res.Log = validationLogOutput.String()
+
+	return res
 }
 
 // Run - implements Test interface
 func (t *CRDsHaveValidationTest) Run(ctx context.Context) *schelpers.TestResult {
-	res := &schelpers.TestResult{Test: t}
-	crds, err := k8sutil.GetCRDs(t.CRDsDir)
+	res := &schelpers.TestResult{Test: t, CRName: t.CR.GetName(), State: scapiv1alpha2.PassState}
+	v1crds, v1beta1crds, err := k8sutil.GetCustomResourceDefinitions(t.CRDsDir)
 	if err != nil {
 		res.Errors = append(res.Errors, fmt.Errorf("failed to get CRDs in %s directory: %v", t.CRDsDir, err))
-		res.State = scapiv1alpha1.ErrorState
+		res.State = scapiv1alpha2.ErrorState
 		return res
 	}
 	err = t.Client.Get(ctx, types.NamespacedName{Namespace: t.CR.GetNamespace(), Name: t.CR.GetName()}, t.CR)
 	if err != nil {
 		res.Errors = append(res.Errors, err)
-		res.State = scapiv1alpha1.ErrorState
+		res.State = scapiv1alpha2.ErrorState
 		return res
 	}
-	for _, crd := range crds {
-		// check if the CRD matches the testing CR
-		gvk := t.CR.GroupVersionKind()
-		// Only check the validation block if the CRD and CR have the same Kind and Version
-		if !(matchVersion(gvk.Version, crd) && matchKind(gvk.Kind, crd.Spec.Names.Kind)) {
-			continue
-		}
-		res.MaximumPoints++
-		if crd.Spec.Validation == nil {
-			res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add CRD validation for %s/%s", crd.Spec.Names.Kind, crd.Spec.Version))
-			continue
-		}
-		failed := false
-		if t.CR.Object["spec"] != nil {
-			spec := t.CR.Object["spec"].(map[string]interface{})
-			for key := range spec {
-				if _, ok := crd.Spec.Validation.OpenAPIV3Schema.Properties["spec"].Properties[key]; !ok {
-					failed = true
-					res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add CRD validation for spec field `%s` in %s/%s", key, gvk.Kind, gvk.Version))
-				}
+
+	// check if the CRD matches the testing CR
+	gvk := t.CR.GroupVersionKind()
+	for _, crd := range v1crds {
+		for _, ver := range crd.Spec.Versions {
+			// Only check the validation block if the CRD and CR have the same Kind and Version
+			if strings.EqualFold(gvk.Version, ver.Name) && matchKind(gvk.Kind, crd.Spec.Names.Kind) {
+				checkV1CRDVersion(res, t.CR, ver.Schema)
 			}
 		}
-		if t.CR.Object["status"] != nil {
-			status := t.CR.Object["status"].(map[string]interface{})
-			for key := range status {
-				if _, ok := crd.Spec.Validation.OpenAPIV3Schema.Properties["status"].Properties[key]; !ok {
-					failed = true
-					res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add CRD validation for status field `%s` in %s/%s", key, gvk.Kind, gvk.Version))
+	}
+	for _, crd := range v1beta1crds {
+		if len(crd.Spec.Versions) == 0 {
+			// Only check the validation block if the CRD and CR have the same Kind and Version
+			if strings.EqualFold(gvk.Version, crd.Spec.Version) && matchKind(gvk.Kind, crd.Spec.Names.Kind) {
+				checkV1beta1CRDVersion(res, t.CR, crd.Spec.Validation)
+			}
+		} else {
+			for _, ver := range crd.Spec.Versions {
+				// Only check the validation block if the CRD and CR have the same Kind and Version
+				if strings.EqualFold(gvk.Version, ver.Name) && matchKind(gvk.Kind, crd.Spec.Names.Kind) {
+					checkV1beta1CRDVersion(res, t.CR, ver.Schema)
 				}
 			}
-		}
-		if !failed {
-			res.EarnedPoints++
 		}
 	}
 	return res
 }
 
+//nolint:dupl
+func checkV1CRDVersion(res *schelpers.TestResult, cr *unstructured.Unstructured,
+	val *apiextv1.CustomResourceValidation) {
+
+	gvk := cr.GroupVersionKind()
+	if val == nil {
+		res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add CRD validation for %s/%s", gvk.Kind, gvk.Version))
+		return
+	}
+	failed := false
+	if cr.Object["spec"] != nil {
+		spec := cr.Object["spec"].(map[string]interface{})
+		for key := range spec {
+			if _, ok := val.OpenAPIV3Schema.Properties["spec"].Properties[key]; !ok {
+				failed = true
+				res.Suggestions = append(res.Suggestions,
+					fmt.Sprintf("Add CRD validation for spec field `%s` in %s/%s", key, gvk.Kind, gvk.Version))
+			}
+		}
+	}
+	if cr.Object["status"] != nil {
+		status := cr.Object["status"].(map[string]interface{})
+		for key := range status {
+			if _, ok := val.OpenAPIV3Schema.Properties["status"].Properties[key]; !ok {
+				failed = true
+				res.Suggestions = append(res.Suggestions,
+					fmt.Sprintf("Add CRD validation for status field `%s` in %s/%s", key, gvk.Kind, gvk.Version))
+			}
+		}
+	}
+
+	if failed {
+		res.State = scapiv1alpha2.FailState
+	}
+}
+
+//nolint:dupl
+func checkV1beta1CRDVersion(res *schelpers.TestResult, cr *unstructured.Unstructured,
+	val *apiextv1beta1.CustomResourceValidation) {
+
+	gvk := cr.GroupVersionKind()
+	if val == nil {
+		res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add CRD validation for %s/%s", gvk.Kind, gvk.Version))
+		return
+	}
+	failed := false
+	if cr.Object["spec"] != nil {
+		spec := cr.Object["spec"].(map[string]interface{})
+		for key := range spec {
+			if _, ok := val.OpenAPIV3Schema.Properties["spec"].Properties[key]; !ok {
+				failed = true
+				res.Suggestions = append(res.Suggestions,
+					fmt.Sprintf("Add CRD validation for spec field `%s` in %s/%s", key, gvk.Kind, gvk.Version))
+			}
+		}
+	}
+	if cr.Object["status"] != nil {
+		status := cr.Object["status"].(map[string]interface{})
+		for key := range status {
+			if _, ok := val.OpenAPIV3Schema.Properties["status"].Properties[key]; !ok {
+				failed = true
+				res.Suggestions = append(res.Suggestions,
+					fmt.Sprintf("Add CRD validation for status field `%s` in %s/%s", key, gvk.Kind, gvk.Version))
+			}
+		}
+	}
+
+	if failed {
+		res.State = scapiv1alpha2.FailState
+	}
+}
+
 // Run - implements Test interface
 func (t *CRDsHaveResourcesTest) Run(ctx context.Context) *schelpers.TestResult {
-	res := &schelpers.TestResult{Test: t}
+	res := &schelpers.TestResult{Test: t, CRName: t.CR.GetName(), State: scapiv1alpha2.PassState}
+
 	var missingResources []string
 	for _, crd := range t.CSV.Spec.CustomResourceDefinitions.Owned {
 		gvk := t.CR.GroupVersionKind()
 		if strings.EqualFold(crd.Version, gvk.Version) && matchKind(gvk.Kind, crd.Kind) {
-			res.MaximumPoints++
-			if len(crd.Resources) > 0 {
-				res.EarnedPoints++
-			}
 			resources, err := getUsedResources(t.ProxyPod)
 			if err != nil {
 				log.Warningf("getUsedResource failed: %v", err)
@@ -256,24 +347,32 @@ func (t *CRDsHaveResourcesTest) Run(ctx context.Context) *schelpers.TestResult {
 			for _, resource := range resources {
 				foundResource := false
 				for _, listedResource := range crd.Resources {
-					if matchKind(resource.Kind, listedResource.Kind) && strings.EqualFold(resource.Version, listedResource.Version) {
+					if matchKind(resource.Kind, listedResource.Kind) &&
+						strings.EqualFold(resource.Version, listedResource.Version) {
 						foundResource = true
 						break
 					}
 				}
-				if foundResource == false {
-					missingResources = append(missingResources, fmt.Sprintf("%s/%s", resource.Kind, resource.Version))
+				if !foundResource {
+					missingResources = append(missingResources, fmt.Sprintf("%s/%s",
+						resource.Kind, resource.Version))
 				}
 			}
 		}
 	}
 	if len(missingResources) > 0 {
-		res.Suggestions = append(res.Suggestions, fmt.Sprintf("If it would be helpful to an end-user to understand or troubleshoot your CR, consider adding resources %v to the resources section for owned CRD %s", missingResources, t.CR.GroupVersionKind().Kind))
+		res.Suggestions = append(res.Suggestions, fmt.Sprintf("If it would be helpful to an end-user to"+
+			" understand or troubleshoot your CR, consider adding resources %v to the resources section for owned"+
+			" CRD %s", missingResources, t.CR.GroupVersionKind().Kind))
+		res.State = scapiv1alpha2.FailState
 	}
+
 	return res
 }
 
 func getUsedResources(proxyPod *v1.Pod) ([]schema.GroupVersionKind, error) {
+	const api = "api"
+	const apis = "apis"
 	logs, err := getProxyLogs(proxyPod)
 	if err != nil {
 		return nil, err
@@ -322,38 +421,42 @@ func getUsedResources(proxyPod *v1.Pod) ([]schema.GroupVersionKind, error) {
 		splitURI = splitURI[1:]
 		switch len(splitURI) {
 		case 3:
-			if splitURI[0] == "api" {
+			if splitURI[0] == api {
 				resources[schema.GroupVersionKind{Version: splitURI[1], Kind: splitURI[2]}] = true
 				break
-			} else if splitURI[0] == "apis" {
+			}
+			if splitURI[0] == apis {
 				// this situation happens when the client enumerates the available resources of the server
 				// Example: "/apis/apps/v1?timeout=32s"
 				break
 			}
 			log.Warnf("Invalid URI: \"%s\"", uri)
 		case 4:
-			if splitURI[0] == "api" {
+			if splitURI[0] == api {
 				resources[schema.GroupVersionKind{Version: splitURI[1], Kind: splitURI[2]}] = true
 				break
-			} else if splitURI[0] == "apis" {
+			}
+			if splitURI[0] == apis {
 				resources[schema.GroupVersionKind{Group: splitURI[1], Version: splitURI[2], Kind: splitURI[3]}] = true
 				break
 			}
 			log.Warnf("Invalid URI: \"%s\"", uri)
 		case 5:
-			if splitURI[0] == "api" {
+			if splitURI[0] == api {
 				resources[schema.GroupVersionKind{Version: splitURI[1], Kind: splitURI[4]}] = true
 				break
-			} else if splitURI[0] == "apis" {
+			}
+			if splitURI[0] == apis {
 				resources[schema.GroupVersionKind{Group: splitURI[1], Version: splitURI[2], Kind: splitURI[3]}] = true
 				break
 			}
 			log.Warnf("Invalid URI: \"%s\"", uri)
 		case 6, 7:
-			if splitURI[0] == "api" {
+			if splitURI[0] == api {
 				resources[schema.GroupVersionKind{Version: splitURI[1], Kind: splitURI[4]}] = true
 				break
-			} else if splitURI[0] == "apis" {
+			}
+			if splitURI[0] == apis {
 				resources[schema.GroupVersionKind{Group: splitURI[1], Version: splitURI[2], Kind: splitURI[5]}] = true
 				break
 			}
@@ -368,91 +471,77 @@ func getUsedResources(proxyPod *v1.Pod) ([]schema.GroupVersionKind, error) {
 }
 
 // Run - implements Test interface
-func (t *AnnotationsContainExamplesTest) Run(ctx context.Context) *schelpers.TestResult {
-	res := &schelpers.TestResult{Test: t, MaximumPoints: 1}
-	if t.CSV.Annotations != nil && t.CSV.Annotations["alm-examples"] != "" {
-		res.EarnedPoints = 1
-	}
-	if res.EarnedPoints == 0 {
-		res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add an alm-examples annotation to your CSV to pass the %s test", t.GetName()))
-	}
-	return res
-}
-
-// Run - implements Test interface
 func (t *StatusDescriptorsTest) Run(ctx context.Context) *schelpers.TestResult {
-	res := &schelpers.TestResult{Test: t}
+	res := &schelpers.TestResult{Test: t, CRName: t.CR.GetName(), State: scapiv1alpha2.PassState}
+
 	err := t.Client.Get(ctx, types.NamespacedName{Namespace: t.CR.GetNamespace(), Name: t.CR.GetName()}, t.CR)
 	if err != nil {
 		res.Errors = append(res.Errors, err)
-		res.State = scapiv1alpha1.ErrorState
+		res.State = scapiv1alpha2.ErrorState
 		return res
 	}
-	if t.CR.Object["status"] == nil {
-		return res
-	}
-	statusBlock := t.CR.Object["status"].(map[string]interface{})
-	res.MaximumPoints = len(statusBlock)
-	var crd *olmapiv1alpha1.CRDDescription
-	for _, owned := range t.CSV.Spec.CustomResourceDefinitions.Owned {
-		if owned.Kind == t.CR.GetKind() {
-			crd = &owned
-			break
-		}
-	}
-	if crd == nil {
-		return res
-	}
-	for key := range statusBlock {
-		for _, statDesc := range crd.StatusDescriptors {
-			if statDesc.Path == key {
-				res.EarnedPoints++
-				delete(statusBlock, key)
-				break
-			}
-		}
-	}
-	for key := range statusBlock {
-		res.Suggestions = append(res.Suggestions, "Add a status descriptor for "+key)
-	}
-	return res
+
+	return checkOwnedCSVDescriptors(t.CR, t.CSV, statusDescriptor, res)
 }
 
 // Run - implements Test interface
 func (t *SpecDescriptorsTest) Run(ctx context.Context) *schelpers.TestResult {
-	res := &schelpers.TestResult{Test: t}
+	res := &schelpers.TestResult{Test: t, CRName: t.CR.GetName(), State: scapiv1alpha2.PassState}
 	err := t.Client.Get(ctx, types.NamespacedName{Namespace: t.CR.GetNamespace(), Name: t.CR.GetName()}, t.CR)
 	if err != nil {
 		res.Errors = append(res.Errors, err)
-		res.State = scapiv1alpha1.ErrorState
+		res.State = scapiv1alpha2.ErrorState
 		return res
 	}
-	if t.CR.Object["spec"] == nil {
+
+	return checkOwnedCSVDescriptors(t.CR, t.CSV, specDescriptor, res)
+}
+
+func checkOwnedCSVDescriptors(cr *unstructured.Unstructured, csv *olmapiv1alpha1.ClusterServiceVersion,
+	descriptor string, res *schelpers.TestResult) *schelpers.TestResult {
+	if cr.Object[descriptor] == nil {
+		res.State = scapiv1alpha2.FailState
 		return res
 	}
-	specBlock := t.CR.Object["spec"].(map[string]interface{})
-	res.MaximumPoints = len(specBlock)
+	block := cr.Object[descriptor].(map[string]interface{})
+
 	var crd *olmapiv1alpha1.CRDDescription
-	for _, owned := range t.CSV.Spec.CustomResourceDefinitions.Owned {
-		if owned.Kind == t.CR.GetKind() {
+	for _, owned := range csv.Spec.CustomResourceDefinitions.Owned {
+		if owned.Kind == cr.GetKind() {
 			crd = &owned
 			break
 		}
 	}
+
 	if crd == nil {
+		res.State = scapiv1alpha2.FailState
 		return res
 	}
-	for key := range specBlock {
-		for _, statDesc := range crd.SpecDescriptors {
-			if statDesc.Path == key {
-				res.EarnedPoints++
-				delete(specBlock, key)
-				break
+
+	if descriptor == statusDescriptor {
+		for key := range block {
+			for _, statDesc := range crd.StatusDescriptors {
+				if statDesc.Path == key {
+					delete(block, key)
+					break
+				}
 			}
 		}
 	}
-	for key := range specBlock {
-		res.Suggestions = append(res.Suggestions, "Add a spec descriptor for "+key)
+	if descriptor == specDescriptor {
+		for key := range block {
+			for _, specDesc := range crd.SpecDescriptors {
+				if specDesc.Path == key {
+					delete(block, key)
+					break
+				}
+			}
+		}
+	}
+
+	for key := range block {
+		res.Suggestions = append(res.Suggestions, fmt.Sprintf("Add a %s descriptor for %s", descriptor, key))
+		res.State = scapiv1alpha2.FailState
 	}
 	return res
 }

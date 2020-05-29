@@ -20,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -29,14 +28,16 @@ import (
 const (
 	DefaultVersion = "latest"
 	DefaultTimeout = time.Minute * 2
+	// DefaultOLMNamespace is the namespace where OLM is installed
+	DefaultOLMNamespace = "olm"
 )
 
 type Manager struct {
-	Client  *Client
-	Version string
-	Timeout time.Duration
-
-	once sync.Once
+	Client       *Client
+	Version      string
+	Timeout      time.Duration
+	OLMNamespace string
+	once         sync.Once
 }
 
 func (m *Manager) initialize() (err error) {
@@ -44,13 +45,13 @@ func (m *Manager) initialize() (err error) {
 		if m.Client == nil {
 			cfg, cerr := config.GetConfig()
 			if cerr != nil {
-				err = errors.Wrapf(cerr, "failed to get Kubernetes config")
+				err = fmt.Errorf("failed to get Kubernetes config: %v", err)
 				return
 			}
 
 			client, cerr := ClientForConfig(cfg)
 			if cerr != nil {
-				err = errors.Wrapf(cerr, "failed to create manager client")
+				err = fmt.Errorf("failed to create manager client: %v", err)
 				return
 			}
 			m.Client = client
@@ -60,6 +61,9 @@ func (m *Manager) initialize() (err error) {
 		}
 		if m.Timeout <= 0 {
 			m.Timeout = DefaultTimeout
+		}
+		if m.OLMNamespace == "" {
+			m.OLMNamespace = DefaultOLMNamespace
 		}
 	})
 	return err
@@ -73,7 +77,7 @@ func (m *Manager) Install() error {
 	ctx, cancel := context.WithTimeout(context.Background(), m.Timeout)
 	defer cancel()
 
-	status, err := m.Client.InstallVersion(ctx, m.Version)
+	status, err := m.Client.InstallVersion(ctx, m.OLMNamespace, m.Version)
 	if err != nil {
 		return err
 	}
@@ -92,12 +96,12 @@ func (m *Manager) Uninstall() error {
 	ctx, cancel := context.WithTimeout(context.Background(), m.Timeout)
 	defer cancel()
 
-	version, err := m.Client.GetInstalledVersion(ctx)
+	version, err := m.Client.GetInstalledVersion(ctx, m.OLMNamespace)
 	if err != nil {
 		return err
 	}
 
-	if err := m.Client.UninstallVersion(ctx, version); err != nil {
+	if err := m.Client.UninstallVersion(ctx, m.OLMNamespace, version); err != nil {
 		return err
 	}
 
@@ -113,12 +117,12 @@ func (m *Manager) Status() error {
 	ctx, cancel := context.WithTimeout(context.Background(), m.Timeout)
 	defer cancel()
 
-	version, err := m.Client.GetInstalledVersion(ctx)
+	version, err := m.Client.GetInstalledVersion(ctx, m.OLMNamespace)
 	if err != nil {
 		return err
 	}
 
-	status, err := m.Client.GetStatus(ctx, version)
+	status, err := m.Client.GetStatus(ctx, m.OLMNamespace, version)
 	if err != nil {
 		return err
 	}

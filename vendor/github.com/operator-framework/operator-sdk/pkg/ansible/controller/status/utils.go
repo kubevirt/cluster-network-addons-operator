@@ -15,7 +15,7 @@
 package status
 
 import (
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -38,7 +38,8 @@ const (
 )
 
 // NewCondition -  condition
-func NewCondition(condType ConditionType, status v1.ConditionStatus, ansibleResult *AnsibleResult, reason, message string) *Condition {
+func NewCondition(condType ConditionType, status v1.ConditionStatus, ansibleResult *AnsibleResult, reason,
+	message string) *Condition {
 	return &Condition{
 		Type:               condType,
 		Status:             status,

@@ -20,6 +20,7 @@ import (
 	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/internal/genutil"
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +33,7 @@ specs in pkg/apis/<group>/<version> directories to comply with kube-API
 requirements. Go code is generated under
 pkg/apis/<group>/<version>/zz_generated.deepcopy.go.
 Example:
+
 	$ operator-sdk generate k8s
 	$ tree pkg/apis
 	pkg/apis/
@@ -53,5 +55,8 @@ func k8sFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return genutil.K8sCodegen()
+	if err := genutil.K8sCodegen(); err != nil {
+		log.Fatal(err)
+	}
+	return nil
 }

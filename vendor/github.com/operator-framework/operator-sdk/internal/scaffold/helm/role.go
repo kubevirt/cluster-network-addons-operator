@@ -22,26 +22,22 @@ import (
 
 	"github.com/operator-framework/operator-sdk/internal/scaffold"
 
-	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/releaseutil"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/discovery"
-	"k8s.io/helm/pkg/chartutil"
-	"k8s.io/helm/pkg/manifest"
-	"k8s.io/helm/pkg/proto/hapi/chart"
-	"k8s.io/helm/pkg/renderutil"
-	"k8s.io/helm/pkg/tiller"
+	"sigs.k8s.io/yaml"
 )
 
 // roleDiscoveryInterface is an interface that contains just the discovery
 // methods needed by the Helm role scaffold generator. Requiring just this
 // interface simplifies testing.
 type roleDiscoveryInterface interface {
-	discovery.ServerVersionInterface
-	ServerResources() ([]*metav1.APIResourceList, error)
+	ServerGroupsAndResources() ([]*metav1.APIGroup, []*metav1.APIResourceList, error)
 }
 
 var DefaultRoleScaffold = scaffold.Role{
@@ -60,6 +56,13 @@ var DefaultRoleScaffold = scaffold.Role{
 			APIGroups: []string{""},
 			Resources: []string{"configmaps", "secrets"},
 			Verbs:     []string{rbacv1.VerbAll},
+		},
+
+		// We need this rule for creating Kubernetes events
+		{
+			APIGroups: []string{""},
+			Resources: []string{"events"},
+			Verbs:     []string{"create"},
 		},
 	},
 }
@@ -85,7 +88,8 @@ func GenerateRoleScaffold(dc roleDiscoveryInterface, chart *chart.Chart) scaffol
 		log.Info("Scaffolding ClusterRole and ClusterRolebinding for cluster scoped resources in the helm chart")
 		roleScaffold.IsClusterScoped = true
 	}
-	roleScaffold.CustomRules = append(roleScaffold.CustomRules, append(clusterResourceRules, namespacedResourceRules...)...)
+	roleScaffold.CustomRules = append(roleScaffold.CustomRules, append(clusterResourceRules,
+		namespacedResourceRules...)...)
 
 	log.Warn("The RBAC rules generated in deploy/role.yaml are based on the chart's default manifest." +
 		" Some rules may be missing for resources that are only enabled with custom values, and" +
@@ -95,15 +99,16 @@ func GenerateRoleScaffold(dc roleDiscoveryInterface, chart *chart.Chart) scaffol
 	return roleScaffold
 }
 
-func generateRoleRules(dc roleDiscoveryInterface, chart *chart.Chart) ([]rbacv1.PolicyRule, []rbacv1.PolicyRule, error) {
-	kubeVersion, serverResources, err := getServerVersionAndResources(dc)
+func generateRoleRules(dc roleDiscoveryInterface, chart *chart.Chart) ([]rbacv1.PolicyRule,
+	[]rbacv1.PolicyRule, error) {
+	_, serverResources, err := dc.ServerGroupsAndResources()
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get server info: %s", err)
+		return nil, nil, fmt.Errorf("failed to get server resources: %v", err)
 	}
 
-	manifests, err := getDefaultManifests(chart, kubeVersion)
+	manifests, err := getDefaultManifests(chart)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get default manifest: %s", err)
+		return nil, nil, fmt.Errorf("failed to get default manifest: %v", err)
 	}
 
 	// Use maps of sets of resources, keyed by their group. This helps us
@@ -162,7 +167,8 @@ func generateRoleRules(dc roleDiscoveryInterface, chart *chart.Chart) ([]rbacv1.
 				namespacedGroups[group][resourceName] = struct{}{}
 			}
 		} else {
-			log.Warnf("Skipping rule generation for %s. Failed to determine resource scope for %s.", name, resource.GroupVersionKind())
+			log.Warnf("Skipping rule generation for %s. Failed to determine resource scope for %s.",
+				name, resource.GroupVersionKind())
 			continue
 		}
 	}
@@ -174,33 +180,19 @@ func generateRoleRules(dc roleDiscoveryInterface, chart *chart.Chart) ([]rbacv1.
 	return clusterRules, namespacedRules, nil
 }
 
-func getServerVersionAndResources(dc roleDiscoveryInterface) (*version.Info, []*metav1.APIResourceList, error) {
-	kubeVersion, err := dc.ServerVersion()
+func getDefaultManifests(c *chart.Chart) ([]releaseutil.Manifest, error) {
+	install := action.NewInstall(&action.Configuration{})
+	install.DryRun = true
+	install.ReleaseName = "RELEASE-NAME"
+	install.Replace = true
+	install.ClientOnly = true
+	rel, err := install.Run(c, nil)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get kubernetes server version: %s", err)
+		return nil, fmt.Errorf("failed to render chart templates: %v", err)
 	}
-	serverResources, err := dc.ServerResources()
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get kubernetes server resources: %s", err)
-	}
-	return kubeVersion, serverResources, nil
-}
-
-func getDefaultManifests(c *chart.Chart, kubeVersion *version.Info) ([]tiller.Manifest, error) {
-	v := strings.TrimSuffix(fmt.Sprintf("%s.%s", kubeVersion.Major, kubeVersion.Minor), "+")
-	renderOpts := renderutil.Options{
-		ReleaseOptions: chartutil.ReleaseOptions{
-			IsInstall: true,
-			IsUpgrade: false,
-		},
-		KubeVersion: v,
-	}
-
-	renderedTemplates, err := renderutil.Render(c, &chart.Config{}, renderOpts)
-	if err != nil {
-		return nil, fmt.Errorf("failed to render chart templates: %s", err)
-	}
-	return tiller.SortByKind(manifest.SplitManifests(renderedTemplates)), nil
+	_, manifests, err := releaseutil.SortManifests(releaseutil.SplitManifests(rel.Manifest),
+		chartutil.DefaultVersionSet, releaseutil.InstallOrder)
+	return manifests, err
 }
 
 func getResource(namespacedResourceList []*metav1.APIResourceList, groupVersion, kind string) (string, bool, bool) {

@@ -18,116 +18,29 @@ import (
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that `run` and `up local` can make use of them.
+	// to ensure that `exec-entrypoint` and `run` can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/add"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/alpha"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/build"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/completion"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/generate"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/migrate"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/new"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/olmcatalog"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/printdeps"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/run"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/scorecard"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/test"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/up"
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/version"
-	"github.com/operator-framework/operator-sdk/internal/flags"
-	"github.com/operator-framework/operator-sdk/internal/util/projutil"
+	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/cli"
+	kbutil "github.com/operator-framework/operator-sdk/internal/util/kubebuilder"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func main() {
-	root := &cobra.Command{
-		Use:   "operator-sdk",
-		Short: "An SDK for building operators with ease",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if viper.GetBool(flags.VerboseOpt) {
-				if err := projutil.SetGoVerbose(); err != nil {
-					log.Fatalf("Could not set GOFLAGS: (%v)", err)
-				}
-				log.SetLevel(log.DebugLevel)
-				log.Debug("Debug logging is set")
-			}
-			if err := checkGoModulesForCmd(cmd); err != nil {
-				log.Fatal(err)
-			}
-		},
+	// Use the new KB CLI only when running inside an existing Kubebuilder project with a PROJECT file.
+	// The default legacy CLI provides the init cmd to initialize
+	// a Kubebuilder project as a way to opt into the new KB CLI.
+	// TODO: Make the new KB CLI the default, once the integration is complete
+	// and deprecate "operator-sdk new" from the old CLI.
+	if kbutil.HasProjectFile() {
+		if err := cli.Run(); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 
-	root.AddCommand(add.NewCmd())
-	root.AddCommand(alpha.NewCmd())
-	root.AddCommand(build.NewCmd())
-	root.AddCommand(completion.NewCmd())
-	root.AddCommand(generate.NewCmd())
-	root.AddCommand(migrate.NewCmd())
-	root.AddCommand(new.NewCmd())
-	root.AddCommand(olmcatalog.NewCmd())
-	root.AddCommand(printdeps.NewCmd())
-	root.AddCommand(run.NewCmd())
-	root.AddCommand(scorecard.NewCmd())
-	root.AddCommand(test.NewCmd())
-	root.AddCommand(up.NewCmd())
-	root.AddCommand(version.NewCmd())
-
-	root.PersistentFlags().Bool(flags.VerboseOpt, false, "Enable verbose logging")
-	if err := viper.BindPFlags(root.PersistentFlags()); err != nil {
-		log.Fatalf("Failed to bind root flags: %v", err)
-	}
-
-	if err := root.Execute(); err != nil {
+	if err := cli.RunLegacy(); err != nil {
 		os.Exit(1)
 	}
-}
-
-func checkGoModulesForCmd(cmd *cobra.Command) (err error) {
-	// Certain commands are able to be run anywhere or handle this check
-	// differently in their CLI code.
-	if skipCheckForCmd(cmd) {
-		return nil
-	}
-	// Do not perform this check if the project is non-Go, as they will not
-	// be using go modules.
-	if !projutil.IsOperatorGo() {
-		return nil
-	}
-	// Do not perform a go modules check if the working directory is not in
-	// the project root, as some sub-commands might not require project root.
-	// Individual subcommands will perform this check as needed.
-	if err := projutil.CheckProjectRoot(); err != nil {
-		return nil
-	}
-
-	return projutil.CheckGoModules()
-}
-
-var commandsToSkip = map[string]struct{}{
-	"new":          struct{}{}, // Handles this logic in cmd/operator-sdk/new
-	"migrate":      struct{}{}, // Handles this logic in cmd/operator-sdk/migrate
-	"operator-sdk": struct{}{}, // Alias for "help"
-	"help":         struct{}{},
-	"completion":   struct{}{},
-	"version":      struct{}{},
-	"print-deps":   struct{}{}, // Does not require this logic
-}
-
-func skipCheckForCmd(cmd *cobra.Command) (skip bool) {
-	if _, ok := commandsToSkip[cmd.Name()]; ok {
-		return true
-	}
-	cmd.VisitParents(func(pc *cobra.Command) {
-		if _, ok := commandsToSkip[pc.Name()]; ok {
-			// The bare "operator-sdk" command will be checked above.
-			if pc.Name() != "operator-sdk" {
-				skip = true
-			}
-		}
-	})
-	return skip
 }

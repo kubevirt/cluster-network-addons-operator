@@ -22,20 +22,29 @@ import (
 	"path/filepath"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"k8s.io/client-go/discovery"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/yaml"
+
+	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/internal/genutil"
+	"github.com/operator-framework/operator-sdk/internal/flags/apiflags"
 	"github.com/operator-framework/operator-sdk/internal/scaffold"
 	"github.com/operator-framework/operator-sdk/internal/scaffold/ansible"
 	"github.com/operator-framework/operator-sdk/internal/scaffold/helm"
 	"github.com/operator-framework/operator-sdk/internal/scaffold/input"
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
-
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"k8s.io/client-go/discovery"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"github.com/operator-framework/operator-sdk/pkg/helm/watches"
 )
 
-func NewCmd() *cobra.Command {
+func NewCmd() *cobra.Command { //nolint:golint
+	/*
+		The nolint here is used to hide the warning
+		"func name will be used as new.NewCmd by other packages,
+		and that stutters; consider calling this Cmd"
+		which is a false positive.
+	*/
 	newCmd := &cobra.Command{
 		Use:   "new <project-name>",
 		Short: "Creates a new operator application",
@@ -43,36 +52,76 @@ func NewCmd() *cobra.Command {
 generates a default directory layout based on the input <project-name>.
 
 <project-name> is the project name of the new operator. (e.g app-operator)
+`,
+		Example: `  # Create a new project directory
+  $ mkdir $HOME/projects/example.com/
+  $ cd $HOME/projects/example.com/
 
-For example:
-	$ mkdir $HOME/projects/example.com/
-	$ cd $HOME/projects/example.com/
-	$ operator-sdk new app-operator
-generates a skeletal app-operator application in $HOME/projects/example.com/app-operator.
+  # Go project
+  $ operator-sdk new app-operator
+
+  # Ansible project
+  $ operator-sdk new app-operator --type=ansible \
+    --api-version=app.example.com/v1alpha1 \
+    --kind=AppService
+
+  # Helm project
+  $ operator-sdk new app-operator --type=helm \
+  --api-version=app.example.com/v1alpha1 \
+  --kind=AppService
+
+  $ operator-sdk new app-operator --type=helm \
+  --api-version=app.example.com/v1alpha1 \
+  --kind=AppService \
+  --helm-chart=myrepo/app
+
+  $ operator-sdk new app-operator --type=helm \
+  --helm-chart=myrepo/app
+
+  $ operator-sdk new app-operator --type=helm \
+  --helm-chart=myrepo/app \
+  --helm-chart-version=1.2.3
+
+  $ operator-sdk new app-operator --type=helm \
+  --helm-chart=app \
+  --helm-chart-repo=https://charts.mycompany.com/
+
+  $ operator-sdk new app-operator --type=helm \
+  --helm-chart=app \
+  --helm-chart-repo=https://charts.mycompany.com/ \
+  --helm-chart-version=1.2.3
+
+  $ operator-sdk new app-operator --type=helm \
+  --helm-chart=/path/to/local/chart-directories/app/
+
+  $ operator-sdk new app-operator --type=helm \
+  --helm-chart=/path/to/local/chart-archives/app-1.2.3.tgz
 `,
 		RunE: newFunc,
 	}
-
-	newCmd.Flags().StringVar(&apiVersion, "api-version", "", "Kubernetes apiVersion and has a format of $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1) - used with \"ansible\" or \"helm\" types")
-	newCmd.Flags().StringVar(&kind, "kind", "", "Kubernetes CustomResourceDefintion kind. (e.g AppService) - used with \"ansible\" or \"helm\" types")
-	newCmd.Flags().StringVar(&operatorType, "type", "go", "Type of operator to initialize (choices: \"go\", \"ansible\" or \"helm\")")
-	newCmd.Flags().StringVar(&repo, "repo", "", "Project repository path for Go operators. Used as the project's Go import path. This must be set if outside of $GOPATH/src (e.g. github.com/example-inc/my-operator)")
-	newCmd.Flags().BoolVar(&gitInit, "git-init", false, "Initialize the project directory as a git repository (default false)")
-	newCmd.Flags().StringVar(&headerFile, "header-file", "", "Path to file containing headers for generated Go files. Copied to hack/boilerplate.go.txt")
+	newCmd.Flags().StringVar(&operatorType, "type", "go",
+		"Type of operator to initialize (choices: \"go\", \"ansible\" or \"helm\")")
+	newCmd.Flags().StringVar(&repo, "repo", "",
+		"Project repository path for Go operators. Used as the project's Go import path. This must be set if "+
+			"outside of $GOPATH/src (e.g. github.com/example-inc/my-operator)")
+	newCmd.Flags().BoolVar(&gitInit, "git-init", false,
+		"Initialize the project directory as a git repository (default false)")
+	newCmd.Flags().StringVar(&headerFile, "header-file", "",
+		"Path to file containing headers for generated Go files. Copied to hack/boilerplate.go.txt")
 	newCmd.Flags().BoolVar(&makeVendor, "vendor", false, "Use a vendor directory for dependencies")
-	newCmd.Flags().BoolVar(&skipValidation, "skip-validation", false, "Do not validate the resulting project's structure and dependencies. (Only used for --type go)")
-	newCmd.Flags().BoolVar(&generatePlaybook, "generate-playbook", false, "Generate a playbook skeleton. (Only used for --type ansible)")
+	newCmd.Flags().BoolVar(&skipValidation, "skip-validation", false,
+		"Do not validate the resulting project's structure and dependencies. (Only used for --type go)")
+	newCmd.Flags().BoolVar(&generatePlaybook, "generate-playbook", false,
+		"Generate a playbook skeleton. (Only used for --type ansible)")
 
-	newCmd.Flags().StringVar(&helmChartRef, "helm-chart", "", "Initialize helm operator with existing helm chart (<URL>, <repo>/<name>, or local path)")
-	newCmd.Flags().StringVar(&helmChartVersion, "helm-chart-version", "", "Specific version of the helm chart (default is latest version)")
-	newCmd.Flags().StringVar(&helmChartRepo, "helm-chart-repo", "", "Chart repository URL for the requested helm chart")
+	// Initialize flagSet struct with common flags
+	apiFlags.AddTo(newCmd.Flags())
 
 	return newCmd
 }
 
 var (
-	apiVersion       string
-	kind             string
+	apiFlags         apiflags.APIFlags
 	operatorType     string
 	projectName      string
 	headerFile       string
@@ -81,10 +130,6 @@ var (
 	makeVendor       bool
 	skipValidation   bool
 	generatePlaybook bool
-
-	helmChartRef     string
-	helmChartVersion string
-	helmChartRepo    string
 )
 
 func newFunc(cmd *cobra.Command, args []string) error {
@@ -104,30 +149,30 @@ func newFunc(cmd *cobra.Command, args []string) error {
 			repo = path.Join(projutil.GetGoPkg(), projectName)
 		}
 		if err := doGoScaffold(); err != nil {
-			return err
+			log.Fatal(err)
 		}
 		if err := getDeps(); err != nil {
-			return err
+			log.Fatal(err)
 		}
 		if !skipValidation {
 			if err := validateProject(); err != nil {
-				return err
+				log.Fatal(err)
 			}
 		}
 
 	case projutil.OperatorTypeAnsible:
 		if err := doAnsibleScaffold(); err != nil {
-			return err
+			log.Fatal(err)
 		}
 	case projutil.OperatorTypeHelm:
 		if err := doHelmScaffold(); err != nil {
-			return err
+			log.Fatal(err)
 		}
 	}
 
 	if gitInit {
 		if err := initGit(); err != nil {
-			return err
+			log.Fatal(err)
 		}
 	}
 
@@ -158,7 +203,8 @@ func mustBeNewProject() {
 		log.Fatalf("Failed to determine if project (%v) exists", projectName)
 	}
 	if stat.IsDir() {
-		log.Fatalf("Project (%v) in (%v) path already exists. Please use a different project name or delete the existing one", projectName, fp)
+		log.Fatalf("Project (%v) in (%v) path already exists. Please use a different project name or delete "+
+			"the existing one", projectName, fp)
 	}
 }
 
@@ -173,7 +219,7 @@ func doGoScaffold() error {
 	if headerFile != "" {
 		err := s.Execute(cfg, &scaffold.Boilerplate{BoilerplateSrcPath: headerFile})
 		if err != nil {
-			return fmt.Errorf("boilerplate scaffold failed: (%v)", err)
+			return fmt.Errorf("boilerplate scaffold failed: %v", err)
 		}
 		s.BoilerplatePath = headerFile
 	}
@@ -199,7 +245,7 @@ func doGoScaffold() error {
 		&scaffold.Gitignore{},
 	)
 	if err != nil {
-		return fmt.Errorf("new Go scaffold failed: (%v)", err)
+		return fmt.Errorf("new Go scaffold failed: %v", err)
 	}
 	return nil
 }
@@ -210,9 +256,9 @@ func doAnsibleScaffold() error {
 		ProjectName:    projectName,
 	}
 
-	resource, err := scaffold.NewResource(apiVersion, kind)
+	resource, err := scaffold.NewResource(apiFlags.APIVersion, apiFlags.Kind)
 	if err != nil {
-		return fmt.Errorf("invalid apiVersion and kind: (%v)", err)
+		return fmt.Errorf("invalid apiVersion and kind: %v", err)
 	}
 
 	roleFiles := ansible.RolesFiles{Resource: *resource}
@@ -223,7 +269,6 @@ func doAnsibleScaffold() error {
 		&scaffold.ServiceAccount{},
 		&scaffold.Role{},
 		&scaffold.RoleBinding{},
-		&scaffold.CRD{Resource: resource},
 		&scaffold.CR{Resource: resource},
 		&ansible.BuildDockerfile{GeneratePlaybook: generatePlaybook},
 		&ansible.RolesReadme{Resource: *resource},
@@ -231,20 +276,16 @@ func doAnsibleScaffold() error {
 		&roleFiles,
 		&roleTemplates,
 		&ansible.RolesVarsMain{Resource: *resource},
-		&ansible.MoleculeTestLocalPlaybook{Resource: *resource},
+		&ansible.MoleculeTestLocalConverge{Resource: *resource},
 		&ansible.RolesDefaultsMain{Resource: *resource},
 		&ansible.RolesTasksMain{Resource: *resource},
 		&ansible.MoleculeDefaultMolecule{},
-		&ansible.BuildTestFrameworkDockerfile{},
-		&ansible.MoleculeTestClusterMolecule{},
 		&ansible.MoleculeDefaultPrepare{},
-		&ansible.MoleculeDefaultPlaybook{
+		&ansible.MoleculeDefaultConverge{
 			GeneratePlaybook: generatePlaybook,
 			Resource:         *resource,
 		},
-		&ansible.BuildTestFrameworkAnsibleTestScript{},
-		&ansible.MoleculeDefaultAsserts{},
-		&ansible.MoleculeTestClusterPlaybook{Resource: *resource},
+		&ansible.MoleculeDefaultVerify{},
 		&ansible.RolesHandlersMain{Resource: *resource},
 		&ansible.Watches{
 			GeneratePlaybook: generatePlaybook,
@@ -252,21 +293,34 @@ func doAnsibleScaffold() error {
 		},
 		&ansible.DeployOperator{},
 		&ansible.Travis{},
+		&ansible.RequirementsYml{},
 		&ansible.MoleculeTestLocalMolecule{},
-		&ansible.MoleculeTestLocalPrepare{Resource: *resource},
+		&ansible.MoleculeTestLocalPrepare{},
+		&ansible.MoleculeTestLocalVerify{},
+		&ansible.MoleculeClusterMolecule{Resource: *resource},
+		&ansible.MoleculeClusterCreate{},
+		&ansible.MoleculeClusterPrepare{Resource: *resource},
+		&ansible.MoleculeClusterConverge{},
+		&ansible.MoleculeClusterVerify{Resource: *resource},
+		&ansible.MoleculeClusterDestroy{Resource: *resource},
+		&ansible.MoleculeTemplatesOperator{},
 	)
 	if err != nil {
-		return fmt.Errorf("new ansible scaffold failed: (%v)", err)
+		return fmt.Errorf("new ansible scaffold failed: %v", err)
+	}
+
+	if err = genutil.GenerateCRDNonGo(projectName, *resource, apiFlags.CrdVersion); err != nil {
+		return err
 	}
 
 	// Remove placeholders from empty directories
 	err = os.Remove(filepath.Join(s.AbsProjectPath, roleFiles.Path))
 	if err != nil {
-		return fmt.Errorf("new ansible scaffold failed: (%v)", err)
+		return fmt.Errorf("new ansible scaffold failed: %v", err)
 	}
 	err = os.Remove(filepath.Join(s.AbsProjectPath, roleTemplates.Path))
 	if err != nil {
-		return fmt.Errorf("new ansible scaffold failed: (%v)", err)
+		return fmt.Errorf("new ansible scaffold failed: %v", err)
 	}
 
 	// Decide on playbook.
@@ -277,13 +331,14 @@ func doAnsibleScaffold() error {
 			&ansible.Playbook{Resource: *resource},
 		)
 		if err != nil {
-			return fmt.Errorf("new ansible playbook scaffold failed: (%v)", err)
+			return fmt.Errorf("new ansible playbook scaffold failed: %v", err)
 		}
 	}
 
 	// update deploy/role.yaml for the given resource r.
 	if err := scaffold.UpdateRoleForResource(resource, cfg.AbsProjectPath); err != nil {
-		return fmt.Errorf("failed to update the RBAC manifest for the resource (%v, %v): (%v)", resource.APIVersion, resource.Kind, err)
+		return fmt.Errorf("failed to update the RBAC manifest for the resource (%v, %v): %v",
+			resource.APIVersion, resource.Kind, err)
 	}
 	return nil
 }
@@ -295,20 +350,25 @@ func doHelmScaffold() error {
 	}
 
 	createOpts := helm.CreateChartOptions{
-		ResourceAPIVersion: apiVersion,
-		ResourceKind:       kind,
-		Chart:              helmChartRef,
-		Version:            helmChartVersion,
-		Repo:               helmChartRepo,
+		ResourceAPIVersion: apiFlags.APIVersion,
+		ResourceKind:       apiFlags.Kind,
+		Chart:              apiFlags.HelmChartRef,
+		Version:            apiFlags.HelmChartVersion,
+		Repo:               apiFlags.HelmChartRepo,
 	}
 
 	resource, chart, err := helm.CreateChart(cfg.AbsProjectPath, createOpts)
 	if err != nil {
-		return fmt.Errorf("failed to create helm chart: %s", err)
+		return fmt.Errorf("failed to create helm chart: %v", err)
 	}
 
-	valuesPath := filepath.Join("<project_dir>", helm.HelmChartsDir, chart.GetMetadata().GetName(), "values.yaml")
-	crSpec := fmt.Sprintf("# Default values copied from %s\n\n%s", valuesPath, chart.GetValues().GetRaw())
+	valuesPath := filepath.Join("<project_dir>", helm.HelmChartsDir, chart.Name(), "values.yaml")
+
+	rawValues, err := yaml.Marshal(chart.Values)
+	if err != nil {
+		return fmt.Errorf("failed to get raw chart values: %v", err)
+	}
+	crSpec := fmt.Sprintf("# Default values copied from %s\n\n%s", valuesPath, rawValues)
 
 	roleScaffold := helm.DefaultRoleScaffold
 	if k8sCfg, err := config.GetConfig(); err != nil {
@@ -319,53 +379,50 @@ func doHelmScaffold() error {
 		roleScaffold = helm.GenerateRoleScaffold(dc, chart)
 	}
 
+	// update watch.yaml for the given resource.
+	watchesFile := filepath.Join(cfg.AbsProjectPath, watches.WatchesFile)
+	if err := watches.UpdateForResource(watchesFile, resource, chart.Name()); err != nil {
+		return fmt.Errorf("failed to create watches.yaml: %w", err)
+	}
+
 	s := &scaffold.Scaffold{}
 	err = s.Execute(cfg,
 		&helm.Dockerfile{},
-		&helm.WatchesYAML{
-			Resource:  resource,
-			ChartName: chart.GetMetadata().GetName(),
-		},
 		&scaffold.ServiceAccount{},
 		&roleScaffold,
 		&scaffold.RoleBinding{IsClusterScoped: roleScaffold.IsClusterScoped},
 		&helm.Operator{},
-		&scaffold.CRD{Resource: resource},
 		&scaffold.CR{
 			Resource: resource,
 			Spec:     crSpec,
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("new helm scaffold failed: (%v)", err)
+		return fmt.Errorf("new helm scaffold failed: %v", err)
+	}
+
+	if err = genutil.GenerateCRDNonGo(projectName, *resource, apiFlags.CrdVersion); err != nil {
+		return err
 	}
 
 	if err := scaffold.UpdateRoleForResource(resource, cfg.AbsProjectPath); err != nil {
-		return fmt.Errorf("failed to update the RBAC manifest for resource (%v, %v): (%v)", resource.APIVersion, resource.Kind, err)
+		return fmt.Errorf("failed to update the RBAC manifest for resource (%v, %v): %v",
+			resource.APIVersion, resource.Kind, err)
 	}
 	return nil
 }
 
 func verifyFlags() error {
-	if operatorType != projutil.OperatorTypeGo && operatorType != projutil.OperatorTypeAnsible && operatorType != projutil.OperatorTypeHelm {
-		return errors.Wrap(projutil.ErrUnknownOperatorType{Type: operatorType}, "value of --type can only be `go`, `ansible`, or `helm`")
+	if operatorType != projutil.OperatorTypeGo && operatorType != projutil.OperatorTypeAnsible && operatorType !=
+		projutil.OperatorTypeHelm {
+		return fmt.Errorf("value of --type can only be `go`, `ansible`, or `helm`: %v",
+			projutil.ErrUnknownOperatorType{Type: operatorType})
 	}
 	if operatorType != projutil.OperatorTypeAnsible && generatePlaybook {
 		return fmt.Errorf("value of --generate-playbook can only be used with --type `ansible`")
 	}
-
-	if len(helmChartRef) != 0 {
-		if operatorType != projutil.OperatorTypeHelm {
-			return fmt.Errorf("value of --helm-chart can only be used with --type=helm")
-		}
-	} else if len(helmChartRepo) != 0 {
-		return fmt.Errorf("value of --helm-chart-repo can only be used with --type=helm and --helm-chart")
-	} else if len(helmChartVersion) != 0 {
-		return fmt.Errorf("value of --helm-chart-version can only be used with --type=helm and --helm-chart")
-	}
-
 	if operatorType == projutil.OperatorTypeGo {
-		if len(apiVersion) != 0 || len(kind) != 0 {
+		if len(apiFlags.APIVersion) != 0 || len(apiFlags.Kind) != 0 {
 			return fmt.Errorf("operators of type Go do not use --api-version or --kind")
 		}
 
@@ -373,25 +430,8 @@ func verifyFlags() error {
 			return err
 		}
 	}
-
-	// --api-version and --kind are required with --type=ansible and --type=helm, with one exception.
-	//
-	// If --type=helm and --helm-chart is set, --api-version and --kind are optional. If left unset,
-	// sane defaults are used when the specified helm chart is created.
-	if operatorType == projutil.OperatorTypeAnsible || operatorType == projutil.OperatorTypeHelm && len(helmChartRef) == 0 {
-		if len(apiVersion) == 0 {
-			return fmt.Errorf("value of --api-version must not have empty value")
-		}
-		if len(kind) == 0 {
-			return fmt.Errorf("value of --kind must not have empty value")
-		}
-		kindFirstLetter := string(kind[0])
-		if kindFirstLetter != strings.ToUpper(kindFirstLetter) {
-			return fmt.Errorf("value of --kind must start with an uppercase letter")
-		}
-		if strings.Count(apiVersion, "/") != 1 {
-			return fmt.Errorf("value of --api-version has wrong format (%v); format must be $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1)", apiVersion)
-		}
+	if err := apiFlags.VerifyCommonFlags(operatorType); err != nil {
+		return err
 	}
 
 	return nil
@@ -426,7 +466,7 @@ func getDeps() error {
 func initGit() error {
 	log.Info("Running git init")
 	if err := execProjCmd("git", "init"); err != nil {
-		return errors.Wrapf(err, "failed to run git init")
+		return fmt.Errorf("failed to run git init: %v", err)
 	}
 	log.Info("Run git init done")
 	return nil
