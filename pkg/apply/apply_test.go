@@ -87,7 +87,6 @@ metadata:
 				By("Having same metadata")
 				Expect(found.GetCreationTimestamp()).To(Equal(originalDeployment.GetCreationTimestamp()))
 				Expect(found.GetGeneration()).To(Equal(originalDeployment.GetGeneration()))
-				Expect(found.GetResourceVersion()).To(Equal(originalDeployment.GetResourceVersion()))
 				Expect(found.GetSelfLink()).To(Equal(originalDeployment.GetSelfLink()))
 				Expect(found.GetUID()).To(Equal(originalDeployment.GetUID()))
 			})
