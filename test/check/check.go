@@ -403,7 +403,7 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 }
 
 func checkForSecretRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name,Namespace: components.Namespace}, &corev1.Secret{})
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
 	return isNotFound("Secret", name, err)
 }
 
