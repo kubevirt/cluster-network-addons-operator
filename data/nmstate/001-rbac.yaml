@@ -52,7 +52,6 @@ rules:
   - events
   - configmaps
   - pods
-  - events
   verbs:
   - get
   - list
@@ -62,11 +61,22 @@ rules:
   resources:
   - secrets
   verbs:
-  - list
   - get
+  - list
+  - watch
   - create
   - update
-  - watch
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - create
+  - update
 - apiGroups:
   - apps
   resources:
@@ -100,6 +110,12 @@ metadata:
   namespace: {{ .HandlerNamespace }}
 rules:
 - apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  verbs:
+  - '*'
+- apiGroups:
   - nmstate.io
   resources:
   - '*'
@@ -111,7 +127,6 @@ rules:
   - pods
   - nodes
   - namespaces
-  - events
   verbs:
   - '*'
 - apiGroups:
