@@ -401,7 +401,7 @@ github.com/opencontainers/image-spec/specs-go/v1
 # github.com/opencontainers/runc v1.0.0-rc2.0.20190611121236-6cc515888830
 github.com/opencontainers/runc/libcontainer/system
 github.com/opencontainers/runc/libcontainer/user
-# github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
+# github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible => github.com/openshift/api v0.0.0-20190924102528-32369d4db2ad
 github.com/openshift/api/config/v1
 github.com/openshift/api/operator/v1
 # github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
@@ -410,7 +410,7 @@ github.com/openshift/cluster-network-operator/pkg/names
 github.com/openshift/custom-resource-status/conditions/v1
 # github.com/openshift/origin v4.1.0+incompatible
 github.com/openshift/origin/pkg/security/apis/security
-# github.com/operator-framework/api v0.0.0-20191127212340-9066a6e95573
+# github.com/operator-framework/api v0.0.0-20200120235816-80fd2f1a09c9
 github.com/operator-framework/api/pkg/internal
 github.com/operator-framework/api/pkg/manifests
 github.com/operator-framework/api/pkg/validation
@@ -429,38 +429,44 @@ github.com/operator-framework/operator-lifecycle-manager/pkg/lib/operatorclient
 github.com/operator-framework/operator-lifecycle-manager/pkg/lib/operatorlister
 github.com/operator-framework/operator-lifecycle-manager/pkg/lib/ownerutil
 github.com/operator-framework/operator-lifecycle-manager/pkg/lib/version
-# github.com/operator-framework/operator-registry v1.5.3
+# github.com/operator-framework/operator-registry v1.5.7-0.20200121213444-d8e2ec52c19a
 github.com/operator-framework/operator-registry/pkg/api
 github.com/operator-framework/operator-registry/pkg/containertools
+github.com/operator-framework/operator-registry/pkg/lib/bundle
 github.com/operator-framework/operator-registry/pkg/registry
 github.com/operator-framework/operator-registry/pkg/sqlite
 github.com/operator-framework/operator-registry/pkg/sqlite/migrations
-# github.com/operator-framework/operator-sdk v0.14.1
+# github.com/operator-framework/operator-sdk v0.15.1
 github.com/operator-framework/operator-sdk/cmd/operator-sdk
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/add
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/alpha
-github.com/operator-framework/operator-sdk/cmd/operator-sdk/alpha/olm
+github.com/operator-framework/operator-sdk/cmd/operator-sdk/alpha/kubebuilder
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/build
+github.com/operator-framework/operator-sdk/cmd/operator-sdk/bundle
+github.com/operator-framework/operator-sdk/cmd/operator-sdk/cleanup
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/cli
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/completion
+github.com/operator-framework/operator-sdk/cmd/operator-sdk/execentrypoint
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/generate
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/internal/genutil
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/migrate
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/new
-github.com/operator-framework/operator-sdk/cmd/operator-sdk/olmcatalog
+github.com/operator-framework/operator-sdk/cmd/operator-sdk/olm
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/printdeps
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/run
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/scorecard
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/test
-github.com/operator-framework/operator-sdk/cmd/operator-sdk/up
 github.com/operator-framework/operator-sdk/cmd/operator-sdk/version
 github.com/operator-framework/operator-sdk/internal/annotations
 github.com/operator-framework/operator-sdk/internal/flags
 github.com/operator-framework/operator-sdk/internal/flags/watch
 github.com/operator-framework/operator-sdk/internal/generate/crd
 github.com/operator-framework/operator-sdk/internal/generate/gen
+github.com/operator-framework/operator-sdk/internal/generate/olm-catalog
 github.com/operator-framework/operator-sdk/internal/olm
 github.com/operator-framework/operator-sdk/internal/olm/client
+github.com/operator-framework/operator-sdk/internal/olm/operator
+github.com/operator-framework/operator-sdk/internal/olm/operator/internal
 github.com/operator-framework/operator-sdk/internal/scaffold
 github.com/operator-framework/operator-sdk/internal/scaffold/ansible
 github.com/operator-framework/operator-sdk/internal/scaffold/helm
@@ -474,7 +480,6 @@ github.com/operator-framework/operator-sdk/internal/scorecard/plugins
 github.com/operator-framework/operator-sdk/internal/util/diffutil
 github.com/operator-framework/operator-sdk/internal/util/fileutil
 github.com/operator-framework/operator-sdk/internal/util/k8sutil
-github.com/operator-framework/operator-sdk/internal/util/operator-registry
 github.com/operator-framework/operator-sdk/internal/util/projutil
 github.com/operator-framework/operator-sdk/internal/util/yamlutil
 github.com/operator-framework/operator-sdk/pkg/ansible

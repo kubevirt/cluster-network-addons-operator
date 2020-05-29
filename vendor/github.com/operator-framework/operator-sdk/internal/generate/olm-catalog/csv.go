@@ -1,4 +1,4 @@
-// Copyright 2018 The Operator-SDK Authors
+// Copyright 2020 The Operator-SDK Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package up
+package olmcatalog
 
 import (
-	"github.com/spf13/cobra"
+	"path/filepath"
+
+	"github.com/operator-framework/operator-sdk/internal/scaffold"
 )
 
-func NewCmd() *cobra.Command {
-	upCmd := &cobra.Command{
-		Use:   "up",
-		Short: "Launches the operator",
-		Long: `The up command has subcommands that can launch the operator in various ways.
-`,
-	}
+const (
+	OLMCatalogDir = scaffold.DeployDir + string(filepath.Separator) + "olm-catalog"
+)
 
-	upCmd.AddCommand(newLocalCmd())
-	return upCmd
+func getCSVName(name, version string) string {
+	return name + ".v" + version
 }

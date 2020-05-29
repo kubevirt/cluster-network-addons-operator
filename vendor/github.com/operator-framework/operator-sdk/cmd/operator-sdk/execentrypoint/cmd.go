@@ -1,4 +1,4 @@
-// Copyright 2018 The Operator-SDK Authors
+// Copyright 2019 The Operator-SDK Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package olmcatalog
+package execentrypoint
 
-import (
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
+// NewCmd returns a command that contains subcommands to run specific
+// operator types.
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "olm-catalog <olm-catalog-command>",
-		Short: "Invokes a olm-catalog command",
-		Long: `The operator-sdk olm-catalog command invokes a command to perform
-Catalog related actions.`,
+		Use:   "exec-entrypoint",
+		Short: "Runs a generic operator",
+		Long: `Runs a generic operator. This is intended to be used when running
+in a Pod inside a cluster. Developers wanting to run their operator locally
+should use "run --local" instead.`,
+		Hidden: true,
 	}
-	cmd.AddCommand(newGenCSVCmd())
+
+	cmd.AddCommand(
+		newRunAnsibleCmd(),
+		newRunHelmCmd(),
+	)
 	return cmd
 }
