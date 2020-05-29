@@ -484,7 +484,7 @@ func isSCCAvailable(c kubernetes.Interface) (bool, error) {
 }
 
 func isResourceAvailable(kubeClient kubernetes.Interface, name string, group string, version string) (bool, error) {
-	result := kubeClient.ExtensionsV1beta1().RESTClient().Get().RequestURI("/apis/" + group + "/" + version + "/" + name).Do()
+	result := kubeClient.ExtensionsV1beta1().RESTClient().Get().RequestURI("/apis/" + group + "/" + version + "/" + name).Do(context.TODO())
 	if result.Error() != nil {
 		if strings.Contains(result.Error().Error(), "the server could not find the requested resource") {
 			return false, nil
