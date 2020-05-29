@@ -22,12 +22,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	gencrd "github.com/operator-framework/operator-sdk/internal/generate/crd"
+	gen "github.com/operator-framework/operator-sdk/internal/generate/gen"
 	"github.com/operator-framework/operator-sdk/internal/scaffold"
 	"github.com/operator-framework/operator-sdk/internal/scaffold/ansible"
 	"github.com/operator-framework/operator-sdk/internal/scaffold/helm"
 	"github.com/operator-framework/operator-sdk/internal/scaffold/input"
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
 
+	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -230,7 +233,6 @@ func doAnsibleScaffold() error {
 		&scaffold.ServiceAccount{},
 		&scaffold.Role{},
 		&scaffold.RoleBinding{},
-		&scaffold.CRD{Resource: resource},
 		&scaffold.CR{Resource: resource},
 		&ansible.BuildDockerfile{GeneratePlaybook: generatePlaybook},
 		&ansible.RolesReadme{Resource: *resource},
@@ -264,6 +266,10 @@ func doAnsibleScaffold() error {
 	)
 	if err != nil {
 		return fmt.Errorf("new ansible scaffold failed: (%v)", err)
+	}
+
+	if err = generateCRDNonGo(projectName, *resource); err != nil {
+		return err
 	}
 
 	// Remove placeholders from empty directories
@@ -311,11 +317,16 @@ func doHelmScaffold() error {
 
 	resource, chart, err := helm.CreateChart(cfg.AbsProjectPath, createOpts)
 	if err != nil {
-		return fmt.Errorf("failed to create helm chart: %s", err)
+		return fmt.Errorf("failed to create helm chart: %w", err)
 	}
 
-	valuesPath := filepath.Join("<project_dir>", helm.HelmChartsDir, chart.GetMetadata().GetName(), "values.yaml")
-	crSpec := fmt.Sprintf("# Default values copied from %s\n\n%s", valuesPath, chart.GetValues().GetRaw())
+	valuesPath := filepath.Join("<project_dir>", helm.HelmChartsDir, chart.Name(), "values.yaml")
+
+	rawValues, err := yaml.Marshal(chart.Values)
+	if err != nil {
+		return fmt.Errorf("failed to get raw chart values: %w", err)
+	}
+	crSpec := fmt.Sprintf("# Default values copied from %s\n\n%s", valuesPath, rawValues)
 
 	roleScaffold := helm.DefaultRoleScaffold
 	if k8sCfg, err := config.GetConfig(); err != nil {
@@ -331,25 +342,42 @@ func doHelmScaffold() error {
 		&helm.Dockerfile{},
 		&helm.WatchesYAML{
 			Resource:  resource,
-			ChartName: chart.GetMetadata().GetName(),
+			ChartName: chart.Name(),
 		},
 		&scaffold.ServiceAccount{},
 		&roleScaffold,
 		&scaffold.RoleBinding{IsClusterScoped: roleScaffold.IsClusterScoped},
 		&helm.Operator{},
-		&scaffold.CRD{Resource: resource},
 		&scaffold.CR{
 			Resource: resource,
 			Spec:     crSpec,
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("new helm scaffold failed: (%v)", err)
+		return fmt.Errorf("new helm scaffold failed: %w", err)
+	}
+
+	if err = generateCRDNonGo(projectName, *resource); err != nil {
+		return err
 	}
 
 	if err := scaffold.UpdateRoleForResource(resource, cfg.AbsProjectPath); err != nil {
-		return fmt.Errorf("failed to update the RBAC manifest for resource (%v, %v): (%v)", resource.APIVersion, resource.Kind, err)
+		return fmt.Errorf("failed to update the RBAC manifest for resource (%v, %v): %w", resource.APIVersion, resource.Kind, err)
 	}
+	return nil
+}
+
+func generateCRDNonGo(projectName string, resource scaffold.Resource) error {
+	crdsDir := filepath.Join(projectName, scaffold.CRDsDir)
+	gcfg := gen.Config{
+		Inputs:    map[string]string{gencrd.CRDsDirKey: crdsDir},
+		OutputDir: crdsDir,
+	}
+	crd := gencrd.NewCRDNonGo(gcfg, resource)
+	if err := crd.Generate(); err != nil {
+		return fmt.Errorf("error generating CRD for %s: %w", resource, err)
+	}
+	log.Info("Generated CustomResourceDefinition manifests.")
 	return nil
 }
 
