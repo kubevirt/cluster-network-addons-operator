@@ -14,7 +14,7 @@ require (
 	github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
 	github.com/openshift/custom-resource-status v0.0.0-20190822192428-e62f2f3b79f3
 	github.com/openshift/origin v4.1.0+incompatible
-	github.com/operator-framework/operator-sdk v0.15.1
+	github.com/operator-framework/operator-sdk v0.16.0
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
