@@ -21,9 +21,6 @@ TARGETS = \
 	whitespace \
 	whitespace-check
 
-export GOFLAGS=-mod=vendor
-export GO111MODULE=on
-
 GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
 GINKGO ?= build/_output/bin/ginkgo
@@ -36,6 +33,11 @@ E2E_SUITES = \
 
 BIN_DIR = $(CURDIR)/build/_output/bin/
 GOBIN = $(BIN_DIR)/go/bin/
+export GOFLAGS=-mod=vendor
+export GO111MODULE=on
+export PATH := $(GOBIN):$(PATH)
+
+KUSTOMIZE := $(GOBIN)/kustomize
 
 OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
 
@@ -45,6 +47,9 @@ GO := $(GOBIN)/go
 
 $(GO):
 	hack/install-go.sh $(BIN_DIR)
+
+$(KUSTOMIZE): go.mod
+	$(MAKE) tools
 
 $(GINKGO): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/onsi/ginkgo/ginkgo
@@ -154,8 +159,8 @@ gen-k8s-check: $(apis_sources)
 	./hack/verify-codegen.sh
 	touch $@
 
-components:
-	./hack/components.sh
+components: $(KUSTOMIZE)
+	KUSTOMIZE=$(KUSTOMIZE) ./hack/components.sh
 
 bump-kubevirtci:
 	rm -rf _kubevirtci
@@ -179,6 +184,9 @@ release: $(GITHUB_RELEASE)
 vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
+
+tools: $(GO)
+	GO=$(GO) GOBIN=$(GOBIN) ./hack/install-tools.sh $$(pwd)/tools.go
 
 .PHONY: \
 	$(E2E_SUITES) \
@@ -206,5 +214,6 @@ vendor: $(GO)
 	prepare-minor \
 	prepare-major \
 	vendor \
+	tools \
 	gen-k8s \
 	release

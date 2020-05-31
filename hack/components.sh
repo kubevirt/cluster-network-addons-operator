@@ -78,7 +78,7 @@ EOF
 rm -rf data/kubemacpool/*
 (
     cd $KUBEMACPOOL_PATH
-    kustomize build config/cnao | \
+    ${KUSTOMIZE} build config/cnao | \
         sed 's/kubemacpool-system/{{ .Namespace }}/' | \
         sed 's/RANGE_START: .*/RANGE_START: {{ .RangeStart }}/' | \
         sed 's/RANGE_END: .*/RANGE_END: {{ .RangeEnd }}/'
