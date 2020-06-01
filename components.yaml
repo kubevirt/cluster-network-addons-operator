@@ -4,7 +4,7 @@ components:
     commit: "bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a" # v3.4.1
   linux-bridge:
     url: "https://github.com/containernetworking/plugins"
-    commit: "fe60fcddb897079746ec1523fd1837ab05b1e689" # v0.8.1
+    commit: "ad10b6fa91aacd720f1f9ab94341a97a82a24965" # v0.8.6
   bridge-marker:
     url: "https://github.com/kubevirt/bridge-marker"
     commit: "2c01b100bcae0061a622d8b82e2c4db4ac092b4c" # 0.2.0
