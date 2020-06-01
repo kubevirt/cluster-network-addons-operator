@@ -26,7 +26,6 @@ export GO111MODULE=on
 
 GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
-GINKGO ?= build/_output/bin/ginkgo
 
 E2E_TEST_EXTRA_ARGS ?=
 E2E_TEST_ARGS ?= $(strip -test.v -test.timeout 3h -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
@@ -37,9 +36,9 @@ E2E_SUITES = \
 BIN_DIR = $(CURDIR)/build/_output/bin/
 GOBIN = $(BIN_DIR)/go/bin/
 
-OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
-
-GITHUB_RELEASE ?= $(BIN_DIR)/github-release
+OPERATOR_SDK ?= $(GOBIN)/operator-sdk
+GITHUB_RELEASE ?= $(GOBIN)/github-release
+GINKGO ?= $(GOBIN)/ginkgo
 
 GO := $(GOBIN)/go
 
@@ -47,13 +46,13 @@ $(GO):
 	hack/install-go.sh $(BIN_DIR)
 
 $(GINKGO): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/onsi/ginkgo/ginkgo
+	$(MAKE) tools
 
 $(OPERATOR_SDK): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+	$(MAKE) tools
 
 $(GITHUB_RELEASE): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
+	$(MAKE) tools
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -180,6 +179,9 @@ vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
 
+tools: $(GO)
+	GO=$(GO) GOBIN=$(GOBIN) ./hack/install-tools.sh $$(pwd)/tools.go
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -206,5 +208,6 @@ vendor: $(GO)
 	prepare-minor \
 	prepare-major \
 	vendor \
+	tools \
 	gen-k8s \
 	release
