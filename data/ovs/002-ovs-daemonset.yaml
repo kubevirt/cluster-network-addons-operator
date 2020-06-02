@@ -25,19 +25,17 @@ spec:
         - key: node-role.kubernetes.io/master
           operator: Exists
           effect: NoSchedule
-      containers:
+      initContainers:
         - name: ovs-cni-plugin
           image: {{ .OvsCNIImage }}
+          command: ['cp', '/ovs', '/host{{ .CNIBinDir }}/ovs']
           imagePullPolicy: {{ .ImagePullPolicy }}
-          resources:
-            requests:
-              cpu: "60m"
-              memory: "30Mi"
           securityContext:
             privileged: true
           volumeMounts:
             - name: cnibin
-              mountPath: /host/opt/cni/bin
+              mountPath: /host{{ .CNIBinDir }}
+      containers:
         - name: ovs-cni-marker
           image: {{ .OvsMarkerImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
