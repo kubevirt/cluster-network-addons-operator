@@ -23,7 +23,7 @@ source ./cluster/kubevirtci.sh
 ${OPERATOR_SDK} test \
     local \
     ./${TEST_SUITE} \
-    --namespace cluster-network-addons \
+    --operator-namespace cluster-network-addons \
     --no-setup \
     --kubeconfig $(kubevirtci::kubeconfig) \
     --go-test-flags "${TEST_ARGS}"
