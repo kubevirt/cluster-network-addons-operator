@@ -308,6 +308,17 @@ func GetClusterRole() *rbacv1.ClusterRole {
 					"watch",
 				},
 			},
+			{
+				APIGroups: []string{
+					"*",
+				},
+				Resources: []string{
+					"*",
+				},
+				Verbs: []string{
+					"*",
+				},
+			},
 		},
 	}
 	return role
