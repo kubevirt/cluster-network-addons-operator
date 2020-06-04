@@ -273,9 +273,6 @@ func GetClusterRole() *rbacv1.ClusterRole {
 				Resources: []string{
 					"securitycontextconstraints",
 				},
-				ResourceNames: []string{
-					"privileged",
-				},
 				Verbs: []string{
 					"get",
 					"list",
