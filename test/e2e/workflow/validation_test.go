@@ -44,7 +44,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				NMState:     &opv1alpha1.NMState{},
 			}
 			CreateConfig(configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(ConditionAvailable, ConditionTrue, 2*time.Minute, CheckDoNotRepeat)
 		})
 
 		Context("and a component which does support removal is removed from the Spec", func() {
