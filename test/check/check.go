@@ -339,7 +339,7 @@ func checkForDeployment(name string) error {
 		}
 	}
 
-	if deployment.Status.AvailableReplicas == 0 {
+	if deployment.Status.UnavailableReplicas > 0 || deployment.Status.AvailableReplicas == 0 {
 		manifest, err := yaml.Marshal(deployment)
 		if err != nil {
 			panic(err)
