@@ -132,6 +132,7 @@ rules:
   - ""
   resources:
   - pods
+  - pods/status
   verbs:
   - get
   - list
@@ -282,10 +283,6 @@ spec:
             configMapKeyRef:
               key: RANGE_END
               name: kubemacpool-mac-range-config
-        - name: HEALTH_PROBE_HOST
-          value: 0.0.0.0
-        - name: HEALTH_PROBE_PORT
-          value: "9440"
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
@@ -314,6 +311,8 @@ spec:
         - mountPath: /etc/webhook/certs
           name: tls-key-pair
           readOnly: true
+      readinessGates:
+      - conditionType: kubemacpool.io/leader-ready
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
       volumes:
