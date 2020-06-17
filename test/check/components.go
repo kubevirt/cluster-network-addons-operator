@@ -45,9 +45,6 @@ var (
 		DaemonSets: []string{
 			"nmstate-handler",
 		},
-		Deployments: []string{
-			"nmstate-webhook",
-		},
 	}
 	OvsComponent = Component{
 		ComponentName:              "Ovs",
