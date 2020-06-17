@@ -67,6 +67,10 @@ metadata:
   name: mac-controller-manager
   namespace: system
 spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2
   template:
     spec:
       containers:
