@@ -67,6 +67,8 @@ metadata:
   name: mac-controller-manager
   namespace: system
 spec:
+  strategy:
+      type: Recreate
   template:
     spec:
       containers:
