@@ -300,7 +300,9 @@ func (status *StatusManager) SetFromPods() {
 
 		// Finally check whether Pods belonging to this Deployments are being started or they
 		// are being scheduled.
-		if dep.Status.AvailableReplicas == 0 {
+		if dep.Status.UnavailableReplicas > 0 {
+			progressing = append(progressing, fmt.Sprintf("Deployment %q is not available (awaiting %d nodes)", depName.String(), dep.Status.UnavailableReplicas))
+		} else if dep.Status.AvailableReplicas == 0 {
 			progressing = append(progressing, fmt.Sprintf("Deployment %q is not yet scheduled on any nodes", depName.String()))
 		} else if dep.Status.ObservedGeneration < dep.Generation {
 			progressing = append(progressing, fmt.Sprintf("Deployment %q update is being processed (generation %d, observed generation %d)", depName.String(), dep.Generation, dep.Status.ObservedGeneration))
