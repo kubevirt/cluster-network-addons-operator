@@ -239,6 +239,8 @@ spec:
     matchLabels:
       control-plane: mac-controller-manager
       controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
