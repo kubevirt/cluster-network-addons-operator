@@ -42,11 +42,11 @@ var _ = Context("Cluster Network Addons Operator", func() {
 					CheckConfigVersions(expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, podsDeploymentTimeout, CheckDoNotRepeat)
 				})
 
-				It("it should report expected deployed container images", func() {
+				It("it should report expected deployed container images and leave no leftovers from the previous version", func() {
+					By("Checking reported container images")
 					CheckReleaseUsesExpectedContainerImages(newRelease)
-				})
 
-				It("should run with no leftovers from the original version", func() {
+					By("Checking for leftover objects from the previous version")
 					CheckForLeftoverObjects(newRelease.Version)
 				})
 			})
