@@ -273,26 +273,13 @@ func GetClusterRole() *rbacv1.ClusterRole {
 				Resources: []string{
 					"securitycontextconstraints",
 				},
-				Verbs: []string{
-					"get",
-					"list",
-					"watch",
-				},
-			},
-			{
-				APIGroups: []string{
-					"security.openshift.io",
-				},
-				Resources: []string{
-					"securitycontextconstraints",
-				},
 				ResourceNames: []string{
 					"privileged",
 				},
 				Verbs: []string{
 					"get",
-					"patch",
-					"update",
+					"list",
+					"watch",
 				},
 			},
 			{
@@ -314,108 +301,19 @@ func GetClusterRole() *rbacv1.ClusterRole {
 				},
 				Resources: []string{
 					"networkaddonsconfigs",
-					"networkaddonsconfigs/status",
 				},
 				Verbs: []string{
 					"get",
 					"list",
 					"watch",
-					"update",
 				},
 			},
 			{
 				APIGroups: []string{
-					"",
-				},
-				Resources: []string{
-					"services",
-					"configmaps",
-					"namespaces",
-					"nodes",
-					"nodes/status",
-					"serviceaccounts",
-					"pods",
-					"pods/status",
-					"events",
-					"secrets",
-				},
-				Verbs: []string{
 					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"apps",
 				},
 				Resources: []string{
 					"*",
-				},
-				Verbs: []string{
-					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"rbac.authorization.k8s.io",
-				},
-				Resources: []string{
-					"*",
-				},
-				Verbs: []string{
-					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"admissionregistration.k8s.io",
-				},
-				Resources: []string{
-					"mutatingwebhookconfigurations",
-					"validatingwebhookconfigurations",
-				},
-				Verbs: []string{
-					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"k8s.cni.cncf.io",
-				},
-				Resources: []string{
-					"*",
-				},
-				Verbs: []string{
-					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"apiextensions.k8s.io",
-				},
-				Resources: []string{
-					"customresourcedefinitions",
-				},
-				Verbs: []string{
-					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"kubevirt.io",
-				},
-				Resources: []string{
-					"virtualmachines",
-				},
-				Verbs: []string{
-					"*",
-				},
-			},
-			{
-				APIGroups: []string{
-					"policy",
-				},
-				Resources: []string{
-					"poddisruptionbudgets",
 				},
 				Verbs: []string{
 					"*",
