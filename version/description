@@ -1,22 +1,5 @@
-0.39.0
+0.39.1
 
 Bugs:
-* drop knmstate webhook (#427)
-* Fix rbac in CNAO's manifest (#419)
-* Fix false positive on the CI and missed bugs (#417)
-* Merge pull request #416 from kubevirt/revert-413-remove_over_previliged_rbac
-* Revert "remove over privileged rbac from cnao manifest (#413)"
-* remove over privileged rbac from cnao manifest (#413)
-* collect init containers (#406)
+* Revert "Fix rbac in CNAO's manifest (#419)" (#433)
 
-Infra:
-* merge some upgrade tests (#428)
-* bump kubemacpool to v0.14.4 (#423)
-* bump bridge marker to 0.3.0 (#420)
-* Bumping kubemacpool to v0.14.2 (#418)
-* bump kubemacpool 0.14.1 (#414)
-* bump ovs-cni 0.12.0 (#405)
-* Bump NetworkManager to 1.22 so we can test knmstate (#411)
-* bump linux-bridge to 0.8.6 (#407)
-* Bump kubernetes-nmstate 0.21.0 (#403)
-* Operator sdk 1.18 (#404)
