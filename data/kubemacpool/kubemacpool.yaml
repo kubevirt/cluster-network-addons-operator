@@ -3,78 +3,8 @@ kind: Namespace
 metadata:
   labels:
     control-plane: mac-controller-manager
-    controller-tools.k8s.io: "1.0"
-    openshift.io/run-level: "0"
-    runlevel: "0"
+    mutatepods.kubemacpool.io: ignore
   name: {{ .Namespace }}
----
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: MutatingWebhookConfiguration
-metadata:
-  labels: null
-  name: kubemacpool-mutator
-webhooks:
-- clientConfig:
-    service:
-      name: kubemacpool-service
-      namespace: {{ .Namespace }}
-      path: /mutate-pods
-  failurePolicy: Fail
-  name: mutatepods.kubemacpool.io
-  namespaceSelector:
-    matchExpressions:
-    - key: runlevel
-      operator: NotIn
-      values:
-      - "0"
-      - "1"
-    - key: openshift.io/run-level
-      operator: NotIn
-      values:
-      - "0"
-      - "1"
-    matchLabels:
-      mutatepods.kubemacpool.io: allocate
-  rules:
-  - apiGroups:
-    - ""
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    resources:
-    - pods
-- clientConfig:
-    service:
-      name: kubemacpool-service
-      namespace: {{ .Namespace }}
-      path: /mutate-virtualmachines
-  failurePolicy: Fail
-  name: mutatevirtualmachines.kubemacpool.io
-  namespaceSelector:
-    matchExpressions:
-    - key: runlevel
-      operator: NotIn
-      values:
-      - "0"
-      - "1"
-    - key: openshift.io/run-level
-      operator: NotIn
-      values:
-      - "0"
-      - "1"
-    matchLabels:
-      mutatevirtualmachines.kubemacpool.io: allocate
-  rules:
-  - apiGroups:
-    - kubevirt.io
-    apiVersions:
-    - v1alpha3
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - virtualmachines
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -321,3 +251,71 @@ spec:
       - name: tls-key-pair
         secret:
           secretName: kubemacpool-service
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  labels: null
+  name: kubemacpool-mutator
+webhooks:
+- clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: {{ .Namespace }}
+      path: /mutate-pods
+  failurePolicy: Fail
+  name: mutatepods.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    matchLabels:
+      mutatepods.kubemacpool.io: allocate
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+- clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: {{ .Namespace }}
+      path: /mutate-virtualmachines
+  failurePolicy: Fail
+  name: mutatevirtualmachines.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    matchLabels:
+      mutatevirtualmachines.kubemacpool.io: allocate
+  rules:
+  - apiGroups:
+    - kubevirt.io
+    apiVersions:
+    - v1alpha3
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachines
