@@ -1,5 +1,4 @@
-0.39.1
+0.39.2
 
-Bugs:
-* Revert "Fix rbac in CNAO's manifest (#419)" (#433)
-
+Features:
+* bump kubemacpool to v0.14.5 (#438)
