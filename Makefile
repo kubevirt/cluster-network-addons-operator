@@ -35,7 +35,9 @@ E2E_SUITES = \
 	test/e2e/workflow
 
 BIN_DIR = $(CURDIR)/build/_output/bin/
-GOBIN = $(BIN_DIR)/go/bin/
+export GOROOT=$(BIN_DIR)/go/
+export GOBIN = $(GOROOT)/bin/
+export PATH := $(GOBIN):$(PATH)
 
 OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
 
