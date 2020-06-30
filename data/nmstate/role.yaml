@@ -1,41 +1,5 @@
 {{define "handlerPrefix"}}{{with $prefix := .HandlerPrefix}}{{$prefix | printf "%s-"}}{{end -}}{{end}}
 ---
-kind: ServiceAccount
-apiVersion: v1
-metadata:
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  namespace: {{ .HandlerNamespace }}
-  labels:
-    nmstate.io: ""
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  namespace: {{ .HandlerNamespace }}
-subjects:
-- kind: ServiceAccount
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  namespace: {{ .HandlerNamespace }}
-roleRef:
-  kind: Role
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  apiGroup: rbac.authorization.k8s.io
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  namespace: {{ .HandlerNamespace }}
-subjects:
-- kind: ServiceAccount
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  namespace: {{ .HandlerNamespace }}
-roleRef:
-  kind: ClusterRole
-  name: {{template "handlerPrefix" .}}nmstate-handler
-  apiGroup: rbac.authorization.k8s.io
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -145,23 +109,3 @@ rules:
   - configmaps
   verbs:
   - "*"
-{{ if .EnableSCC }}
----
-apiVersion: security.openshift.io/v1
-kind: SecurityContextConstraints
-metadata:
-  name: nmstate
-allowPrivilegedContainer: true
-allowHostDirVolumePlugin: true
-allowHostNetwork: true
-allowHostIPC: false
-allowHostPID: false
-allowHostPorts: false
-readOnlyRootFilesystem: false
-runAsUser:
-  type: RunAsAny
-seLinuxContext:
-  type: RunAsAny
-users:
-- system:serviceaccount:{{ .HandlerNamespace }}:nmstate-handler
-{{ end }}
