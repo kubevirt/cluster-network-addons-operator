@@ -3,25 +3,14 @@
 # source automation/check-patch.setup.sh
 # cd ${TMP_PROJECT_PATH}
 
-echo 'Setup Go paths'
-export GOROOT=/tmp/cluster-network-addons-operator/go/root
-mkdir -p $GOROOT
-export GOPATH=/tmp/cluster-network-addons-operator/go/path
-mkdir -p $GOPATH
-export PATH=${GOPATH}/bin:${GOROOT}/bin:${PATH}
+tmp_dir=/tmp/cnao/
 
-echo 'Install Go 1.13'
-export GIMME_GO_VERSION=1.13
-GIMME=/tmp/cluster-network-addons-operator/go/gimme
-mkdir -p $GIMME
-curl -sL https://raw.githubusercontent.com/travis-ci/gimme/master/gimme | HOME=${GIMME} bash >> ${GIMME}/gimme.sh
-source ${GIMME}/gimme.sh
+rm -rf $tmp_dir
+mkdir -p $tmp_dir
 
-echo 'Install operator repository under the temporary Go path'
-TMP_PROJECT_PATH=${GOPATH}/src/github.com/kubevirt/cluster-network-addons-operator
-rm -rf ${TMP_PROJECT_PATH}
-mkdir -p ${TMP_PROJECT_PATH}
-cp -rf $(pwd)/. ${TMP_PROJECT_PATH}
+export TMP_PROJECT_PATH=$tmp_dir/cluster-network-addons-operator
+export ARTIFACTS=${ARTIFACTS-$tmp_dir/artifacts}
+mkdir -p $ARTIFACTS
 
-echo 'Exporting temporary project path'
-export TMP_PROJECT_PATH
+rsync -rt --links --filter=':- .gitignore' $(pwd)/ $TMP_PROJECT_PATH
+

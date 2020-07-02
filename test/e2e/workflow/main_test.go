@@ -6,6 +6,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	ginkgoreporters "kubevirt.io/qe-tools/pkg/ginkgo-reporters"
+
 	f "github.com/operator-framework/operator-sdk/pkg/test"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,7 +29,12 @@ func TestMain(m *testing.M) {
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "E2E Workflow Test Suite")
+
+	reporters := make([]Reporter, 0)
+	if ginkgoreporters.JunitOutput != "" {
+		reporters = append(reporters, ginkgoreporters.NewJunitReporter())
+	}
+	RunSpecsWithDefaultAndCustomReporters(t, "E2E Workflow Test Suite", reporters)
 }
 
 var _ = BeforeSuite(func() {
