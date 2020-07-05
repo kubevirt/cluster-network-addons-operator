@@ -26,3 +26,8 @@ function git-utils::get_component_tag() {
         git describe --tags
     )
 }
+
+function git-utils::create_temp_path() {
+	local component=$1
+	mktemp -d -p /tmp -t deploy.${component}.XXXX
+}

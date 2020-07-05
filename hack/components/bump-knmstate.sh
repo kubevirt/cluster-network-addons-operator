@@ -5,10 +5,14 @@ set -xeo pipefail
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 
+echo Bumping kubernetes-nmstate
 NMSTATE_URL=$(yaml-utils::get_component_url nmstate)
 NMSTATE_COMMIT=$(yaml-utils::get_component_commit nmstate)
 NMSTATE_REPO=$(yaml-utils::get_component_repo ${NMSTATE_URL})
-NMSTATE_PATH=${GOPATH}/src/${NMSTATE_REPO}
+
+TEMP_DIR=$(git-utils::create_temp_path nmstate)
+trap "rm -rf ${TEMP_DIR}" EXIT
+NMSTATE_PATH=${TEMP_DIR}/${NMSTATE_REPO}
 
 echo 'Fetch kubernetes-nmstate sources'
 git-utils::fetch_component ${NMSTATE_PATH} ${NMSTATE_URL} ${NMSTATE_COMMIT}

@@ -156,9 +156,6 @@ gen-k8s-check: $(apis_sources)
 	./hack/verify-codegen.sh
 	touch $@
 
-bump-all:
-	./hack/components/bump-all.sh
-
 bump-kubevirtci:
 	rm -rf _kubevirtci
 	./hack/bump-kubevirtci.sh
@@ -181,6 +178,10 @@ release: $(GITHUB_RELEASE)
 vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
+
+bump-%:
+	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
+bump-all: bump-knmstate bump-kubemacpool bump-macvtap
 
 .PHONY: \
 	$(E2E_SUITES) \
@@ -208,5 +209,7 @@ vendor: $(GO)
 	prepare-minor \
 	prepare-major \
 	vendor \
+	bump-% \
+	bump-all \
 	gen-k8s \
 	release
