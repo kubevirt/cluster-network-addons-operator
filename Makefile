@@ -157,7 +157,7 @@ gen-k8s-check: $(apis_sources)
 	touch $@
 
 components:
-	./hack/components.sh
+	./hack/components/components.sh
 
 bump-kubevirtci:
 	rm -rf _kubevirtci
