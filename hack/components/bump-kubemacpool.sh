@@ -2,15 +2,16 @@
 
 set -xeo pipefail
 
-source hack/components/common-functions.sh
+source hack/components/yaml-utils.sh
+source hack/components/git-utils.sh
 
-KUBEMACPOOL_URL=$(cat components.yaml | shyaml get-value components.kubemacpool.url)
-KUBEMACPOOL_COMMIT=$(cat components.yaml | shyaml get-value components.kubemacpool.commit)
-KUBEMACPOOL_REPO=$(echo ${KUBEMACPOOL_URL} | sed 's#https://\(.*\)#\1#')
+KUBEMACPOOL_URL=$(yaml-utils::get_component_url kubemacpool)
+KUBEMACPOOL_COMMIT=$(yaml-utils::get_component_commit kubemacpool)
+KUBEMACPOOL_REPO=$(yaml-utils::get_component_repo ${KUBEMACPOOL_URL})
 KUBEMACPOOL_PATH=${GOPATH}/src/${KUBEMACPOOL_REPO}
 
 echo 'Fetch kubemacpool sources'
-fetch_component ${KUBEMACPOOL_PATH} ${KUBEMACPOOL_URL} ${KUBEMACPOOL_COMMIT}
+git-utils::fetch_component ${KUBEMACPOOL_PATH} ${KUBEMACPOOL_URL} ${KUBEMACPOOL_COMMIT}
 
 echo 'Configure kustomize for CNAO templates and save the rendered manifest under CNAO data'
 (
@@ -52,7 +53,7 @@ rm -rf data/kubemacpool/*
 ) > data/kubemacpool/kubemacpool.yaml
 
 echo 'Get kubemacpool image name and update it under CNAO'
-KUBEMACPOOL_TAG=$(get_component_tag ${KUBEMACPOOL_PATH})
+KUBEMACPOOL_TAG=$(git-utils::get_component_tag ${KUBEMACPOOL_PATH})
 KUBEMACPOOL_IMAGE=quay.io/kubevirt/kubemacpool
 KUBEMACPOOL_IMAGE_TAGGED=${KUBEMACPOOL_IMAGE}:${KUBEMACPOOL_TAG}
 sed -i "s#\"${KUBEMACPOOL_IMAGE}:.*\"#\"${KUBEMACPOOL_IMAGE_TAGGED}\"#" pkg/components/components.go

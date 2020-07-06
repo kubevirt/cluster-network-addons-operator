@@ -2,15 +2,16 @@
 
 set -xeo pipefail
 
-source hack/components/common-functions.sh
+source hack/components/yaml-utils.sh
+source hack/components/git-utils.sh
 
-MACVTAP_URL=$(cat components.yaml | shyaml get-value components.macvtap-cni.url)
-MACVTAP_COMMIT=$(cat components.yaml | shyaml get-value components.macvtap-cni.commit)
-MACVTAP_REPO=$(echo ${MACVTAP_URL} | sed 's#https://\(.*\)#\1#')
+MACVTAP_URL=$(yaml-utils::get_component_url macvtap-cni)
+MACVTAP_COMMIT=$(yaml-utils::get_component_commit macvtap-cni)
+MACVTAP_REPO=$(yaml-utils::get_component_repo ${MACVTAP_URL})
 MACVTAP_PATH=${GOPATH}/src/${MACVTAP_REPO}
 
 echo 'Fetch macvtap-cni sources'
-fetch_component ${MACVTAP_PATH} ${MACVTAP_URL} ${MACVTAP_COMMIT}
+git-utils::fetch_component ${MACVTAP_PATH} ${MACVTAP_URL} ${MACVTAP_COMMIT}
 
 rm -rf data/macvtap/*
 echo 'Copy the templates from the macvtap-cni repo ...'
@@ -32,7 +33,7 @@ EOF
 cat ${MACVTAP_PATH}/templates/macvtap.yaml.in >> data/macvtap/002-macvtap-daemonset.yaml
 
 echo 'Get macvtap-cni image name and update it under CNAO'
-MACVTAP_TAG=$(get_component_tag ${MACVTAP_PATH})
+MACVTAP_TAG=$(git-utils::get_component_tag ${MACVTAP_PATH})
 MACVTAP_IMAGE=quay.io/kubevirt/macvtap-cni
 MACVTAP_IMAGE_TAGGED=${MACVTAP_IMAGE}:${MACVTAP_TAG}
 sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" pkg/components/components.go

@@ -2,7 +2,7 @@
 
 set -xeo pipefail
 
-function fetch_component() {
+function git-utils::fetch_component() {
     local destination=$1
     local url=$2
     local commit=$3
@@ -18,7 +18,7 @@ function fetch_component() {
     )
 }
 
-function get_component_tag() {
+function git-utils::get_component_tag() {
     local component_dir=$1
 
     (

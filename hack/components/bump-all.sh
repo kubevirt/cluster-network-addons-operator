@@ -2,8 +2,6 @@
 
 set -xeo pipefail
 
-source hack/components/common_functions.sh
-
 CNAO_VERSION=${VERSION} # Exported from Makefile
 
 echo 'Setup temporary Go path'
@@ -12,10 +10,10 @@ mkdir -p $GOPATH
 export PATH=${GOPATH}/bin:${PATH}
 
 echo 'kubemacpool'
-source hack/components/bump_kubemacpool.sh
+source hack/components/bump-kubemacpool.sh
 
 echo 'macvtap'
-source hack/components/bump_macvtap.sh
+source hack/components/bump-macvtap.sh
 
 echo 'kubernetes-nmstate'
-source hack/components/bump_knmstate.sh
+source hack/components/bump-knmstate.sh
