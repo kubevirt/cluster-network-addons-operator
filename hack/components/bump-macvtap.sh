@@ -2,7 +2,7 @@
 
 set -xe
 
-source hack/components/common_functions.sh
+source hack/components/common-functions.sh
 
 MACVTAP_URL=$(cat components.yaml | shyaml get-value components.macvtap-cni.url)
 MACVTAP_COMMIT=$(cat components.yaml | shyaml get-value components.macvtap-cni.commit)

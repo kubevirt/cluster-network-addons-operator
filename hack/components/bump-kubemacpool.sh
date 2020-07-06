@@ -2,7 +2,7 @@
 
 set -xe
 
-source hack/components/common_functions.sh
+source hack/components/common-functions.sh
 
 KUBEMACPOOL_URL=$(cat components.yaml | shyaml get-value components.kubemacpool.url)
 KUBEMACPOOL_COMMIT=$(cat components.yaml | shyaml get-value components.kubemacpool.commit)

@@ -2,7 +2,7 @@
 
 set -xe
 
-source hack/components/common_functions.sh
+source hack/components/common-functions.sh
 
 NMSTATE_URL=$(cat components.yaml | shyaml get-value components.nmstate.url)
 NMSTATE_COMMIT=$(cat components.yaml | shyaml get-value components.nmstate.commit)

@@ -3,9 +3,9 @@
 set -xe
 
 function fetch_component() {
-    destination=$1
-    url=$2
-    commit=$3
+    local destination=$1
+    local url=$2
+    local commit=$3
 
     if [ ! -d ${destination} ]; then
         mkdir -p ${destination}
@@ -14,14 +14,12 @@ function fetch_component() {
 
     (
         cd ${destination}
-        git fetch origin
-        git reset --hard
-        git checkout ${commit}
+        git reset ${commit} --hard
     )
 }
 
 function get_component_tag() {
-    component_dir=$1
+    local component_dir=$1
 
     (
         cd ${component_dir}
