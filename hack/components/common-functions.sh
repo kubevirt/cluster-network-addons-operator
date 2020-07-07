@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xe
+set -xeo pipefail
 
 function fetch_component() {
     local destination=$1

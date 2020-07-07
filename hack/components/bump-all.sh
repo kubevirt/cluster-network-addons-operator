@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xe
+set -xeo pipefail
 
 source hack/components/common_functions.sh
 
