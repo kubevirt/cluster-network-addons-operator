@@ -156,8 +156,8 @@ gen-k8s-check: $(apis_sources)
 	./hack/verify-codegen.sh
 	touch $@
 
-components:
-	./hack/components.sh
+bump-all:
+	./hack/components/bump-all.sh
 
 bump-kubevirtci:
 	rm -rf _kubevirtci
@@ -201,7 +201,7 @@ vendor: $(GO)
 	docker-push-operator \
 	docker-push-registry \
 	gen-manifests \
-	components \
+	bump-all \
 	test/unit \
 	bump-kubevirtci \
 	prepare-patch \
