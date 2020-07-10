@@ -81,13 +81,13 @@ func CheckConfigCondition(conditionType ConditionType, conditionStatus Condition
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition, current config:\n%v", configToYaml(config)))
+		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
 	} else {
-		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state, current config:\n%v", configToYaml(config)))
+		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value, current config:\n%v", configToYaml(config)))
+		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
 	}
 }
 
@@ -124,13 +124,13 @@ func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string,
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions, current config:\n%v", configToYaml(config)))
+		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
 	} else {
-		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state, current config:\n%v", configToYaml(config)))
+		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v", configToYaml(config)))
+		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
 	}
 }
 
