@@ -5,10 +5,14 @@ set -xeo pipefail
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 
+echo Bumping kubemacpool
 KUBEMACPOOL_URL=$(yaml-utils::get_component_url kubemacpool)
 KUBEMACPOOL_COMMIT=$(yaml-utils::get_component_commit kubemacpool)
 KUBEMACPOOL_REPO=$(yaml-utils::get_component_repo ${KUBEMACPOOL_URL})
-KUBEMACPOOL_PATH=${GOPATH}/src/${KUBEMACPOOL_REPO}
+
+TEMP_DIR=$(git-utils::create_temp_path kubemacpool)
+trap "rm -rf ${TEMP_DIR}" EXIT
+KUBEMACPOOL_PATH=${TEMP_DIR}/${KUBEMACPOOL_REPO}
 
 echo 'Fetch kubemacpool sources'
 git-utils::fetch_component ${KUBEMACPOOL_PATH} ${KUBEMACPOOL_URL} ${KUBEMACPOOL_COMMIT}

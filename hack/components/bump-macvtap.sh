@@ -5,10 +5,14 @@ set -xeo pipefail
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 
+echo Bumping macvtap-cni
 MACVTAP_URL=$(yaml-utils::get_component_url macvtap-cni)
 MACVTAP_COMMIT=$(yaml-utils::get_component_commit macvtap-cni)
 MACVTAP_REPO=$(yaml-utils::get_component_repo ${MACVTAP_URL})
-MACVTAP_PATH=${GOPATH}/src/${MACVTAP_REPO}
+
+TEMP_DIR=$(git-utils::create_temp_path macvtap-cni)
+trap "rm -rf ${TEMP_DIR}" EXIT
+MACVTAP_PATH=${TEMP_DIR}/${MACVTAP_REPO}
 
 echo 'Fetch macvtap-cni sources'
 git-utils::fetch_component ${MACVTAP_PATH} ${MACVTAP_URL} ${MACVTAP_COMMIT}
