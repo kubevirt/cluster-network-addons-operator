@@ -36,6 +36,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 // ManifestPath is the path to the manifest templates
@@ -43,10 +44,12 @@ const ManifestPath = "./data"
 
 var operatorNamespace string
 var operatorVersion string
+var operatorVersionLabel string
 
 func init() {
 	operatorNamespace = os.Getenv("OPERATOR_NAMESPACE")
 	operatorVersion = os.Getenv("OPERATOR_VERSION")
+	operatorVersionLabel = k8s.StringToLabel(operatorVersion)
 }
 
 // Add creates a new NetworkAddonsConfig Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -305,7 +308,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 		if labels == nil {
 			labels = map[string]string{}
 		}
-		labels[opv1alpha1.SchemeGroupVersion.Group+"/version"] = operatorVersion
+		labels[opv1alpha1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
 		obj.SetLabels(labels)
 	}
 
