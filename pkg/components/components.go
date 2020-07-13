@@ -2,7 +2,6 @@ package components
 
 import (
 	"fmt"
-	"strings"
 
 	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -12,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 const (
@@ -72,14 +72,6 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 func GetDeployment(version string, operatorVersion string, namespace string, repository string, imageName string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, imageName, tag)
 
-	// In case SHA is used for the version, we need to trim it to fit into labels
-	if len(operatorVersion) > 63 {
-		operatorVersion = operatorVersion[0:63]
-	}
-
-	// We also need to remove characters that are not allowed, e.g. :
-	operatorVersion = strings.Replace(operatorVersion, ":", "_", -1)
-
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -89,7 +81,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Name:      Name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				opv1alpha1.SchemeGroupVersion.Group + "/version": operatorVersion,
+				opv1alpha1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
