@@ -5,7 +5,7 @@ set -xeo pipefail
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 
-echo Bumping kubernetes-nmstate
+echo 'Bumping kubernetes-nmstate'
 NMSTATE_URL=$(yaml-utils::get_component_url nmstate)
 NMSTATE_COMMIT=$(yaml-utils::get_component_commit nmstate)
 NMSTATE_REPO=$(yaml-utils::get_component_repo ${NMSTATE_URL})

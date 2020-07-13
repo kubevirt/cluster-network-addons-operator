@@ -5,7 +5,7 @@ set -xeo pipefail
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 
-echo Bumping kubemacpool
+echo 'Bumping kubemacpool'
 KUBEMACPOOL_URL=$(yaml-utils::get_component_url kubemacpool)
 KUBEMACPOOL_COMMIT=$(yaml-utils::get_component_commit kubemacpool)
 KUBEMACPOOL_REPO=$(yaml-utils::get_component_repo ${KUBEMACPOOL_URL})
