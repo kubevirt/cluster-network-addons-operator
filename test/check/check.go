@@ -64,7 +64,7 @@ func CheckComponentsRemoval(components []Component) {
 		By(fmt.Sprintf("Checking that component %s has been removed", component.ComponentName))
 		Eventually(func() error {
 			return checkForComponentRemoval(&component)
-		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), "Component has not been fully removed within the given timeout")
+		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout\ndescribe all:\n%v", component.ComponentName, describeAll()))
 	}
 }
 
