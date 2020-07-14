@@ -1,4 +1,4 @@
-0.39.2
+0.39.3
 
-Features:
-* bump kubemacpool to v0.14.5 (#438)
+Bugs:
+* Do not trim the version exposed in CR (#466)
