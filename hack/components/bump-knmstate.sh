@@ -29,3 +29,10 @@ echo 'Copy kubernetes-nmstate manifests'
 rm -rf data/nmstate/*
 cp $NMSTATE_PATH/deploy/handler/* data/nmstate/
 cp $NMSTATE_PATH/deploy/crds/*nodenetwork*crd* data/nmstate/
+
+echo 'Apply custom CNAO patches on kubernetes-nmstate manifests'
+echo '
+241a242,243
+>   annotations:
+>     networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
+' | patch data/nmstate/operator.yaml

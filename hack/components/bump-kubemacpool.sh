@@ -30,6 +30,7 @@ bases:
 - ../default
 patchesStrategicMerge:
 - cnao_image_patch.yaml
+- cnao_rejectowner_patch.yaml
 EOF
 
     cat <<EOF > config/cnao/cnao_image_patch.yaml
@@ -46,7 +47,18 @@ spec:
         imagePullPolicy: "{{ .ImagePullPolicy }}"
         name: manager
 EOF
+
+    cat <<EOF > config/cnao/cnao_rejectowner_patch.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: service
+  namespace: system
+  annotations:
+    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
+EOF
 )
+
 rm -rf data/kubemacpool/*
 (
     cd $KUBEMACPOOL_PATH
