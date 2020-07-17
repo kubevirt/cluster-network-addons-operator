@@ -239,6 +239,8 @@ kind: Secret
 metadata:
   name: {{template "handlerPrefix" .}}nmstate-webhook
   namespace: {{ .HandlerNamespace }}
+  annotations:
+    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
 type: kubernetes.io/tls
 data:
   tls.crt: YmFkIGNlcnRpZmljYXRlCg==

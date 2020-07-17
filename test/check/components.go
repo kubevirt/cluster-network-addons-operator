@@ -17,7 +17,10 @@ var (
 		ClusterRole:        "kubemacpool-manager-role",
 		ClusterRoleBinding: "kubemacpool-manager-rolebinding",
 		Deployments:        []string{"kubemacpool-mac-controller-manager"},
-		// TODO: KubeMacPool secret is not owned by NetworkAddonsConfig and KubeMacPool is currently not cleaning it up upon removal. Therefore we cannot really check for it. Once is the cleanup implemented, we should check it again.
+		// TODO: KubeMacPool secret is not owned by NetworkAddonsConfig and
+		// KubeMacPool is currently not cleaning it up upon removal. Therefore
+		// we cannot really check for it. Once is the cleanup implemented, we
+		// should check it again.
 		// Secret:                       "kubemacpool-service",
 		MutatingWebhookConfiguration: "kubemacpool-mutator",
 	}
@@ -49,7 +52,11 @@ var (
 		Deployments: []string{
 			"nmstate-webhook",
 		},
-		Secret:                       "nmstate-webhook",
+		// TODO: KubeMacPool secret is not owned by NetworkAddonsConfig and
+		// knmstate is currently not cleaning it up upon removal. Therefore we
+		// cannot really check for it. Once is the cleanup implemented, we
+		// should check it again.
+		// Secret:                       "nmstate-webhook",
 		MutatingWebhookConfiguration: "nmstate",
 	}
 	OvsComponent = Component{
