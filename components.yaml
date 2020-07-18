@@ -10,10 +10,10 @@ components:
     commit: "049eb6a796b742767a0be838f6ddb7f79c97dd60" # 0.3.0
   kubemacpool:
     url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
-    commit: "6256cfd2b562dcec66e8434c544729a35f07704b" # v0.15.0
+    commit: "7728339b6c8dcfc9d53cc18ce8e06a910094ed47" # v0.16.0
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
-    commit: "f6bafd49e5561b4b8bf005684900b9a139149ea3" # v0.22.0
+    commit: "ce634344aeda497dc6a51b20a9ac39984312038e" # v0.23.0
   ovs-cni:
     url: "https://github.com/kubevirt/ovs-cni"
     commit: "edb4754d08f49be54c399c938895fe82aab6aa5a" # v0.12.0
