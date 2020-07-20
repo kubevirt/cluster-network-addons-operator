@@ -1,22 +1,20 @@
-0.39.0
+0.40.0
+
+Features:
+* Bump knmstate to v0.23.0 (#472)
+* Bump KubeMacPool to v0.16.0 (#470)
+* adding linux-bridge bump script. (#450)
+* Introduce `networkaddonsoperator.network.kubevirt.io/rejectOwner` annotation and drop ownership of KMP secrets (#469)
+* move bump-all.sh functionality to Makefile (#449)
+* Split components to sub scripts (#448)
+* Junit report (#444)
+* Automatize knmstate (#412)
 
 Bugs:
-* drop knmstate webhook (#427)
-* Fix rbac in CNAO's manifest (#419)
-* Fix false positive on the CI and missed bugs (#417)
-* Merge pull request #416 from kubevirt/revert-413-remove_over_previliged_rbac
-* Revert "remove over privileged rbac from cnao manifest (#413)"
-* remove over privileged rbac from cnao manifest (#413)
-* collect init containers (#406)
+* Do not trim the version exposed in CR (#465)
+* add describe logs when components has failed to be fully removed (#464)
+* Add describe-all to test checks (#459)
+* Disable ginkgo colors at CI run (#443)
 
-Infra:
-* merge some upgrade tests (#428)
-* bump kubemacpool to v0.14.4 (#423)
-* bump bridge marker to 0.3.0 (#420)
-* Bumping kubemacpool to v0.14.2 (#418)
-* bump kubemacpool 0.14.1 (#414)
-* bump ovs-cni 0.12.0 (#405)
-* Bump NetworkManager to 1.22 so we can test knmstate (#411)
-* bump linux-bridge to 0.8.6 (#407)
-* Bump kubernetes-nmstate 0.21.0 (#403)
-* Operator sdk 1.18 (#404)
+Docs:
+* fix version in README (#436)
