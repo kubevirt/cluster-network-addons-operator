@@ -1,0 +1,89 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: bridge-marker
+  namespace: {{ .Namespace }}
+  labels:
+    tier: node
+    app: bridge-marker
+spec:
+  selector:
+    matchLabels:
+      name: bridge-marker
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: bridge-marker
+        name: bridge-marker
+    spec:
+      serviceAccountName: bridge-marker
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: bridge-marker
+          image: {{ .LinuxBridgeMarkerImage }}
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          args:
+            - -node-name
+            - $(NODE_NAME)
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: bridge-marker-cr
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - update
+  - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: bridge-marker-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bridge-marker-cr
+subjects:
+  - kind: ServiceAccount
+    name: bridge-marker
+    namespace: {{ .Namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bridge-marker
+  namespace: {{ .Namespace }}
+{{ if .EnableSCC }}
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: bridge-marker
+allowHostNetwork: true
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+users:
+- system:serviceaccount:{{ .Namespace }}:bridge-marker
+{{ end }}
+---
