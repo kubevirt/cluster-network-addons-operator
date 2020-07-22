@@ -181,7 +181,7 @@ vendor: $(GO)
 
 bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
-bump-all: bump-knmstate bump-kubemacpool bump-macvtap bump-linux-bridge bump-multus
+bump-all: bump-knmstate bump-kubemacpool bump-macvtap bump-linux-bridge bump-multus bump-ovs-cni
 
 .PHONY: \
 	$(E2E_SUITES) \

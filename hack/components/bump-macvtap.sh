@@ -5,7 +5,7 @@ set -xeo pipefail
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 
-echo Bumping macvtap-cni
+echo 'Bumping macvtap-cni'
 MACVTAP_URL=$(yaml-utils::get_component_url macvtap-cni)
 MACVTAP_COMMIT=$(yaml-utils::get_component_commit macvtap-cni)
 MACVTAP_REPO=$(yaml-utils::get_component_repo ${MACVTAP_URL})
