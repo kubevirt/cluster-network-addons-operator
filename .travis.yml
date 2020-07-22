@@ -6,6 +6,7 @@ services:
 
 install: true
 script:
+- make bump-all
 - make check
 - make docker-build
 
