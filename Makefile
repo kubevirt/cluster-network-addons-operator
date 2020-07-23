@@ -78,6 +78,7 @@ whitespace: $(all_sources)
 	touch $@
 
 check: whitespace-check vet goimports-check gen-k8s-check test/unit
+	./hack/check.sh
 
 whitespace-check: $(all_sources)
 	./hack/whitespace.sh
