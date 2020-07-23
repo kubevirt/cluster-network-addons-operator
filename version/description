@@ -1,20 +1,10 @@
-0.40.0
+0.40.1
 
 Features:
-* Bump knmstate to v0.23.0 (#472)
-* Bump KubeMacPool to v0.16.0 (#470)
-* adding linux-bridge bump script. (#450)
-* Introduce `networkaddonsoperator.network.kubevirt.io/rejectOwner` annotation and drop ownership of KMP secrets (#469)
-* move bump-all.sh functionality to Makefile (#449)
-* Split components to sub scripts (#448)
-* Junit report (#444)
-* Automatize knmstate (#412)
+* Add bridge-marker bump script (#458)
+* Add ovs-cni bump script (#457)
+* Add multus bump script (#456)
 
 Bugs:
-* Do not trim the version exposed in CR (#465)
-* add describe logs when components has failed to be fully removed (#464)
-* Add describe-all to test checks (#459)
-* Disable ginkgo colors at CI run (#443)
-
-Docs:
-* fix version in README (#436)
+* Add kubernetes-nmstate openshift scc manifests (#475)
+* use kustomize version used on kmp (#477)
