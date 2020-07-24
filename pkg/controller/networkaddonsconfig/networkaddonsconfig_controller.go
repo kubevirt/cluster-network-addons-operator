@@ -437,9 +437,7 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 		}
 	}
 
-	r.statusManager.SetDaemonSets(daemonSets)
-	r.statusManager.SetDeployments(deployments)
-	r.statusManager.SetContainers(containers)
+	r.statusManager.SetAttributes(daemonSets, deployments, containers)
 
 	allResources := []types.NamespacedName{}
 	allResources = append(allResources, daemonSets...)
