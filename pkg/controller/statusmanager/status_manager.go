@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
@@ -54,6 +55,7 @@ type StatusManager struct {
 	deployments []types.NamespacedName
 
 	containers []opv1alpha1.Container
+	mux        sync.Mutex
 }
 
 func New(client client.Client, name string) *StatusManager {
@@ -151,7 +153,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	}
 
 	// Make sure to expose deployed containers
-	config.Status.Containers = status.containers
+	_, _, config.Status.Containers = status.GetAttributes()
 
 	// Expose currently handled version
 	config.Status.OperatorVersion = operatorVersion
@@ -212,12 +214,18 @@ func (status *StatusManager) SetNotFailing(level StatusLevel) {
 	status.syncFailing()
 }
 
-func (status *StatusManager) SetDaemonSets(daemonSets []types.NamespacedName) {
+func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []opv1alpha1.Container) {
+	status.mux.Lock()
+	defer status.mux.Unlock()
 	status.daemonSets = daemonSets
+	status.deployments = deployments
+	status.containers = containers
 }
 
-func (status *StatusManager) SetDeployments(deployments []types.NamespacedName) {
-	status.deployments = deployments
+func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.NamespacedName, []opv1alpha1.Container) {
+	status.mux.Lock()
+	defer status.mux.Unlock()
+	return status.daemonSets, status.deployments, status.containers
 }
 
 // SetFromPods sets the operator status to Failing, Progressing, or Available, based on
@@ -225,10 +233,11 @@ func (status *StatusManager) SetDeployments(deployments []types.NamespacedName) 
 // no-op if the StatusManager is currently marked as failing due to a configuration error.
 func (status *StatusManager) SetFromPods() {
 	progressing := []string{}
+	daemonSets, deployments, _ := status.GetAttributes()
 
 	// Iterate all owned DaemonSets and check whether they are progressing smoothly or have been
 	// already deployed.
-	for _, dsName := range status.daemonSets {
+	for _, dsName := range daemonSets {
 
 		// First check whether DaemonSet namespace exists
 		ns := &corev1.Namespace{}
@@ -271,7 +280,7 @@ func (status *StatusManager) SetFromPods() {
 
 	// Do the same for Deployments. Iterate all owned Deployments and check whether they are
 	// progressing smoothly or have been already deployed.
-	for _, depName := range status.deployments {
+	for _, depName := range deployments {
 		// First check whether Deployment namespace exists
 		ns := &corev1.Namespace{}
 		if err := status.client.Get(context.TODO(), types.NamespacedName{Name: depName.Namespace}, ns); err != nil {
@@ -338,8 +347,4 @@ func (status *StatusManager) SetFromPods() {
 	if len(progressing) == 0 {
 		status.Set(true)
 	}
-}
-
-func (status *StatusManager) SetContainers(containers []opv1alpha1.Container) {
-	status.containers = containers
 }
