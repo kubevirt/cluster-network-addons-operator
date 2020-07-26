@@ -24,7 +24,7 @@ TARGETS = \
 export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 
-WHAT ?= ./pkg ./cmd
+WHAT ?= ./pkg ./cmd ./tools/
 
 GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
@@ -72,7 +72,7 @@ apis_sources=$(call rwildcard,pkg/apis,*.go)
 fmt: whitespace goimports
 
 goimports: $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/
+	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
 	touch $@
 
 whitespace: $(all_sources)
@@ -87,7 +87,7 @@ whitespace-check: $(all_sources)
 	touch $@
 
 vet: $(GO) $(cmd_sources) $(pkg_sources)
-	$(GO) vet ./pkg/... ./cmd/... ./test/...
+	$(GO) vet ./pkg/... ./cmd/... ./test/... ./tools/...
 	touch $@
 
 goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
