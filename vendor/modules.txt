@@ -186,6 +186,8 @@ github.com/fatih/color
 github.com/fatih/structtag
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
+# github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
+github.com/getlantern/deepcopy
 # github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 github.com/ghodss/yaml
 # github.com/github-release/github-release v0.8.1

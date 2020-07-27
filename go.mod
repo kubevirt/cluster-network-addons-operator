@@ -4,6 +4,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/github-release/github-release v0.8.1
 	github.com/gobwas/glob v0.2.3
