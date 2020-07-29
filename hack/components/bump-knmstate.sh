@@ -34,8 +34,4 @@ sed -i "s/---/{{ if .EnableSCC }}\n---/" data/nmstate/scc.yaml
 echo "{{ end }}" >> data/nmstate/scc.yaml
 
 echo 'Apply custom CNAO patches on kubernetes-nmstate manifests'
-echo '
-241a242,243
->   annotations:
->     networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
-' | patch data/nmstate/operator.yaml
+sed -i -z 's#kind: Secret\nmetadata:#kind: Secret\nmetadata:\n  annotations:\n    networkaddonsoperator.network.kubevirt.io\/rejectOwner: ""#' data/nmstate/operator.yaml
