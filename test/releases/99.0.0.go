@@ -30,7 +30,7 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool:v0.16.0",
+				Image:      "quay.io/kubevirt/kubemacpool:v0.17.0",
 			},
 			opv1alpha1.Container{
 				ParentName: "nmstate-handler",
