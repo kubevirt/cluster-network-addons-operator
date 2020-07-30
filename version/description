@@ -1,10 +1,9 @@
-0.40.1
+0.41.0
 
 Features:
-* Add bridge-marker bump script (#458)
-* Add ovs-cni bump script (#457)
-* Add multus bump script (#456)
+* Bump kubernetes-nmstate to 0.26.0 (#483)
+* Bump kmp to 0.17.0 (#482)
 
 Bugs:
-* Add kubernetes-nmstate openshift scc manifests (#475)
-* use kustomize version used on kmp (#477)
+* Add mutex and lock critical sections in StatusManager (#474)
+* add porcelain to check for uncommitted changes (#476)
