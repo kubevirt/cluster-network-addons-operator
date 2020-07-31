@@ -19,13 +19,23 @@ type inputParams struct {
 	gitToken             string
 }
 
+const (
+	updatePolicyStatic = "static"
+	updatePolicyTagged = "tagged"
+	updatePolicyLatest = "latest"
+)
+
 func main() {
 	logger = initLog()
-	// cold start message (visibly unique in log)
 	logger.Printf("~~~~~~~~Bumper Script~~~~~~~~")
 
 	inputArgs := inputParams{}
 	initFlags(&inputArgs)
+
+	githubApi, err := newGithubApi(inputArgs.gitToken)
+	if err != nil {
+		exitWithError(errors.Wrap(err, "Failed to create github api instance"))
+	}
 
 	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
 	componentsConfig, err := parseComponentsYaml(inputArgs.componentsConfigPath)
@@ -34,71 +44,66 @@ func main() {
 	}
 
 	for componentName, component := range componentsConfig.Components {
-		logger.Printf("Checking if %s needs bumping", componentName)
+		logger.Printf("~~Checking if %s needs bumping~~", componentName)
 
 		err = printCurrentComponentParams(component)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to print component %s", componentName))
 		}
 
-		currentReleaseVersion, err := getCurrentReleaseTag(component.Url)
+		gitComponent, err := newGitComponent(githubApi, componentName, &component)
 		if err != nil {
-			exitWithError(errors.Wrapf(err, "Failed to get latest release version tag from %s", component.Url))
+			exitWithError(errors.Wrapf(err, "Failed to clone %s", componentName))
+		}
+		defer os.RemoveAll(gitComponent.gitRepo.localDir)
+
+		currentReleaseTag, err := gitComponent.getCurrentReleaseTag()
+		if err != nil {
+			exitWithError(errors.Wrapf(err, "Failed to get current release version tag from %s", componentName))
 		}
 
-		latestReleaseVersion, latestReleaseCommit, err := getLatestReleaseInfo(component.Url)
+		updatedReleaseTag, updatedReleaseCommit, err := gitComponent.getUpdatedReleaseInfo()
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to get latest release version tag from %s", componentName))
 		}
 
-		//TODO updatePolicyDummy is a placeholder. In future task will be replaced by proper parameter set in the configYaml
-		updatePolicyDummy := "static"
-		bumpNeeded, err := isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicyDummy)
+		bumpNeeded, err := isBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to discover if Bump need for %s", componentName))
 		}
 
 		if bumpNeeded {
-			logger.Printf("Bumping %s from %s to %s", componentName, currentReleaseVersion, latestReleaseVersion)
-			//reset --hard git repo
+			logger.Printf("Bumping %s from %s to %s", componentName, currentReleaseTag, updatedReleaseTag)
+			// reset --hard git repo
 			exitWithError(fmt.Errorf("reset --hader repo not implemented yet"))
 
-			//PR name
-			PRTitle := fmt.Sprintf("Bump %s to %s", componentName, latestReleaseVersion)
+			// PR name
+			PRTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
 			logger.Printf("PR title: %s", PRTitle)
-			//Create PR
+			// Create PR
 			exitWithError(fmt.Errorf("create PR not implemented yet"))
 
-			//update component's entry in config yaml
-			component.Commit = latestReleaseCommit
-			component.Metadata = latestReleaseVersion
+			// update component's entry in config yaml
+			component.Commit = updatedReleaseCommit
+			component.Metadata = updatedReleaseTag
 			err = updateComponentsYaml(inputArgs.componentsConfigPath, componentsConfig)
 			if err != nil {
 				exitWithError(errors.Wrap(err, "Failed to update components yaml"))
 			}
 
-			//run bump script
 			cmd := exec.Command("make", fmt.Sprintf("bump-%s", componentName))
 			if out, err := cmd.CombinedOutput(); err != nil {
 				exitWithError(errors.Wrapf(err, "Failed to run bump script. StdOut = %s", string(out)))
 			}
 
-			//create a new branch name
+			// create a new branch name
 			BranchName := strings.Replace(strings.ToLower(PRTitle), " ", "_", -1)
 			logger.Printf("Opening new Branch %s", BranchName)
 
-			//push branch to PR
+			// push branch to PR
 			exitWithError(fmt.Errorf("push branch to PR not implemented yet"))
 		}
 	}
-}
-
-func getLatestReleaseInfo(componentUrl string) (string, string, error) {
-	return "", "", fmt.Errorf("getLatestReleaseInfo Not yet implemented")
-}
-
-func getCurrentReleaseTag(componentUrl string) (string, error) {
-	return "", fmt.Errorf("getCurrentReleaseTag Not yet implemented")
 }
 
 func isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy string) (bool, error) {
