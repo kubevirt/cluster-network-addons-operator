@@ -190,7 +190,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 			// Request object not found, could have been deleted after reconcile request.
 			// Reset list of tracked objects.
 			// TODO: This can be dropped once we implement a finalizer waiting for all components to be removed
-			r.trackDeployedObjects([]*unstructured.Unstructured{})
+			r.stopTrackingObjects()
 
 			// Owned objects are automatically garbage collected. Return and don't requeue
 			return reconcile.Result{}, nil
@@ -258,7 +258,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Track state of all deployed pods
-	r.trackDeployedObjects(objs)
+	r.trackDeployedObjects(objs, networkAddonsConfig.GetGeneration())
 
 	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
 	// previous runs.
@@ -406,7 +406,7 @@ func (r *ReconcileNetworkAddonsConfig) deleteObjects(objs []*unstructured.Unstru
 // Track current state of Deployments and DaemonSets deployed by the operator. This is needed to
 // keep state of NetworkAddonsConfig up-to-date, e.g. mark as Ready once all objects are successfully
 // created. This also exposes all containers and their images used by deployed components in Status.
-func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured.Unstructured) {
+func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured.Unstructured, generation int64) {
 	daemonSets := []types.NamespacedName{}
 	deployments := []types.NamespacedName{}
 	containers := []opv1alpha1.Container{}
@@ -437,13 +437,24 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 		}
 	}
 
-	r.statusManager.SetAttributes(daemonSets, deployments, containers)
+	r.statusManager.SetAttributes(daemonSets, deployments, containers, generation)
 
 	allResources := []types.NamespacedName{}
 	allResources = append(allResources, daemonSets...)
 	allResources = append(allResources, deployments...)
 
 	r.podReconciler.SetResources(allResources)
+
+	// Trigger status manager to notice the change
+	r.statusManager.SetFromPods()
+}
+
+// Stop tracking current state of Deployments and DaemonSets deployed by the operator.
+func (r *ReconcileNetworkAddonsConfig) stopTrackingObjects() {
+	// reset generation number by using invalid generation value
+	r.statusManager.SetAttributes([]types.NamespacedName{}, []types.NamespacedName{}, []opv1alpha1.Container{}, -1)
+
+	r.podReconciler.SetResources([]types.NamespacedName{})
 
 	// Trigger status manager to notice the change
 	r.statusManager.SetFromPods()

@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
 const (
@@ -51,6 +52,7 @@ type StatusManager struct {
 
 	failing [maxStatusLevel]*conditionsv1.Condition
 
+	generation  int64
 	daemonSets  []types.NamespacedName
 	deployments []types.NamespacedName
 
@@ -153,7 +155,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	}
 
 	// Make sure to expose deployed containers
-	_, _, config.Status.Containers = status.GetAttributes()
+	_, _, config.Status.Containers, status.generation = status.GetAttributes()
 
 	// Expose currently handled version
 	config.Status.OperatorVersion = operatorVersion
@@ -214,18 +216,19 @@ func (status *StatusManager) SetNotFailing(level StatusLevel) {
 	status.syncFailing()
 }
 
-func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []opv1alpha1.Container) {
+func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []opv1alpha1.Container, generation int64) {
 	status.mux.Lock()
 	defer status.mux.Unlock()
 	status.daemonSets = daemonSets
 	status.deployments = deployments
 	status.containers = containers
+	status.generation = generation
 }
 
-func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.NamespacedName, []opv1alpha1.Container) {
+func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.NamespacedName, []opv1alpha1.Container, int64) {
 	status.mux.Lock()
 	defer status.mux.Unlock()
-	return status.daemonSets, status.deployments, status.containers
+	return status.daemonSets, status.deployments, status.containers, status.generation
 }
 
 // SetFromPods sets the operator status to Failing, Progressing, or Available, based on
@@ -233,7 +236,7 @@ func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.Na
 // no-op if the StatusManager is currently marked as failing due to a configuration error.
 func (status *StatusManager) SetFromPods() {
 	progressing := []string{}
-	daemonSets, deployments, _ := status.GetAttributes()
+	daemonSets, deployments, _, generation := status.GetAttributes()
 
 	// Iterate all owned DaemonSets and check whether they are progressing smoothly or have been
 	// already deployed.
@@ -342,6 +345,16 @@ func (status *StatusManager) SetFromPods() {
 
 	// If all pods are being created, mark deployment as not failing
 	status.SetNotFailing(PodDeployment)
+
+	config := &opv1alpha1.NetworkAddonsConfig{}
+	if err := status.client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config); err != nil {
+		return
+	}
+
+	// if we didn't get current generation, don't mark as Available yet
+	if config.GetGeneration() != generation {
+		return
+	}
 
 	// Finally, if all containers are deployed, mark as Available
 	if len(progressing) == 0 {
