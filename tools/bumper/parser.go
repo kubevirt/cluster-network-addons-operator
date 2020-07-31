@@ -10,9 +10,11 @@ import (
 )
 
 type component struct {
-	Url      string `yaml:"url"`
-	Commit   string `yaml:"commit"`
-	Metadata string `yaml:"metadata"`
+	Url          string `yaml:"url"`
+	Commit       string `yaml:"commit"`
+	Branch       string `yaml:"branch"`
+	Updatepolicy string `yaml:"update-policy"`
+	Metadata     string `yaml:"metadata"`
 }
 
 type componentsConfig struct {

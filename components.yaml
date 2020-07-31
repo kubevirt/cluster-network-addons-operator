@@ -1,23 +1,43 @@
 components:
   multus:
     url: "https://github.com/intel/multus-cni"
-    commit: "bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a" # v3.4.1
+    commit: "bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a"
+    branch: "master"
+    update-policy: "tagged"
+    metadata: "v3.4.1"
   linux-bridge:
     url: "https://github.com/containernetworking/plugins"
-    commit: "ad10b6fa91aacd720f1f9ab94341a97a82a24965" # v0.8.6
+    commit: "ad10b6fa91aacd720f1f9ab94341a97a82a24965"
+    branch: "master"
+    update-policy: "tagged"
+    metadata: "v0.8.6"
   bridge-marker:
     url: "https://github.com/kubevirt/bridge-marker"
-    commit: "049eb6a796b742767a0be838f6ddb7f79c97dd60" # 0.3.0
+    commit: "049eb6a796b742767a0be838f6ddb7f79c97dd60"
+    branch: "master"
+    update-policy: "tagged"
+    metadata: "0.3.0"
   kubemacpool:
     url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
     commit: "07def8fb9616acf039075047f6a4a00fee258971"
+    branch: "master"
+    update-policy: "tagged"
     metadata: "v0.19.0"
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
-    commit: "bdb07fb11f4a5d5cea87f2dec5ab9f6387b4128b" # v0.26.0
+    commit: "bdb07fb11f4a5d5cea87f2dec5ab9f6387b4128b"
+    branch: "master"
+    update-policy: "tagged"
+    metadata: "v0.26.0"
   ovs-cni:
     url: "https://github.com/kubevirt/ovs-cni"
-    commit: "edb4754d08f49be54c399c938895fe82aab6aa5a" # v0.12.0
+    commit: "edb4754d08f49be54c399c938895fe82aab6aa5a"
+    branch: "release-0.12"
+    update-policy: "tagged"
+    metadata: "v0.12.0"
   macvtap-cni:
     url: "https://github.com/kubevirt/macvtap-cni"
-    commit: "14e5a3c7bf516bd4542366a78b7af02f04230ac5" # v0.2.0
+    commit: "14e5a3c7bf516bd4542366a78b7af02f04230ac5"
+    branch: "master"
+    update-policy: "tagged"
+    metadata: "v0.2.0"
