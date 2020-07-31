@@ -660,6 +660,8 @@ github.com/spf13/viper
 # github.com/stretchr/testify v1.5.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/thanhpk/randstr v1.0.4
+github.com/thanhpk/randstr
 # github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 github.com/tomnomnom/linkheader
 # github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2

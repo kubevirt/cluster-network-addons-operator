@@ -21,6 +21,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.18.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.5
+	github.com/thanhpk/randstr v1.0.4
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
