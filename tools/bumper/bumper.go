@@ -7,8 +7,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
 )
 
@@ -78,8 +80,8 @@ func main() {
 			exitWithError(fmt.Errorf("reset --hader repo not implemented yet"))
 
 			// PR name
-			PRTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
-			logger.Printf("PR title: %s", PRTitle)
+			prTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
+			logger.Printf("PR title: %s", prTitle)
 			// Create PR
 			exitWithError(fmt.Errorf("create PR not implemented yet"))
 
@@ -97,18 +99,40 @@ func main() {
 			}
 
 			// create a new branch name
-			BranchName := strings.Replace(strings.ToLower(PRTitle), " ", "_", -1)
+			BranchName := strings.Replace(strings.ToLower(prTitle), " ", "_", -1)
 			logger.Printf("Opening new Branch %s", BranchName)
 
 			// push branch to PR
 			exitWithError(fmt.Errorf("push branch to PR not implemented yet"))
+		} else {
+			logger.Printf("Bump not needed in component %s", componentName)
 		}
 	}
 }
 
 func isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy string) (bool, error) {
 	logger.Printf("currentReleaseVersion: %s, latestReleaseVersion: %s, updatePolicy: %s\n", currentReleaseVersion, latestReleaseVersion, updatePolicy)
-	return false, fmt.Errorf("isBumpNeeded Not yet implemented")
+
+	if updatePolicy == updatePolicyStatic {
+		logger.Printf("updatePolicy is static. avoiding auto bump")
+		return false, nil
+	}
+
+	// if one of the tags is in vtag format (e.g 0.39.0-32-g1fcbe815), and not equal, then always bump
+	if isVtagFormat(currentReleaseVersion) || isVtagFormat(latestReleaseVersion) {
+		return currentReleaseVersion == latestReleaseVersion, nil
+	}
+
+	currentVersion, err := canonicalizeVersion(currentReleaseVersion)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to digest current Version %s to semver", currentVersion)
+	}
+	latestVersion, err := canonicalizeVersion(latestReleaseVersion)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to digest latest Version %s to semver", latestVersion)
+	}
+
+	return currentVersion.LessThan(*latestVersion), nil
 }
 
 func initLog() *log.Logger {
@@ -125,6 +149,31 @@ func initFlags(paramArgs *inputParams) {
 	if flag.NFlag() != 2 {
 		exitWithError(fmt.Errorf("Wrong Number of input parameters %d, should be 2. Use --help for usage", flag.NFlag()))
 	}
+}
+
+// since versioning of components can sometimes divert from semver standard, we do some refactoring
+func canonicalizeVersion(version string) (*semver.Version, error) {
+	// remove trailing "v" if exists
+	version = strings.TrimPrefix(version, "v")
+
+	// expand to 2 dotted format
+	versionSectionsNum := len(strings.Split(version, "."))
+	switch versionSectionsNum {
+	case 2:
+		version = version + ".0"
+	case 3:
+		break
+	default:
+		return nil, fmt.Errorf("Failed to refactor version string %s", version)
+	}
+
+	return semver.NewVersion(version)
+}
+
+// check vtag format (example: 0.39.0-32-g1fcbe815)
+func isVtagFormat(tagVersion string) bool {
+	var vtagSyntax = regexp.MustCompile(`^[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{7}`)
+	return vtagSyntax.MatchString(tagVersion)
 }
 
 func exitWithError(err error) {

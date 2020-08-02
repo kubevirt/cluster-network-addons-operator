@@ -98,6 +98,8 @@ github.com/containerd/continuity/syscallx
 github.com/containerd/continuity/sysx
 # github.com/containerd/ttrpc v0.0.0-20190828154514-0e0f228740de
 github.com/containerd/ttrpc
+# github.com/coreos/go-semver v0.3.0
+github.com/coreos/go-semver/semver
 # github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 github.com/coreos/prometheus-operator/pkg/apis/monitoring
 github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1
