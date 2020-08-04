@@ -285,6 +285,12 @@ spec:
             configMapKeyRef:
               key: RANGE_END
               name: kubemacpool-mac-range-config
+        - name: CA_ROTATE_INTERVAL
+          value: 8760h0m0s
+        - name: CA_OVERLAP_INTERVAL
+          value: 8760h0m0s
+        - name: CERT_ROTATE_INTERVAL
+          value: 4380h0m0s
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
