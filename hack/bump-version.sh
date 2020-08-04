@@ -12,15 +12,15 @@ bump() {
 }
 
 bump_major() {
-   bump "s/^\(.*\)[.].*[.].*$/\1/g" "s/^\(.*\)[.]\(.*\)[.]\(.*\)$/version_part.\2.\3/g"
+   bump "s/^\(.*\)[.].*[.].*$/\1/g" "s/^.*$/version_part.0.0/g"
 }
 
 bump_minor() {
-    bump "s/^.*[.]\(.*\)[.].*$/\1/g" "s/^\(.*\)[.]\(.*\)[.]\(.*\)$/\1.version_part.\3/g"
+    bump "s/^.*[.]\(.*\)[.].*$/\1/g" "s/^\(.*\)[.].*[.].*$/\1.version_part.0/g"
 }
 
 bump_patch() {
-    bump "s/^.*[.].*[.]\(.*\)$/\1/g" "s/^\(.*\)[.]\(.*\)[.]\(.*\)$/\1.\2.version_part/g"
+    bump "s/^.*[.].*[.]\(.*\)$/\1/g" "s/^\(.*\)[.]\(.*\)[.].*$/\1.\2.version_part/g"
 }
 
 if [[ ! $current_type =~ $expected_types ]]; then
