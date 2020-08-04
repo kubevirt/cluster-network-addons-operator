@@ -6,7 +6,7 @@ import (
 
 func init() {
 	release := Release{
-		Version: "0.27.0",
+		Version: "0.27.7",
 		Containers: []opv1alpha1.Container{
 			opv1alpha1.Container{
 				ParentName: "multus",
@@ -30,31 +30,31 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool:v0.8.1",
+				Image:      "quay.io/kubevirt/kubemacpool:v0.8.3",
 			},
 			opv1alpha1.Container{
 				ParentName: "nmstate-handler",
 				ParentKind: "DaemonSet",
 				Name:       "nmstate-handler",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler:v0.14.0",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler:v0.15.5",
 			},
 			opv1alpha1.Container{
 				ParentName: "nmstate-handler-worker",
 				ParentKind: "DaemonSet",
 				Name:       "nmstate-handler",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler:v0.14.0",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler:v0.15.5",
 			},
 			opv1alpha1.Container{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "quay.io/kubevirt/ovs-cni-plugin:v0.9.0",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin:v0.10.0",
 			},
 			opv1alpha1.Container{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "quay.io/kubevirt/ovs-cni-marker:v0.9.0",
+				Image:      "quay.io/kubevirt/ovs-cni-marker:v0.10.0",
 			},
 		},
 		SupportedSpec: opv1alpha1.NetworkAddonsConfigSpec{
