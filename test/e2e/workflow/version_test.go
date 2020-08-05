@@ -22,7 +22,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 		It("should set targetVersion and operatorVersion immediately after it turns Progressing", func() {
 			CheckConfigCondition(ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
-			CheckConfigVersions(operatorVersion, "", operatorVersion, CheckImmediately, CheckDoNotRepeat)
+			CheckConfigVersions(operatorVersion, CheckIgnoreVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
 		})
 
 		It("should set observedVersion once turns it Available", func() {
