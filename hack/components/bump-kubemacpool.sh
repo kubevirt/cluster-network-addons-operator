@@ -46,6 +46,13 @@ spec:
       - image: "{{ .KubeMacPoolImage }}"
         imagePullPolicy: "{{ .ImagePullPolicy }}"
         name: manager
+        env:
+          - name: CA_ROTATE_INTERVAL
+            value: "{{ .CARotateInterval }}"
+          - name: CA_OVERLAP_INTERVAL
+            value: "{{ .CAOverlapInterval }}"
+          - name: CERT_ROTATE_INTERVAL
+            value: "{{ .CertRotateInterval }}"
 EOF
 
     cat <<EOF > config/cnao/cnao_rejectowner_patch.yaml

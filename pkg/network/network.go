@@ -28,6 +28,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 	errs = append(errs, validateMultus(conf, openshiftNetworkConfig)...)
 	errs = append(errs, validateKubeMacPool(conf)...)
 	errs = append(errs, validateImagePullPolicy(conf)...)
+	errs = append(errs, validateSelfSignConfiguration(conf)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
@@ -43,6 +44,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 func FillDefaults(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) error {
 	errs := []error{}
 
+	errs = append(errs, fillDefaultsSelfSignConfiguration(conf, previous)...)
 	errs = append(errs, fillDefaultsImagePullPolicy(conf, previous)...)
 	errs = append(errs, fillDefaultsKubeMacPool(conf, previous)...)
 
@@ -84,6 +86,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 
 	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
+	errs = append(errs, changeSafeSelfSignConfiguration(prev, next)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))

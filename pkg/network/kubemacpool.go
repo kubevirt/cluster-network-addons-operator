@@ -107,6 +107,9 @@ func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir str
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["RangeStart"] = conf.KubeMacPool.RangeStart
 	data.Data["RangeEnd"] = conf.KubeMacPool.RangeEnd
+	data.Data["CARotateInterval"] = conf.SelfSignConfiguration.CARotateInterval
+	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
+	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
 	if err != nil {
