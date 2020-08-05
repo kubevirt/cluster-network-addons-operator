@@ -22,6 +22,13 @@ main() {
     trap teardown EXIT SIGINT SIGTERM SIGSTOP
     make cluster-operator-push
     make cluster-operator-install
+    set -e
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
     make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
 }
 
