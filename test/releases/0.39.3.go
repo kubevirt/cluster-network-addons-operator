@@ -6,7 +6,7 @@ import (
 
 func init() {
 	release := Release{
-		Version: "0.39.0",
+		Version: "0.39.3",
 		Containers: []opv1alpha1.Container{
 			opv1alpha1.Container{
 				ParentName: "multus",
@@ -30,7 +30,7 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool:v0.14.4",
+				Image:      "quay.io/kubevirt/kubemacpool:v0.14.5",
 			},
 			opv1alpha1.Container{
 				ParentName: "nmstate-handler",
