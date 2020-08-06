@@ -131,7 +131,6 @@ var _ = Describe("Testing kubeMacPool", func() {
 				Expect(errorList).To(BeEmpty())
 			})
 		})
-
 	})
 
 	Describe("fill defaults function", func() {

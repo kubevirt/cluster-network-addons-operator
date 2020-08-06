@@ -24,6 +24,8 @@ TARGETS = \
 export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 
+WHAT ?= ./pkg ./cmd
+
 GINKGO_EXTRA_ARGS ?=
 GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
 GINKGO ?= build/_output/bin/ginkgo
@@ -93,7 +95,7 @@ goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
 	touch $@
 
 test/unit: $(GINKGO)
-	$(GINKGO) $(GINKGO_ARGS) ./pkg/ ./cmd/
+	$(GINKGO) $(GINKGO_ARGS) $(WHAT)
 
 manager: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./cmd/...
