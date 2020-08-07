@@ -232,63 +232,65 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 			},
 		}),
 	)
-	Describe("change safe function", func() {
-		Context("When they are equal", func() {
-			It("should NOT return an error", func() {
-				previousClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{
-					SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
-						CARotateInterval:   "2h",
-						CAOverlapInterval:  "1h",
-						CertRotateInterval: "1h",
-					},
-				}
-				currentClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{
-					SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
-						CARotateInterval:   "2h",
-						CAOverlapInterval:  "1h",
-						CertRotateInterval: "1h",
-					},
-				}
-				errorList := changeSafeSelfSignConfiguration(previousClusterConfig, currentClusterConfig)
+	type changeSafeCase struct {
+		previousConfig *opv1alpha1.NetworkAddonsConfigSpec
+		currentConfig  *opv1alpha1.NetworkAddonsConfigSpec
+		expectedError  string
+	}
+	DescribeTable("change safe function",
+		func(c changeSafeCase) {
+			errorList := changeSafeSelfSignConfiguration(c.previousConfig, c.currentConfig)
+			if c.expectedError == "" {
 				Expect(errorList).To(BeEmpty())
-			})
-		})
-
-		Context("When they are not equal", func() {
-			It("should return an error", func() {
-				previousClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{
-					SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
-						CARotateInterval:   "2h",
-						CAOverlapInterval:  "1h",
-						CertRotateInterval: "1h",
-					},
-				}
-				currentClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{
-					SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
-						CARotateInterval:   "4h",
-						CAOverlapInterval:  "1h",
-						CertRotateInterval: "1h",
-					},
-				}
-				errorList := changeSafeSelfSignConfiguration(previousClusterConfig, currentClusterConfig)
+			} else {
 				Expect(len(errorList)).To(Equal(1), "validation failed due to an unexpected error: %v", errorList)
-				Expect(errorList[0].Error()).To(Equal("cannot modify SelfSignConfiguration configuration once it is deployed"))
-			})
-		})
-
-		Context("When trying to remove selfSignConfiguration", func() {
-			It("should NOT return an error", func() {
-				previousClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{
-					SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
-						CARotateInterval:   "2h",
-						CAOverlapInterval:  "1h",
-						CertRotateInterval: "1h",
-					},
-				}
-				currentClusterConfig := &opv1alpha1.NetworkAddonsConfigSpec{}
-				errorList := changeSafeSelfSignConfiguration(previousClusterConfig, currentClusterConfig)
-				Expect(errorList).To(BeEmpty())
-			})
-		})
-	})
+				Expect(errorList[0].Error()).To(MatchRegexp(c.expectedError))
+			}
+		},
+		Entry("when they are equal should NOT return an error", changeSafeCase{
+			previousConfig: &opv1alpha1.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
+					CARotateInterval:   "2h",
+					CAOverlapInterval:  "1h",
+					CertRotateInterval: "1h",
+				},
+			},
+			currentConfig: &opv1alpha1.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
+					CARotateInterval:   "2h",
+					CAOverlapInterval:  "1h",
+					CertRotateInterval: "1h",
+				},
+			},
+			expectedError: "",
+		}),
+		Entry("When they are not equal should return an error", changeSafeCase{
+			previousConfig: &opv1alpha1.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
+					CARotateInterval:   "2h",
+					CAOverlapInterval:  "1h",
+					CertRotateInterval: "1h",
+				},
+			},
+			currentConfig: &opv1alpha1.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
+					CARotateInterval:   "4h",
+					CAOverlapInterval:  "1h",
+					CertRotateInterval: "1h",
+				},
+			},
+			expectedError: "cannot modify SelfSignConfiguration configuration once it is deployed",
+		}),
+		Entry("When trying to remove selfSignConfiguration should NOT return an error", changeSafeCase{
+			previousConfig: &opv1alpha1.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &opv1alpha1.SelfSignConfiguration{
+					CARotateInterval:   "2h",
+					CAOverlapInterval:  "1h",
+					CertRotateInterval: "1h",
+				},
+			},
+			currentConfig: &opv1alpha1.NetworkAddonsConfigSpec{},
+			expectedError: "",
+		}),
+	)
 })
