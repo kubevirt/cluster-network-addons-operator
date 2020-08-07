@@ -241,8 +241,6 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  annotations:
-    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
   name: {{template "handlerPrefix" .}}nmstate-webhook
   namespace: {{ .HandlerNamespace }}
 type: kubernetes.io/tls

@@ -49,7 +49,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 		return errors.Wrapf(err, "could not retrieve existing %s", objDesc)
 	}
 
-	if isTLSSecret(obj) {
+	if IsTLSSecret(obj) {
 		log.Printf("Ignoring TLS secret %s at reconcile", obj.GetName())
 		return nil
 	}
@@ -117,7 +117,7 @@ func DeleteObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruc
 	return nil
 }
 
-func isTLSSecret(obj *uns.Unstructured) bool {
+func IsTLSSecret(obj *uns.Unstructured) bool {
 	if obj.GetKind() != "Secret" {
 		return false
 	}

@@ -206,8 +206,6 @@ data:
   tls.key: YmFkIGtleQo=
 kind: Secret
 metadata:
-  annotations:
-    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
   name: kubemacpool-service
   namespace: '{{ .Namespace }}'
 type: kubernetes.io/tls

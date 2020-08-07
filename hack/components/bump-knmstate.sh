@@ -32,6 +32,3 @@ cp $NMSTATE_PATH/deploy/crds/*nodenetwork*crd* data/nmstate/
 cp $NMSTATE_PATH/deploy/openshift/scc.yaml data/nmstate/scc.yaml
 sed -i "s/---/{{ if .EnableSCC }}\n---/" data/nmstate/scc.yaml
 echo "{{ end }}" >> data/nmstate/scc.yaml
-
-echo 'Apply custom CNAO patches on kubernetes-nmstate manifests'
-sed -i -z 's#kind: Secret\nmetadata:#kind: Secret\nmetadata:\n  annotations:\n    networkaddonsoperator.network.kubevirt.io\/rejectOwner: ""#' data/nmstate/operator.yaml
