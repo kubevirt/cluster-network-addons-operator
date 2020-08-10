@@ -1,10 +1,18 @@
-0.40.1
+0.41.0
 
 Features:
-* Add bridge-marker bump script (#458)
-* Add ovs-cni bump script (#457)
-* Add multus bump script (#456)
+* Bump KubeMacPool to v0.19.0 (#499)
+* Convert the rest of the SelfSignedConfiguration test to table (#495)
+* Add self signed certificates configuration knobs to NAC CRD (#490)
+* Automation: KubeMacPool functests on CNAO lane (#408)
+* Test upgrades from 0.39.3 instead of 0.39.0 (#488)
+* Test upgrades from 0.27.7 instead of 0.27.0
+* Bump kubernetes-nmstate to 0.26.0 (#483)
+* add porcelain to check for uncommitted changes (#476)
 
 Bugs:
-* Add kubernetes-nmstate openshift scc manifests (#475)
-* use kustomize version used on kmp (#477)
+* Fix test "should set targetVersion and operatorVersion immediately after it turns Progressing (#492)
+* Delete unused OKD automation scripts (#489)
+* Fix reset patch version when bumping minor (#486)
+* Check SetFromPods has current networkAddonsConfig generation before setting Available (#485)
+* Add mutex and lock critical sections in StatusManager (#474)
