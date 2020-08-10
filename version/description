@@ -1,4 +1,4 @@
-0.39.3
+0.39.4
 
-Bugs:
-* Do not trim the version exposed in CR (#466)
+Features:
+* Bump KubeMacPool to v0.14.6 (#497)
