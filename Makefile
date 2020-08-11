@@ -173,7 +173,7 @@ prepare-major:
 release: $(GITHUB_RELEASE)
 	DESCRIPTION=version/description \
 	GITHUB_RELEASE=$(GITHUB_RELEASE) \
-	TAG=$(shell hack/version.sh) \
+	TAG=v$(shell hack/version.sh) \
 	  hack/release.sh \
 	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
 	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
