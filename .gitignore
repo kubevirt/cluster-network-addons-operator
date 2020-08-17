@@ -26,3 +26,7 @@ goimports-check
 vet
 whitespace
 whitespace-check
+
+# bumper go exec file
+bumper
+
