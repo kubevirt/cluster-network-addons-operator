@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -213,6 +215,56 @@ func (componentOps *gitComponent) getLatestFromBranch(repo, owner, branch, repoD
 	}
 
 	return vtag, updatedCommit, nil
+}
+
+func (componentOps *gitComponent) isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy string) (bool, error) {
+	logger.Printf("currentReleaseVersion: %s, latestReleaseVersion: %s, updatePolicy: %s\n", currentReleaseVersion, latestReleaseVersion, updatePolicy)
+
+	if updatePolicy == updatePolicyStatic {
+		logger.Printf("updatePolicy is static. avoiding auto bump")
+		return false, nil
+	}
+
+	// if one of the tags is in vtag format (e.g 0.39.0-32-g1fcbe815), and not equal, then always bump
+	if isVtagFormat(currentReleaseVersion) || isVtagFormat(latestReleaseVersion) {
+		return currentReleaseVersion == latestReleaseVersion, nil
+	}
+
+	currentVersion, err := canonicalizeVersion(currentReleaseVersion)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to digest current Version %s to semver", currentVersion)
+	}
+	latestVersion, err := canonicalizeVersion(latestReleaseVersion)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to digest latest Version %s to semver", latestVersion)
+	}
+
+	return currentVersion.LessThan(*latestVersion), nil
+}
+
+// since versioning of components can sometimes divert from semver standard, we do some refactoring
+func canonicalizeVersion(version string) (*semver.Version, error) {
+	// remove trailing "v" if exists
+	version = strings.TrimPrefix(version, "v")
+
+	// expand to 2 dotted format
+	versionSectionsNum := len(strings.Split(version, "."))
+	switch versionSectionsNum {
+	case 2:
+		version = version + ".0"
+	case 3:
+		break
+	default:
+		return nil, fmt.Errorf("Failed to refactor version string %s", version)
+	}
+
+	return semver.NewVersion(version)
+}
+
+// check vtag format (example: 0.39.0-32-g1fcbe815)
+func isVtagFormat(tagVersion string) bool {
+	var vtagSyntax = regexp.MustCompile(`^[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{7}`)
+	return vtagSyntax.MatchString(tagVersion)
 }
 
 // getTagCommitSha gets the commit sha from tag name
