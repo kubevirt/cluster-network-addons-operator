@@ -22,6 +22,7 @@ import (
 
 type mockGithubApi struct {
 	repoDir string
+	fakePRList []*github.PullRequest
 }
 
 func (g mockGithubApi) ListMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
@@ -50,6 +51,17 @@ func (g mockGithubApi) GetRef(owner string, repo string, ref string) (*github.Re
 
 	githubRef, err := getRefFromCommitObjList(gitCommitObjList, ref)
 	return githubRef, nil, err
+}
+
+func (g *mockGithubApi) CreatePullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
+	pullRequest := &github.PullRequest{Title: pull.Title}
+	g.fakePRList = append(g.fakePRList, pullRequest)
+
+	return pullRequest,  nil, nil
+}
+
+func (g *mockGithubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
+	return g.fakePRList, nil, nil
 }
 
 type gitCommitMock struct {
@@ -188,6 +200,7 @@ func getNewMockReference(commitObj *gitCommitMock) *github.Reference {
 func newFakeGithubApi(repoDir string) *mockGithubApi {
 	return &mockGithubApi{
 		repoDir: repoDir,
+		fakePRList: []*github.PullRequest{},
 	}
 }
 
@@ -302,4 +315,8 @@ func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCo
 	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed adding %s tag to commit Hash %s", tagName, commitHash))
 
 	tagCommitMap[tagName] = commitHash.String()
+}
+
+func getFakePrWithTitle(prTitle string) *github.NewPullRequest {
+	return &github.NewPullRequest{ Title: &prTitle}
 }

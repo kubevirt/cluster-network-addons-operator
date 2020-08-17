@@ -67,7 +67,8 @@ func main() {
 			exitWithError(errors.Wrapf(err, "Failed to get latest release version tag from %s", componentName))
 		}
 
-		bumpNeeded, err := isBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy)
+		proposedPrTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
+		bumpNeeded, err := gitComponent.isBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to discover if Bump need for %s", componentName))
 		}
@@ -77,9 +78,6 @@ func main() {
 			// reset --hard git repo
 			exitWithError(fmt.Errorf("reset --hader repo not implemented yet"))
 
-			// PR name
-			prTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
-			logger.Printf("PR title: %s", prTitle)
 			// Create PR
 			exitWithError(fmt.Errorf("create PR not implemented yet"))
 
@@ -97,8 +95,8 @@ func main() {
 			}
 
 			// create a new branch name
-			BranchName := strings.Replace(strings.ToLower(prTitle), " ", "_", -1)
-			logger.Printf("Opening new Branch %s", BranchName)
+			branchName := strings.Replace(strings.ToLower(proposedPrTitle), " ", "_", -1)
+			logger.Printf("Opening new Branch %s", branchName)
 
 			// push branch to PR
 			exitWithError(fmt.Errorf("push branch to PR not implemented yet"))

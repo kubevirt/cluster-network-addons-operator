@@ -5,10 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/coreos/go-semver/semver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+
+	"github.com/coreos/go-semver/semver"
 )
 
 var _ = Describe("Testing internal git", func() {
@@ -215,6 +216,62 @@ var _ = Describe("Testing internal git", func() {
 			shouldReturnErr: true,
 		}),
 	)
+
+	Context("Creating fake PRs", func() {
+		type isPrAlreadyOpenedParams struct {
+			prTitle      string
+			expectResult bool
+		}
+		dummyOwner := "dummyOwner"
+		dummyRepo := "dummyRepo"
+		BeforeEach(func() {
+
+			newPr := getFakePrWithTitle("bump test-component to 0.0.2")
+			_, _, err := gitComponent.githubInterface.CreatePullRequest(dummyOwner,dummyRepo, newPr)
+			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
+
+			newPr = getFakePrWithTitle("bump test-component to 1.0.0")
+			_, _, err = gitComponent.githubInterface.CreatePullRequest(dummyOwner,dummyRepo, newPr)
+			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
+
+			newPr = getFakePrWithTitle("bump test-component to 1.0.1")
+			_, _, err = gitComponent.githubInterface.CreatePullRequest(dummyOwner,dummyRepo, newPr)
+			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
+		})
+
+		DescribeTable("and checking isPrAlreadyOpened function",
+			func(r isPrAlreadyOpenedParams) {
+				defer os.RemoveAll(gitComponent.gitRepo.localDir)
+				By("Running api to check if a PR is already opened")
+				isPrAlreadyOpened, err := gitComponent.isPrAlreadyOpened(dummyOwner, dummyRepo, r.prTitle)
+
+				By("Checking that result is as expected")
+				Expect(err).ToNot(HaveOccurred(), "should not fail to run isPrAlreadyOpened")
+				Expect(isPrAlreadyOpened).To(Equal(r.expectResult))
+			},
+			Entry("should find PR that is first in the list", isPrAlreadyOpenedParams{
+				prTitle:      "bump test-component to 0.0.2",
+				expectResult: true,
+			}),
+			Entry("should find PR that is in the middle of the list", isPrAlreadyOpenedParams{
+				prTitle:      "bump test-component to 1.0.0",
+				expectResult: true,
+			}),
+			Entry("should find PR that is last in the list", isPrAlreadyOpenedParams{
+				prTitle:      "bump test-component to 1.0.1",
+				expectResult: true,
+			}),
+			Entry("should not find PR that has empty title string", isPrAlreadyOpenedParams{
+				prTitle:      "",
+				expectResult: false,
+			}),
+			Entry("should not find PR that is not in the list", isPrAlreadyOpenedParams{
+				prTitle:      "bump test-component to 1.0.3",
+				expectResult: false,
+			}),
+		)
+	})
+
 	type canonicalizeVersionParams struct {
 		version        string
 		expectedResult *semver.Version
@@ -222,6 +279,8 @@ var _ = Describe("Testing internal git", func() {
 	}
 	DescribeTable("canonicalizeVersion function",
 		func(v canonicalizeVersionParams) {
+			defer os.RemoveAll(gitComponent.gitRepo.localDir)
+
 			By("Parsing the version string")
 			formattedVersion, err := canonicalizeVersion(v.version)
 
@@ -268,6 +327,8 @@ var _ = Describe("Testing internal git", func() {
 	}
 	DescribeTable("isVtagFormat function",
 		func(p isVtagFormatParams) {
+			defer os.RemoveAll(gitComponent.gitRepo.localDir)
+
 			By("Checking if the version string of vtag format")
 			isVtag := isVtagFormat(p.version)
 
@@ -304,13 +365,17 @@ var _ = Describe("Testing internal git", func() {
 		currentReleaseVersion string
 		latestReleaseVersion  string
 		updatePolicy          string
+		prTitle               string
 		isBumpExpected        bool
 		isValid               bool
 	}
+	dummyPRTitle := "dummy new PR title"
 	DescribeTable("isBumpNeeded function",
 		func(b isBumpNeededParams) {
+			defer os.RemoveAll(gitComponent.gitRepo.localDir)
+
 			By("Checking if bump is needed")
-			isBumpNeeded, err := isBumpNeeded(b.currentReleaseVersion, b.latestReleaseVersion, b.updatePolicy)
+			isBumpNeeded, err := gitComponent.isBumpNeeded(b.currentReleaseVersion, b.latestReleaseVersion, b.updatePolicy, b.prTitle)
 			By("Checking expected error received")
 			if b.isValid {
 				Expect(err).ToNot(HaveOccurred(), "Expect function to not return an Error")
@@ -325,6 +390,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v2.5.1",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "static",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
@@ -332,6 +398,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v0.11.0-3-g1be91ab",
 			latestReleaseVersion:  "v0.11.0-4-g1ar46a5",
 			updatePolicy:          "latest",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
@@ -339,6 +406,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
@@ -346,6 +414,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "v3.5.2",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
@@ -353,6 +422,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v0.11.0-3-g1be91ab",
 			latestReleaseVersion:  "v0.11.0-3-g1be91ab",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
@@ -360,6 +430,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v3.6.1",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
@@ -367,6 +438,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v0.11.0-3-g1be91ab",
 			latestReleaseVersion:  "v0.11.0-4-g1ar46a5",
 			updatePolicy:          "latest",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
@@ -374,6 +446,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "ver1.2.3",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               false,
 		}),
@@ -381,6 +454,7 @@ var _ = Describe("Testing internal git", func() {
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "ver1.2.3",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               false,
 		}),

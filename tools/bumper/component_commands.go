@@ -36,6 +36,8 @@ type githubInterface interface {
 	ListMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error)
 	ListCommits(owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error)
 	GetRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error)
+	ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error)
+	CreatePullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error)
 }
 
 func (g githubApi) ListMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
@@ -50,11 +52,24 @@ func (g githubApi) GetRef(owner string, repo string, ref string) (*github.Refere
 	return g.client.Git.GetRef(g.ctx, owner, repo, ref)
 }
 
+func (g githubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
+	return g.client.PullRequests.List(g.ctx, owner, repo, &github.PullRequestListOptions{State: "open", Base: "master"})
+}
+
+func (g githubApi) CreatePullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
+	return g.client.PullRequests.Create(g.ctx, owner, repo, pull)
+}
+
 type gitRepo struct {
 	repo *git.Repository
 
 	localDir string
 }
+
+const (
+	cnaoOwner = "kubevirt"
+	cnaoRepo  = "cluster-network-addons-operator"
+)
 
 func newGitComponent(api *githubApi, componentName string, componentParams *component) (*gitComponent, error) {
 	componentGitRepo, err := newGitRepo(componentName, componentParams)
@@ -217,11 +232,21 @@ func (componentOps *gitComponent) getLatestFromBranch(repo, owner, branch, repoD
 	return vtag, updatedCommit, nil
 }
 
-func (componentOps *gitComponent) isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy string) (bool, error) {
+func (componentOps *gitComponent) isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy, proposedPrTitle string) (bool, error) {
 	logger.Printf("currentReleaseVersion: %s, latestReleaseVersion: %s, updatePolicy: %s\n", currentReleaseVersion, latestReleaseVersion, updatePolicy)
 
 	if updatePolicy == updatePolicyStatic {
 		logger.Printf("updatePolicy is static. avoiding auto bump")
+		return false, nil
+	}
+
+	// check if PR not already opened
+	isAlreadyOpened, err := componentOps.isPrAlreadyOpened(cnaoOwner, cnaoRepo, proposedPrTitle)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to check if PR already open")
+	}
+	if isAlreadyOpened {
+		logger.Printf("Bump PR for the latest version already exist. Aborting auto bump")
 		return false, nil
 	}
 
@@ -240,6 +265,24 @@ func (componentOps *gitComponent) isBumpNeeded(currentReleaseVersion, latestRele
 	}
 
 	return currentVersion.LessThan(*latestVersion), nil
+}
+
+// check if there is an already open PR with the same title in the repo.
+func (componentOps *gitComponent) isPrAlreadyOpened(owner, repo, proposedPrTitle string) (bool, error) {
+	logger.Printf("checking if there is an already open bump PR for this release")
+
+	prList, _, err := componentOps.githubInterface.ListPullRequests(owner, repo)
+	if err != nil {
+		return false, errors.Wrapf(err, "Failed to get list of PRs from %s/%s repo", owner, repo)
+	}
+
+	for _, pr := range prList {
+		if pr.GetTitle() == proposedPrTitle {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // since versioning of components can sometimes divert from semver standard, we do some refactoring
