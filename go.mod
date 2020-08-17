@@ -4,9 +4,13 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
+	github.com/coreos/go-semver v0.3.0
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/github-release/github-release v0.8.1
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/gobwas/glob v0.2.3
+	github.com/google/go-github/v32 v32.1.0
 	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1 // indirect
 	github.com/kevinburke/rest v0.0.0-20200429221318-0d2892b400f8 // indirect
 	github.com/onsi/ginkgo v1.12.0
@@ -18,8 +22,10 @@ require (
 	github.com/operator-framework/operator-sdk v0.18.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.5
+	github.com/thanhpk/randstr v1.0.4
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/tools v0.0.0-20200403190813-44a64ad78b9b
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.3
