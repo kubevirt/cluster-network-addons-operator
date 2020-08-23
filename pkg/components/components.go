@@ -10,8 +10,8 @@ import (
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -133,7 +133,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Name:      Name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				opv1alpha1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
+				cnaov1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -378,9 +378,8 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 			Name: "networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io",
 		},
 		Spec: extv1beta1.CustomResourceDefinitionSpec{
-			Group:   "networkaddonsoperator.network.kubevirt.io",
-			Version: "v1alpha1",
-			Scope:   "Cluster",
+			Group: "networkaddonsoperator.network.kubevirt.io",
+			Scope: "Cluster",
 
 			Subresources: &extv1beta1.CustomResourceSubresources{
 				Status: &extv1beta1.CustomResourceSubresourceStatus{},
@@ -395,9 +394,14 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 
 			Versions: []extv1beta1.CustomResourceDefinitionVersion{
 				{
-					Name:    "v1alpha1",
+					Name:    "v1",
 					Served:  true,
 					Storage: true,
+				},
+				{
+					Name:    "v1alpha1",
+					Served:  true,
+					Storage: false,
 				},
 			},
 
@@ -428,22 +432,22 @@ func GetCrd() *extv1beta1.CustomResourceDefinition {
 	return crd
 }
 
-func GetCR() *cnav1alpha1.NetworkAddonsConfig {
-	return &cnav1alpha1.NetworkAddonsConfig{
+func GetCRV1() *cnaov1.NetworkAddonsConfig {
+	return &cnaov1.NetworkAddonsConfig{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "networkaddonsoperator.network.kubevirt.io/v1alpha1",
+			APIVersion: "networkaddonsoperator.network.kubevirt.io/v1",
 			Kind:       "NetworkAddonsConfig",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "cluster",
 		},
-		Spec: cnav1alpha1.NetworkAddonsConfigSpec{
-			Multus:          &cnav1alpha1.Multus{},
-			LinuxBridge:     &cnav1alpha1.LinuxBridge{},
-			KubeMacPool:     &cnav1alpha1.KubeMacPool{},
-			NMState:         &cnav1alpha1.NMState{},
-			Ovs:             &cnav1alpha1.Ovs{},
-			MacvtapCni:      &cnav1alpha1.MacvtapCni{},
+		Spec: cnao.NetworkAddonsConfigSpec{
+			Multus:          &cnao.Multus{},
+			LinuxBridge:     &cnao.LinuxBridge{},
+			KubeMacPool:     &cnao.KubeMacPool{},
+			NMState:         &cnao.NMState{},
+			Ovs:             &cnao.Ovs{},
+			MacvtapCni:      &cnao.MacvtapCni{},
 			ImagePullPolicy: corev1.PullIfNotPresent,
 		},
 	}
