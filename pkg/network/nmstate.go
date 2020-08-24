@@ -32,11 +32,9 @@ func renderNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string,
 	data.Data["HandlerPullPolicy"] = conf.ImagePullPolicy
 	data.Data["HandlerNodeSelector"] = map[string]string{}
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
-	// TODO: This is just a place holder to make template renderer happy
-	//       proper variable has to be read from selfSignConfiguration
-	data.Data["CARotateInterval"] = ""
-	data.Data["CAOverlapInterval"] = ""
-	data.Data["CertRotateInterval"] = ""
+	data.Data["CARotateInterval"] = conf.SelfSignConfiguration.CARotateInterval
+	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
+	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "nmstate"), &data)
 	if err != nil {
