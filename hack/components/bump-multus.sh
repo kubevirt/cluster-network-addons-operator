@@ -4,6 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
+source hack/components/docker-utils.sh
 
 #here we do all the object specific parametizing
 function __parametize_by_object() {
@@ -106,6 +107,7 @@ echo 'Get multus image name and update it under CNAO'
 MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
 MULTUS_IMAGE=nfvpe/multus
 MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}
-sed -i "s#\"${MULTUS_IMAGE}:.*\"#\"${MULTUS_IMAGE_TAGGED}\"#" \
+MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
+sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" \
     pkg/components/components.go \
     test/releases/${CNAO_VERSION}.go

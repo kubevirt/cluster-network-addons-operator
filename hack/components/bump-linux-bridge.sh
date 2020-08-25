@@ -4,6 +4,7 @@ set -xe
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
+source hack/components/docker-utils.sh
 
 echo Bumping linux-bridge
 LINUX_BRIDGE_URL=$(yaml-utils::get_component_url linux-bridge)
@@ -40,10 +41,16 @@ EOF
 echo 'Push the image to KubeVirt repo'
 (
     if [ ! -z ${PUSH_IMAGES} ]; then
-        docker push ${LINUX_BRIDGE_IMAGE_TAGGED}
+        docker push "${LINUX_BRIDGE_IMAGE_TAGGED}"
     fi
 )
 
+if [[ "$(docker-utils::check_image_exists "${LINUX_BRIDGE_IMAGE}" "${LINUX_BRIDGE_TAG}")" ]]; then
+    LINUX_BRIDGE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${LINUX_BRIDGE_IMAGE_TAGGED}" "${LINUX_BRIDGE_IMAGE}")"
+else
+    LINUX_BRIDGE_IMAGE_DIGEST=${LINUX_BRIDGE_IMAGE_TAGGED}
+fi
+
 echo 'Update linux-bridge references under CNAO'
-sed -i "s#\"${LINUX_BRIDGE_IMAGE}:.*\"#\"${LINUX_BRIDGE_IMAGE_TAGGED}\"#" pkg/components/components.go
-sed -i "s#\"${LINUX_BRIDGE_IMAGE}:.*\"#\"${LINUX_BRIDGE_IMAGE_TAGGED}\"#" test/releases/${CNAO_VERSION}.go
+sed -i -r "s#\"${LINUX_BRIDGE_IMAGE}(@sha256)?:.*\"#\"${LINUX_BRIDGE_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${LINUX_BRIDGE_IMAGE}(@sha256)?:.*\"#\"${LINUX_BRIDGE_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

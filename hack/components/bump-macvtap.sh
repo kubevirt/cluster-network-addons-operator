@@ -4,6 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
+source hack/components/docker-utils.sh
 
 echo 'Bumping macvtap-cni'
 MACVTAP_URL=$(yaml-utils::get_component_url macvtap-cni)
@@ -40,6 +41,8 @@ echo 'Get macvtap-cni image name and update it under CNAO'
 MACVTAP_TAG=$(git-utils::get_component_tag ${MACVTAP_PATH})
 MACVTAP_IMAGE=quay.io/kubevirt/macvtap-cni
 MACVTAP_IMAGE_TAGGED=${MACVTAP_IMAGE}:${MACVTAP_TAG}
-sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" pkg/components/components.go
+MACVTAP_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MACVTAP_IMAGE_TAGGED}" "${MACVTAP_IMAGE}")"
+
+sed -i -r "s#\"${MACVTAP_IMAGE}(@sha256)?:.*\"#\"${MACVTAP_IMAGE_DIGEST}\"#" pkg/components/components.go
 # TODO: uncomment the following line *once* there is macvtap upgrade is supported
 #sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" test/releases/${CNAO_VERSION}.go

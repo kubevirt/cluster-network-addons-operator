@@ -4,6 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
+source hack/components/docker-utils.sh
 
 echo 'Bumping kubernetes-nmstate'
 NMSTATE_URL=$(yaml-utils::get_component_url nmstate)
@@ -21,9 +22,10 @@ echo 'Get kubernetes-nmstate image name and update it under CNAO'
 NMSTATE_TAG=$(git-utils::get_component_tag ${NMSTATE_PATH})
 NMSTATE_IMAGE=quay.io/nmstate/kubernetes-nmstate-handler
 NMSTATE_IMAGE_TAGGED=${NMSTATE_IMAGE}:${NMSTATE_TAG}
-sed -i "s#\"${NMSTATE_IMAGE}:.*\"#\"${NMSTATE_IMAGE_TAGGED}\"#" \
+NMSTATE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${NMSTATE_IMAGE_TAGGED}" "${NMSTATE_IMAGE}")"
+sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" \
     pkg/components/components.go \
-    test/releases/${CNAO_VERSION}.go
+    "test/releases/${CNAO_VERSION}.go"
 
 echo 'Copy kubernetes-nmstate manifests'
 rm -rf data/nmstate/*
