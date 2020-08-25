@@ -207,7 +207,7 @@ The selfSignConfiguration parameters has to be all or none set, setting some of
 them fails at validation, also they have to conform to golang time.Duration
 string format also the following checks are done at validation: caRotateInterval => caOverlapInterval && caRotateInterval => certRotateInterval
 
-This parameters are consumed by kubemacpool component.
+This parameters are consumed by kubemacpool and kubernetes-nmstate components.
 
 # Deployment
 
