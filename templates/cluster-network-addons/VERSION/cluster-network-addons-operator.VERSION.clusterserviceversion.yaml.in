@@ -88,6 +88,11 @@ spec:
         - name: cluster-network-addons-operator
           spec:
 {{.CNA.DeploymentSpec}}
+  relatedImages:
+  {{- range .CNA.RelatedImages }}
+    - image: "{{ .Ref }}"
+      name: "{{ .Name }}"
+  {{- end}}
   customresourcedefinitions:
     owned:
       - name: {{.CNA.CRD.ObjectMeta.Name}}

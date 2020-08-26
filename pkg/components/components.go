@@ -2,13 +2,13 @@ package components
 
 import (
 	"fmt"
-
 	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"regexp"
 
 	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
@@ -17,6 +17,10 @@ import (
 const (
 	Name      = "cluster-network-addons-operator"
 	Namespace = "cluster-network-addons"
+)
+
+var (
+	imageSplitRe = regexp.MustCompile(`([^/@:]+)(?:@sha256)?:`)
 )
 
 const (
@@ -39,6 +43,27 @@ type AddonsImages struct {
 	OvsCni            string
 	OvsMarker         string
 	MacvtapCni        string
+}
+
+type RelatedImage struct {
+	Name string `json:"name"`
+	Ref  string `json:"image"`
+}
+
+type RelatedImages []RelatedImage
+
+func NewRelatedImages(images ...string) RelatedImages {
+	ris := RelatedImages{}
+	for _, image := range images {
+		ris = append(ris, NewRelatedImage(image))
+	}
+
+	return ris
+}
+
+func (ris *RelatedImages) Add(image string) {
+	ri := NewRelatedImage(image)
+	*ris = append(*ris, ri)
 }
 
 func (ai *AddonsImages) FillDefaults() *AddonsImages {
@@ -67,6 +92,32 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 		ai.MacvtapCni = MacvtapCniImageDefault
 	}
 	return ai
+}
+
+func (ai AddonsImages) ToRelatedImages() RelatedImages {
+	return NewRelatedImages(
+		ai.Multus,
+		ai.LinuxBridgeCni,
+		ai.LinuxBridgeMarker,
+		ai.KubeMacPool,
+		ai.NMStateHandler,
+		ai.OvsCni,
+		ai.OvsMarker,
+		ai.MacvtapCni,
+	)
+}
+
+func NewRelatedImage(image string) RelatedImage {
+
+	name := image
+	if names := imageSplitRe.FindStringSubmatch(image); len(names) > 1 {
+		name = names[1]
+	}
+
+	return RelatedImage{
+		Name: name,
+		Ref:  image,
+	}
 }
 
 func GetDeployment(version string, operatorVersion string, namespace string, repository string, imageName string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
