@@ -15,6 +15,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,7 +32,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
@@ -134,7 +137,10 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 	}
 
 	// Watch for changes to primary resource NetworkAddonsConfig
-	if err := c.Watch(&source.Kind{Type: &opv1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+	if err := c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+		return err
+	}
+	if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
 		return err
 	}
 
@@ -183,8 +189,8 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Fetch the NetworkAddonsConfig instance
-	networkAddonsConfig := &opv1alpha1.NetworkAddonsConfig{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfig)
+	networkAddonsConfigStorageVersion := &cnaov1.NetworkAddonsConfig{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -195,7 +201,17 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 			// Owned objects are automatically garbage collected. Return and don't requeue
 			return reconcile.Result{}, nil
 		}
+
+		log.Printf("Error reading NetworkAddonsConfig. err = %v", err)
 		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	networkAddonsConfig, err := r.ConvertNetworkAddonsConfigV1ToShared(networkAddonsConfigStorageVersion)
+	if err != nil {
+		// If failed, set NetworkAddonsConfig to failing and requeue
+		err = errors.Wrap(err, "failed converting NetworkAddonsConfig to internal structure")
+		r.statusManager.SetFailing(statusmanager.OperatorConfig, "updateNetworkAddonsConfigToV1", err.Error())
 		return reconcile.Result{}, err
 	}
 
@@ -227,7 +243,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Canonicalize and validate NetworkAddonsConfig, finally render objects of requested components
-	objs, err := r.renderObjects(networkAddonsConfig, openshiftNetworkConfig)
+	objs, err := r.renderObjectsV1(networkAddonsConfig, openshiftNetworkConfig)
 	if err != nil {
 		// If failed, set NetworkAddonsConfig to failing and requeue
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToRender", err.Error())
@@ -242,7 +258,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 
 	// Apply generated objects on Kubernetes API server
-	err = r.applyObjects(networkAddonsConfig, objs)
+	err = r.applyObjects(networkAddonsConfigStorageVersion, objs)
 	if err != nil {
 		// If failed, set NetworkAddonsConfig to failing and requeue
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToApply", err.Error())
@@ -276,8 +292,18 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	return reconcile.Result{RequeueAfter: time.Minute}, nil
 }
 
+// Convert NetworkAddonsConfig to shared type
+func (r *ReconcileNetworkAddonsConfig) ConvertNetworkAddonsConfigV1ToShared(networkAddonsConfig *cnaov1.NetworkAddonsConfig) (*cnao.NetworkAddonsConfig, error) {
+	return &cnao.NetworkAddonsConfig{
+		TypeMeta:   networkAddonsConfig.TypeMeta,
+		ObjectMeta: networkAddonsConfig.ObjectMeta,
+		Spec:       networkAddonsConfig.Spec,
+		Status:     networkAddonsConfig.Status,
+	}, nil
+}
+
 // Render objects for all desired components
-func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network) ([]*unstructured.Unstructured, error) {
+func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network) ([]*unstructured.Unstructured, error) {
 	// Generate the objects
 	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
@@ -308,7 +334,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 		if labels == nil {
 			labels = map[string]string{}
 		}
-		labels[opv1alpha1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
+		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
 		obj.SetLabels(labels)
 	}
 
@@ -316,7 +342,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjects(networkAddonsConfig *opv1al
 }
 
 // Validate and returns the previous configuration spec
-func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig) (*opv1alpha1.NetworkAddonsConfigSpec, error) {
+func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig *cnao.NetworkAddonsConfig) (*cnao.NetworkAddonsConfigSpec, error) {
 	// Retrieve the previously applied operator configuration
 	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
@@ -349,7 +375,7 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 }
 
 // Generate the removal object list
-func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *opv1alpha1.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
+func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *cnao.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *cnao.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
 	objsToRemove, err := network.RenderObjsToRemove(prev, &networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
 		log.Printf("failed to render for removal: %v", err)
@@ -362,7 +388,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig
 
 // Apply the objects to the cluster. Set their controller reference to NetworkAddonsConfig, so they
 // are removed when NetworkAddonsConfig config is
-func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig *opv1alpha1.NetworkAddonsConfig, objs []*unstructured.Unstructured) error {
+func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.Object, objs []*unstructured.Unstructured) error {
 	for _, obj := range objs {
 		// Mark the object to be GC'd if the owner is deleted.
 		// Don't set owner reference on namespaces if they are used by the operator itself
@@ -409,7 +435,7 @@ func (r *ReconcileNetworkAddonsConfig) deleteObjects(objs []*unstructured.Unstru
 func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured.Unstructured, generation int64) {
 	daemonSets := []types.NamespacedName{}
 	deployments := []types.NamespacedName{}
-	containers := []opv1alpha1.Container{}
+	containers := []cnao.Container{}
 
 	for _, obj := range objs {
 		if obj.GetAPIVersion() == "apps/v1" && obj.GetKind() == "DaemonSet" {
@@ -452,7 +478,7 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 // Stop tracking current state of Deployments and DaemonSets deployed by the operator.
 func (r *ReconcileNetworkAddonsConfig) stopTrackingObjects() {
 	// reset generation number by using invalid generation value
-	r.statusManager.SetAttributes([]types.NamespacedName{}, []types.NamespacedName{}, []opv1alpha1.Container{}, -1)
+	r.statusManager.SetAttributes([]types.NamespacedName{}, []types.NamespacedName{}, []cnao.Container{}, -1)
 
 	r.podReconciler.SetResources([]types.NamespacedName{})
 
@@ -460,11 +486,11 @@ func (r *ReconcileNetworkAddonsConfig) stopTrackingObjects() {
 	r.statusManager.SetFromPods()
 }
 
-func collectContainersInfo(parentKind string, parentName string, containers []v1.Container) []opv1alpha1.Container {
-	containersInfo := []opv1alpha1.Container{}
+func collectContainersInfo(parentKind string, parentName string, containers []v1.Container) []cnao.Container {
+	containersInfo := []cnao.Container{}
 
 	for _, container := range containers {
-		containersInfo = append(containersInfo, opv1alpha1.Container{
+		containersInfo = append(containersInfo, cnao.Container{
 			ParentKind: parentKind,
 			ParentName: parentName,
 			Image:      container.Image,
@@ -513,7 +539,7 @@ func isResourceAvailable(kubeClient kubernetes.Interface, name string, group str
 	return true, nil
 }
 
-func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*opv1alpha1.NetworkAddonsConfig, error) {
+func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*cnao.NetworkAddonsConfig, error) {
 	// convert the runtime.Object to unstructured.Unstructured
 	unstructuredObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
@@ -521,7 +547,7 @@ func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*opv1alpha1.Network
 	}
 
 	// convert unstructured.Unstructured to a NetworkAddonsConfig
-	networkAddonsConfig := &opv1alpha1.NetworkAddonsConfig{}
+	networkAddonsConfig := &cnao.NetworkAddonsConfig{}
 	if err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredObj, networkAddonsConfig); err != nil {
 		return nil, err
 	}

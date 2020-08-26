@@ -12,17 +12,17 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 // Canonicalize converts configuration to a canonical form.
-func Canonicalize(conf *opv1alpha1.NetworkAddonsConfigSpec) {
+func Canonicalize(conf *cnao.NetworkAddonsConfigSpec) {
 	// TODO
 }
 
 // Validate checks that the supplied configuration is reasonable.
 // This should be called after Canonicalize
-func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.Network) error {
+func Validate(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.Network) error {
 	errs := []error{}
 
 	errs = append(errs, validateMultus(conf, openshiftNetworkConfig)...)
@@ -41,7 +41,7 @@ func Validate(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 //
 // Defaults are carried forward from previous if it is provided. This is so we
 // can change defaults as we move forward, but won't disrupt existing clusters.
-func FillDefaults(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) error {
+func FillDefaults(conf, previous *cnao.NetworkAddonsConfigSpec) error {
 	errs := []error{}
 
 	errs = append(errs, fillDefaultsSelfSignConfiguration(conf, previous)...)
@@ -56,7 +56,7 @@ func FillDefaults(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) error {
 }
 
 // specialCleanUp checks if there are any specific outdated objects or ones that are no longer compatible and deletes them.
-func SpecialCleanUp(conf *opv1alpha1.NetworkAddonsConfigSpec, client k8sclient.Client) error {
+func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client) error {
 	errs := []error{}
 	ctx := context.TODO()
 
@@ -72,7 +72,7 @@ func SpecialCleanUp(conf *opv1alpha1.NetworkAddonsConfigSpec, client k8sclient.C
 
 // IsChangeSafe checks to see if the change between prev and next are allowed
 // FillDefaults and Validate should have been called.
-func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
+func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 	if prev == nil {
 		return nil
 	}
@@ -95,7 +95,7 @@ func IsChangeSafe(prev, next *opv1alpha1.NetworkAddonsConfigSpec) error {
 }
 
 // Render creates a list of components to be created
-func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
 
@@ -146,7 +146,7 @@ func Render(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, opensh
 }
 
 // RenderObjsToRemove creates list of components to be removed
-func RenderObjsToRemove(prev, conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	log.Print("starting rendering objects to delete phase")
 	objsToRemove := []*unstructured.Unstructured{}
 

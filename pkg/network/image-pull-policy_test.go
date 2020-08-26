@@ -6,13 +6,13 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 var _ = Describe("Testing image-pull-policy", func() {
 	Describe("validateImagePullPolicy", func() {
 		Context("when configuration uses invalid policy type", func() {
-			spec := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullPolicy("BAD")}
+			spec := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullPolicy("BAD")}
 
 			It("should fail", func() {
 				errorList := validateImagePullPolicy(spec)
@@ -22,7 +22,7 @@ var _ = Describe("Testing image-pull-policy", func() {
 		})
 
 		Context("when configuration uses a valid policy type", func() {
-			spec := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways}
+			spec := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways}
 
 			It("should pass", func() {
 				errorList := validateImagePullPolicy(spec)
@@ -34,8 +34,8 @@ var _ = Describe("Testing image-pull-policy", func() {
 	Describe("fillDefaultsImagePullPolicy", func() {
 		Context("when no policy specified", func() {
 			Context("and there was a policy specified in the previous config", func() {
-				new := &opv1alpha1.NetworkAddonsConfigSpec{}
-				prev := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways}
+				new := &cnao.NetworkAddonsConfigSpec{}
+				prev := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways}
 
 				It("should successfully pass", func() {
 					errorList := fillDefaultsImagePullPolicy(new, prev)
@@ -48,8 +48,8 @@ var _ = Describe("Testing image-pull-policy", func() {
 			})
 
 			Context("and there was no policy specified in the last config", func() {
-				new := &opv1alpha1.NetworkAddonsConfigSpec{}
-				prev := &opv1alpha1.NetworkAddonsConfigSpec{}
+				new := &cnao.NetworkAddonsConfigSpec{}
+				prev := &cnao.NetworkAddonsConfigSpec{}
 
 				It("should successfully pass", func() {
 					errorList := fillDefaultsImagePullPolicy(new, prev)
@@ -70,8 +70,8 @@ var _ = Describe("Testing image-pull-policy", func() {
 
 	Describe("changeSafeImagePullPolicy", func() {
 		Context("when it is kept disabled", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{}
+			prev := &cnao.NetworkAddonsConfigSpec{}
+			new := &cnao.NetworkAddonsConfigSpec{}
 
 			It("should pass", func() {
 				errorList := changeSafeImagePullPolicy(prev, new)
@@ -80,8 +80,8 @@ var _ = Describe("Testing image-pull-policy", func() {
 		})
 
 		Context("when there is no previous value", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{LinuxBridge: &opv1alpha1.LinuxBridge{}}
+			prev := &cnao.NetworkAddonsConfigSpec{}
+			new := &cnao.NetworkAddonsConfigSpec{LinuxBridge: &cnao.LinuxBridge{}}
 
 			It("should accept any configuration", func() {
 				errorList := changeSafeImagePullPolicy(prev, new)
@@ -90,8 +90,8 @@ var _ = Describe("Testing image-pull-policy", func() {
 		})
 
 		Context("when the previous and new configuration match", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{LinuxBridge: &opv1alpha1.LinuxBridge{}}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{LinuxBridge: &opv1alpha1.LinuxBridge{}}
+			prev := &cnao.NetworkAddonsConfigSpec{LinuxBridge: &cnao.LinuxBridge{}}
+			new := &cnao.NetworkAddonsConfigSpec{LinuxBridge: &cnao.LinuxBridge{}}
 
 			It("should accept the configuration", func() {
 				errorList := changeSafeImagePullPolicy(prev, new)
@@ -100,8 +100,8 @@ var _ = Describe("Testing image-pull-policy", func() {
 		})
 
 		Context("when there is previous value, but the new one is empty (removing component)", func() {
-			prev := &opv1alpha1.NetworkAddonsConfigSpec{LinuxBridge: &opv1alpha1.LinuxBridge{}}
-			new := &opv1alpha1.NetworkAddonsConfigSpec{}
+			prev := &cnao.NetworkAddonsConfigSpec{LinuxBridge: &cnao.LinuxBridge{}}
+			new := &cnao.NetworkAddonsConfigSpec{}
 
 			// If ImagePullPolicy is omitted, default or previously applied will be used
 			It("should pass", func() {
