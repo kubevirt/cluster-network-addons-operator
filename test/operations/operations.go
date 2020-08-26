@@ -13,14 +13,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
-func GetConfig() *opv1alpha1.NetworkAddonsConfig {
+func GetConfig() *cnaov1.NetworkAddonsConfig {
 	By("Getting the current config")
 
-	config := &opv1alpha1.NetworkAddonsConfig{}
+	config := &cnaov1.NetworkAddonsConfig{}
 
 	err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
 	if apierrors.IsNotFound(err) {
@@ -31,10 +32,10 @@ func GetConfig() *opv1alpha1.NetworkAddonsConfig {
 	return config
 }
 
-func CreateConfig(configSpec opv1alpha1.NetworkAddonsConfigSpec) {
+func CreateConfig(configSpec cnao.NetworkAddonsConfigSpec) {
 	By(fmt.Sprintf("Applying NetworkAddonsConfig:\n%s", configSpecToYaml(configSpec)))
 
-	config := &opv1alpha1.NetworkAddonsConfig{
+	config := &cnaov1.NetworkAddonsConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: names.OPERATOR_CONFIG,
 		},
@@ -45,7 +46,7 @@ func CreateConfig(configSpec opv1alpha1.NetworkAddonsConfigSpec) {
 	Expect(err).NotTo(HaveOccurred(), "Failed to create the Config")
 }
 
-func UpdateConfig(configSpec opv1alpha1.NetworkAddonsConfigSpec) {
+func UpdateConfig(configSpec cnao.NetworkAddonsConfigSpec) {
 	By(fmt.Sprintf("Updating NetworkAddonsConfig:\n%s", configSpecToYaml(configSpec)))
 
 	// Get current Config
@@ -60,7 +61,7 @@ func UpdateConfig(configSpec opv1alpha1.NetworkAddonsConfigSpec) {
 func DeleteConfig() {
 	By("Removing NetworkAddonsConfig")
 
-	config := &opv1alpha1.NetworkAddonsConfig{
+	config := &cnaov1.NetworkAddonsConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: names.OPERATOR_CONFIG,
 		},
@@ -71,7 +72,7 @@ func DeleteConfig() {
 }
 
 // Convert NetworkAddonsConfig specification to a yaml format we would expect in a manifest
-func configSpecToYaml(configSpec opv1alpha1.NetworkAddonsConfigSpec) string {
+func configSpecToYaml(configSpec cnao.NetworkAddonsConfigSpec) string {
 	manifest, err := yaml.Marshal(configSpec)
 	if err != nil {
 		panic(err)

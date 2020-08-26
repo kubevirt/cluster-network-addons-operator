@@ -5,8 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
@@ -15,8 +14,8 @@ import (
 var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when invalid config is applied", func() {
 		BeforeEach(func() {
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				KubeMacPool: &opv1alpha1.KubeMacPool{
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool: &cnao.KubeMacPool{
 					RangeStart: "this:aint:right",
 				},
 			}
@@ -26,7 +25,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 		Context("and it is updated with a valid config", func() {
 			BeforeEach(func() {
-				configSpec := opv1alpha1.NetworkAddonsConfigSpec{}
+				configSpec := cnao.NetworkAddonsConfigSpec{}
 				UpdateConfig(configSpec)
 			})
 

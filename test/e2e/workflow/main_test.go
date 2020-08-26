@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
@@ -39,7 +39,7 @@ func TestE2E(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	By("Adding custom resource scheme to framework")
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, &opv1alpha1.NetworkAddonsConfigList{})
+	err := framework.AddToFrameworkScheme(apis.AddToScheme, &cnaov1.NetworkAddonsConfigList{})
 	Expect(err).ToNot(HaveOccurred())
 
 	By("Detecting operator version")

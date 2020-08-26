@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
@@ -21,9 +21,9 @@ type Release struct {
 	// Release version
 	Version string
 	// Containers and their images for given release
-	Containers []opv1alpha1.Container
+	Containers []cnao.Container
 	// SupportedSpec for given release should be upgradable
-	SupportedSpec opv1alpha1.NetworkAddonsConfigSpec
+	SupportedSpec cnao.NetworkAddonsConfigSpec
 	// Manifest that can be used to install the operator in given release
 	Manifests []string
 }
@@ -127,7 +127,7 @@ func CheckReleaseUsesExpectedContainerImages(release Release) {
 	Expect(deployedContainers).To(Equal(expectedContainers))
 }
 
-func sortContainers(containers []opv1alpha1.Container) []opv1alpha1.Container {
+func sortContainers(containers []cnao.Container) []cnao.Container {
 	sort.Slice(containers, func(a, b int) bool {
 		return (sort.StringsAreSorted([]string{containers[a].ParentKind, containers[b].ParentKind}) &&
 			sort.StringsAreSorted([]string{containers[a].ParentName, containers[b].ParentName}) &&
@@ -136,8 +136,8 @@ func sortContainers(containers []opv1alpha1.Container) []opv1alpha1.Container {
 	return containers
 }
 
-func dropMultusContainers(containers []opv1alpha1.Container) []opv1alpha1.Container {
-	filteredContainers := []opv1alpha1.Container{}
+func dropMultusContainers(containers []cnao.Container) []cnao.Container {
+	filteredContainers := []cnao.Container{}
 	for _, container := range containers {
 		if !strings.Contains(container.Name, "multus") {
 			filteredContainers = append(filteredContainers, container)
