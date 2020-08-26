@@ -23,9 +23,9 @@ NMSTATE_TAG=$(git-utils::get_component_tag ${NMSTATE_PATH})
 NMSTATE_IMAGE=quay.io/nmstate/kubernetes-nmstate-handler
 NMSTATE_IMAGE_TAGGED=${NMSTATE_IMAGE}:${NMSTATE_TAG}
 NMSTATE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${NMSTATE_IMAGE_TAGGED}" "${NMSTATE_IMAGE}")"
-sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" \
-    pkg/components/components.go \
-    "test/releases/${CNAO_VERSION}.go"
+
+sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" "test/releases/${CNAO_VERSION}.go"
 
 echo 'Copy kubernetes-nmstate manifests'
 rm -rf data/nmstate/*

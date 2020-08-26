@@ -94,6 +94,6 @@ BRIDGE_MARKER_TAG=$(git-utils::get_component_tag ${BRIDGE_MARKER_PATH})
 BRIDGE_MARKER_IMAGE=quay.io/kubevirt/bridge-marker
 BRIDGE_MARKER_IMAGE_TAGGED=${BRIDGE_MARKER_IMAGE}:${BRIDGE_MARKER_TAG}
 BRIDGE_MARKER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${BRIDGE_MARKER_IMAGE_TAGGED}" "${BRIDGE_MARKER_IMAGE}")"
-sed -i -r "s#\"${BRIDGE_MARKER_IMAGE}(@sha256)?:.*\"#\"${BRIDGE_MARKER_IMAGE_DIGEST}\"#" \
-    pkg/components/components.go \
-    test/releases/${CNAO_VERSION}.go
+
+sed -i -r "s#\"${BRIDGE_MARKER_IMAGE}(@sha256)?:.*\"#\"${BRIDGE_MARKER_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${BRIDGE_MARKER_IMAGE}(@sha256)?:.*\"#\"${BRIDGE_MARKER_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

@@ -45,4 +45,4 @@ MACVTAP_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MACVTAP_IMAGE_TAGGED}"
 
 sed -i -r "s#\"${MACVTAP_IMAGE}(@sha256)?:.*\"#\"${MACVTAP_IMAGE_DIGEST}\"#" pkg/components/components.go
 # TODO: uncomment the following line *once* there is macvtap upgrade is supported
-#sed -i "s#\"${MACVTAP_IMAGE}:.*\"#\"${MACVTAP_IMAGE_TAGGED}\"#" test/releases/${CNAO_VERSION}.go
+#sed -i "s#\"${MACVTAP_IMAGE}(@sha256)?:.*\"#\"${MACVTAP_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

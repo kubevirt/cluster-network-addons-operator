@@ -108,6 +108,6 @@ MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
 MULTUS_IMAGE=nfvpe/multus
 MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}
 MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
-sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" \
-    pkg/components/components.go \
-    test/releases/${CNAO_VERSION}.go
+
+sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
