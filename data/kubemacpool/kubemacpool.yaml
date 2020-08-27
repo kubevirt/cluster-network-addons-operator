@@ -3,7 +3,6 @@ kind: Namespace
 metadata:
   labels:
     control-plane: mac-controller-manager
-    mutatepods.kubemacpool.io: ignore
   name: {{ .Namespace }}
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
@@ -31,8 +30,6 @@ webhooks:
       values:
       - "0"
       - "1"
-    matchLabels:
-      mutatepods.kubemacpool.io: allocate
   rules:
   - apiGroups:
     - ""
@@ -61,8 +58,6 @@ webhooks:
       values:
       - "0"
       - "1"
-    matchLabels:
-      mutatevirtualmachines.kubemacpool.io: allocate
   rules:
   - apiGroups:
     - kubevirt.io
