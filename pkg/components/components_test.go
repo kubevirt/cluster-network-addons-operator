@@ -8,26 +8,41 @@ import (
 
 const imageName = "the-image-name"
 
-var _ = Describe("Components Tests", func() {
-	Describe("RelatedImage Test", func() {
-		DescribeTable("image name tests", func(fullImageName string){
-			ri := NewRelatedImage(fullImageName)
-			Expect(ri.Ref).To(Equal(fullImageName))
-			Expect(ri.Name).To(Equal(imageName))
-		},
-		Entry("Should extract a short image name from image name", "imageRegistry/organization/" + imageName + ":1.2.3"),
-		Entry("Should extract a short image name from image digest", "imageRegistry/organization/" + imageName + "@sha256:76cc13fb4a60943dca6038619599b6a49fe451852aba23ad3046658429a9af30"),
-		Entry("Should copy the image name if it not match to the standard", imageName),
-		Entry("Should find the right name, even with a registry name with a port number", "registry:5000/" + imageName + "@sha256:76cc13fb4a60943dca6038619599b6a49fe451852aba23ad3046658429a9af30"))
-	})
+var _ = Describe("Components", func() {
+	DescribeTable("When RelatedImage is called", func(fullImageName, expectedShortName string) {
+		ri := NewRelatedImage(fullImageName)
+		Expect(ri.Ref).To(Equal(fullImageName))
+		Expect(ri.Name).To(Equal(expectedShortName))
+	},
+		Entry("Should extract a short image name from image name",
+			"imageRegistry/organization/the-image-name:1.2.3",
+			"the-image-name",
+		),
+		Entry("Should extract a short image name from image digest",
+			"imageRegistry/organization/the-image-name@sha256:76cc13fb4a60943dca6038619599b6a49fe451852aba23ad3046658429a9af30",
+			"the-image-name",
+		),
+		Entry("Should copy the image name if it not match to the standard",
+			"the-image-name",
+			"the-image-name",
+		),
+		Entry("Should find the short name, when the host name is with a port number",
+			"registry:5000/the-image-name@sha256:76cc13fb4a60943dca6038619599b6a49fe451852aba23ad3046658429a9af30",
+			"the-image-name",
+		),
+		Entry("Should find the short name, when the image name is just organization/image",
+			"organization/the-image-name",
+			"the-image-name",
+		),
+	)
 
-	Context("RelatedImages Tests", func() {
-		It(`"constructor" should create an empty list when there are no parameters`, func() {
+	Context("When RelatedImages constructor is called", func() {
+		It("Should create an empty list when there are no parameters", func() {
 			ris := NewRelatedImages()
 			Expect(ris).To(BeEmpty())
 		})
 
-		It(`"constructor" should create a list of related images if getting image names as parameters`, func() {
+		It("Should create a list of related images if getting image names as parameters", func() {
 			ris := NewRelatedImages(
 				"nfvpe/multus@sha256:167722b954355361bd69829466f27172b871dbdbf86b85a95816362885dc0aba",
 				"quay.io/kubevirt/cni-default-plugins@sha256:680ac8fd5eeab39c9a3c01479da344bdcaa43aa065d07ae00513b7bafa22fccf",
@@ -42,7 +57,9 @@ var _ = Describe("Components Tests", func() {
 			Expect(ris[2].Name).To(Equal("ovs-cni-marker"))
 			Expect(ris[2].Ref).To(Equal("quay.io/kubevirt/ovs-cni-marker@sha256:0f08d6b1550a90c9f10221f2bb07709d1090e7c675ee1a711981bd429074d620"))
 		})
+	})
 
+	Context("When adding image to RelatedImages", func() {
 		It("should add image to an empty list", func() {
 			var ris RelatedImages
 			Expect(ris).To(BeEmpty())

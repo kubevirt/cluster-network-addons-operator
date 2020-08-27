@@ -47,8 +47,8 @@ type AddonsImages struct {
 }
 
 type RelatedImage struct {
-	Name string `json:"name"`
-	Ref  string `json:"image"`
+	Name string
+	Ref  string
 }
 
 type RelatedImages []RelatedImage
