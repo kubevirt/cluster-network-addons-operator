@@ -2,20 +2,26 @@ package components
 
 import (
 	"fmt"
-	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
+	"regexp"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
+
+	cnav1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 const (
 	Name      = "cluster-network-addons-operator"
 	Namespace = "cluster-network-addons"
+)
+
+var (
+	imageSplitRe = regexp.MustCompile(`(?:.+/)*([^/:@]+)(?:[:@]?.*)?`)
 )
 
 const (
@@ -104,18 +110,10 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 
 func NewRelatedImage(image string) RelatedImage {
 	// find the basic image name - with no registry and tag
-	// remove registry prefix if exists (e.g. quay.io/organization/)
-	subStr := image[strings.LastIndex(image, "/")+1:]
-
-	// remove digest tag if exists (e.g. @sha256:79889cb3fd31db8c945021d928e86738654288d451f4cd42c8c07c9690398330)
-	index := strings.LastIndex(subStr, "@")
-	if index == -1 {
-		// remove image tag if exists (e.g. :latest or :v1.2.3)
-		if index = strings.LastIndex(subStr, ":"); index == -1 {
-			index = len(subStr)
-		}
+	name := image
+	if names := imageSplitRe.FindStringSubmatch(image); len(names) > 1 {
+		name = names[1]
 	}
-	name := subStr[:index]
 
 	return RelatedImage{
 		Name: name,
