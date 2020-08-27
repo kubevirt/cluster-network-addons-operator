@@ -47,6 +47,7 @@ type operatorData struct {
 	CRD               *extv1beta1.CustomResourceDefinition
 	CRDString         string
 	CRString          string
+	RelatedImages     components.RelatedImages
 }
 
 type templateData struct {
@@ -200,6 +201,11 @@ func getCNA(data *templateData) {
 	marshallObject(cr, &writer)
 	crString := writer.String()
 
+	// Get related images
+	relatedImages := data.AddonsImages.ToRelatedImages()
+	selfImageName := fmt.Sprintf("%s/%s:%s", data.ContainerPrefix, data.ImageName, data.ContainerTag)
+	relatedImages.Add(selfImageName)
+
 	cnaData := operatorData{
 		Deployment:        deployment,
 		DeploymentSpec:    deploymentSpec,
@@ -210,6 +216,7 @@ func getCNA(data *templateData) {
 		CRD:               crd,
 		CRDString:         crdString,
 		CRString:          crString,
+		RelatedImages:     relatedImages,
 	}
 	data.CNA = &cnaData
 }
