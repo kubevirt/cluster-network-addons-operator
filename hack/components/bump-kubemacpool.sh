@@ -32,6 +32,8 @@ bases:
 patchesStrategicMerge:
 - cnao_image_patch.yaml
 - cnao_rejectowner_patch.yaml
+- mutatevirtualmachines_opt_mode_patch.yaml
+- mutatepods_opt_mode_patch.yaml
 EOF
 
     cat <<EOF > config/cnao/cnao_image_patch.yaml
@@ -65,6 +67,13 @@ metadata:
   annotations:
     networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
 EOF
+
+    (
+        cd config/cnao
+        cp ../release/mutatepods_opt_mode_patch.yaml .
+        cp ../release/mutatevirtualmachines_opt_mode_patch.yaml .
+    )
+
 )
 
 rm -rf data/kubemacpool/*
