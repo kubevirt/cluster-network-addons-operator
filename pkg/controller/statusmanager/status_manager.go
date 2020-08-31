@@ -18,7 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
@@ -56,7 +57,7 @@ type StatusManager struct {
 	daemonSets  []types.NamespacedName
 	deployments []types.NamespacedName
 
-	containers []opv1alpha1.Container
+	containers []cnao.Container
 	mux        sync.Mutex
 }
 
@@ -85,7 +86,7 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 // set updates the NetworkAddonsConfig.Status with the provided conditions
 func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) error {
 	// Read the current NetworkAddonsConfig
-	config := &opv1alpha1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
+	config := &cnaov1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
 	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
 	if err != nil {
 		log.Printf("Failed to get NetworkAddonsOperator %q in order to update its State: %v", status.name, err)
@@ -216,7 +217,7 @@ func (status *StatusManager) SetNotFailing(level StatusLevel) {
 	status.syncFailing()
 }
 
-func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []opv1alpha1.Container, generation int64) {
+func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []cnao.Container, generation int64) {
 	status.mux.Lock()
 	defer status.mux.Unlock()
 	status.daemonSets = daemonSets
@@ -225,7 +226,7 @@ func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, de
 	status.generation = generation
 }
 
-func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.NamespacedName, []opv1alpha1.Container, int64) {
+func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.NamespacedName, []cnao.Container, int64) {
 	status.mux.Lock()
 	defer status.mux.Unlock()
 	return status.daemonSets, status.deployments, status.containers, status.generation
@@ -346,7 +347,7 @@ func (status *StatusManager) SetFromPods() {
 	// If all pods are being created, mark deployment as not failing
 	status.SetNotFailing(PodDeployment)
 
-	config := &opv1alpha1.NetworkAddonsConfig{}
+	config := &cnaov1.NetworkAddonsConfig{}
 	if err := status.client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config); err != nil {
 		return
 	}

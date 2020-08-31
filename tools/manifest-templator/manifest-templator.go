@@ -197,7 +197,7 @@ func getCNA(data *templateData) {
 
 	// Get CNA CR
 	writer = strings.Builder{}
-	cr := components.GetCR()
+	cr := components.GetCRV1()
 	marshallObject(cr, &writer)
 	crString := writer.String()
 

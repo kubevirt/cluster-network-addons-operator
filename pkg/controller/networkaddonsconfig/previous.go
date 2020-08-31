@@ -11,14 +11,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alphav1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	k8sutil "github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 // GetAppliedConfiguration retrieves the configuration we applied.
 // Returns nil with no error if no previous configuration was observed.
-func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name string, namespace string) (*opv1alphav1.NetworkAddonsConfigSpec, error) {
+func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name string, namespace string) (*cnao.NetworkAddonsConfigSpec, error) {
 	cm := &corev1.ConfigMap{}
 	err := client.Get(ctx, types.NamespacedName{Name: names.APPLIED_PREFIX + name, Namespace: namespace}, cm)
 	if err != nil && apierrors.IsNotFound(err) {
@@ -27,7 +27,7 @@ func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name 
 		return nil, err
 	}
 
-	spec := &opv1alphav1.NetworkAddonsConfigSpec{}
+	spec := &cnao.NetworkAddonsConfigSpec{}
 	err = json.Unmarshal([]byte(cm.Data["applied"]), spec)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name 
 
 // AppliedConfiguration renders the ConfigMap in which we store the configuration
 // we've applied.
-func appliedConfiguration(applied *opv1alphav1.NetworkAddonsConfig, namespace string) (*uns.Unstructured, error) {
+func appliedConfiguration(applied *cnao.NetworkAddonsConfig, namespace string) (*uns.Unstructured, error) {
 	app, err := json.Marshal(applied.Spec)
 	if err != nil {
 		return nil, err

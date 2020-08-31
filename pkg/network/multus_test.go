@@ -6,7 +6,7 @@ import (
 
 	osv1 "github.com/openshift/api/operator/v1"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 var _ = Describe("Testing multus", func() {
@@ -16,9 +16,9 @@ var _ = Describe("Testing multus", func() {
 			openshiftNetworkOperatorRunning bool,
 			openshiftNetworkOperatorDisableMultiNetwork bool,
 		) []error {
-			conf := &opv1alpha1.NetworkAddonsConfigSpec{}
+			conf := &cnao.NetworkAddonsConfigSpec{}
 			if multusRequested {
-				conf.Multus = &opv1alpha1.Multus{}
+				conf.Multus = &cnao.Multus{}
 			}
 
 			var openshiftNetworkConfig *osv1.Network

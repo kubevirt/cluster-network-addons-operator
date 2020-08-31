@@ -24,7 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 
@@ -70,7 +71,7 @@ func CheckComponentsRemoval(components []Component) {
 
 func CheckConfigCondition(conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
-	config := &opv1alpha1.NetworkAddonsConfig{}
+	config := &cnaov1.NetworkAddonsConfig{}
 
 	getAndCheckCondition := func() error {
 		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
@@ -93,7 +94,7 @@ func CheckConfigCondition(conditionType ConditionType, conditionStatus Condition
 
 func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
 	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q", operatorVersion, observedVersion, targetVersion))
-	config := &opv1alpha1.NetworkAddonsConfig{}
+	config := &cnaov1.NetworkAddonsConfig{}
 
 	getAndCheckVersions := func() error {
 		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
@@ -147,7 +148,7 @@ func CheckOperatorIsReady(timeout time.Duration) {
 
 func CheckForLeftoverObjects(currentVersion string) {
 	listOptions := client.ListOptions{}
-	key := opv1alpha1.SchemeGroupVersion.Group + "/version"
+	key := cnaov1.SchemeGroupVersion.Group + "/version"
 	labelSelector, err := k8slabels.Parse(fmt.Sprintf("%s,%s != %s", key, key, currentVersion))
 	Expect(err).NotTo(HaveOccurred())
 	listOptions.LabelSelector = labelSelector
@@ -334,7 +335,7 @@ func checkForDeployment(name string) error {
 
 	labels := deployment.GetLabels()
 	if labels != nil {
-		if _, operatorLabelSet := labels[opv1alpha1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+		if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
 			return fmt.Errorf("Deployment %s/%s is missing operator label", components.Namespace, name)
 		}
 	}
@@ -360,7 +361,7 @@ func checkForDaemonSet(name string) error {
 
 	labels := daemonSet.GetLabels()
 	if labels != nil {
-		if _, operatorLabelSet := labels[opv1alpha1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+		if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
 			return fmt.Errorf("DaemonSet %s/%s is missing operator label", components.Namespace, name)
 		}
 	}
@@ -422,7 +423,7 @@ func isNotFound(componentType string, componentName string, clientGetOutput erro
 	return fmt.Errorf("%s %q has been found", componentType, componentName)
 }
 
-func checkConfigCondition(conf *opv1alpha1.NetworkAddonsConfig, conditionType ConditionType, conditionStatus ConditionStatus) error {
+func checkConfigCondition(conf *cnaov1.NetworkAddonsConfig, conditionType ConditionType, conditionStatus ConditionStatus) error {
 	for _, condition := range conf.Status.Conditions {
 		if condition.Type == conditionsv1.ConditionType(conditionType) {
 			if condition.Status == corev1.ConditionStatus(conditionStatus) {
@@ -449,7 +450,7 @@ func isNotSupportedKind(err error) bool {
 	return strings.Contains(err.Error(), "no kind is registered for the type")
 }
 
-func configToYaml(config *opv1alpha1.NetworkAddonsConfig) string {
+func configToYaml(config *cnaov1.NetworkAddonsConfig) string {
 	manifest, err := yaml.Marshal(config)
 	if err != nil {
 		panic(err)
@@ -489,7 +490,7 @@ func retrieveRange() (string, string) {
 	appliedData, exist := configMap.Data["applied"]
 	Expect(exist).To(BeTrue(), "applied data not found in configMap")
 
-	appliedConfig := &opv1alpha1.NetworkAddonsConfigSpec{}
+	appliedConfig := &cnao.NetworkAddonsConfigSpec{}
 	err := json.Unmarshal([]byte(appliedData), appliedConfig)
 	Expect(err).ToNot(HaveOccurred())
 

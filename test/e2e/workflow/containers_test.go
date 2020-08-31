@@ -6,15 +6,15 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
 var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when is the config already deployed", func() {
-		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-			LinuxBridge: &opv1alpha1.LinuxBridge{},
+		configSpec := cnao.NetworkAddonsConfigSpec{
+			LinuxBridge: &cnao.LinuxBridge{},
 		}
 
 		BeforeEach(func() {

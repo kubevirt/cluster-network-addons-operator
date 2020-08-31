@@ -5,8 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
@@ -14,8 +13,8 @@ import (
 var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when a config is created", func() {
 		BeforeEach(func() {
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				LinuxBridge: &opv1alpha1.LinuxBridge{},
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				LinuxBridge: &cnao.LinuxBridge{},
 			}
 			CreateConfig(configSpec)
 		})
@@ -33,8 +32,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 	Context("when there is an existing config", func() {
 		BeforeEach(func() {
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				Multus: &opv1alpha1.Multus{},
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				Multus: &cnao.Multus{},
 			}
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
@@ -46,9 +45,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			}
 
 			updatingConfig := func() {
-				configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-					Multus:      &opv1alpha1.Multus{},
-					LinuxBridge: &opv1alpha1.LinuxBridge{},
+				configSpec := cnao.NetworkAddonsConfigSpec{
+					Multus:      &cnao.Multus{},
+					LinuxBridge: &cnao.LinuxBridge{},
 				}
 
 				// Give validator some time to verify original state

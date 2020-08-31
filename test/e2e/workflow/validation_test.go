@@ -6,8 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	v1 "k8s.io/api/core/v1"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
-
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
@@ -16,16 +15,16 @@ var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when there is no running config", func() {
 		Context("and an invalid config is created", func() {
 			BeforeEach(func() {
-				configSpec := opv1alpha1.NetworkAddonsConfigSpec{
+				configSpec := cnao.NetworkAddonsConfigSpec{
 					ImagePullPolicy: v1.PullAlways,
-					KubeMacPool: &opv1alpha1.KubeMacPool{
+					KubeMacPool: &cnao.KubeMacPool{
 						RangeStart: "this:aint:right",
 					},
-					LinuxBridge: &opv1alpha1.LinuxBridge{},
-					Multus:      &opv1alpha1.Multus{},
-					Ovs:         &opv1alpha1.Ovs{},
-					NMState:     &opv1alpha1.NMState{},
-					MacvtapCni:  &opv1alpha1.MacvtapCni{},
+					LinuxBridge: &cnao.LinuxBridge{},
+					Multus:      &cnao.Multus{},
+					Ovs:         &cnao.Ovs{},
+					NMState:     &cnao.NMState{},
+					MacvtapCni:  &cnao.MacvtapCni{},
 				}
 				CreateConfig(configSpec)
 			})
@@ -39,9 +38,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 	Context("when a valid config is deployed", func() {
 		BeforeEach(func() {
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				LinuxBridge: &opv1alpha1.LinuxBridge{},
-				NMState:     &opv1alpha1.NMState{},
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				LinuxBridge: &cnao.LinuxBridge{},
+				NMState:     &cnao.NMState{},
 			}
 			CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 2*time.Minute, CheckDoNotRepeat)
@@ -49,8 +48,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 		Context("and a component which does support removal is removed from the Spec", func() {
 			BeforeEach(func() {
-				configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-					LinuxBridge: &opv1alpha1.LinuxBridge{},
+				configSpec := cnao.NetworkAddonsConfigSpec{
+					LinuxBridge: &cnao.LinuxBridge{},
 				}
 				UpdateConfig(configSpec)
 			})

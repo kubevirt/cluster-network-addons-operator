@@ -1,13 +1,13 @@
 package releases
 
 import (
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 func init() {
 	release := Release{
 		Version: "99.0.0",
-		Containers: []opv1alpha1.Container{
+		Containers: []cnao.Container{
 			{
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
@@ -57,12 +57,12 @@ func init() {
 				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:0f08d6b1550a90c9f10221f2bb07709d1090e7c675ee1a711981bd429074d620",
 			},
 		},
-		SupportedSpec: opv1alpha1.NetworkAddonsConfigSpec{
-			KubeMacPool: &opv1alpha1.KubeMacPool{},
-			LinuxBridge: &opv1alpha1.LinuxBridge{},
-			Multus:      &opv1alpha1.Multus{},
-			NMState:     &opv1alpha1.NMState{},
-			Ovs:         &opv1alpha1.Ovs{},
+		SupportedSpec: cnao.NetworkAddonsConfigSpec{
+			KubeMacPool: &cnao.KubeMacPool{},
+			LinuxBridge: &cnao.LinuxBridge{},
+			Multus:      &cnao.Multus{},
+			NMState:     &cnao.NMState{},
+			Ovs:         &cnao.Ovs{},
 		},
 		Manifests: []string{
 			"operator.yaml",

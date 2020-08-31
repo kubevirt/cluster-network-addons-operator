@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
@@ -16,7 +16,7 @@ import (
 var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when there is no pre-existing Config", func() {
 		DescribeTable("should succeed deploying single component",
-			func(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
+			func(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
 				testConfigCreate(configSpec, components)
 
 				// Make sure that deployed components remain up and running
@@ -24,48 +24,48 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			},
 			Entry(
 				"Empty config",
-				opv1alpha1.NetworkAddonsConfigSpec{},
+				cnao.NetworkAddonsConfigSpec{},
 				[]Component{},
 			),
 			Entry(
 				LinuxBridgeComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					LinuxBridge: &opv1alpha1.LinuxBridge{},
+				cnao.NetworkAddonsConfigSpec{
+					LinuxBridge: &cnao.LinuxBridge{},
 				},
 				[]Component{LinuxBridgeComponent},
 			), //2303
 			Entry(
 				MultusComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					Multus: &opv1alpha1.Multus{},
+				cnao.NetworkAddonsConfigSpec{
+					Multus: &cnao.Multus{},
 				},
 				[]Component{MultusComponent},
 			),
 			Entry(
 				NMStateComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					NMState: &opv1alpha1.NMState{},
+				cnao.NetworkAddonsConfigSpec{
+					NMState: &cnao.NMState{},
 				},
 				[]Component{NMStateComponent},
 			),
 			Entry(
 				KubeMacPoolComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					KubeMacPool: &opv1alpha1.KubeMacPool{},
+				cnao.NetworkAddonsConfigSpec{
+					KubeMacPool: &cnao.KubeMacPool{},
 				},
 				[]Component{KubeMacPoolComponent},
 			),
 			Entry(
 				OvsComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					Ovs: &opv1alpha1.Ovs{},
+				cnao.NetworkAddonsConfigSpec{
+					Ovs: &cnao.Ovs{},
 				},
 				[]Component{OvsComponent},
 			),
 			Entry(
 				MacvtapComponent.ComponentName,
-				opv1alpha1.NetworkAddonsConfigSpec{
-					MacvtapCni: &opv1alpha1.MacvtapCni{},
+				cnao.NetworkAddonsConfigSpec{
+					MacvtapCni: &cnao.MacvtapCni{},
 				},
 				[]Component{MacvtapComponent},
 			),
@@ -80,51 +80,51 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				OvsComponent,
 				MacvtapComponent,
 			}
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-				KubeMacPool: &opv1alpha1.KubeMacPool{},
-				LinuxBridge: &opv1alpha1.LinuxBridge{},
-				Multus:      &opv1alpha1.Multus{},
-				NMState:     &opv1alpha1.NMState{},
-				Ovs:         &opv1alpha1.Ovs{},
-				MacvtapCni:  &opv1alpha1.MacvtapCni{},
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool: &cnao.KubeMacPool{},
+				LinuxBridge: &cnao.LinuxBridge{},
+				Multus:      &cnao.Multus{},
+				NMState:     &cnao.NMState{},
+				Ovs:         &cnao.Ovs{},
+				MacvtapCni:  &cnao.MacvtapCni{},
 			}
 			testConfigCreate(configSpec, components)
 		})
 		//2304
 		It("should be able to deploy all components one by one", func() {
-			configSpec := opv1alpha1.NetworkAddonsConfigSpec{}
+			configSpec := cnao.NetworkAddonsConfigSpec{}
 			components := []Component{}
 
 			// Deploy initial empty config
 			testConfigCreate(configSpec, components)
 
 			// Deploy Multus component
-			configSpec.Multus = &opv1alpha1.Multus{}
+			configSpec.Multus = &cnao.Multus{}
 			components = append(components, MultusComponent)
 			testConfigUpdate(configSpec, components)
 
 			// Add Linux bridge component
-			configSpec.LinuxBridge = &opv1alpha1.LinuxBridge{}
+			configSpec.LinuxBridge = &cnao.LinuxBridge{}
 			components = append(components, LinuxBridgeComponent)
 			testConfigUpdate(configSpec, components)
 
 			// Add KubeMacPool component
-			configSpec.KubeMacPool = &opv1alpha1.KubeMacPool{}
+			configSpec.KubeMacPool = &cnao.KubeMacPool{}
 			components = append(components, KubeMacPoolComponent)
 			testConfigUpdate(configSpec, components)
 
 			// Add NMState component
-			configSpec.NMState = &opv1alpha1.NMState{}
+			configSpec.NMState = &cnao.NMState{}
 			components = append(components, NMStateComponent)
 			testConfigUpdate(configSpec, components)
 
 			// Add Ovs component
-			configSpec.Ovs = &opv1alpha1.Ovs{}
+			configSpec.Ovs = &cnao.Ovs{}
 			components = append(components, OvsComponent)
 			testConfigUpdate(configSpec, components)
 
 			// Add Macvtap component
-			configSpec.MacvtapCni = &opv1alpha1.MacvtapCni{}
+			configSpec.MacvtapCni = &cnao.MacvtapCni{}
 			components = append(components, MacvtapComponent)
 			testConfigUpdate(configSpec, components)
 		})
@@ -139,13 +139,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			OvsComponent,
 			MacvtapComponent,
 		}
-		configSpec := opv1alpha1.NetworkAddonsConfigSpec{
-			LinuxBridge: &opv1alpha1.LinuxBridge{},
-			Multus:      &opv1alpha1.Multus{},
-			NMState:     &opv1alpha1.NMState{},
-			KubeMacPool: &opv1alpha1.KubeMacPool{},
-			Ovs:         &opv1alpha1.Ovs{},
-			MacvtapCni:  &opv1alpha1.MacvtapCni{},
+		configSpec := cnao.NetworkAddonsConfigSpec{
+			LinuxBridge: &cnao.LinuxBridge{},
+			Multus:      &cnao.Multus{},
+			NMState:     &cnao.NMState{},
+			KubeMacPool: &cnao.KubeMacPool{},
+			Ovs:         &cnao.Ovs{},
+			MacvtapCni:  &cnao.MacvtapCni{},
 		}
 
 		BeforeEach(func() {
@@ -176,7 +176,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when kubeMacPool is deployed", func() {
 		BeforeEach(func() {
 			By("Deploying KubeMacPool")
-			config := opv1alpha1.NetworkAddonsConfigSpec{KubeMacPool: &opv1alpha1.KubeMacPool{}}
+			config := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
 			CreateConfig(config)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
@@ -187,7 +187,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			DeleteConfig()
 			CheckComponentsRemoval(AllComponents)
 
-			config := opv1alpha1.NetworkAddonsConfigSpec{KubeMacPool: &opv1alpha1.KubeMacPool{}}
+			config := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
 			CreateConfig(config)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 			rangeStart, rangeEnd := CheckUnicastAndValidity()
@@ -199,13 +199,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 	})
 })
 
-func testConfigCreate(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
+func testConfigCreate(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
 	checkConfigChange(components, func() {
 		CreateConfig(configSpec)
 	})
 }
 
-func testConfigUpdate(configSpec opv1alpha1.NetworkAddonsConfigSpec, components []Component) {
+func testConfigUpdate(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
 	checkConfigChange(components, func() {
 		UpdateConfig(configSpec)
 	})

@@ -12,11 +12,11 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 // ValidateMultus validates the combination of DisableMultiNetwork and AddtionalNetworks
-func validateKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func validateKubeMacPool(conf *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.KubeMacPool == nil {
 		return []error{}
 	}
@@ -58,7 +58,7 @@ func validateKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	return []error{}
 }
 
-func fillDefaultsKubeMacPool(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func fillDefaultsKubeMacPool(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.KubeMacPool == nil {
 		return []error{}
 	}
@@ -86,7 +86,7 @@ func fillDefaultsKubeMacPool(conf, previous *opv1alpha1.NetworkAddonsConfigSpec)
 	return []error{}
 }
 
-func changeSafeKubeMacPool(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func changeSafeKubeMacPool(prev, next *cnao.NetworkAddonsConfigSpec) []error {
 	if prev.KubeMacPool != nil && next.KubeMacPool != nil && !reflect.DeepEqual(prev.KubeMacPool, next.KubeMacPool) {
 		return []error{errors.Errorf("cannot modify KubeMacPool configuration once it is deployed")}
 	}
@@ -95,7 +95,7 @@ func changeSafeKubeMacPool(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []err
 }
 
 // renderLinuxBridge generates the manifests of Linux Bridge
-func renderKubeMacPool(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
+func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
 	if conf.KubeMacPool == nil {
 		return nil, nil
 	}

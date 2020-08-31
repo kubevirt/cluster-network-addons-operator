@@ -4,12 +4,12 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 const defaultImagePullPolicy = v1.PullIfNotPresent
 
-func validateImagePullPolicy(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func validateImagePullPolicy(conf *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.ImagePullPolicy == "" {
 		return []error{}
 	}
@@ -21,7 +21,7 @@ func validateImagePullPolicy(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
 	return []error{}
 }
 
-func fillDefaultsImagePullPolicy(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func fillDefaultsImagePullPolicy(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.ImagePullPolicy == "" {
 		if previous != nil && previous.ImagePullPolicy != "" {
 			conf.ImagePullPolicy = previous.ImagePullPolicy
@@ -33,7 +33,7 @@ func fillDefaultsImagePullPolicy(conf, previous *opv1alpha1.NetworkAddonsConfigS
 	return []error{}
 }
 
-func changeSafeImagePullPolicy(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func changeSafeImagePullPolicy(prev, next *cnao.NetworkAddonsConfigSpec) []error {
 	if prev.ImagePullPolicy != "" && prev.ImagePullPolicy != next.ImagePullPolicy {
 		return []error{errors.Errorf("cannot modify ImagePullPolicy configuration once components were deployed")}
 	}

@@ -15,11 +15,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 // renderNMState generates the manifests of NMState handler
-func renderNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.NMState == nil {
 		return nil, nil
 	}
@@ -44,7 +44,7 @@ func renderNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string,
 	return objs, nil
 }
 
-func cleanUpNMState(conf *opv1alpha1.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
+func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
 	if conf.NMState == nil {
 		return nil
 	}

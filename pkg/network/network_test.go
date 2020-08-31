@@ -9,14 +9,14 @@ import (
 	osv1 "github.com/openshift/api/operator/v1"
 	v1 "k8s.io/api/core/v1"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 var _ = Describe("Testing network", func() {
 	// There is no functionality in this function yet
 	Describe("Canonicalize", func() {
 		Context("when given an empty config", func() {
-			conf := &opv1alpha1.NetworkAddonsConfigSpec{}
+			conf := &cnao.NetworkAddonsConfigSpec{}
 			It("should pass", func() {
 				Canonicalize(conf)
 			})
@@ -25,7 +25,7 @@ var _ = Describe("Testing network", func() {
 
 	Describe("Validate", func() {
 		Context("when given a valid config", func() {
-			conf := &opv1alpha1.NetworkAddonsConfigSpec{}
+			conf := &cnao.NetworkAddonsConfigSpec{}
 			openshiftNetworkConf := &osv1.Network{}
 			It("should pass", func() {
 				err := Validate(conf, openshiftNetworkConf)
@@ -34,8 +34,8 @@ var _ = Describe("Testing network", func() {
 		})
 
 		Context("when given invalid config", func() {
-			conf := &opv1alpha1.NetworkAddonsConfigSpec{
-				KubeMacPool: &opv1alpha1.KubeMacPool{
+			conf := &cnao.NetworkAddonsConfigSpec{
+				KubeMacPool: &cnao.KubeMacPool{
 					RangeStart: "foo",
 				},
 				ImagePullPolicy: v1.PullPolicy("bar"),
@@ -54,8 +54,8 @@ var _ = Describe("Testing network", func() {
 	// TODO: Mock rand.Read to fail and test error handling here
 	Describe("FillDefaults", func() {
 		Context("when given valid configuration", func() {
-			newConf := &opv1alpha1.NetworkAddonsConfigSpec{}
-			prevConfig := &opv1alpha1.NetworkAddonsConfigSpec{}
+			newConf := &cnao.NetworkAddonsConfigSpec{}
+			prevConfig := &cnao.NetworkAddonsConfigSpec{}
 
 			It("should successfully pass", func() {
 				err := FillDefaults(newConf, prevConfig)
@@ -66,8 +66,8 @@ var _ = Describe("Testing network", func() {
 
 	Describe("IsChangeSafe", func() {
 		Context("when current and new configuration is compatible", func() {
-			newConf := &opv1alpha1.NetworkAddonsConfigSpec{}
-			prevConfig := &opv1alpha1.NetworkAddonsConfigSpec{}
+			newConf := &cnao.NetworkAddonsConfigSpec{}
+			prevConfig := &cnao.NetworkAddonsConfigSpec{}
 
 			It("should pass the check", func() {
 				err := IsChangeSafe(prevConfig, newConf)
@@ -76,8 +76,8 @@ var _ = Describe("Testing network", func() {
 		})
 
 		Context("when current and new configuration is not compatible", func() {
-			newConf := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways}
-			prevConfig := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullIfNotPresent}
+			newConf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways}
+			prevConfig := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullIfNotPresent}
 
 			It("should fail the check", func() {
 				err := IsChangeSafe(prevConfig, newConf)
@@ -88,7 +88,7 @@ var _ = Describe("Testing network", func() {
 
 	Describe("Render", func() {
 		Context("when given valid arguments", func() {
-			conf := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &opv1alpha1.Multus{}, LinuxBridge: &opv1alpha1.LinuxBridge{}}
+			conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, LinuxBridge: &cnao.LinuxBridge{}}
 			manifestDir := "../../data"
 			openshiftNetworkConf := &osv1.Network{}
 			clusterInfo := &ClusterInfo{SCCAvailable: true, OpenShift4: false}
@@ -101,7 +101,7 @@ var _ = Describe("Testing network", func() {
 		})
 
 		Context("when given manifest directory that does not contain all expected components", func() {
-			conf := &opv1alpha1.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &opv1alpha1.Multus{}, LinuxBridge: &opv1alpha1.LinuxBridge{}}
+			conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, LinuxBridge: &cnao.LinuxBridge{}}
 			manifestDir := "." // Test directory with this module
 			openshiftNetworkConf := &osv1.Network{}
 			clusterInfo := &ClusterInfo{SCCAvailable: true, OpenShift4: false}

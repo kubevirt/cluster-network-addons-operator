@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 // - CARotateInterval
 // - CAOverlapInterval
 // - CertRotateInterval
-func validateSelfSignConfiguration(conf *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.SelfSignConfiguration == nil {
 		return []error{}
 	}
@@ -78,14 +78,14 @@ func validateSelfSignConfiguration(conf *opv1alpha1.NetworkAddonsConfigSpec) []e
 	return errs
 }
 
-func fillDefaultsSelfSignConfiguration(conf, previous *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func fillDefaultsSelfSignConfiguration(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.SelfSignConfiguration == nil || conf.SelfSignConfiguration.CARotateInterval == "" || conf.SelfSignConfiguration.CAOverlapInterval == "" || conf.SelfSignConfiguration.CertRotateInterval == "" {
 		if previous != nil && previous.SelfSignConfiguration != nil {
 			conf.SelfSignConfiguration = previous.SelfSignConfiguration
 			return []error{}
 		}
 
-		conf.SelfSignConfiguration = &opv1alpha1.SelfSignConfiguration{
+		conf.SelfSignConfiguration = &cnao.SelfSignConfiguration{
 			CARotateInterval:   caRotateIntervalDefault.String(),
 			CAOverlapInterval:  caOverlapIntervalDefault.String(),
 			CertRotateInterval: certRotateIntervalDefault.String(),
@@ -95,7 +95,7 @@ func fillDefaultsSelfSignConfiguration(conf, previous *opv1alpha1.NetworkAddonsC
 	return []error{}
 }
 
-func changeSafeSelfSignConfiguration(prev, next *opv1alpha1.NetworkAddonsConfigSpec) []error {
+func changeSafeSelfSignConfiguration(prev, next *cnao.NetworkAddonsConfigSpec) []error {
 	if prev.SelfSignConfiguration != nil && next.SelfSignConfiguration != nil && !reflect.DeepEqual(prev.SelfSignConfiguration, next.SelfSignConfiguration) {
 		return []error{errors.Errorf("cannot modify SelfSignConfiguration configuration once it is deployed")}
 	}

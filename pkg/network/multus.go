@@ -15,13 +15,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	opv1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network/cni"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 )
 
 // ValidateMultus validates the combination of DisableMultiNetwork and AddtionalNetworks
-func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.Network) []error {
+func validateMultus(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.Network) []error {
 	if conf.Multus == nil {
 		return []error{}
 	}
@@ -36,7 +36,7 @@ func validateMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, openshiftNetworkCo
 }
 
 // cleanUpMultus checks specific multus outdated objects or ones that are no longer compatible and deletes them.
-func cleanUpMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
+func cleanUpMultus(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
 	if conf.Multus == nil {
 		return nil
 	}
@@ -80,7 +80,7 @@ func cleanUpMultusOldName(ctx context.Context, client k8sclient.Client) []error 
 }
 
 // RenderMultus generates the manifests of Multus
-func renderMultus(conf *opv1alpha1.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+func renderMultus(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.Multus == nil || openshiftNetworkConfig != nil {
 		return nil, nil
 	}
