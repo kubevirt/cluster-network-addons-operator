@@ -44,6 +44,7 @@ func Validate(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.N
 func FillDefaults(conf, previous *cnao.NetworkAddonsConfigSpec) error {
 	errs := []error{}
 
+	errs = append(errs, fillDefaultsPlacementConfiguration(conf, previous)...)
 	errs = append(errs, fillDefaultsSelfSignConfiguration(conf, previous)...)
 	errs = append(errs, fillDefaultsImagePullPolicy(conf, previous)...)
 	errs = append(errs, fillDefaultsKubeMacPool(conf, previous)...)
@@ -84,6 +85,7 @@ func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 
 	errs := []error{}
 
+	errs = append(errs, changeSafePlacementConfiguration(prev, next)...)
 	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
 	errs = append(errs, changeSafeSelfSignConfiguration(prev, next)...)

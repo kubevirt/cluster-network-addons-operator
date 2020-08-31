@@ -209,6 +209,41 @@ string format also the following checks are done at validation: caRotateInterval
 
 This parameters are consumed by kubemacpool and kubernetes-nmstate components.
 
+## Placement Configuration
+
+Administrator can specify placement preferences for deployed infra and workload components
+by defining [affinity, nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
+and [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/).
+
+By default, infra components are scheduled on master nodes and workload components are scheduled on all nodes.
+To adjust this behaviour, provide custom `placementConfiguration` to the `NetworkAddonsConfig`.
+
+In the following example, `nodeAffinity` is used to schedule infra components to master nodes and `nodeSelector`
+to schedule workloads on worker nodes.
+Note that worker nodes need to be labeled with `node-role.kubernetes.io/worker` label.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  placementConfiguration:
+    infra:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+    workloads:
+      nodeSelector:
+        node-role.kubernetes.io/worker: ""
+```
+
+`PlacementConfiguration` cannot be changed after `NetworkAddonsConfig` is deployed.
+
 # Deployment
 
 First install the operator itself:
