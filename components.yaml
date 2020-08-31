@@ -19,10 +19,10 @@ components:
     metadata: "0.3.0"
   kubemacpool:
     url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
-    commit: "07def8fb9616acf039075047f6a4a00fee258971"
+    commit: "7600ea1e8a945a5665071bdc7e6d8619adb65195"
     branch: "master"
     update-policy: "tagged"
-    metadata: "v0.19.0"
+    metadata: "v0.20.0"
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
     commit: "f1c8aec816f88ac0435c3c8985bc49823fb9d20a"
