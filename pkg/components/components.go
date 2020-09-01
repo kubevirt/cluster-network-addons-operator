@@ -123,6 +123,7 @@ func NewRelatedImage(image string) RelatedImage {
 
 func GetDeployment(version string, operatorVersion string, namespace string, repository string, imageName string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, imageName, tag)
+	runAsNonRoot := true
 
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -154,6 +155,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: Name,
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsNonRoot: &runAsNonRoot,
+					},
 					Containers: []corev1.Container{
 						{
 							Name:            Name,
