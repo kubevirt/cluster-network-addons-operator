@@ -225,7 +225,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
 	if err != nil {
 		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
-		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig: %v", err)
+		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToGetOpenShiftNetworkConfig", err.Error())
 		return reconcile.Result{}, err
 	}
@@ -233,7 +233,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// Validate the configuration
 	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
 		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
-		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec: %v", err)
+		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToValidate", err.Error())
 		return reconcile.Result{}, err
 	}
@@ -349,14 +349,14 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
 		log.Printf("failed to retrieve previously applied configuration: %v", err)
-		err = errors.Wrapf(err, "failed to retrieve previously applied configuration: %v", err)
+		err = errors.Wrapf(err, "failed to retrieve previously applied configuration")
 		return nil, err
 	}
 
 	// Fill all defaults explicitly
 	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
 		log.Printf("failed to fill defaults: %v", err)
-		err = errors.Wrapf(err, "failed to fill defaults: %v", err)
+		err = errors.Wrapf(err, "failed to fill defaults")
 		return nil, err
 	}
 
