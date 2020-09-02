@@ -28,7 +28,7 @@ function __parametize_by_object() {
 	done
 }
 
-echo 'Bumping bridge-marker'
+echo 'Bumping bridge-marker just testing'
 BRIDGE_MARKER_URL=$(yaml-utils::get_component_url bridge-marker)
 BRIDGE_MARKER_COMMIT=$(yaml-utils::get_component_commit bridge-marker)
 BRIDGE_MARKER_REPO=$(yaml-utils::get_component_repo ${BRIDGE_MARKER_URL})
