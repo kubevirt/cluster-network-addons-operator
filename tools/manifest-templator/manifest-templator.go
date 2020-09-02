@@ -46,6 +46,7 @@ type operatorData struct {
 	ClusterRules      string
 	CRD               *extv1beta1.CustomResourceDefinition
 	CRDString         string
+	CRDVersion        string
 	CRString          string
 	RelatedImages     components.RelatedImages
 }
@@ -194,6 +195,7 @@ func getCNA(data *templateData) {
 	crd := components.GetCrd()
 	marshallObject(crd, &writer)
 	crdString := writer.String()
+	crdVersion := crd.Spec.Versions[0].Name
 
 	// Get CNA CR
 	writer = strings.Builder{}
@@ -215,6 +217,7 @@ func getCNA(data *templateData) {
 		ClusterRules:      clusterRules,
 		CRD:               crd,
 		CRDString:         crdString,
+		CRDVersion:        crdVersion,
 		CRString:          crString,
 		RelatedImages:     relatedImages,
 	}
