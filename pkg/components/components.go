@@ -7,7 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -372,63 +372,64 @@ func GetClusterRole() *rbacv1.ClusterRole {
 	return role
 }
 
-func GetCrd() *extv1beta1.CustomResourceDefinition {
-	crd := &extv1beta1.CustomResourceDefinition{
+func GetCrd() *extv1.CustomResourceDefinition {
+	subResouceSchema := &extv1.CustomResourceSubresources{Status: &extv1.CustomResourceSubresourceStatus{}}
+	validationSchema := &extv1.CustomResourceValidation{
+		OpenAPIV3Schema: &extv1.JSONSchemaProps{
+			Type: "object",
+			Properties: map[string]extv1.JSONSchemaProps{
+				"apiVersion": extv1.JSONSchemaProps{
+					Type: "string",
+				},
+				"kind": extv1.JSONSchemaProps{
+					Type: "string",
+				},
+				"metadata": extv1.JSONSchemaProps{
+					Type: "object",
+				},
+				"spec": extv1.JSONSchemaProps{
+					Type: "object",
+				},
+				"status": extv1.JSONSchemaProps{
+					Type: "object",
+				},
+			},
+		},
+	}
+
+	crd := &extv1.CustomResourceDefinition{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "apiextensions.k8s.io/v1beta1",
+			APIVersion: "apiextensions.k8s.io/v1",
 			Kind:       "CustomResourceDefinition",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io",
 		},
-		Spec: extv1beta1.CustomResourceDefinitionSpec{
+		Spec: extv1.CustomResourceDefinitionSpec{
 			Group: "networkaddonsoperator.network.kubevirt.io",
 			Scope: "Cluster",
 
-			Subresources: &extv1beta1.CustomResourceSubresources{
-				Status: &extv1beta1.CustomResourceSubresourceStatus{},
-			},
-
-			Names: extv1beta1.CustomResourceDefinitionNames{
+			Names: extv1.CustomResourceDefinitionNames{
 				Plural:   "networkaddonsconfigs",
 				Singular: "networkaddonsconfig",
 				Kind:     "NetworkAddonsConfig",
 				ListKind: "NetworkAddonsConfigList",
 			},
 
-			Versions: []extv1beta1.CustomResourceDefinitionVersion{
+			Versions: []extv1.CustomResourceDefinitionVersion{
 				{
 					Name:    "v1",
 					Served:  true,
 					Storage: true,
+					Schema:  validationSchema,
+					Subresources: subResouceSchema,
 				},
 				{
 					Name:    "v1alpha1",
 					Served:  true,
 					Storage: false,
-				},
-			},
-
-			Validation: &extv1beta1.CustomResourceValidation{
-				OpenAPIV3Schema: &extv1beta1.JSONSchemaProps{
-					Type: "object",
-					Properties: map[string]extv1beta1.JSONSchemaProps{
-						"apiVersion": extv1beta1.JSONSchemaProps{
-							Type: "string",
-						},
-						"kind": extv1beta1.JSONSchemaProps{
-							Type: "string",
-						},
-						"metadata": extv1beta1.JSONSchemaProps{
-							Type: "object",
-						},
-						"spec": extv1beta1.JSONSchemaProps{
-							Type: "object",
-						},
-						"status": extv1beta1.JSONSchemaProps{
-							Type: "object",
-						},
-					},
+					Schema:  validationSchema,
+					Subresources: subResouceSchema,
 				},
 			},
 		},
