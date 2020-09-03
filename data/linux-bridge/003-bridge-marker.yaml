@@ -20,12 +20,8 @@ spec:
     spec:
       serviceAccountName: bridge-marker
       hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/arch: amd64
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          operator: Exists
-          effect: NoSchedule
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       containers:
         - name: bridge-marker
           image: {{ .LinuxBridgeMarkerImage }}
@@ -38,6 +34,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
