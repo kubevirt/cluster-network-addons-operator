@@ -87,11 +87,8 @@ spec:
         name: kube-multus-ds-amd64
     spec:
       hostNetwork: true
-      nodeSelector:
-        kubernetes.io/arch: amd64
-      tolerations:
-        - operator: Exists
-          effect: NoSchedule
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       serviceAccountName: multus
       containers:
         - name: kube-multus
@@ -122,6 +119,7 @@ spec:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 {{ if .EnableSCC }}
 ---
 apiVersion: security.openshift.io/v1
