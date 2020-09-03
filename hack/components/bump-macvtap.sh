@@ -6,6 +6,19 @@ source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 source hack/components/docker-utils.sh
 
+function __parametize_by_object() {
+  for f in ./*; do
+    case "${f}" in
+      ./macvtap.yaml.in)
+        yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
+        yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+        yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+        yaml-utils::remove_single_quotes_from_yaml ${f}
+        ;;
+    esac
+  done
+}
+
 echo 'Bumping macvtap-cni'
 MACVTAP_URL=$(yaml-utils::get_component_url macvtap-cni)
 MACVTAP_COMMIT=$(yaml-utils::get_component_commit macvtap-cni)
@@ -35,6 +48,13 @@ data:
   DP_MACVTAP_CONF: "[]"
 ---
 EOF
+
+(
+  cd ${MACVTAP_PATH}/templates/
+  echo 'parametize manifests by object'
+  __parametize_by_object
+)
+
 cat ${MACVTAP_PATH}/templates/macvtap.yaml.in >> data/macvtap/002-macvtap-daemonset.yaml
 
 echo 'Get macvtap-cni image name and update it under CNAO'
