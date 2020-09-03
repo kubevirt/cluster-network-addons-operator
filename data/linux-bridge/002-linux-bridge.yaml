@@ -21,12 +21,9 @@ spec:
 {{ if .EnableSCC }}
       serviceAccountName: linux-bridge
 {{ end }}
-      nodeSelector:
-        beta.kubernetes.io/arch: amd64
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          operator: Exists
-          effect: NoSchedule
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       containers:
         - name: cni-plugins
           image: {{ .LinuxBridgeImage }}
