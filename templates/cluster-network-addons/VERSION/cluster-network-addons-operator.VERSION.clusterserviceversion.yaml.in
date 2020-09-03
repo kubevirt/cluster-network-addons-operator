@@ -96,7 +96,7 @@ spec:
   customresourcedefinitions:
     owned:
       - name: {{.CNA.CRD.ObjectMeta.Name}}
-        version: {{.CNA.CRD.Spec.Version}}
+        version: {{.CNA.CRDVersion}}
         group: {{.CNA.CRD.Spec.Group}}
         kind: {{.CNA.CRD.Spec.Names.Kind}}
         displayName: Cluster Network Addons
