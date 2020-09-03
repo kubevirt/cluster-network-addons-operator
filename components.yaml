@@ -1,10 +1,10 @@
 components:
   multus:
     url: "https://github.com/intel/multus-cni"
-    commit: "bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a"
+    commit: "c85b79f5ff5bcacaa45e2135d29e9afb6b84ed9b"
     branch: "master"
     update-policy: "tagged"
-    metadata: "v3.4.1"
+    metadata: "v3.6"
   linux-bridge:
     url: "https://github.com/containernetworking/plugins"
     commit: "9b8de6a613657df14a3a5958642872fa9855d570"
