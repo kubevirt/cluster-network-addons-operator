@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/helm/pkg/chartutil"
 )
 
 type RenderData struct {
@@ -68,6 +69,7 @@ func RenderTemplate(path string, d *RenderData) ([]*unstructured.Unstructured, e
 
 	// Add universal functions
 	tmpl.Funcs(sprig.TxtFuncMap())
+	tmpl.Funcs(template.FuncMap{"toYaml": chartutil.ToYaml})
 
 	source, err := ioutil.ReadFile(path)
 	if err != nil {

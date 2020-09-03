@@ -251,18 +251,7 @@ spec:
         control-plane: mac-controller-manager
         controller-tools.k8s.io: "1.0"
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: control-plane
-                  operator: In
-                  values:
-                  - mac-controller-manager
-              topologyKey: kubernetes.io/hostname
-            weight: 1
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       containers:
       - args:
         - --v=production
@@ -322,8 +311,10 @@ spec:
         - mountPath: /etc/webhook/certs
           name: tls-key-pair
           readOnly: true
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       volumes:
       - name: tls-key-pair
         secret:
