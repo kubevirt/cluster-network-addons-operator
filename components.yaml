@@ -7,10 +7,10 @@ components:
     metadata: "v3.4.1"
   linux-bridge:
     url: "https://github.com/containernetworking/plugins"
-    commit: "ad10b6fa91aacd720f1f9ab94341a97a82a24965"
+    commit: "9b8de6a613657df14a3a5958642872fa9855d570"
     branch: "master"
     update-policy: "tagged"
-    metadata: "v0.8.6"
+    metadata: "v0.8.7"
   bridge-marker:
     url: "https://github.com/kubevirt/bridge-marker"
     commit: "049eb6a796b742767a0be838f6ddb7f79c97dd60"
