@@ -107,6 +107,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string) (
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["RangeStart"] = conf.KubeMacPool.RangeStart
 	data.Data["RangeEnd"] = conf.KubeMacPool.RangeEnd
+	data.Data["Placement"] = conf.PlacementConfiguration.Infra
 	data.Data["CARotateInterval"] = conf.SelfSignConfiguration.CARotateInterval
 	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval

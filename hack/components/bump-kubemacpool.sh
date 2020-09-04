@@ -31,6 +31,7 @@ bases:
 - ../default
 patchesStrategicMerge:
 - cnao_image_patch.yaml
+- cnao_placement_patch.yaml
 - cnao_rejectowner_patch.yaml
 - mutatevirtualmachines_opt_mode_patch.yaml
 - mutatepods_opt_mode_patch.yaml
@@ -58,6 +59,20 @@ spec:
             value: "{{ .CertRotateInterval }}"
 EOF
 
+    cat <<EOF > config/cnao/cnao_placement_patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mac-controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      affinity: AFFINITY
+      nodeSelector: NODE_SELECTOR
+      tolerations: TOLERATIONS
+EOF
+
     cat <<EOF > config/cnao/cnao_rejectowner_patch.yaml
 apiVersion: v1
 kind: Secret
@@ -83,7 +98,10 @@ rm -rf data/kubemacpool/*
     ./build/_output/bin/go/bin/kustomize build config/cnao | \
         sed 's/kubemacpool-system/{{ .Namespace }}/' | \
         sed 's/RANGE_START: .*/RANGE_START: {{ .RangeStart }}/' | \
-        sed 's/RANGE_END: .*/RANGE_END: {{ .RangeEnd }}/'
+        sed 's/RANGE_END: .*/RANGE_END: {{ .RangeEnd }}/' | \
+        sed 's/AFFINITY/{{ toYaml .Placement.Affinity | nindent 8 }}/' | \
+        sed 's/NODE_SELECTOR/{{ toYaml .Placement.NodeSelector | nindent 8 }}/' | \
+        sed 's/TOLERATIONS/{{ toYaml .Placement.Tolerations | nindent 8 }}/'
 ) > data/kubemacpool/kubemacpool.yaml
 
 echo 'Get kubemacpool image name and update it under CNAO'
