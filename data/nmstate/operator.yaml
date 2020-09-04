@@ -23,9 +23,9 @@ spec:
         name: {{template "handlerPrefix" .}}nmstate-webhook
     spec:
       serviceAccountName: {{template "handlerPrefix" .}}nmstate-handler
-      nodeSelector: {{ toYaml .WebhookNodeSelector | nindent 8 }}
-      tolerations: {{ toYaml .WebhookTolerations | nindent 8 }}
-      affinity: {{ toYaml .WebhookAffinity | nindent 8 }}
+      nodeSelector: {{ toYaml .PlacementConfiguration.Infra.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .PlacementConfiguration.Infra.Tolerations | nindent 8 }}
+      affinity: {{ toYaml .PlacementConfiguration.Infra.Affinity | nindent 8 }}
       containers:
         - name: nmstate-webhook
           args:
@@ -107,9 +107,9 @@ spec:
       # https://github.com/nmstate/nmstate/pull/440
       hostNetwork: true
       serviceAccountName: {{template "handlerPrefix" .}}nmstate-handler
-      nodeSelector: {{ toYaml .HandlerNodeSelector | nindent 8 }}
-      tolerations: {{ toYaml .HandlerTolerations | nindent 8 }}
-      affinity: {{ toYaml .HandlerAffinity | nindent 8 }}
+      nodeSelector: {{ toYaml .PlacementConfiguration.Workloads.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .PlacementConfiguration.Workloads.Tolerations | nindent 8 }}
+      affinity: {{ toYaml .PlacementConfiguration.Workloads.Affinity | nindent 8 }}
       containers:
         - name: nmstate-handler
           args:

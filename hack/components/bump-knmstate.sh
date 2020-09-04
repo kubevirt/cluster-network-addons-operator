@@ -27,9 +27,26 @@ NMSTATE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${NMSTATE_IMAGE_TAGGED}"
 sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" "test/releases/${CNAO_VERSION}.go"
 
+echo 'Configure nmstate-webhook and nmstate-handler templates and save the rendered manifest under CNAO data'
+(
+    cd ${NMSTATE_PATH}
+    mkdir -p config/cnao/handler
+
+    cp $NMSTATE_PATH/deploy/handler/* config/cnao/handler
+
+    sed -i \
+        -e "s#WebhookAffinity#PlacementConfiguration.Infra.Affinity#" \
+        -e "s#WebhookTolerations#PlacementConfiguration.Infra.Tolerations#" \
+        -e "s#WebhookNodeSelector#PlacementConfiguration.Infra.NodeSelector#" \
+        -e "s#HandlerAffinity#PlacementConfiguration.Workloads.Affinity#" \
+        -e "s#HandlerTolerations#PlacementConfiguration.Workloads.Tolerations#" \
+        -e "s#HandlerNodeSelector#PlacementConfiguration.Workloads.NodeSelector#" \
+        config/cnao/handler/operator.yaml
+)
+
 echo 'Copy kubernetes-nmstate manifests'
 rm -rf data/nmstate/*
-cp $NMSTATE_PATH/deploy/handler/* data/nmstate/
+cp $NMSTATE_PATH/config/cnao/handler/* data/nmstate/
 cp $NMSTATE_PATH/deploy/crds/*nodenetwork*crd* data/nmstate/
 cp $NMSTATE_PATH/deploy/openshift/scc.yaml data/nmstate/scc.yaml
 sed -i "s/---/{{ if .EnableSCC }}\n---/" data/nmstate/scc.yaml
