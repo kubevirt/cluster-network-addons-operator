@@ -19,12 +19,8 @@ spec:
     spec:
       serviceAccountName: ovs-cni-marker
       hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/arch: amd64
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          operator: Exists
-          effect: NoSchedule
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       initContainers:
         - name: ovs-cni-plugin
           image: {{ .OvsCNIImage }}
@@ -61,6 +57,7 @@ spec:
         - name: ovs-var-run
           hostPath:
             path: /var/run/openvswitch
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
