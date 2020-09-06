@@ -90,6 +90,7 @@ func renderMultus(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, opensh
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["MultusImage"] = os.Getenv("MULTUS_IMAGE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
+	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
 	if clusterInfo.OpenShift4 {
 		data.Data["CNIConfigDir"] = cni.ConfigDirOpenShift4
 		data.Data["CNIBinDir"] = cni.BinDirOpenShift4
