@@ -88,7 +88,7 @@ var _ = Describe("Testing network", func() {
 
 	Describe("Render", func() {
 		Context("when given valid arguments", func() {
-			conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, LinuxBridge: &cnao.LinuxBridge{}}
+			conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, LinuxBridge: &cnao.LinuxBridge{}, PlacementConfiguration: &cnao.PlacementConfiguration{Workloads: &cnao.Placement{}}}
 			manifestDir := "../../data"
 			openshiftNetworkConf := &osv1.Network{}
 			clusterInfo := &ClusterInfo{SCCAvailable: true, OpenShift4: false}
@@ -101,7 +101,7 @@ var _ = Describe("Testing network", func() {
 		})
 
 		Context("when given manifest directory that does not contain all expected components", func() {
-			conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, LinuxBridge: &cnao.LinuxBridge{}}
+			conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, LinuxBridge: &cnao.LinuxBridge{}, PlacementConfiguration: &cnao.PlacementConfiguration{Workloads: &cnao.Placement{}}}
 			manifestDir := "." // Test directory with this module
 			openshiftNetworkConf := &osv1.Network{}
 			clusterInfo := &ClusterInfo{SCCAvailable: true, OpenShift4: false}
