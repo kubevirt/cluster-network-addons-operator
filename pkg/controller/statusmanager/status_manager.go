@@ -360,7 +360,7 @@ func (status *StatusManager) SetFromPods() {
 			},
 		)
 	}
-	
+
 	// If all pods are being created, mark deployment as not failing
 	status.SetNotFailing(PodDeployment)
 
