@@ -65,6 +65,7 @@ func init() {
 			Ovs:         &cnao.Ovs{},
 		},
 		Manifests: []string{
+			"network-addons-config.crd.yaml",
 			"operator.yaml",
 		},
 	}
