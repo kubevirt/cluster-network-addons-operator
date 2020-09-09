@@ -17,9 +17,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	eventemitter "github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
@@ -28,7 +30,9 @@ const (
 	conditionsUpdateCoolDown = 50 * time.Millisecond
 )
 
-var operatorVersion string
+var (
+	operatorVersion string
+)
 
 func init() {
 	operatorVersion = os.Getenv("OPERATOR_VERSION")
@@ -57,12 +61,17 @@ type StatusManager struct {
 	daemonSets  []types.NamespacedName
 	deployments []types.NamespacedName
 
-	containers []cnao.Container
-	mux        sync.Mutex
+	containers   []cnao.Container
+	mux          sync.Mutex
+	eventEmitter eventemitter.EventEmitter
 }
 
-func New(client client.Client, name string) *StatusManager {
-	return &StatusManager{client: client, name: name}
+func New(mgr manager.Manager, name string) *StatusManager {
+	return &StatusManager{
+		client:       mgr.GetClient(),
+		name:         name,
+		eventEmitter: eventemitter.New(mgr),
+	}
 }
 
 // Set updates the NetworkAddonsConfig.Status with the provided conditions.
@@ -105,12 +114,15 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		// In case the operator is failing, we should not report it as being ready. This has
 		// to be done even when the operator is running fine based on the previous configuration
 		// and the only failing thing is validation of new config.
+		reason := "Failing"
+		message := "Unable to apply desired configuration"
+		status.eventEmitter.EmitFailingForConfig(reason, message)
 		conditionsv1.SetStatusCondition(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionAvailable,
 				Status:  corev1.ConditionFalse,
-				Reason:  "Failing",
-				Message: "Unable to apply desired configuration",
+				Reason:  reason,
+				Message: message,
 			},
 		)
 
@@ -125,12 +137,15 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		)
 	} else if status.failing[PodDeployment] != nil {
 		// In case pod deployment is in progress, implicitly mark as not Available
+		reason := "Failing"
+		message := "Some problems occurred while deploying components' pods"
+		status.eventEmitter.EmitFailingForConfig(reason, message)
 		conditionsv1.SetStatusCondition(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionAvailable,
 				Status:  corev1.ConditionFalse,
-				Reason:  "Failing",
-				Message: "Some problems occurred while deploying components' pods",
+				Reason:  reason,
+				Message: message,
 			},
 		)
 	} else if conditionsv1.IsStatusConditionTrue(config.Status.Conditions, conditionsv1.ConditionProgressing) {
@@ -146,6 +161,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		)
 	} else if reachedAvailableLevel {
 		// If successfully deployed all components and is not failing on anything, mark as Available
+		status.eventEmitter.EmitAvailableForConfig()
 		conditionsv1.SetStatusCondition(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:   conditionsv1.ConditionAvailable,
@@ -174,7 +190,6 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	if err != nil {
 		return fmt.Errorf("Failed to update NetworkAddonsConfig %q Status: %v", config.Name, err)
 	}
-
 	return nil
 }
 
@@ -198,6 +213,7 @@ func (status *StatusManager) syncFailing() {
 // SetFailing marks the operator as Failing with the given reason and message. If it
 // is not already failing for a lower-level reason, the operator's status will be updated.
 func (status *StatusManager) SetFailing(level StatusLevel, reason, message string) {
+	status.eventEmitter.EmitFailingForConfig(reason, message)
 	status.failing[level] = &conditionsv1.Condition{
 		Type:    conditionsv1.ConditionDegraded,
 		Status:  corev1.ConditionTrue,
@@ -325,6 +341,7 @@ func (status *StatusManager) SetFromPods() {
 	// If there are any progressing Pods, list them in the condition with their state. Otherwise,
 	// mark Progressing condition as False.
 	if len(progressing) > 0 {
+		status.eventEmitter.EmitProgressingForConfig()
 		status.Set(
 			false,
 			conditionsv1.Condition{

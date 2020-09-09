@@ -37,6 +37,7 @@ import (
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
@@ -98,14 +99,15 @@ func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.C
 	// Status manager is shared between both reconcilers and it is used to update conditions of
 	// NetworkAddonsConfig.State. NetworkAddonsConfig reconciler updates it with progress of rendering
 	// and applying of manifests. Pods reconciler updates it with progress of deployed pods.
-	statusManager := statusmanager.New(mgr.GetClient(), names.OPERATOR_CONFIG)
+	statusManager := statusmanager.New(mgr, names.OPERATOR_CONFIG)
 	return &ReconcileNetworkAddonsConfig{
 		client:        mgr.GetClient(),
 		scheme:        mgr.GetScheme(),
 		namespace:     namespace,
-		podReconciler: newPodReconciler(statusManager),
+		podReconciler: newPodReconciler(statusManager, mgr),
 		statusManager: statusManager,
 		clusterInfo:   clusterInfo,
+		eventEmitter:  eventemitter.New(mgr),
 	}
 }
 
@@ -175,6 +177,7 @@ type ReconcileNetworkAddonsConfig struct {
 	podReconciler *ReconcilePods
 	statusManager *statusmanager.StatusManager
 	clusterInfo   *network.ClusterInfo
+	eventEmitter  eventemitter.EventEmitter
 }
 
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
@@ -222,7 +225,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
 	if err != nil {
 		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
-		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig: %v", err)
+		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToGetOpenShiftNetworkConfig", err.Error())
 		return reconcile.Result{}, err
 	}
@@ -230,11 +233,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// Validate the configuration
 	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
 		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
-		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec: %v", err)
+		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToValidate", err.Error())
 		return reconcile.Result{}, err
 	}
-
 	prev, err := r.getPreviousConfigSpec(networkAddonsConfig)
 	if err != nil {
 		// If failed, set NetworkAddonsConfig to failing and requeue
@@ -347,14 +349,14 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
 		log.Printf("failed to retrieve previously applied configuration: %v", err)
-		err = errors.Wrapf(err, "failed to retrieve previously applied configuration: %v", err)
+		err = errors.Wrapf(err, "failed to retrieve previously applied configuration")
 		return nil, err
 	}
 
 	// Fill all defaults explicitly
 	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
 		log.Printf("failed to fill defaults: %v", err)
-		err = errors.Wrapf(err, "failed to fill defaults: %v", err)
+		err = errors.Wrapf(err, "failed to fill defaults")
 		return nil, err
 	}
 

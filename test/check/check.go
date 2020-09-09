@@ -27,6 +27,8 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
+
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 
 	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
@@ -499,4 +501,54 @@ func retrieveRange() (string, string) {
 	rangeStart := appliedConfig.KubeMacPool.RangeStart
 	rangeEnd := appliedConfig.KubeMacPool.RangeEnd
 	return rangeStart, rangeEnd
+}
+
+func CheckAvailableEvent() {
+	//checkConfigLatestEvent(eventemitter.AvailableReason, eventemitter.AvailableMessage, duration, timeout)
+	By("Check for Available event")
+	config, err := getConfig()
+	Expect(err).NotTo(HaveOccurred())
+	objectEventWatcher := NewObjectEventWatcher(config).SinceWatchedObjectResourceVersion().Timeout(time.Duration(15) * time.Minute)
+	stopChan := make(chan struct{})
+	defer close(stopChan)
+	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.AvailableReason)
+}
+
+func CheckProgressingEvent() {
+	By("Check for Progressing event")
+	config, err := getConfig()
+	Expect(err).NotTo(HaveOccurred())
+	objectEventWatcher := NewObjectEventWatcher(config).SinceNow().Timeout(time.Duration(5) * time.Minute)
+	stopChan := make(chan struct{})
+	defer close(stopChan)
+	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.ProgressingReason)
+}
+
+func CheckModifiedEvent() {
+	By("Check for Modified event")
+	config, err := getConfig()
+	Expect(err).NotTo(HaveOccurred())
+	objectEventWatcher := NewObjectEventWatcher(config).SinceNow().Timeout(time.Duration(5) * time.Minute)
+	stopChan := make(chan struct{})
+	defer close(stopChan)
+	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.ModifiedReason)
+}
+
+func CheckFailedEvent(reason string) {
+	By("Check for Failed event")
+	config, err := getConfig()
+	Expect(err).NotTo(HaveOccurred())
+	objectEventWatcher := NewObjectEventWatcher(config).SinceWatchedObjectResourceVersion().Timeout(time.Duration(5) * time.Minute)
+	stopChan := make(chan struct{})
+	defer close(stopChan)
+	objectEventWatcher.WaitFor(stopChan, WarningEvent, fmt.Sprintf("%s: %s", eventemitter.FailedReason, reason))
+}
+
+func getConfig() (*cnaov1.NetworkAddonsConfig, error) {
+	config := &cnaov1.NetworkAddonsConfig{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }

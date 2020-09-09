@@ -102,6 +102,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.Multus = &cnao.Multus{}
 			components = append(components, MultusComponent)
 			testConfigUpdate(configSpec, components)
+			CheckModifiedEvent()
+			CheckProgressingEvent()
 
 			// Add Linux bridge component
 			configSpec.LinuxBridge = &cnao.LinuxBridge{}
@@ -240,7 +242,6 @@ func checkConfigChange(components []Component, while func()) {
 	} else {
 		// If there are any components to deploy wait until Progressing condition is reported
 		CheckConfigCondition(ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
-
 		// Wait until Available condition is reported. It may take a few minutes the first time
 		// we are pulling component images to the Node
 		CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)

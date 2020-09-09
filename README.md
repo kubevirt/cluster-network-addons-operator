@@ -272,6 +272,21 @@ In case something failed, you can find the error in the NetworkAddonsConfig Stat
 ```shell
 kubectl get networkaddonsconfig cluster -o yaml
 ```
+You can follow the deployment state through events produced in the default namespace:
+
+```shell
+kubectl get events
+```
+Events will be produced whenever the deployment is applied, configured or failed. The expected events are:
+
+|Event type   | Reason                                                            |
+|-------------|-------------------------------------------------------------------|
+|Progressing  | When operator had started deploying the components                |
+|Failed       | When one or more components failed to deploy                      |
+|Available    | When all components finished to deploy                            |
+|Modified     | When the configuration was modified or applied for the first time |
+
+
 
 For more information about the configuration format check [configuring section](#configuration).
 
