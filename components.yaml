@@ -25,10 +25,10 @@ components:
     metadata: "v0.20.0"
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
-    commit: "f1c8aec816f88ac0435c3c8985bc49823fb9d20a"
+    commit: "a0d3d5658390fac730bafcc85506a0a681da98ac"
     branch: "master"
     update-policy: "tagged"
-    metadata: "v0.29.0"
+    metadata: "v0.31.0"
   ovs-cni:
     url: "https://github.com/kubevirt/ovs-cni"
     commit: "edb4754d08f49be54c399c938895fe82aab6aa5a"
