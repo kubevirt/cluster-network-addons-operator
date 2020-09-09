@@ -376,22 +376,134 @@ func GetCrd() *extv1.CustomResourceDefinition {
 	subResouceSchema := &extv1.CustomResourceSubresources{Status: &extv1.CustomResourceSubresourceStatus{}}
 	validationSchema := &extv1.CustomResourceValidation{
 		OpenAPIV3Schema: &extv1.JSONSchemaProps{
-			Type: "object",
+			Description: "NetworkAddonsConfig is the Schema for the networkaddonsconfigs API",
+			Type:        "object",
 			Properties: map[string]extv1.JSONSchemaProps{
 				"apiVersion": extv1.JSONSchemaProps{
-					Type: "string",
+					Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+					Type:        "string",
 				},
 				"kind": extv1.JSONSchemaProps{
-					Type: "string",
+					Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+					Type:        "string",
 				},
 				"metadata": extv1.JSONSchemaProps{
 					Type: "object",
 				},
 				"spec": extv1.JSONSchemaProps{
 					Type: "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"imagePullPolicy": extv1.JSONSchemaProps{
+							Description: "PullPolicy describes a policy for if/when to pull a container image",
+							Type:        "string",
+						},
+						"kubeMacPool": extv1.JSONSchemaProps{
+							Type: "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"rangeEnd": extv1.JSONSchemaProps{
+									Type: "string",
+								},
+								"rangeStart": extv1.JSONSchemaProps{
+									Type: "string",
+								},
+							},
+						},
+						"linuxBridge": extv1.JSONSchemaProps{
+							Type: "object",
+						},
+						"macvtap": extv1.JSONSchemaProps{
+							Type: "object",
+						},
+						"multus": extv1.JSONSchemaProps{
+							Type: "object",
+						},
+						"nmstate": extv1.JSONSchemaProps{
+							Type: "object",
+						},
+						"ovs": extv1.JSONSchemaProps{
+							Type: "object",
+						},
+					},
 				},
 				"status": extv1.JSONSchemaProps{
-					Type: "object",
+					Description: "NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig",
+					Type:        "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"conditions": extv1.JSONSchemaProps{
+							Type: "array",
+							Items: &extv1.JSONSchemaPropsOrArray{
+								Schema: &extv1.JSONSchemaProps{
+									Type: "object",
+									Properties: map[string]extv1.JSONSchemaProps{
+										"lastHeartbeatTime": extv1.JSONSchemaProps{
+											Format: "date-time",
+											Type:   "object",
+											Nullable: true,
+										},
+										"lastTransitionTime": extv1.JSONSchemaProps{
+											Format: "date-time",
+											Type:   "object",
+											Nullable: true,
+										},
+										"message": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+										"reason": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+										"status": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+										"type": extv1.JSONSchemaProps{
+											Description: "ConditionType is the state of the operator's reconciliation functionality.",
+											Type:        "string",
+										},
+									},
+									Required: []string{
+										"status",
+										"type",
+									},
+								},
+							},
+						},
+						"containers": extv1.JSONSchemaProps{
+							Type: "array",
+							Items: &extv1.JSONSchemaPropsOrArray{
+								Schema: &extv1.JSONSchemaProps{
+									Properties: map[string]extv1.JSONSchemaProps{
+										"image": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+										"name": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+										"parentKind": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+										"parentName": extv1.JSONSchemaProps{
+											Type: "string",
+										},
+									},
+									Required: []string{
+										"image",
+										"name",
+										"parentKind",
+										"parentName",
+									},
+									Type: "object",
+								},
+							},
+						},
+						"observedVersion": extv1.JSONSchemaProps{
+							Type: "string",
+						},
+						"operatorVersion": extv1.JSONSchemaProps{
+							Type: "string",
+						},
+						"targetVersion": extv1.JSONSchemaProps{
+							Type: "string",
+						},
+					},
 				},
 			},
 		},
@@ -418,17 +530,17 @@ func GetCrd() *extv1.CustomResourceDefinition {
 
 			Versions: []extv1.CustomResourceDefinitionVersion{
 				{
-					Name:    "v1",
-					Served:  true,
-					Storage: true,
-					Schema:  validationSchema,
+					Name:         "v1",
+					Served:       true,
+					Storage:      true,
+					Schema:       validationSchema,
 					Subresources: subResouceSchema,
 				},
 				{
-					Name:    "v1alpha1",
-					Served:  true,
-					Storage: false,
-					Schema:  validationSchema,
+					Name:         "v1alpha1",
+					Served:       true,
+					Storage:      false,
+					Schema:       validationSchema,
 					Subresources: subResouceSchema,
 				},
 			},
