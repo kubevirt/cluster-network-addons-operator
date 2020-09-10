@@ -63,9 +63,9 @@ webhooks:
       - "0"
       - "1"
     - key: mutatevirtualmachines.kubemacpool.io
-      operator: NotIn
+      operator: In
       values:
-      - ignore
+      - allocate
   rules:
   - apiGroups:
     - kubevirt.io
