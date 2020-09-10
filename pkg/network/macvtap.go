@@ -29,6 +29,7 @@ func renderMacvtapCni(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, cl
 	} else {
 		data.Data["CniMountPath"] = cni.BinDir
 	}
+	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "macvtap"), &data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to render macvtap-cni state handler manifests")

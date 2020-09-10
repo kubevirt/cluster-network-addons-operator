@@ -7,6 +7,7 @@ metadata:
 data:
   DP_MACVTAP_CONF: "[]"
 ---
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -24,33 +25,33 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - name: macvtap-cni
-        command: [ "/macvtap-deviceplugin", "-v", "3", "-logtostderr"]
-        envFrom:
-          - configMapRef:
-              name: macvtap-deviceplugin-config
-        image: {{ .MacvtapImage }}
-        imagePullPolicy: {{ .ImagePullPolicy }}
-        resources:
-          requests:
-            cpu: "60m"
-            memory: "30Mi"
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: deviceplugin
-            mountPath: /var/lib/kubelet/device-plugins
+        - name: macvtap-cni
+          command: ["/macvtap-deviceplugin", "-v", "3", "-logtostderr"]
+          envFrom:
+            - configMapRef:
+                name: macvtap-deviceplugin-config
+          image: {{ .MacvtapImage }}
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          resources:
+            requests:
+              cpu: "60m"
+              memory: "30Mi"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: deviceplugin
+              mountPath: /var/lib/kubelet/device-plugins
       initContainers:
-      - name: install-cni
-        command: ['cp', '/macvtap-cni', '/host/opt/cni/bin/macvtap']
-        image: {{ .MacvtapImage }}
-        imagePullPolicy: {{ .ImagePullPolicy }}
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: cni
-            mountPath: /host/opt/cni/bin
-            mountPropagation: Bidirectional
+        - name: install-cni
+          command: ["cp", "/macvtap-cni", "/host/opt/cni/bin/macvtap"]
+          image: {{ .MacvtapImage }}
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: cni
+              mountPath: /host/opt/cni/bin
+              mountPropagation: Bidirectional
       volumes:
         - name: deviceplugin
           hostPath:
@@ -58,3 +59,6 @@ spec:
         - name: cni
           hostPath:
             path: {{ .CniMountPath }}
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
