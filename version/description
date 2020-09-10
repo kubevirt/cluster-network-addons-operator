@@ -1,18 +1,27 @@
-0.41.0
+0.42.0
 
 Features:
-* Bump KubeMacPool to v0.19.0 (#499)
-* Convert the rest of the SelfSignedConfiguration test to table (#495)
-* Add self signed certificates configuration knobs to NAC CRD (#490)
-* Automation: KubeMacPool functests on CNAO lane (#408)
-* Test upgrades from 0.39.3 instead of 0.39.0 (#488)
-* Test upgrades from 0.27.7 instead of 0.27.0
-* Bump kubernetes-nmstate to 0.26.0 (#483)
-* add porcelain to check for uncommitted changes (#476)
+* Add PlacementConfiguration for macvtap (#535)
+* change kubemacpool vms to opt-in (#538)
+* Add Placement for knmstate (#536)
+* Add events to status manager and controller (#515)
+* add PlacementConfiguration for bridge-marger (#531)
+* Add PlacementConfiguration for linux-bridge (#532)
+* add PlacementConfiguration for multus (#530)
+* add PlacementConfiguration for ovs-cni (#529)
+* Add PlacementConfiguration to kubeMacPool (#526)
+* Introduce PlacementConfiguration API (#520)
+* Bump Linux Bridge CNI to v0.8.7 (#533)
+* add 'runAsNonRoot: true' to deployment's securityContext. (#510)
+* Migrate CNAO to v1 (#511)
+* Bump kubemacpool to v0.20.0 (#521)
+* Add the relatedImages field to the CSV (#519)
+* Use image digests instead of tags (#518)
+* Configure knmstate cert rotation parameters from the CR (#514)
+* Bump kubernetes-nmstate to v0.29.0 (#513)
+* add stdout to git-clone process in bumper script (#505)
+* Bumper go script infra (#479)
+* Previx version tag with "v" (#501)
 
 Bugs:
-* Fix test "should set targetVersion and operatorVersion immediately after it turns Progressing (#492)
-* Delete unused OKD automation scripts (#489)
-* Fix reset patch version when bumping minor (#486)
-* Check SetFromPods has current networkAddonsConfig generation before setting Available (#485)
-* Add mutex and lock critical sections in StatusManager (#474)
+* fix ClusterServiceVersion manifest to not use deprecated version (#522)
