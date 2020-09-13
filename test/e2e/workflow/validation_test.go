@@ -12,6 +12,7 @@ import (
 )
 
 var _ = Describe("NetworkAddonsConfig", func() {
+	releaseConfigApi := ConfigV1{}
 	Context("when there is no running config", func() {
 		Context("and an invalid config is created", func() {
 			BeforeEach(func() {
@@ -26,7 +27,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					NMState:     &cnao.NMState{},
 					MacvtapCni:  &cnao.MacvtapCni{},
 				}
-				CreateConfig(configSpec)
+				releaseConfigApi.CreateConfig(configSpec)
 			})
 
 			It("should report Failing condition and Available must be set to False", func() {
@@ -42,7 +43,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				LinuxBridge: &cnao.LinuxBridge{},
 				NMState:     &cnao.NMState{},
 			}
-			CreateConfig(configSpec)
+			releaseConfigApi.CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 2*time.Minute, CheckDoNotRepeat)
 		})
 
@@ -51,7 +52,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				configSpec := cnao.NetworkAddonsConfigSpec{
 					LinuxBridge: &cnao.LinuxBridge{},
 				}
-				UpdateConfig(configSpec)
+				releaseConfigApi.UpdateConfig(configSpec)
 			})
 
 			It("should remain at Available condition", func() {

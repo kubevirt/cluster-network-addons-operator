@@ -16,15 +16,14 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		configSpec := cnao.NetworkAddonsConfigSpec{
 			LinuxBridge: &cnao.LinuxBridge{},
 		}
-
+		releaseConfigApi := ConfigV1{}
 		BeforeEach(func() {
-			CreateConfig(configSpec)
+			releaseConfigApi.CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should report non-empty list of deployed containers", func() {
-			config := GetConfig()
-			Expect(config.Status.Containers).NotTo(BeEmpty())
+			Expect(releaseConfigApi.GetStatus().Containers).NotTo(BeEmpty())
 		})
 	})
 })

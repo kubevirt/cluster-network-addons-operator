@@ -19,9 +19,11 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			BeforeEach(func() {
 				InstallRelease(oldRelease)
 				CheckOperatorIsReady(podsDeploymentTimeout)
-				CreateConfig(oldRelease.SupportedSpec)
+				oldReleaseConfigApi := ConfigV1{}
+				oldReleaseConfigApi.CreateConfig(oldRelease.SupportedSpec)
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-				CheckReleaseUsesExpectedContainerImages(oldRelease)
+				status := oldReleaseConfigApi.GetStatus()
+				CheckReleaseUsesExpectedContainerImages(oldRelease, status.Containers)
 				expectedOperatorVersion := oldRelease.Version
 				expectedObservedVersion := oldRelease.Version
 				expectedTargetVersion := oldRelease.Version
@@ -29,10 +31,11 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			})
 
 			Context("and it is upgraded to the latest release", func() {
+				newReleaseConfigApi := ConfigV1{}
 				BeforeEach(func() {
 					UninstallRelease(oldRelease)
 					InstallRelease(newRelease)
-					UpdateConfig(newRelease.SupportedSpec)
+					newReleaseConfigApi.UpdateConfig(newRelease.SupportedSpec)
 					CheckOperatorIsReady(podsDeploymentTimeout)
 
 					// Check that operator and target versions will be set to the newer.
@@ -44,7 +47,8 @@ var _ = Context("Cluster Network Addons Operator", func() {
 
 				It("it should report expected deployed container images and leave no leftovers from the previous version", func() {
 					By("Checking reported container images")
-					CheckReleaseUsesExpectedContainerImages(newRelease)
+					status := newReleaseConfigApi.GetStatus()
+					CheckReleaseUsesExpectedContainerImages(newRelease, status.Containers)
 
 					By("Checking for leftover objects from the previous version")
 					CheckForLeftoverObjects(newRelease.Version)

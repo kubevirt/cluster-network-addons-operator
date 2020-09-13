@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
+	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
@@ -40,8 +41,10 @@ func TestE2E(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	By("Adding custom resource scheme to framework")
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, &cnaov1.NetworkAddonsConfigList{})
-	Expect(err).ToNot(HaveOccurred())
+	err := framework.AddToFrameworkScheme(apis.AddToScheme, &cnaov1alpha1.NetworkAddonsConfigList{})
+	Expect(err).ToNot(HaveOccurred(), "Should succeed adding cnaov1alpha1.NetworkAddonsConfigList to FrameworkScheme")
+	err = framework.AddToFrameworkScheme(apis.AddToScheme, &cnaov1.NetworkAddonsConfigList{})
+	Expect(err).ToNot(HaveOccurred(), "Should succeed adding cnaov1.NetworkAddonsConfigList to FrameworkScheme")
 
 	By("Detecting operator version")
 	operatorVersion, err = getRunningOperatorVersion()
@@ -55,8 +58,9 @@ var _ = AfterSuite(func() {
 var _ = AfterEach(func() {
 	PrintOperatorPodStability()
 	By("Performing cleanup")
-	if GetConfig() != nil {
-		DeleteConfig()
+	releaseConfigApi := ConfigV1{}
+	if releaseConfigApi.GetConfig() != nil {
+		releaseConfigApi.DeleteConfig()
 	}
 	CheckComponentsRemoval(AllComponents)
 })

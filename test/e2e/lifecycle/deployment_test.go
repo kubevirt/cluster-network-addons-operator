@@ -22,13 +22,15 @@ var _ = Context("Cluster Network Addons Operator", func() {
 		})
 
 		Context("and when NodeNetworkConfig with supported spec is created", func() {
+			releaseConfigApi := ConfigV1{}
 			BeforeEach(func() {
-				CreateConfig(masterRelease.SupportedSpec)
+				releaseConfigApi.CreateConfig(masterRelease.SupportedSpec)
 			})
 
 			It("reaches Available condition with all containers using expected images", func() {
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-				CheckReleaseUsesExpectedContainerImages(masterRelease)
+				status := releaseConfigApi.GetStatus()
+				CheckReleaseUsesExpectedContainerImages(masterRelease, status.Containers)
 			})
 
 			It("stays in Available condition while the operator is being removed and redeployed", func() {

@@ -14,7 +14,6 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
-	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
 type Release struct {
@@ -112,7 +111,7 @@ func UninstallRelease(release Release) {
 
 // Make sure that container images currently used (reported in NetworkAddonsConfig)
 // are matching images expected for given release
-func CheckReleaseUsesExpectedContainerImages(release Release) {
+func CheckReleaseUsesExpectedContainerImages(release Release, containers []cnao.Container) {
 	By(fmt.Sprintf("Checking that all deployed images match release %s", release.Version))
 
 	expectedContainers := sortContainers(release.Containers)
@@ -121,9 +120,7 @@ func CheckReleaseUsesExpectedContainerImages(release Release) {
 		expectedContainers = dropMultusContainers(expectedContainers)
 	}
 
-	config := GetConfig()
-	deployedContainers := sortContainers(config.Status.Containers)
-
+	deployedContainers := sortContainers(containers)
 	Expect(deployedContainers).To(Equal(expectedContainers))
 }
 

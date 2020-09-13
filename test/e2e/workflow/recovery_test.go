@@ -13,13 +13,14 @@ import (
 //2297
 var _ = Describe("NetworkAddonsConfig", func() {
 	Context("when invalid config is applied", func() {
+		releaseConfigApi := ConfigV1{}
 		BeforeEach(func() {
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				KubeMacPool: &cnao.KubeMacPool{
 					RangeStart: "this:aint:right",
 				},
 			}
-			CreateConfig(configSpec)
+			releaseConfigApi.CreateConfig(configSpec)
 			CheckConfigCondition(ConditionDegraded, ConditionTrue, 5*time.Second, CheckDoNotRepeat)
 			CheckFailedEvent("FailedToValidate")
 		})
@@ -27,7 +28,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		Context("and it is updated with a valid config", func() {
 			BeforeEach(func() {
 				configSpec := cnao.NetworkAddonsConfigSpec{}
-				UpdateConfig(configSpec)
+				releaseConfigApi.UpdateConfig(configSpec)
 			})
 
 			It("should turn from Failing to Available", func() {

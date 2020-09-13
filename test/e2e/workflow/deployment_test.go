@@ -14,10 +14,11 @@ import (
 )
 
 var _ = Describe("NetworkAddonsConfig", func() {
+	releaseConfigApi := ConfigV1{}
 	Context("when there is no pre-existing Config", func() {
 		DescribeTable("should succeed deploying single component",
 			func(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
-				testConfigCreate(configSpec, components)
+				testConfigCreate(configSpec, components, releaseConfigApi)
 
 				// Make sure that deployed components remain up and running
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
@@ -88,7 +89,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Ovs:         &cnao.Ovs{},
 				MacvtapCni:  &cnao.MacvtapCni{},
 			}
-			testConfigCreate(configSpec, components)
+			testConfigCreate(configSpec, components, releaseConfigApi)
 		})
 		//2304
 		It("should be able to deploy all components one by one", func() {
@@ -96,39 +97,39 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			components := []Component{}
 
 			// Deploy initial empty config
-			testConfigCreate(configSpec, components)
+			testConfigCreate(configSpec, components, releaseConfigApi)
 
 			// Deploy Multus component
 			configSpec.Multus = &cnao.Multus{}
 			components = append(components, MultusComponent)
-			testConfigUpdate(configSpec, components)
+			testConfigUpdate(configSpec, components, releaseConfigApi)
 			CheckModifiedEvent()
 			CheckProgressingEvent()
 
 			// Add Linux bridge component
 			configSpec.LinuxBridge = &cnao.LinuxBridge{}
 			components = append(components, LinuxBridgeComponent)
-			testConfigUpdate(configSpec, components)
+			testConfigUpdate(configSpec, components, releaseConfigApi)
 
 			// Add KubeMacPool component
 			configSpec.KubeMacPool = &cnao.KubeMacPool{}
 			components = append(components, KubeMacPoolComponent)
-			testConfigUpdate(configSpec, components)
+			testConfigUpdate(configSpec, components, releaseConfigApi)
 
 			// Add NMState component
 			configSpec.NMState = &cnao.NMState{}
 			components = append(components, NMStateComponent)
-			testConfigUpdate(configSpec, components)
+			testConfigUpdate(configSpec, components, releaseConfigApi)
 
 			// Add Ovs component
 			configSpec.Ovs = &cnao.Ovs{}
 			components = append(components, OvsComponent)
-			testConfigUpdate(configSpec, components)
+			testConfigUpdate(configSpec, components, releaseConfigApi)
 
 			// Add Macvtap component
 			configSpec.MacvtapCni = &cnao.MacvtapCni{}
 			components = append(components, MacvtapComponent)
-			testConfigUpdate(configSpec, components)
+			testConfigUpdate(configSpec, components, releaseConfigApi)
 		})
 	})
 
@@ -151,26 +152,26 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		}
 
 		BeforeEach(func() {
-			CreateConfig(configSpec)
+			releaseConfigApi.CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 		//2305
 		It("should remain in Available condition after applying the same config", func() {
-			UpdateConfig(configSpec)
+			releaseConfigApi.UpdateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, 30*time.Second)
 		})
 		//2281
 		It("should be able to remove all of them by removing the config", func() {
-			DeleteConfig()
+			releaseConfigApi.DeleteConfig()
 			CheckComponentsRemoval(components)
 		})
 		//2300
 		It("should be able to remove the config and create it again", func() {
-			DeleteConfig()
+			releaseConfigApi.DeleteConfig()
 			//TODO: remove this checking after this [1] issue is resolved
 			// [1] https://github.com/kubevirt/cluster-network-addons-operator/issues/394
 			CheckComponentsRemoval(components)
-			CreateConfig(configSpec)
+			releaseConfigApi.CreateConfig(configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
 		})
 	})
@@ -179,18 +180,18 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		BeforeEach(func() {
 			By("Deploying KubeMacPool")
 			config := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
-			CreateConfig(config)
+			releaseConfigApi.CreateConfig(config)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should modify the MAC range after being redeployed ", func() {
 			oldRangeStart, oldRangeEnd := CheckUnicastAndValidity()
 			By("Redeploying KubeMacPool")
-			DeleteConfig()
+			releaseConfigApi.DeleteConfig()
 			CheckComponentsRemoval(AllComponents)
 
 			config := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
-			CreateConfig(config)
+			releaseConfigApi.CreateConfig(config)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 			rangeStart, rangeEnd := CheckUnicastAndValidity()
 
@@ -201,15 +202,15 @@ var _ = Describe("NetworkAddonsConfig", func() {
 	})
 })
 
-func testConfigCreate(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
+func testConfigCreate(configSpec cnao.NetworkAddonsConfigSpec, components []Component, configApi ConfigV1) {
 	checkConfigChange(components, func() {
-		CreateConfig(configSpec)
+		configApi.CreateConfig(configSpec)
 	})
 }
 
-func testConfigUpdate(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
+func testConfigUpdate(configSpec cnao.NetworkAddonsConfigSpec, components []Component, configApi ConfigV1) {
 	checkConfigChange(components, func() {
-		UpdateConfig(configSpec)
+		configApi.UpdateConfig(configSpec)
 	})
 }
 
