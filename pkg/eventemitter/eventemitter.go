@@ -6,7 +6,6 @@ import (
 	"log"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,7 +31,7 @@ const (
 
 type EventEmitter interface {
 	Init(mgr manager.Manager)
-	EmitEvent(object runtime.Object, eventType, reason, msg string)
+	EmitEventForConfig(config *cnaov1.NetworkAddonsConfig, eventType, reason, msg string)
 	EmitModifiedForConfig()
 	EmitProgressingForConfig()
 	EmitFailingForConfig(reason, message string)
@@ -58,30 +57,30 @@ func (ee *eventEmitter) Init(mgr manager.Manager) {
 	ee.recorder = mgr.GetEventRecorderFor(names.OPERATOR_CONFIG)
 }
 
-func (ee eventEmitter) EmitEvent(object runtime.Object, eventType, reason, msg string) {
-	if object != nil {
-		ee.recorder.Event(object, eventType, reason, msg)
+func (ee eventEmitter) EmitEventForConfig(config *cnaov1.NetworkAddonsConfig, eventType, reason, msg string) {
+	if config != nil {
+		ee.recorder.Event(config, eventType, reason, msg)
 	}
 }
 
 func (ee eventEmitter) EmitProgressingForConfig() {
 	config := ee.getConfigForEmitter()
-	ee.EmitEvent(config, corev1.EventTypeNormal, ProgressingReason, ProgressingMessage)
+	ee.EmitEventForConfig(config, corev1.EventTypeNormal, ProgressingReason, ProgressingMessage)
 }
 
 func (ee eventEmitter) EmitFailingForConfig(reason, message string) {
 	config := ee.getConfigForEmitter()
-	ee.EmitEvent(config, corev1.EventTypeWarning, fmt.Sprintf("%s: %s", FailedReason, reason), fmt.Sprintf("%s: %s", FailedMessage, message))
+	ee.EmitEventForConfig(config, corev1.EventTypeWarning, fmt.Sprintf("%s: %s", FailedReason, reason), fmt.Sprintf("%s: %s", FailedMessage, message))
 }
 
 func (ee eventEmitter) EmitAvailableForConfig() {
 	config := ee.getConfigForEmitter()
-	ee.EmitEvent(config, corev1.EventTypeNormal, AvailableReason, AvailableMessage)
+	ee.EmitEventForConfig(config, corev1.EventTypeNormal, AvailableReason, AvailableMessage)
 }
 
 func (ee eventEmitter) EmitModifiedForConfig() {
 	config := ee.getConfigForEmitter()
-	ee.EmitEvent(config, corev1.EventTypeNormal, ModifiedReason, ModifiedMessage)
+	ee.EmitEventForConfig(config, corev1.EventTypeNormal, ModifiedReason, ModifiedMessage)
 }
 
 func (ee eventEmitter) getConfigForEmitter() *cnaov1.NetworkAddonsConfig {
