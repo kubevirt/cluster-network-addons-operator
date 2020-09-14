@@ -19,7 +19,7 @@ import (
 const (
 	ModifiedMessage    = "Config spec was modified"
 	ProgressingMessage = "Operator is progressing"
-	AvailableMessage   = "All applied componenets are available"
+	AvailableMessage   = "All applied components are available"
 	FailedMessage      = "Operator failed"
 )
 
