@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -65,33 +66,51 @@ func (ee eventEmitter) EmitEvent(object runtime.Object, eventType, reason, msg s
 }
 
 func (ee eventEmitter) EmitProgressingForConfig() {
-	config := ee.getConfigForEmitter()
+	config, err := ee.getConfigForEmitter()
+	if err != nil {
+		log.Printf("Failed to emit event Progressing for config. err = %v", err)
+		return
+	}
+
 	ee.EmitEvent(config, corev1.EventTypeNormal, ProgressingReason, ProgressingMessage)
 }
 
 func (ee eventEmitter) EmitFailingForConfig(reason, message string) {
-	config := ee.getConfigForEmitter()
+	config, err := ee.getConfigForEmitter()
+	if err != nil {
+		log.Printf("Failed to emit event Failing for config. err = %v", err)
+		return
+	}
+
 	ee.EmitEvent(config, corev1.EventTypeWarning, fmt.Sprintf("%s: %s", FailedReason, reason), fmt.Sprintf("%s: %s", FailedMessage, message))
 }
 
 func (ee eventEmitter) EmitAvailableForConfig() {
-	config := ee.getConfigForEmitter()
+	config, err := ee.getConfigForEmitter()
+	if err != nil {
+		log.Printf("Failed to emit event Available for config. err = %v", err)
+		return
+	}
+
 	ee.EmitEvent(config, corev1.EventTypeNormal, AvailableReason, AvailableMessage)
 }
 
 func (ee eventEmitter) EmitModifiedForConfig() {
-	config := ee.getConfigForEmitter()
+	config, err := ee.getConfigForEmitter()
+	if err != nil {
+		log.Printf("Failed to emit event Modified for config. err = %v", err)
+		return
+	}
+
 	ee.EmitEvent(config, corev1.EventTypeNormal, ModifiedReason, ModifiedMessage)
 }
 
-func (ee eventEmitter) getConfigForEmitter() *cnaov1.NetworkAddonsConfig {
+func (ee eventEmitter) getConfigForEmitter() (*cnaov1.NetworkAddonsConfig, error) {
 	config := &cnaov1.NetworkAddonsConfig{}
 	err := ee.client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
 	if err != nil {
-		log.Printf("Failed to get NetworkAddonsConfig in order emit event. %v", err)
-
-		return nil
+		return nil, errors.Wrap(err, "Failed to get NetworkAddonsConfig in order to emit event.")
 	}
 
-	return config
+	return config, nil
 }
