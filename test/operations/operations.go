@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -68,7 +69,13 @@ func DeleteConfig() {
 	}
 
 	err := framework.Global.Client.Delete(context.TODO(), config)
-	Expect(err).NotTo(HaveOccurred(), "Failed to remove the Config")
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to remove the Config")
+
+	// Wait until the config is deleted
+	EventuallyWithOffset(1, func() error {
+		return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, &cnaov1.NetworkAddonsConfig{})
+	}, 60*time.Second, 1*time.Second).Should(SatisfyAll(HaveOccurred(), WithTransform(apierrors.IsNotFound, BeTrue())), fmt.Sprintf("should successfuly delete config '%s'", config.Name))
+
 }
 
 // Convert NetworkAddonsConfig specification to a yaml format we would expect in a manifest
