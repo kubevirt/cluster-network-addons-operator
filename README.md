@@ -11,7 +11,7 @@ However, not all features might be supported there.
 Configuration of desired network addons is done using `NetworkAddonsConfig` object:
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -32,7 +32,7 @@ The operator allows administrator to deploy multi-network
 attribute.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -51,7 +51,7 @@ The operator allows administrator to deploy [Linux Bridge CNI plugin](https://gi
 simply by adding `linuxBridge` attribute to `NetworkAddonsConfig`.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -89,7 +89,7 @@ requested a random range will be provided. This random range spans from
 unicast and `XX:XX` is a random prefix.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -117,7 +117,7 @@ This component can be enabled by adding `nmstate` section to the
 `NetworkAddonsConfig`.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -140,7 +140,7 @@ simply by adding `ovs` attribute to `NetworkAddonsConfig`. Please note that
 in order to use this plugin, openvswitch have to be up and running at nodes.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -158,7 +158,7 @@ The operator allows the administrator to deploy the
 adding `mavtap` attribute to `NetworkAddonsConfig`.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -179,7 +179,7 @@ Administrator can specify [image pull policy](https://kubernetes.io/docs/concept
 for deployed components. Default is `IfNotPresent`.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -193,7 +193,7 @@ Administrator can specify [webhook self signed certificates configuration](https
 for deployed components. Default is `caRotateInterval: 168h`, `caOverlapInterval: 7h`, `certRotateInterval: 7h`
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
@@ -223,7 +223,7 @@ to schedule workloads on worker nodes.
 Note that worker nodes need to be labeled with `node-role.kubernetes.io/worker` label.
 
 ```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
