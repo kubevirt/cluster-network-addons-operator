@@ -1,7 +1,10 @@
 approvers:
+  - RamLavi
   - phoracek
   - qinqon
 reviewers:
+  - RamLavi
+  - alonSadan
   - phoracek
   - qinqon
-  - RamLavi
+  - rhrazdil
