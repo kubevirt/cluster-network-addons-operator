@@ -353,6 +353,47 @@ func checkForDeployment(name string) error {
 	return nil
 }
 
+// CheckOperatorPodStability makes sure that the CNAO pod has not restarted since it started working
+func CheckOperatorPodStability(continuesDuration time.Duration) {
+	By("Checking that cnao operator pod hasn't performed any resets")
+	if continuesDuration != CheckImmediately {
+		Consistently( func() error {
+				return CalculateOperatorPodStability()
+			}, continuesDuration, time.Second).ShouldNot(HaveOccurred(), "CNAO operator pod should not restart consistently")
+	} else {
+		Expect(CalculateOperatorPodStability()).ShouldNot(HaveOccurred(), "Operator is not ready")
+	}
+}
+
+func PrintOperatorPodStability() {
+	if err := CalculateOperatorPodStability(); err != nil {
+		fmt.Fprintln(GinkgoWriter, "WARNING: CNAO operator pod is not stable: " + err.Error())
+	}
+	return
+}
+
+func CalculateOperatorPodStability() error {
+	pods := corev1.PodList{}
+	listOptions := []client.ListOption{
+		client.MatchingLabels(map[string]string{"name": components.Name}),
+		client.InNamespace(components.Namespace),
+	}
+
+	err := framework.Global.Client.List(context.Background(), &pods, listOptions...)
+	Expect(err).NotTo(HaveOccurred(), "should succeed getting the cnao pod")
+
+	if len(pods.Items) != 1 {
+		return fmt.Errorf("cnao operator pod should only have 1 replica")
+	}
+
+	for _, containerStatus := range pods.Items[0].Status.ContainerStatuses {
+		if containerStatus.RestartCount != 0 {
+			return fmt.Errorf("cnao operator pod restarted %d time since created", containerStatus.RestartCount)
+		}
+	}
+	return nil
+}
+
 func checkForDaemonSet(name string) error {
 	daemonSet := appsv1.DaemonSet{}
 

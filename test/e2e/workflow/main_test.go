@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"time"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -47,7 +48,12 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
+var _ = AfterSuite(func() {
+	CheckOperatorPodStability(time.Minute)
+})
+
 var _ = AfterEach(func() {
+	PrintOperatorPodStability()
 	By("Performing cleanup")
 	if GetConfig() != nil {
 		DeleteConfig()
