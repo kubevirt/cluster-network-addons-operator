@@ -1,27 +1,7 @@
-0.42.0
-
-Features:
-* Add PlacementConfiguration for macvtap (#535)
-* change kubemacpool vms to opt-in (#538)
-* Add Placement for knmstate (#536)
-* Add events to status manager and controller (#515)
-* add PlacementConfiguration for bridge-marger (#531)
-* Add PlacementConfiguration for linux-bridge (#532)
-* add PlacementConfiguration for multus (#530)
-* add PlacementConfiguration for ovs-cni (#529)
-* Add PlacementConfiguration to kubeMacPool (#526)
-* Introduce PlacementConfiguration API (#520)
-* Bump Linux Bridge CNI to v0.8.7 (#533)
-* add 'runAsNonRoot: true' to deployment's securityContext. (#510)
-* Migrate CNAO to v1 (#511)
-* Bump kubemacpool to v0.20.0 (#521)
-* Add the relatedImages field to the CSV (#519)
-* Use image digests instead of tags (#518)
-* Configure knmstate cert rotation parameters from the CR (#514)
-* Bump kubernetes-nmstate to v0.29.0 (#513)
-* add stdout to git-clone process in bumper script (#505)
-* Bumper go script infra (#479)
-* Previx version tag with "v" (#501)
+0.42.1
 
 Bugs:
-* fix ClusterServiceVersion manifest to not use deprecated version (#522)
+* test: Ensure NAC does not exists eventually after delete (#559)
+* [release-0.42] Check cnao pod restarts in CI tests (#556)
+* events, event-emitter: change emitter to emit only for config (#550)
+* [release-0.42] Fix missing prefix 'v' for versions v0.41.0 and v0.42.0 (#553)
