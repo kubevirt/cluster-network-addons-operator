@@ -17,11 +17,12 @@ var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
 		Context(fmt.Sprintf("when operator in version %s is installed and supported spec configured", oldRelease.Version), func() {
 			BeforeEach(func() {
+				oldReleaseGvk := GetCnaoV1alpha1GroupVersionKind()
 				InstallRelease(oldRelease)
 				CheckOperatorIsReady(podsDeploymentTimeout)
-				CreateConfig(oldRelease.SupportedSpec)
+				CreateConfig(oldReleaseGvk, oldRelease.SupportedSpec)
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-				CheckReleaseUsesExpectedContainerImages(oldRelease)
+				CheckReleaseUsesExpectedContainerImages(oldReleaseGvk, oldRelease)
 				expectedOperatorVersion := oldRelease.Version
 				expectedObservedVersion := oldRelease.Version
 				expectedTargetVersion := oldRelease.Version
@@ -29,10 +30,11 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			})
 
 			Context("and it is upgraded to the latest release", func() {
+				newReleaseGvk := GetCnaoV1GroupVersionKind()
 				BeforeEach(func() {
 					UninstallRelease(oldRelease)
 					InstallRelease(newRelease)
-					UpdateConfig(newRelease.SupportedSpec)
+					UpdateConfig(newReleaseGvk, newRelease.SupportedSpec)
 					CheckOperatorIsReady(podsDeploymentTimeout)
 
 					// Check that operator and target versions will be set to the newer.
@@ -44,7 +46,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 
 				It("it should report expected deployed container images and leave no leftovers from the previous version", func() {
 					By("Checking reported container images")
-					CheckReleaseUsesExpectedContainerImages(newRelease)
+					CheckReleaseUsesExpectedContainerImages(newReleaseGvk, newRelease)
 
 					By("Checking for leftover objects from the previous version")
 					CheckForLeftoverObjects(newRelease.Version)

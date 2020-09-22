@@ -22,13 +22,14 @@ var _ = Context("Cluster Network Addons Operator", func() {
 		})
 
 		Context("and when NodeNetworkConfig with supported spec is created", func() {
+			gvk := GetCnaoV1GroupVersionKind()
 			BeforeEach(func() {
-				CreateConfig(masterRelease.SupportedSpec)
+				CreateConfig(gvk, masterRelease.SupportedSpec)
 			})
 
 			It("reaches Available condition with all containers using expected images", func() {
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-				CheckReleaseUsesExpectedContainerImages(masterRelease)
+				CheckReleaseUsesExpectedContainerImages(gvk, masterRelease)
 			})
 
 			It("stays in Available condition while the operator is being removed and redeployed", func() {

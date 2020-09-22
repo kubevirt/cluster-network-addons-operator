@@ -12,6 +12,7 @@ import (
 
 //2297
 var _ = Describe("NetworkAddonsConfig", func() {
+	gvk := GetCnaoV1GroupVersionKind()
 	Context("when invalid config is applied", func() {
 		BeforeEach(func() {
 			configSpec := cnao.NetworkAddonsConfigSpec{
@@ -19,7 +20,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					RangeStart: "this:aint:right",
 				},
 			}
-			CreateConfig(configSpec)
+			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(ConditionDegraded, ConditionTrue, 5*time.Second, CheckDoNotRepeat)
 			CheckFailedEvent("FailedToValidate")
 		})
@@ -27,7 +28,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		Context("and it is updated with a valid config", func() {
 			BeforeEach(func() {
 				configSpec := cnao.NetworkAddonsConfigSpec{}
-				UpdateConfig(configSpec)
+				UpdateConfig(gvk, configSpec)
 			})
 
 			It("should turn from Failing to Available", func() {

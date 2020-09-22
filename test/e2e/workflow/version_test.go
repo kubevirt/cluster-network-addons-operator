@@ -11,12 +11,13 @@ import (
 )
 
 var _ = Describe("NetworkAddonsConfig", func() {
+	gvk := GetCnaoV1GroupVersionKind()
 	Context("when a config is created", func() {
 		BeforeEach(func() {
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				LinuxBridge: &cnao.LinuxBridge{},
 			}
-			CreateConfig(configSpec)
+			CreateConfig(gvk, configSpec)
 		})
 
 		It("should set targetVersion and operatorVersion immediately after it turns Progressing", func() {
@@ -35,7 +36,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				Multus: &cnao.Multus{},
 			}
-			CreateConfig(configSpec)
+			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
@@ -53,7 +54,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				// Give validator some time to verify original state
 				time.Sleep(3 * time.Second)
 
-				UpdateConfig(configSpec)
+				UpdateConfig(gvk, configSpec)
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 
 				// Give validator some time to verify versions while we stay in updated config

@@ -16,15 +16,16 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		configSpec := cnao.NetworkAddonsConfigSpec{
 			LinuxBridge: &cnao.LinuxBridge{},
 		}
-
+		gvk := GetCnaoV1GroupVersionKind()
 		BeforeEach(func() {
-			CreateConfig(configSpec)
+			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should report non-empty list of deployed containers", func() {
-			config := GetConfig()
-			Expect(config.Status.Containers).NotTo(BeEmpty())
+			configStatus := GetConfigStatus(gvk)
+
+			Expect(configStatus.Containers).NotTo(BeEmpty())
 		})
 	})
 })
