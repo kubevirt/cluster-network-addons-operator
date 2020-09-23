@@ -2,8 +2,8 @@ package test
 
 import (
 	"context"
-	"time"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -55,8 +55,9 @@ var _ = AfterSuite(func() {
 var _ = AfterEach(func() {
 	PrintOperatorPodStability()
 	By("Performing cleanup")
-	if GetConfig() != nil {
-		DeleteConfig()
+	gvk := GetCnaoV1GroupVersionKind()
+	if GetConfig(gvk) != nil {
+		DeleteConfig(gvk)
 	}
 	CheckComponentsRemoval(AllComponents)
 })

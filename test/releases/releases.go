@@ -6,10 +6,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/blang/semver"
-	"github.com/gobwas/glob"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/blang/semver"
+	"github.com/gobwas/glob"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
@@ -112,7 +114,7 @@ func UninstallRelease(release Release) {
 
 // Make sure that container images currently used (reported in NetworkAddonsConfig)
 // are matching images expected for given release
-func CheckReleaseUsesExpectedContainerImages(release Release) {
+func CheckReleaseUsesExpectedContainerImages(gvk schema.GroupVersionKind, release Release) {
 	By(fmt.Sprintf("Checking that all deployed images match release %s", release.Version))
 
 	expectedContainers := sortContainers(release.Containers)
@@ -121,8 +123,8 @@ func CheckReleaseUsesExpectedContainerImages(release Release) {
 		expectedContainers = dropMultusContainers(expectedContainers)
 	}
 
-	config := GetConfig()
-	deployedContainers := sortContainers(config.Status.Containers)
+	configStatus := GetConfigStatus(gvk)
+	deployedContainers := sortContainers(configStatus.Containers)
 
 	Expect(deployedContainers).To(Equal(expectedContainers))
 }

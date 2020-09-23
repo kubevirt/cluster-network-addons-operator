@@ -8,74 +8,123 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
-func GetConfig() *cnaov1.NetworkAddonsConfig {
+func GetConfig(gvk schema.GroupVersionKind) *unstructured.Unstructured {
 	By("Getting the current config")
-
-	config := &cnaov1.NetworkAddonsConfig{}
-
+	config := &unstructured.Unstructured{}
+	config.SetGroupVersionKind(gvk)
 	err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
 	if apierrors.IsNotFound(err) {
 		return nil
 	}
 	Expect(err).NotTo(HaveOccurred(), "Failed to fetch Config")
-
 	return config
 }
 
-func CreateConfig(configSpec cnao.NetworkAddonsConfigSpec) {
-	By(fmt.Sprintf("Applying NetworkAddonsConfig:\n%s", configSpecToYaml(configSpec)))
+func CreateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConfigSpec) {
+	By(fmt.Sprintf("Applying NetworkAddonsConfig spec:\n%s", configSpecToYaml(configSpec)))
 
-	config := &cnaov1.NetworkAddonsConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: names.OPERATOR_CONFIG,
-		},
-		Spec: configSpec,
-	}
+	config := &unstructured.Unstructured{}
+	config.SetGroupVersionKind(gvk)
+	config.SetName(names.OPERATOR_CONFIG)
 
-	err := framework.Global.Client.Create(context.TODO(), config, &framework.CleanupOptions{})
+	unstructuredConfigSpec, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&configSpec)
+	Expect(err).NotTo(HaveOccurred(), "Failed to convert config spec to unstructured")
+	config.Object["spec"] = unstructuredConfigSpec
+
+	err = framework.Global.Client.Create(context.TODO(), config, &framework.CleanupOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Failed to create the Config")
 }
 
-func UpdateConfig(configSpec cnao.NetworkAddonsConfigSpec) {
+func UpdateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConfigSpec) {
 	By(fmt.Sprintf("Updating NetworkAddonsConfig:\n%s", configSpecToYaml(configSpec)))
 
 	// Get current Config
-	config := GetConfig()
+	config := GetConfig(gvk)
 
 	// Update the Config with the desired Spec
-	config.Spec = configSpec
+	config.Object["spec"] = configSpec
 	err := framework.Global.Client.Update(context.TODO(), config)
 	Expect(err).NotTo(HaveOccurred(), "Failed to update the Config")
 }
 
-func DeleteConfig() {
+func DeleteConfig(gvk schema.GroupVersionKind) {
 	By("Removing NetworkAddonsConfig")
 
-	config := &cnaov1.NetworkAddonsConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: names.OPERATOR_CONFIG,
-		},
-	}
+	config := &unstructured.Unstructured{}
+	config.SetGroupVersionKind(gvk)
+	config.SetName(names.OPERATOR_CONFIG)
 
 	err := framework.Global.Client.Delete(context.TODO(), config)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to remove the Config")
 
 	// Wait until the config is deleted
 	EventuallyWithOffset(1, func() error {
-		return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, &cnaov1.NetworkAddonsConfig{})
-	}, 60*time.Second, 1*time.Second).Should(SatisfyAll(HaveOccurred(), WithTransform(apierrors.IsNotFound, BeTrue())), fmt.Sprintf("should successfuly delete config '%s'", config.Name))
+		return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+	}, 60*time.Second, 1*time.Second).Should(SatisfyAll(HaveOccurred(), WithTransform(apierrors.IsNotFound, BeTrue())), fmt.Sprintf("should successfuly delete config '%s'", config.GetName()))
 
+}
+
+func GetConfigStatus(gvk schema.GroupVersionKind) *cnao.NetworkAddonsConfigStatus {
+	config := GetConfig(gvk)
+	if config != nil {
+		By("Getting the current config status")
+		switch gvk {
+		case GetCnaoV1GroupVersionKind():
+			return &convertToConfigV1(config).Status
+		case GetCnaoV1alpha1GroupVersionKind():
+			return &convertToConfigV1alpha1(config).Status
+		}
+
+		Fail(fmt.Sprintf("gvk %v not supported", gvk))
+	}
+	return nil
+}
+
+func convertToConfigV1(unstructuredConfig *unstructured.Unstructured) *cnaov1.NetworkAddonsConfig {
+	configV1 := &cnaov1.NetworkAddonsConfig{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredConfig.Object, configV1)
+	Expect(err).NotTo(HaveOccurred(), "Failed to convert unstructured config to cnaov1 Config")
+
+	return configV1
+}
+
+func convertToConfigV1alpha1(unstructuredConfig *unstructured.Unstructured) *cnaov1alpha1.NetworkAddonsConfig {
+	configV1alpha1 := &cnaov1alpha1.NetworkAddonsConfig{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredConfig.Object, configV1alpha1)
+	Expect(err).NotTo(HaveOccurred(), "Failed to convert unstructured config to cnaov1alpha1 Config")
+
+	return configV1alpha1
+}
+
+func GetCnaoV1GroupVersionKind() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   "networkaddonsoperator.network.kubevirt.io",
+		Version: "v1",
+		Kind:    "NetworkAddonsConfig",
+	}
+}
+
+func GetCnaoV1alpha1GroupVersionKind() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   "networkaddonsoperator.network.kubevirt.io",
+		Version: "v1alpha1",
+		Kind:    "NetworkAddonsConfig",
+	}
 }
 
 // Convert NetworkAddonsConfig specification to a yaml format we would expect in a manifest

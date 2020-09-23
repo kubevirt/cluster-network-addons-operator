@@ -39,8 +39,9 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterEach(func() {
 	By("Performing cleanup")
-	if GetConfig() != nil {
-		DeleteConfig()
+	gvk := GetCnaoV1GroupVersionKind()
+	if GetConfig(gvk) != nil {
+		DeleteConfig(gvk)
 	}
 	CheckComponentsRemoval(AllComponents)
 	for _, release := range Releases() {
