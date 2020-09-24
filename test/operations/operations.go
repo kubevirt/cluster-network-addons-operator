@@ -24,7 +24,6 @@ import (
 )
 
 func GetConfig(gvk schema.GroupVersionKind) *unstructured.Unstructured {
-	By("Getting the current config")
 	config := &unstructured.Unstructured{}
 	config.SetGroupVersionKind(gvk)
 	err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
@@ -82,7 +81,6 @@ func DeleteConfig(gvk schema.GroupVersionKind) {
 func GetConfigStatus(gvk schema.GroupVersionKind) *cnao.NetworkAddonsConfigStatus {
 	config := GetConfig(gvk)
 	if config != nil {
-		By("Getting the current config status")
 		switch gvk {
 		case GetCnaoV1GroupVersionKind():
 			return &ConvertToConfigV1(config).Status
