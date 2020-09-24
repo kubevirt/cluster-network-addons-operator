@@ -19,7 +19,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		gvk := GetCnaoV1GroupVersionKind()
 		BeforeEach(func() {
 			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should report non-empty list of deployed containers", func() {

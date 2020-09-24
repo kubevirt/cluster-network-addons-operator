@@ -31,8 +31,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should report Failing condition and Available must be set to False", func() {
-				CheckConfigCondition(ConditionDegraded, ConditionTrue, time.Minute, CheckDoNotRepeat)
-				CheckConfigCondition(ConditionAvailable, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionDegraded, ConditionTrue, time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
 		})
 	})
@@ -44,7 +44,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				NMState:     &cnao.NMState{},
 			}
 			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 2*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 2*time.Minute, CheckDoNotRepeat)
 		})
 
 		Context("and a component which does support removal is removed from the Spec", func() {
@@ -56,8 +56,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should remain at Available condition", func() {
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, time.Minute, CheckDoNotRepeat)
-				CheckConfigCondition(ConditionDegraded, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionDegraded, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
 		})
 	})
