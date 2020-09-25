@@ -21,13 +21,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 
 		It("should set targetVersion and operatorVersion immediately after it turns Progressing", func() {
-			CheckConfigCondition(ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
-			CheckConfigVersions(operatorVersion, CheckIgnoreVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
+			CheckConfigVersions(gvk, operatorVersion, CheckIgnoreVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
 		})
 
 		It("should set observedVersion once turns it Available", func() {
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-			CheckConfigVersions(operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigVersions(gvk, operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
 		})
 	})
 
@@ -37,12 +37,12 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Multus: &cnao.Multus{},
 			}
 			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should keep reported versions while being changed", func() {
 			versionRemainsTheSame := func() {
-				CheckConfigVersions(operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
+				CheckConfigVersions(gvk, operatorVersion, operatorVersion, operatorVersion, CheckImmediately, CheckDoNotRepeat)
 			}
 
 			updatingConfig := func() {
@@ -55,7 +55,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				time.Sleep(3 * time.Second)
 
 				UpdateConfig(gvk, configSpec)
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 
 				// Give validator some time to verify versions while we stay in updated config
 				time.Sleep(3 * time.Second)

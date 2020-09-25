@@ -28,13 +28,13 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			})
 
 			It("reaches Available condition with all containers using expected images", func() {
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 				CheckReleaseUsesExpectedContainerImages(gvk, masterRelease)
 			})
 
 			It("stays in Available condition while the operator is being removed and redeployed", func() {
 				configIsAvailable := func() {
-					CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, CheckDoNotRepeat)
+					CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, CheckImmediately, CheckDoNotRepeat)
 				}
 
 				reinstallingOperator := func() {
@@ -50,7 +50,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 				}
 
 				// Wait until the configuration reaches Available state
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 
 				// Make sure that configuration stays available during operator's reinstallation
 				KeepCheckingWhile(configIsAvailable, reinstallingOperator)

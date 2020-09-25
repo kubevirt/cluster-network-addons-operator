@@ -24,7 +24,6 @@ import (
 )
 
 func GetConfig(gvk schema.GroupVersionKind) *unstructured.Unstructured {
-	By("Getting the current config")
 	config := &unstructured.Unstructured{}
 	config.SetGroupVersionKind(gvk)
 	err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
@@ -82,12 +81,11 @@ func DeleteConfig(gvk schema.GroupVersionKind) {
 func GetConfigStatus(gvk schema.GroupVersionKind) *cnao.NetworkAddonsConfigStatus {
 	config := GetConfig(gvk)
 	if config != nil {
-		By("Getting the current config status")
 		switch gvk {
 		case GetCnaoV1GroupVersionKind():
-			return &convertToConfigV1(config).Status
+			return &ConvertToConfigV1(config).Status
 		case GetCnaoV1alpha1GroupVersionKind():
-			return &convertToConfigV1alpha1(config).Status
+			return &ConvertToConfigV1alpha1(config).Status
 		}
 
 		Fail(fmt.Sprintf("gvk %v not supported", gvk))
@@ -95,7 +93,7 @@ func GetConfigStatus(gvk schema.GroupVersionKind) *cnao.NetworkAddonsConfigStatu
 	return nil
 }
 
-func convertToConfigV1(unstructuredConfig *unstructured.Unstructured) *cnaov1.NetworkAddonsConfig {
+func ConvertToConfigV1(unstructuredConfig *unstructured.Unstructured) *cnaov1.NetworkAddonsConfig {
 	configV1 := &cnaov1.NetworkAddonsConfig{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredConfig.Object, configV1)
 	Expect(err).NotTo(HaveOccurred(), "Failed to convert unstructured config to cnaov1 Config")
@@ -103,7 +101,7 @@ func convertToConfigV1(unstructuredConfig *unstructured.Unstructured) *cnaov1.Ne
 	return configV1
 }
 
-func convertToConfigV1alpha1(unstructuredConfig *unstructured.Unstructured) *cnaov1alpha1.NetworkAddonsConfig {
+func ConvertToConfigV1alpha1(unstructuredConfig *unstructured.Unstructured) *cnaov1alpha1.NetworkAddonsConfig {
 	configV1alpha1 := &cnaov1alpha1.NetworkAddonsConfig{}
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredConfig.Object, configV1alpha1)
 	Expect(err).NotTo(HaveOccurred(), "Failed to convert unstructured config to cnaov1alpha1 Config")

@@ -21,6 +21,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -33,6 +34,7 @@ import (
 
 	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
+	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
 const (
@@ -71,38 +73,28 @@ func CheckComponentsRemoval(components []Component) {
 	}
 }
 
-func CheckConfigCondition(conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
+func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
-	config := &cnaov1.NetworkAddonsConfig{}
-
 	getAndCheckCondition := func() error {
-		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
-		if err != nil {
-			return err
-		}
-		return checkConfigCondition(config, conditionType, conditionStatus)
+
+		return checkConfigCondition(gvk, conditionType, conditionStatus)
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
+		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition, current config:\n%v\ndescribe all:\n%v", configToYaml(gvk), describeAll()))
 	} else {
-		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
+		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state, current config:\n%v\ndescribe all:\n%v", configToYaml(gvk), describeAll()))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
+		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value, current config:\n%v\ndescribe all:\n%v", configToYaml(gvk), describeAll()))
 	}
 }
 
-func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
+func CheckConfigVersions(gvk schema.GroupVersionKind, operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
 	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q", operatorVersion, observedVersion, targetVersion))
-	config := &cnaov1.NetworkAddonsConfig{}
-
 	getAndCheckVersions := func() error {
-		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
-		if err != nil {
-			return err
-		}
+		configStatus := GetConfigStatus(gvk)
 
 		errs := []error{}
 		errsAppend := func(err error) {
@@ -111,29 +103,29 @@ func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string,
 			}
 		}
 
-		if operatorVersion != CheckIgnoreVersion && config.Status.OperatorVersion != operatorVersion {
-			errsAppend(fmt.Errorf("OperatorVersion %q does not match expected %q", config.Status.OperatorVersion, operatorVersion))
+		if operatorVersion != CheckIgnoreVersion && configStatus.OperatorVersion != operatorVersion {
+			errsAppend(fmt.Errorf("OperatorVersion %q does not match expected %q", configStatus.OperatorVersion, operatorVersion))
 		}
 
-		if observedVersion != CheckIgnoreVersion && config.Status.ObservedVersion != observedVersion {
-			errsAppend(fmt.Errorf("ObservedVersion %q does not match expected %q", config.Status.ObservedVersion, observedVersion))
+		if observedVersion != CheckIgnoreVersion && configStatus.ObservedVersion != observedVersion {
+			errsAppend(fmt.Errorf("ObservedVersion %q does not match expected %q", configStatus.ObservedVersion, observedVersion))
 		}
 
-		if targetVersion != CheckIgnoreVersion && config.Status.TargetVersion != targetVersion {
-			errsAppend(fmt.Errorf("TargetVersion %q does not match expected %q", config.Status.TargetVersion, targetVersion))
+		if targetVersion != CheckIgnoreVersion && configStatus.TargetVersion != targetVersion {
+			errsAppend(fmt.Errorf("TargetVersion %q does not match expected %q", configStatus.TargetVersion, targetVersion))
 		}
 
 		return errsToErr(errs)
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
+		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions, current config:\n%v\ndescribe all:\n%v", configToYaml(gvk), describeAll()))
 	} else {
-		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
+		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state, current config:\n%v\ndescribe all:\n%v", configToYaml(gvk), describeAll()))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v\ndescribe all:\n%v", configToYaml(config), describeAll()))
+		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v\ndescribe all:\n%v", configToYaml(gvk), describeAll()))
 	}
 }
 
@@ -357,9 +349,9 @@ func checkForDeployment(name string) error {
 func CheckOperatorPodStability(continuesDuration time.Duration) {
 	By("Checking that cnao operator pod hasn't performed any resets")
 	if continuesDuration != CheckImmediately {
-		Consistently( func() error {
-				return CalculateOperatorPodStability()
-			}, continuesDuration, time.Second).ShouldNot(HaveOccurred(), "CNAO operator pod should not restart consistently")
+		Consistently(func() error {
+			return CalculateOperatorPodStability()
+		}, continuesDuration, time.Second).ShouldNot(HaveOccurred(), "CNAO operator pod should not restart consistently")
 	} else {
 		Expect(CalculateOperatorPodStability()).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
@@ -367,7 +359,7 @@ func CheckOperatorPodStability(continuesDuration time.Duration) {
 
 func PrintOperatorPodStability() {
 	if err := CalculateOperatorPodStability(); err != nil {
-		fmt.Fprintln(GinkgoWriter, "WARNING: CNAO operator pod is not stable: " + err.Error())
+		fmt.Fprintln(GinkgoWriter, "WARNING: CNAO operator pod is not stable: "+err.Error())
 	}
 	return
 }
@@ -466,13 +458,17 @@ func isNotFound(componentType string, componentName string, clientGetOutput erro
 	return fmt.Errorf("%s %q has been found", componentType, componentName)
 }
 
-func checkConfigCondition(conf *cnaov1.NetworkAddonsConfig, conditionType ConditionType, conditionStatus ConditionStatus) error {
-	for _, condition := range conf.Status.Conditions {
+func checkConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus) error {
+	confStatus := GetConfigStatus(gvk)
+	if confStatus == nil {
+		return fmt.Errorf("Config Status not found")
+	}
+	for _, condition := range confStatus.Conditions {
 		if condition.Type == conditionsv1.ConditionType(conditionType) {
 			if condition.Status == corev1.ConditionStatus(conditionStatus) {
 				return nil
 			}
-			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q, obtained config:\n%vdescribe all:\n%v", conditionType, conditionStatus, condition.Status, configToYaml(conf), describeAll())
+			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q, obtained config:\n%vdescribe all:\n%v", conditionType, conditionStatus, condition.Status, configToYaml(gvk), describeAll())
 		}
 	}
 
@@ -493,7 +489,8 @@ func isNotSupportedKind(err error) bool {
 	return strings.Contains(err.Error(), "no kind is registered for the type")
 }
 
-func configToYaml(config *cnaov1.NetworkAddonsConfig) string {
+func configToYaml(gvk schema.GroupVersionKind) string {
+	config := GetConfig(gvk)
 	manifest, err := yaml.Marshal(config)
 	if err != nil {
 		panic(err)
@@ -544,52 +541,43 @@ func retrieveRange() (string, string) {
 	return rangeStart, rangeEnd
 }
 
-func CheckAvailableEvent() {
+func CheckAvailableEvent(gvk schema.GroupVersionKind) {
 	//checkConfigLatestEvent(eventemitter.AvailableReason, eventemitter.AvailableMessage, duration, timeout)
 	By("Check for Available event")
-	config, err := getConfig()
-	Expect(err).NotTo(HaveOccurred())
-	objectEventWatcher := NewObjectEventWatcher(config).SinceWatchedObjectResourceVersion().Timeout(time.Duration(15) * time.Minute)
+	config := GetConfig(gvk)
+	configV1 := ConvertToConfigV1(config)
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceWatchedObjectResourceVersion().Timeout(time.Duration(15) * time.Minute)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.AvailableReason)
 }
 
-func CheckProgressingEvent() {
+func CheckProgressingEvent(gvk schema.GroupVersionKind) {
 	By("Check for Progressing event")
-	config, err := getConfig()
-	Expect(err).NotTo(HaveOccurred())
-	objectEventWatcher := NewObjectEventWatcher(config).SinceNow().Timeout(time.Duration(5) * time.Minute)
+	config := GetConfig(gvk)
+	configV1 := ConvertToConfigV1(config)
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(time.Duration(5) * time.Minute)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.ProgressingReason)
 }
 
-func CheckModifiedEvent() {
+func CheckModifiedEvent(gvk schema.GroupVersionKind) {
 	By("Check for Modified event")
-	config, err := getConfig()
-	Expect(err).NotTo(HaveOccurred())
-	objectEventWatcher := NewObjectEventWatcher(config).SinceNow().Timeout(time.Duration(5) * time.Minute)
+	config := GetConfig(gvk)
+	configV1 := ConvertToConfigV1(config)
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(time.Duration(5) * time.Minute)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.ModifiedReason)
 }
 
-func CheckFailedEvent(reason string) {
+func CheckFailedEvent(gvk schema.GroupVersionKind, reason string) {
 	By("Check for Failed event")
-	config, err := getConfig()
-	Expect(err).NotTo(HaveOccurred())
-	objectEventWatcher := NewObjectEventWatcher(config).SinceWatchedObjectResourceVersion().Timeout(time.Duration(5) * time.Minute)
+	config := GetConfig(gvk)
+	configV1 := ConvertToConfigV1(config)
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceWatchedObjectResourceVersion().Timeout(time.Duration(5) * time.Minute)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, WarningEvent, fmt.Sprintf("%s: %s", eventemitter.FailedReason, reason))
-}
-
-func getConfig() (*cnaov1.NetworkAddonsConfig, error) {
-	config := &cnaov1.NetworkAddonsConfig{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
-	if err != nil {
-		return nil, err
-	}
-	return config, nil
 }

@@ -23,7 +23,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				testConfigCreate(gvk, configSpec, components)
 
 				// Make sure that deployed components remain up and running
-				CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
 			},
 			Entry(
 				"Empty config",
@@ -105,8 +105,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.Multus = &cnao.Multus{}
 			components = append(components, MultusComponent)
 			testConfigUpdate(gvk, configSpec, components)
-			CheckModifiedEvent()
-			CheckProgressingEvent()
+			CheckModifiedEvent(gvk)
+			CheckProgressingEvent(gvk)
 
 			// Add Linux bridge component
 			configSpec.LinuxBridge = &cnao.LinuxBridge{}
@@ -154,12 +154,12 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		}
 		BeforeEach(func() {
 			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 		//2305
 		It("should remain in Available condition after applying the same config", func() {
 			UpdateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, CheckImmediately, 30*time.Second)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, CheckImmediately, 30*time.Second)
 		})
 		//2281
 		It("should be able to remove all of them by removing the config", func() {
@@ -173,7 +173,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			// [1] https://github.com/kubevirt/cluster-network-addons-operator/issues/394
 			CheckComponentsRemoval(components)
 			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
 		})
 	})
 	//2178
@@ -182,7 +182,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			By("Deploying KubeMacPool")
 			config := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
 			CreateConfig(gvk, config)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
 		It("should modify the MAC range after being redeployed ", func() {
@@ -193,7 +193,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 			configSpec := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
 			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 			rangeStart, rangeEnd := CheckUnicastAndValidity()
 
 			By("Comparing the ranges")
@@ -204,13 +204,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 })
 
 func testConfigCreate(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
-	checkConfigChange(components, func() {
+	checkConfigChange(gvk, components, func() {
 		CreateConfig(gvk, configSpec)
 	})
 }
 
 func testConfigUpdate(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
-	checkConfigChange(components, func() {
+	checkConfigChange(gvk, components, func() {
 		UpdateConfig(gvk, configSpec)
 	})
 }
@@ -223,7 +223,7 @@ func testConfigUpdate(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddons
 // TODO This should be replaced by a solution based around `Watch` once it is
 // available on operator-sdk test framework:
 // https://github.com/operator-framework/operator-sdk/issues/2655
-func checkConfigChange(components []Component, while func()) {
+func checkConfigChange(gvk schema.GroupVersionKind, components []Component, while func()) {
 
 	// Start the function with a little delay to give the Progressing check a better chance
 	// of catching the event
@@ -240,14 +240,14 @@ func checkConfigChange(components []Component, while func()) {
 	if noComponentToDeploy {
 		// Wait until Available condition is reported. Should be fast when no components are
 		// being deployed
-		CheckConfigCondition(ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
+		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
 	} else {
 		// If there are any components to deploy wait until Progressing condition is reported
-		CheckConfigCondition(ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
+		CheckConfigCondition(gvk, ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
 		// Wait until Available condition is reported. It may take a few minutes the first time
 		// we are pulling component images to the Node
-		CheckConfigCondition(ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-		CheckConfigCondition(ConditionProgressing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+		CheckConfigCondition(gvk, ConditionProgressing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 
 		// Check that all requested components have been deployed
 		CheckComponentsDeployment(components)
