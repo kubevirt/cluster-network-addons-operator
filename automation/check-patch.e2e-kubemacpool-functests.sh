@@ -15,6 +15,7 @@ function __get_skipped_tests() {
 
 	# We can't test all KMP opt-mode CNAO context, as the operator will reconcile
 	# back to the configured opt-mode when the test tries to change it.
+	# So we check KMP webhook's opt-mode and skip tests accordingly
 	if grep 'default/mutatevirtualmachines_opt_out_patch.yaml' hack/components/bump-kubemacpool.sh; then
 		echo "KMP VM webhook is set to opt-out mode. Skipping opt-in Context"
 		skipped_regex="${skipped_regex} \(opt-in\smode\)"

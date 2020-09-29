@@ -436,13 +436,13 @@ func GetCrd() *extv1.CustomResourceDefinition {
 									Type: "object",
 									Properties: map[string]extv1.JSONSchemaProps{
 										"lastHeartbeatTime": extv1.JSONSchemaProps{
-											Format: "date-time",
-											Type:   "object",
+											Format:   "date-time",
+											Type:     "object",
 											Nullable: true,
 										},
 										"lastTransitionTime": extv1.JSONSchemaProps{
-											Format: "date-time",
-											Type:   "object",
+											Format:   "date-time",
+											Type:     "object",
 											Nullable: true,
 										},
 										"message": extv1.JSONSchemaProps{
