@@ -37,7 +37,7 @@ components:
     metadata: "v0.13.0"
   macvtap-cni:
     url: "https://github.com/kubevirt/macvtap-cni"
-    commit: "ced0fb4ce9ae9719b21269c7636b7d8ac14a6e6b"
+    commit: "7e7c46b85fda5c4c947edb55881671eb79e0f6af"
     branch: "master"
     update-policy: "tagged"
-    metadata: "v0.3.1"
+    metadata: "v0.4.0"
