@@ -55,6 +55,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should remain at Available condition", func() {
+				components := []Component{NMStateComponent}
+				CheckComponentsRemoval(components)
+
 				CheckConfigCondition(ConditionAvailable, ConditionTrue, time.Minute, CheckDoNotRepeat)
 				CheckConfigCondition(ConditionDegraded, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
 			})
