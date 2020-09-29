@@ -34,7 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	components "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
-	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 type operatorData struct {
@@ -44,7 +44,7 @@ type operatorData struct {
 	Rules             string
 	ClusterRoleString string
 	ClusterRules      string
-	CRD               *extv1beta1.CustomResourceDefinition
+	CRD               *extv1.CustomResourceDefinition
 	CRDString         string
 	CRDVersion        string
 	CRString          string
