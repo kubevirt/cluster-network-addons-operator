@@ -13,8 +13,10 @@ OPERATOR_IMAGE ?= cluster-network-addons-operator
 REGISTRY_IMAGE ?= cluster-network-addons-registry
 
 TARGETS = \
+	gen-crds \
+	gen-openapi \
 	gen-k8s \
-	gen-k8s-check \
+	gen-check \
 	goimports \
 	goimports-check \
 	vet \
@@ -45,6 +47,8 @@ OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
 
 GITHUB_RELEASE ?= $(BIN_DIR)/github-release
 
+OPENAPI_GEN ?= $(BIN_DIR)/openapi-gen
+
 GO := $(GOBIN)/go
 
 $(GO):
@@ -55,6 +59,9 @@ $(GINKGO): $(GO) go.mod
 
 $(OPERATOR_SDK): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+
+$(OPENAPI_GEN): $(GO) go.mod
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/k8s.io/kube-openapi/cmd/openapi-gen
 
 $(GITHUB_RELEASE): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
@@ -79,7 +86,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace-check vet goimports-check gen-k8s-check test/unit
+check: whitespace-check vet goimports-check gen-check test/unit
 	./hack/check.sh
 
 whitespace-check: $(all_sources)
@@ -89,6 +96,9 @@ whitespace-check: $(all_sources)
 vet: $(GO) $(cmd_sources) $(pkg_sources)
 	$(GO) vet ./pkg/... ./cmd/... ./test/... ./tools/...
 	touch $@
+
+gen-crds: $(OPERATOR_SDK)
+	$(OPERATOR_SDK) generate crds
 
 goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
 	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
@@ -140,7 +150,7 @@ cluster-clean:
 	./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
-gen-manifests: manifest-templator
+gen-manifests: gen-crds manifest-templator
 	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
 	CONTAINER_PREFIX=$(IMAGE_REGISTRY) \
@@ -155,7 +165,13 @@ gen-k8s: $(OPERATOR_SDK) $(apis_sources)
 	$(OPERATOR_SDK) generate k8s
 	touch $@
 
-gen-k8s-check: $(apis_sources)
+gen-openapi: $(OPENAPI_GEN) $(apis_sources)
+	$(OPENAPI_GEN) --logtostderr=true -o "" -i ./pkg/apis/networkaddonsoperator/v1alpha1 -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/v1alpha1 -h ./hack/boilerplate.go.txt -r "-"
+	$(OPENAPI_GEN) --logtostderr=true -o "" -i ./pkg/apis/networkaddonsoperator/v1 -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/v1 -h ./hack/boilerplate.go.txt -r "-"
+	$(OPENAPI_GEN) --logtostderr=true -o "" -i ./pkg/apis/networkaddonsoperator/shared -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/shared -h ./hack/boilerplate.go.txt -r "-"
+	touch $@
+
+gen-check: $(apis_sources)
 	./hack/verify-codegen.sh
 	touch $@
 
@@ -219,4 +235,7 @@ bump-all: bump-nmstate bump-kubemacpool bump-macvtap bump-linux-bridge bump-mult
 	bump-% \
 	bump-all \
 	gen-k8s \
+	gen-openapi \
+	gen-check \
+	gen-crds \
 	release

@@ -7,4 +7,5 @@ import (
 	_ "github.com/onsi/ginkgo/ginkgo"
 	_ "github.com/operator-framework/operator-sdk/cmd/operator-sdk"
 	_ "golang.org/x/tools/cmd/goimports"
+	_ "k8s.io/kube-openapi/cmd/openapi-gen"
 )

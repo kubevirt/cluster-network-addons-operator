@@ -37,7 +37,7 @@ func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name 
 
 // AppliedConfiguration renders the ConfigMap in which we store the configuration
 // we've applied.
-func appliedConfiguration(applied *cnao.NetworkAddonsConfig, namespace string) (*uns.Unstructured, error) {
+func appliedConfiguration(applied *NetworkAddonsConfig, namespace string) (*uns.Unstructured, error) {
 	app, err := json.Marshal(applied.Spec)
 	if err != nil {
 		return nil, err

@@ -25,6 +25,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"text/template"
@@ -68,6 +69,20 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getCrd() (*extv1.CustomResourceDefinition, error) {
+	generatedCrdPath := "deploy/crds/networkaddonsoperator.network.kubevirt.io_networkaddonsconfigs_crd.yaml"
+	crdFile, err := ioutil.ReadFile(generatedCrdPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed opening generated crd: %w", err)
+	}
+	crd := &extv1.CustomResourceDefinition{}
+	err = yaml.Unmarshal(crdFile, crd)
+	if err != nil {
+		return nil, fmt.Errorf("failed parsing generated crd %s: %w", generatedCrdPath, err)
+	}
+	return crd, nil
 }
 
 func fixResourceString(in string, indention int) string {
@@ -192,7 +207,8 @@ func getCNA(data *templateData) {
 
 	// Get CNA CRD
 	writer = strings.Builder{}
-	crd := components.GetCrd()
+	crd, err := getCrd()
+	check(err)
 	marshallObject(crd, &writer)
 	crdString := writer.String()
 	crdVersion := crd.Spec.Versions[0].Name

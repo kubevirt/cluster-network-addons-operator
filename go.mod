@@ -9,6 +9,7 @@ require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/github-release/github-release v0.8.1
 	github.com/go-git/go-git/v5 v5.1.0
+	github.com/go-openapi/spec v0.19.3
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-github/v32 v32.1.0
 	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1 // indirect
@@ -33,6 +34,7 @@ require (
 	k8s.io/apimachinery v0.18.3
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/helm v2.16.10+incompatible
+	k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c
 	kubevirt.io/qe-tools v0.1.6
 	sigs.k8s.io/controller-runtime v0.6.0
 )

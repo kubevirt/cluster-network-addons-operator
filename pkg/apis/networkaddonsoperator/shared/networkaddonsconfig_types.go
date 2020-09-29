@@ -3,7 +3,6 @@ package shared
 import (
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NetworkAddonsConfigSpec defines the desired state of NetworkAddonsConfig
@@ -61,8 +60,9 @@ type KubeMacPool struct {
 // +k8s:openapi-gen=true
 type MacvtapCni struct{}
 
-// NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 // +k8s:openapi-gen=true
+
+// NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig
 type NetworkAddonsConfigStatus struct {
 	OperatorVersion string                   `json:"operatorVersion,omitempty"`
 	ObservedVersion string                   `json:"observedVersion,omitempty"`
@@ -76,15 +76,4 @@ type Container struct {
 	ParentName string `json:"parentName"`
 	Name       string `json:"name"`
 	Image      string `json:"image"`
-}
-
-// NetworkAddonsConfig is the Schema for the networkaddonsconfigs API
-// This struct is no exposed/registered as part of the CRD, but is used
-// by the v1alpha1 and v1 as kind of inside-helper struct
-type NetworkAddonsConfig struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   NetworkAddonsConfigSpec   `json:"spec,omitempty"`
-	Status NetworkAddonsConfigStatus `json:"status,omitempty"`
 }

@@ -50,6 +50,17 @@ var operatorNamespace string
 var operatorVersion string
 var operatorVersionLabel string
 
+// NetworkAddonsConfig is the Schema for the networkaddonsconfigs API
+// This struct is no exposed/registered as part of the CRD, but is used
+// by the v1alpha1 and v1 as kind of inside-helper struct
+type NetworkAddonsConfig struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	Spec   cnao.NetworkAddonsConfigSpec
+	Status cnao.NetworkAddonsConfigStatus
+}
+
 func init() {
 	operatorNamespace = os.Getenv("OPERATOR_NAMESPACE")
 	operatorVersion = os.Getenv("OPERATOR_VERSION")
@@ -295,8 +306,8 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 }
 
 // Convert NetworkAddonsConfig to shared type
-func (r *ReconcileNetworkAddonsConfig) ConvertNetworkAddonsConfigV1ToShared(networkAddonsConfig *cnaov1.NetworkAddonsConfig) (*cnao.NetworkAddonsConfig, error) {
-	return &cnao.NetworkAddonsConfig{
+func (r *ReconcileNetworkAddonsConfig) ConvertNetworkAddonsConfigV1ToShared(networkAddonsConfig *cnaov1.NetworkAddonsConfig) (*NetworkAddonsConfig, error) {
+	return &NetworkAddonsConfig{
 		TypeMeta:   networkAddonsConfig.TypeMeta,
 		ObjectMeta: networkAddonsConfig.ObjectMeta,
 		Spec:       networkAddonsConfig.Spec,
@@ -305,7 +316,7 @@ func (r *ReconcileNetworkAddonsConfig) ConvertNetworkAddonsConfigV1ToShared(netw
 }
 
 // Render objects for all desired components
-func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network) ([]*unstructured.Unstructured, error) {
+func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network) ([]*unstructured.Unstructured, error) {
 	// Generate the objects
 	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
@@ -344,7 +355,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 }
 
 // Validate and returns the previous configuration spec
-func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig *cnao.NetworkAddonsConfig) (*cnao.NetworkAddonsConfigSpec, error) {
+func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig *NetworkAddonsConfig) (*cnao.NetworkAddonsConfigSpec, error) {
 	// Retrieve the previously applied operator configuration
 	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
@@ -377,7 +388,7 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 }
 
 // Generate the removal object list
-func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *cnao.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *cnao.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
+func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *cnao.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
 	objsToRemove, err := network.RenderObjsToRemove(prev, &networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
 		log.Printf("failed to render for removal: %v", err)
@@ -541,7 +552,7 @@ func isResourceAvailable(kubeClient kubernetes.Interface, name string, group str
 	return true, nil
 }
 
-func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*cnao.NetworkAddonsConfig, error) {
+func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*NetworkAddonsConfig, error) {
 	// convert the runtime.Object to unstructured.Unstructured
 	unstructuredObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
@@ -549,7 +560,7 @@ func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*cnao.NetworkAddons
 	}
 
 	// convert unstructured.Unstructured to a NetworkAddonsConfig
-	networkAddonsConfig := &cnao.NetworkAddonsConfig{}
+	networkAddonsConfig := &NetworkAddonsConfig{}
 	if err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredObj, networkAddonsConfig); err != nil {
 		return nil, err
 	}

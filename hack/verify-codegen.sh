@@ -19,7 +19,7 @@ cleanup
 mkdir -p "${TMP_DIFFROOT}"
 cp -a "${DIFFROOT}"/* "${TMP_DIFFROOT}"
 
-make gen-k8s
+make gen-k8s gen-openapi
 echo "diffing ${DIFFROOT} against freshly generated codegen"
 ret=0
 diff -Naupr "${DIFFROOT}" "${TMP_DIFFROOT}" || ret=$?
@@ -28,6 +28,6 @@ if [[ $ret -eq 0 ]]
 then
     echo "${DIFFROOT} up to date."
 else
-    echo "${DIFFROOT} is out of date. Please run 'make gen-k8s'."
+    echo "${DIFFROOT} is out of date. Please run 'make gen-k8s gen-openapi'."
     exit 1
 fi

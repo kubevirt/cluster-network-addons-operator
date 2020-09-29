@@ -15,12 +15,17 @@ _components/
 # Temporary test files
 deploy/test/
 
+# Generated crds
+deploy/crds/
+
 # Cover file
 cover.out
 
 # Makefile fake targets
 gen-k8s
-gen-k8s-check
+gen-openapi
+gen-crds
+gen-check
 goimports
 goimports-check
 vet
