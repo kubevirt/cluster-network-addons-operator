@@ -1,7 +1,9 @@
-0.42.1
+0.42.2
 
 Bugs:
-* test: Ensure NAC does not exists eventually after delete (#559)
-* [release-0.42] Check cnao pod restarts in CI tests (#556)
-* events, event-emitter: change emitter to emit only for config (#550)
-* [release-0.42] Fix missing prefix 'v' for versions v0.41.0 and v0.42.0 (#553)
+* fix AddToScheme to add all served versions (#582)
+* kmp functests, skip KMP opt-mode tests not maching CNAO config (#579)
+* refactor fix of flaky validation test (#574)
+* bump kubemacpool to v0.20.2 (#568)
+* Fix release 0.41.0 manifest (#561)
+
