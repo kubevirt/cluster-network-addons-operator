@@ -7,12 +7,12 @@ import (
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// NetworkAddonsConfig is the Schema for the networkaddonsconfigs API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=networkaddonsconfigs,scope=Cluster
 // +kubebuilder:storageversion
 // +k8s:openapi-gen=true
-
-// NetworkAddonsConfig is the Schema for the networkaddonsconfigs API
 type NetworkAddonsConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -24,6 +24,7 @@ type NetworkAddonsConfig struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // NetworkAddonsConfigList contains a list of NetworkAddonsConfig
+// +k8s:openapi-gen=true
 type NetworkAddonsConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

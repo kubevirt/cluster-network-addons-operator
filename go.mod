@@ -1,5 +1,7 @@
 module github.com/kubevirt/cluster-network-addons-operator
 
+go 1.13
+
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
@@ -68,5 +70,3 @@ replace (
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	k8s.io/client-go => k8s.io/client-go v0.18.2
 )
-
-go 1.13

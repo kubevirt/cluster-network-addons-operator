@@ -29,16 +29,16 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./pkg/apis/networkaddonsoperator/shared.KubeMacPool":             schema_pkg_apis_networkaddonsoperator_shared_KubeMacPool(ref),
-		"./pkg/apis/networkaddonsoperator/shared.LinuxBridge":             schema_pkg_apis_networkaddonsoperator_shared_LinuxBridge(ref),
-		"./pkg/apis/networkaddonsoperator/shared.MacvtapCni":              schema_pkg_apis_networkaddonsoperator_shared_MacvtapCni(ref),
-		"./pkg/apis/networkaddonsoperator/shared.Multus":                  schema_pkg_apis_networkaddonsoperator_shared_Multus(ref),
-		"./pkg/apis/networkaddonsoperator/shared.NMState":                 schema_pkg_apis_networkaddonsoperator_shared_NMState(ref),
-		"./pkg/apis/networkaddonsoperator/shared.NetworkAddonsConfigSpec": schema_pkg_apis_networkaddonsoperator_shared_NetworkAddonsConfigSpec(ref),
-		"./pkg/apis/networkaddonsoperator/shared.Ovs":                     schema_pkg_apis_networkaddonsoperator_shared_Ovs(ref),
-		"./pkg/apis/networkaddonsoperator/shared.Placement":               schema_pkg_apis_networkaddonsoperator_shared_Placement(ref),
-		"./pkg/apis/networkaddonsoperator/shared.PlacementConfiguration":  schema_pkg_apis_networkaddonsoperator_shared_PlacementConfiguration(ref),
-		"./pkg/apis/networkaddonsoperator/shared.SelfSignConfiguration":   schema_pkg_apis_networkaddonsoperator_shared_SelfSignConfiguration(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.KubeMacPool":             schema_pkg_apis_networkaddonsoperator_shared_KubeMacPool(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.LinuxBridge":             schema_pkg_apis_networkaddonsoperator_shared_LinuxBridge(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.MacvtapCni":              schema_pkg_apis_networkaddonsoperator_shared_MacvtapCni(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Multus":                  schema_pkg_apis_networkaddonsoperator_shared_Multus(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.NMState":                 schema_pkg_apis_networkaddonsoperator_shared_NMState(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.NetworkAddonsConfigSpec": schema_pkg_apis_networkaddonsoperator_shared_NetworkAddonsConfigSpec(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Ovs":                     schema_pkg_apis_networkaddonsoperator_shared_Ovs(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Placement":               schema_pkg_apis_networkaddonsoperator_shared_Placement(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.PlacementConfiguration":  schema_pkg_apis_networkaddonsoperator_shared_PlacementConfiguration(ref),
+		"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.SelfSignConfiguration":   schema_pkg_apis_networkaddonsoperator_shared_SelfSignConfiguration(ref),
 	}
 }
 
@@ -115,22 +115,22 @@ func schema_pkg_apis_networkaddonsoperator_shared_NetworkAddonsConfigSpec(ref co
 				Properties: map[string]spec.Schema{
 					"multus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.Multus"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Multus"),
 						},
 					},
 					"linuxBridge": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.LinuxBridge"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.LinuxBridge"),
 						},
 					},
 					"ovs": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.Ovs"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Ovs"),
 						},
 					},
 					"kubeMacPool": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.KubeMacPool"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.KubeMacPool"),
 						},
 					},
 					"imagePullPolicy": {
@@ -141,29 +141,29 @@ func schema_pkg_apis_networkaddonsoperator_shared_NetworkAddonsConfigSpec(ref co
 					},
 					"nmstate": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.NMState"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.NMState"),
 						},
 					},
 					"macvtap": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.MacvtapCni"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.MacvtapCni"),
 						},
 					},
 					"selfSignConfiguration": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.SelfSignConfiguration"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.SelfSignConfiguration"),
 						},
 					},
 					"placementConfiguration": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.PlacementConfiguration"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.PlacementConfiguration"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/networkaddonsoperator/shared.KubeMacPool", "./pkg/apis/networkaddonsoperator/shared.LinuxBridge", "./pkg/apis/networkaddonsoperator/shared.MacvtapCni", "./pkg/apis/networkaddonsoperator/shared.Multus", "./pkg/apis/networkaddonsoperator/shared.NMState", "./pkg/apis/networkaddonsoperator/shared.Ovs", "./pkg/apis/networkaddonsoperator/shared.PlacementConfiguration", "./pkg/apis/networkaddonsoperator/shared.SelfSignConfiguration"},
+			"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.KubeMacPool", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.LinuxBridge", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.MacvtapCni", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Multus", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.NMState", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Ovs", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.PlacementConfiguration", "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.SelfSignConfiguration"},
 	}
 }
 
@@ -230,19 +230,19 @@ func schema_pkg_apis_networkaddonsoperator_shared_PlacementConfiguration(ref com
 				Properties: map[string]spec.Schema{
 					"infra": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.Placement"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Placement"),
 						},
 					},
 					"workloads": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/networkaddonsoperator/shared.Placement"),
+							Ref: ref("github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Placement"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/networkaddonsoperator/shared.Placement"},
+			"github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared.Placement"},
 	}
 }
 

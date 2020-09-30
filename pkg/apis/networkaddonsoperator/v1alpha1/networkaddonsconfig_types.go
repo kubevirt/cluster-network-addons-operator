@@ -23,6 +23,7 @@ type NetworkAddonsConfig struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // NetworkAddonsConfigList contains a list of NetworkAddonsConfig
+// +k8s:openapi-gen=true
 type NetworkAddonsConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -39,6 +39,11 @@ E2E_SUITES = \
 	test/e2e/workflow
 
 BIN_DIR = $(CURDIR)/build/_output/bin/
+
+export GOPROXY=direct
+export GOSUMDB=off
+export GOFLAGS=-mod=vendor
+export GO111MODULE=on
 export GOROOT=$(BIN_DIR)/go/
 export GOBIN = $(GOROOT)/bin/
 export PATH := $(GOBIN):$(PATH)
@@ -166,9 +171,9 @@ gen-k8s: $(OPERATOR_SDK) $(apis_sources)
 	touch $@
 
 gen-openapi: $(OPENAPI_GEN) $(apis_sources)
-	$(OPENAPI_GEN) --logtostderr=true -o "" -i ./pkg/apis/networkaddonsoperator/v1alpha1 -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/v1alpha1 -h ./hack/boilerplate.go.txt -r "-"
-	$(OPENAPI_GEN) --logtostderr=true -o "" -i ./pkg/apis/networkaddonsoperator/v1 -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/v1 -h ./hack/boilerplate.go.txt -r "-"
-	$(OPENAPI_GEN) --logtostderr=true -o "" -i ./pkg/apis/networkaddonsoperator/shared -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/shared -h ./hack/boilerplate.go.txt -r "-"
+	$(OPENAPI_GEN) --logtostderr=true -o "" -i github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/shared -h ./hack/boilerplate.go.txt -r "-"
+	$(OPENAPI_GEN) --logtostderr=true -o "" -i github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1 -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/v1alpha1 -h ./hack/boilerplate.go.txt -r "-"
+	$(OPENAPI_GEN) --logtostderr=true -o "" -i github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1 -O zz_generated.openapi -p ./pkg/apis/networkaddonsoperator/v1 -h ./hack/boilerplate.go.txt -r "-"
 	touch $@
 
 gen-check: $(apis_sources)

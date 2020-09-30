@@ -1,5 +1,6 @@
 language: go
 go: "1.13"
+go_import_path: github.com/kubevirt/cluster-network-addons-operator/
 
 services:
 - docker
