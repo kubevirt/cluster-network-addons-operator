@@ -155,7 +155,7 @@ may change.
 
 The operator allows the administrator to deploy the
 [macvtap CNI plugin](https://github.com/kubevirt/macvtap-cni/), simply by
-adding `mavtap` attribute to `NetworkAddonsConfig`.
+adding `macvtap` attribute to `NetworkAddonsConfig`.
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1
