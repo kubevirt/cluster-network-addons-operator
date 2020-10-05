@@ -17,6 +17,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
 		Context(fmt.Sprintf("when operator in version %s is installed and supported spec configured", oldRelease.Version), func() {
 			BeforeEach(func() {
+				UninstallRelease(newRelease)
 				oldReleaseGvk := GetCnaoV1alpha1GroupVersionKind()
 				InstallRelease(oldRelease)
 				CheckOperatorIsReady(podsDeploymentTimeout)
@@ -32,7 +33,6 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			Context("and it is upgraded to the latest release", func() {
 				newReleaseGvk := GetCnaoV1GroupVersionKind()
 				BeforeEach(func() {
-					UninstallRelease(oldRelease)
 					InstallRelease(newRelease)
 					UpdateConfig(newReleaseGvk, newRelease.SupportedSpec)
 					CheckOperatorIsReady(podsDeploymentTimeout)
@@ -56,7 +56,6 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			It(fmt.Sprintf("should transition reported versions while being upgraded to version %s", newRelease.Version), func() {
 				newReleaseGvk := GetCnaoV1GroupVersionKind()
 				// Upgrade the operator
-				UninstallRelease(oldRelease)
 				InstallRelease(newRelease)
 
 				// Check that operator and target versions will be set to the newer. Ignore observed version, since it

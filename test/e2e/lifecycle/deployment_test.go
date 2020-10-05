@@ -41,8 +41,8 @@ var _ = Context("Cluster Network Addons Operator", func() {
 					// Give validator some time to verify original state
 					time.Sleep(3 * time.Second)
 
-					UninstallRelease(masterRelease)
-					InstallRelease(masterRelease)
+					UninstallOperator(masterRelease)
+					InstallOperator(masterRelease)
 					CheckOperatorIsReady(15 * time.Minute)
 
 					// Give validator some time to verify conditions while the new installation is operating

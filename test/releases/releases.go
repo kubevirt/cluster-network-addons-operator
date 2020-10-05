@@ -94,7 +94,7 @@ func LatestRelease() Release {
 	return r[len(r)-1]
 }
 
-// Installs given release (RBAC and Deployment)
+// Installs given release (CRD, RBAC and Deployment)
 func InstallRelease(release Release) {
 	By(fmt.Sprintf("Installing release %s", release.Version))
 	for _, manifestName := range release.Manifests {
@@ -110,6 +110,22 @@ func UninstallRelease(release Release) {
 		out, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
 		Expect(err).NotTo(HaveOccurred(), out)
 	}
+}
+
+// Installs given release (RBAC and Deployment)
+func InstallOperator(release Release) {
+	manifestName := "operator.yaml"
+	By(fmt.Sprintf("Installing operator %s", release.Version))
+	out, err := Kubectl("apply", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
+	Expect(err).NotTo(HaveOccurred(), out)
+}
+
+// Removes given release from cluster
+func UninstallOperator(release Release) {
+	manifestName := "operator.yaml"
+	By(fmt.Sprintf("Uninstalling operator %s", release.Version))
+	out, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
+	Expect(err).NotTo(HaveOccurred(), out)
 }
 
 // Make sure that container images currently used (reported in NetworkAddonsConfig)
