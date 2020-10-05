@@ -84,6 +84,7 @@ func main() {
 			// update component's entry in config yaml
 			component.Commit = updatedReleaseCommit
 			component.Metadata = updatedReleaseTag
+			componentsConfig.Components[componentName] = component
 			err = updateComponentsYaml(inputArgs.componentsConfigPath, componentsConfig)
 			if err != nil {
 				exitWithError(errors.Wrap(err, "Failed to update components yaml"))
