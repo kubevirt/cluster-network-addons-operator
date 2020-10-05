@@ -56,12 +56,12 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should remain at Available condition", func() {
-				components := []Component{NMStateComponent}
-				CheckComponentsRemoval(components)
+				By("Waiting for Modified event after config update")
+				CheckModifiedEvent(gvk)
 
-				By("Checking that Available status turn to True after config update")
-				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, time.Minute, time.Minute)
-				By("Checking that Degraded status turn to False after config update")
+				By("Checking that Available status turn to True")
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
+				By("Checking that Degraded status turn to False")
 				CheckConfigCondition(gvk, ConditionDegraded, ConditionFalse, CheckImmediately, time.Minute)
 			})
 		})
