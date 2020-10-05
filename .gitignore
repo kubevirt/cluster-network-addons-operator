@@ -18,6 +18,9 @@ deploy/test/
 # Cover file
 cover.out
 
+# bumper exec
+bumper
+
 # Makefile fake targets
 gen-k8s
 gen-k8s-check
