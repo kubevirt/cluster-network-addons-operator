@@ -68,6 +68,13 @@ func init() {
 			"network-addons-config.crd.yaml",
 			"operator.yaml",
 		},
+		CrdCleanUp: []string{
+			"network-attachment-definitions.k8s.cni.cncf.io",
+			"networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io",
+			"nodenetworkconfigurationenactments.nmstate.io",
+			"nodenetworkconfigurationpolicies.nmstate.io",
+			"nodenetworkstates.nmstate.io",
+		},
 	}
 	releases = append(releases, release)
 }

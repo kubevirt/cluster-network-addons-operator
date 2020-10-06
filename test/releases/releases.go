@@ -28,6 +28,8 @@ type Release struct {
 	SupportedSpec cnao.NetworkAddonsConfigSpec
 	// Manifest that can be used to install the operator in given release
 	Manifests []string
+	// CrdCleanUp is used to uninstall CRDs between upgrade tests
+	CrdCleanUp []string
 }
 
 // Releases are populated by respective release modules using init()
@@ -110,6 +112,12 @@ func UninstallRelease(release Release) {
 		out, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
 		Expect(err).NotTo(HaveOccurred(), out)
 	}
+
+	for _, crdInstance := range release.CrdCleanUp {
+		out, err := Kubectl("delete", "crd", "--ignore-not-found", crdInstance)
+		Expect(err).NotTo(HaveOccurred(), out)
+	}
+
 }
 
 // Installs given release (RBAC and Deployment)
