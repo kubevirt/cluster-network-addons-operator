@@ -45,11 +45,7 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	return objs, nil
 }
 
-func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
-	if conf.NMState == nil {
-		return nil
-	}
-
+func removeDaemonSetHandlerWorker(ctx context.Context, client k8sclient.Client) []error {
 	// Get existing
 	existing := &unstructured.Unstructured{}
 	gvk := schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "DaemonSet"}
@@ -72,8 +68,18 @@ func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, cli
 
 	} else if apierrors.IsNotFound(err) {
 		// object not found, no need for action.
-		return nil
+		return []error{}
+	}
+	return []error{}
+}
+
+func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
+	if conf.NMState == nil {
+		return []error{}
 	}
 
-	return []error{err}
+	errList := []error{}
+	errList = append(errList, removeDaemonSetHandlerWorker(ctx, client)...)
+
+	return errList
 }

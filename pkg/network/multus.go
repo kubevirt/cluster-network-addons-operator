@@ -38,14 +38,12 @@ func validateMultus(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *
 // cleanUpMultus checks specific multus outdated objects or ones that are no longer compatible and deletes them.
 func cleanUpMultus(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
 	if conf.Multus == nil {
-		return nil
+		return []error{}
 	}
 
-	errs := []error{}
-	errs = append(errs, cleanUpMultusOldName(ctx, client)...)
-
-	return errs
-
+	errList := []error{}
+	errList = append(errList, cleanUpMultusOldName(ctx, client)...)
+	return errList
 }
 
 // cleanUpMultusOldName deletes multus ds object with old name after a new name was introduces in version 0.25.0.
@@ -59,24 +57,26 @@ func cleanUpMultusOldName(ctx context.Context, client k8sclient.Client) []error 
 	name := "kube-multus-ds-amd64"
 
 	err := client.Get(ctx, types.NamespacedName{Name: name, Namespace: namespace}, existing)
-	// if we found the object
-	if err == nil {
-		objDesc := fmt.Sprintf("(%s) %s/%s", gvk.String(), namespace, name)
-		log.Printf("Cleaning up %s Object", objDesc)
-
-		// Delete the object
-		err = client.Delete(ctx, existing)
-		if err != nil {
-			log.Printf("Failed Cleaning up %s Object", objDesc)
-			return []error{err}
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// object not found, no need for action.
+			return []error{}
 		}
-
-	} else if apierrors.IsNotFound(err) {
-		// object not found, no need for action.
-		return nil
+		return []error{err}
 	}
 
-	return []error{err}
+	// if we found the object
+	objDesc := fmt.Sprintf("(%s) %s/%s", gvk.String(), namespace, name)
+	log.Printf("Cleaning up %s Object", objDesc)
+
+	// Delete the object
+	err = client.Delete(ctx, existing)
+	if err != nil {
+		log.Printf("Failed Cleaning up %s Object", objDesc)
+		return []error{err}
+	}
+
+	return []error{}
 }
 
 // RenderMultus generates the manifests of Multus
