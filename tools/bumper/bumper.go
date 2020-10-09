@@ -90,9 +90,12 @@ func main() {
 				exitWithError(errors.Wrap(err, "Failed to update components yaml"))
 			}
 
+			logger.Printf("Running bump-%s script", componentName)
 			cmd := exec.Command("make", fmt.Sprintf("bump-%s", componentName))
-			if out, err := cmd.CombinedOutput(); err != nil {
-				exitWithError(errors.Wrapf(err, "Failed to run bump script. StdOut = %s", string(out)))
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				exitWithError(errors.Wrapf(err, "Failed to run bump script, \nStdout:\n%s\nStderr:\n%s", cmd.Stdout, cmd.Stderr))
 			}
 
 			// create a new branch name
