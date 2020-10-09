@@ -10,6 +10,7 @@ echo 'Bumping kubernetes-nmstate'
 NMSTATE_URL=$(yaml-utils::get_component_url nmstate)
 NMSTATE_COMMIT=$(yaml-utils::get_component_commit nmstate)
 NMSTATE_REPO=$(yaml-utils::get_component_repo ${NMSTATE_URL})
+NMSTATE_REGISTRY=$(yaml-utils::get_component_registry nmstate)
 
 TEMP_DIR=$(git-utils::create_temp_path nmstate)
 trap "rm -rf ${TEMP_DIR}" EXIT
@@ -20,12 +21,12 @@ git-utils::fetch_component ${NMSTATE_PATH} ${NMSTATE_URL} ${NMSTATE_COMMIT}
 
 echo 'Get kubernetes-nmstate image name and update it under CNAO'
 NMSTATE_TAG=$(git-utils::get_component_tag ${NMSTATE_PATH})
-NMSTATE_IMAGE=quay.io/nmstate/kubernetes-nmstate-handler
+NMSTATE_IMAGE=$NMSTATE_REGISTRY/kubernetes-nmstate-handler
 NMSTATE_IMAGE_TAGGED=${NMSTATE_IMAGE}:${NMSTATE_TAG}
 NMSTATE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${NMSTATE_IMAGE_TAGGED}" "${NMSTATE_IMAGE}")"
 
-sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" pkg/components/components.go
-sed -i -r "s#\"${NMSTATE_IMAGE}(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" "test/releases/${CNAO_VERSION}.go"
+sed -i -r "s#\".*/kubernetes-nmstate-handler(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" "test/releases/${CNAO_VERSION}.go"
+sed -i -r "s#\".*/kubernetes-nmstate-handler(@sha256)?:.*\"#\"${NMSTATE_IMAGE_DIGEST}\"#" pkg/components/components.go
 
 echo 'Configure nmstate-webhook and nmstate-handler templates and save the rendered manifest under CNAO data'
 (
@@ -47,7 +48,7 @@ echo 'Configure nmstate-webhook and nmstate-handler templates and save the rende
 echo 'Copy kubernetes-nmstate manifests'
 rm -rf data/nmstate/*
 cp $NMSTATE_PATH/config/cnao/handler/* data/nmstate/
-cp $NMSTATE_PATH/deploy/crds/*nodenetwork*crd* data/nmstate/
+cp $NMSTATE_PATH/deploy/crds/nmstate.io_nodenetwork* data/nmstate/
 cp $NMSTATE_PATH/deploy/openshift/scc.yaml data/nmstate/scc.yaml
 sed -i "s/---/{{ if .EnableSCC }}\n---/" data/nmstate/scc.yaml
 echo "{{ end }}" >> data/nmstate/scc.yaml

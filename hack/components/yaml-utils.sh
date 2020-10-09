@@ -65,6 +65,12 @@ function yaml-utils::get_component_repo() {
 	echo ${url} | sed 's#https://\(.*\)#\1#'
 }
 
+function yaml-utils::get_component_registry() {
+	local component=$1
+	arg=components.\"${component}\".registry
+	__get_parameter_from_yaml components.yaml ${arg}
+}
+
 function yaml-utils::append_delimiter() {
 		local yaml_file=$1
 
