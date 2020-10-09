@@ -233,7 +233,9 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 func errorListToMultiLineString(errs []error) string {
 	stringErrs := []string{}
 	for _, err := range errs {
-		stringErrs = append(stringErrs, err.Error())
+		if err != nil {
+			stringErrs = append(stringErrs, err.Error())
+		}
 	}
 	return strings.Join(stringErrs, "\n")
 }
