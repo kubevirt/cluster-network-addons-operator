@@ -32,10 +32,10 @@ components:
   nmstate:
     url: https://github.com/qinqon/kubernetes-nmstate
     registry: quay.io/qinqon
-    commit: 93d8f5be1a2dab483f96e937fa820a0c37b2e91e
+    commit: bc6d97c15cc043306ef5d54c475c846a2a0b16ef
     branch: operator-sdk-1.y.z-move-code
     update-policy: tagged
-    metadata: 608.1
+    metadata: 608.2
   ovs-cni:
     url: https://github.com/kubevirt/ovs-cni
     commit: 973a42b03f553234add72a909fd262560be61237
