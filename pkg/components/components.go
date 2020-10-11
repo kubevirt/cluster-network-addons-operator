@@ -30,8 +30,8 @@ const (
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:99d0fbd707deaf2136968aaa34862b54c73c9e5e963dc44140e726cf9ad41b58"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:79c4534d418c4a350a663e38499c22d54dc68c400f517aead4479f6d862b408e"
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler@sha256:444ab3349882ac58f594396529708146993b831c2e3e1d524eaa12e17e09f150"
-	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:b4a2a9bcbde3f8b5f24e0ae957fedca57201c91bc9645459a49f0b954057b22b"
-	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@sha256:1e0a8c6ba54db8e0a4c6ed926bed25e3a272a4db883805a1af020beba131f999"
+	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@"
+	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@"
 	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:0fbb0f3cde7970c0786aec8213bbf28a9d6328e7644d965262783a8248a9ded9"
 )
 
