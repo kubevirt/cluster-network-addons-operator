@@ -12,7 +12,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "kube-multus",
-				Image:      "nfvpe/multus@sha256:167722b954355361bd69829466f27172b871dbdbf86b85a95816362885dc0aba",
+				Image:      "nfvpe/multus@sha256:9a43e0586a5e6cb33f09a79794d531ee2a6b97181cae12a82fcd2f2cd24ee65a",
 			},
 			{
 				ParentName: "bridge-marker",
@@ -67,6 +67,13 @@ func init() {
 		Manifests: []string{
 			"network-addons-config.crd.yaml",
 			"operator.yaml",
+		},
+		CrdCleanUp: []string{
+			"network-attachment-definitions.k8s.cni.cncf.io",
+			"networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io",
+			"nodenetworkconfigurationenactments.nmstate.io",
+			"nodenetworkconfigurationpolicies.nmstate.io",
+			"nodenetworkstates.nmstate.io",
 		},
 	}
 	releases = append(releases, release)
