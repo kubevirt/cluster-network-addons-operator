@@ -25,10 +25,10 @@ components:
     metadata: v0.4.0
   multus:
     url: https://github.com/intel/multus-cni
-    commit: bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a
+    commit: c85b79f5ff5bcacaa45e2135d29e9afb6b84ed9b
     branch: master
     update-policy: tagged
-    metadata: v3.4.1
+    metadata: v3.6
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
     commit: a0d3d5658390fac730bafcc85506a0a681da98ac
