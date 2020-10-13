@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	MultusImageDefault            = "nfvpe/multus@sha256:167722b954355361bd69829466f27172b871dbdbf86b85a95816362885dc0aba"
+	MultusImageDefault            = "nfvpe/multus@sha256:9a43e0586a5e6cb33f09a79794d531ee2a6b97181cae12a82fcd2f2cd24ee65a"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:3dd438117076016d6d2acd508b93f106ca80a28c0af6e2e914d812f9a1d55142"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:99d0fbd707deaf2136968aaa34862b54c73c9e5e963dc44140e726cf9ad41b58"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:79c4534d418c4a350a663e38499c22d54dc68c400f517aead4479f6d862b408e"
