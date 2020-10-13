@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
@@ -162,6 +163,10 @@ func convertLogToReferenceList(gitCommitObjList []gitCommitMock, refsFilter stri
 		}
 	}
 
+	sort.Slice(RefTagsGithubApi, func(i, j int) bool {
+		return RefTagsGithubApi[i].GetRef() < RefTagsGithubApi[j].GetRef()
+	})
+
 	return RefTagsGithubApi
 }
 
@@ -290,6 +295,13 @@ func createCommitWithoutTag(w *git.Worktree, tagCommitMap map[string]string, rep
 	}
 }
 
+// createCommitWithAnnotatedTag created commit and tags it in the repo.
+// In order to simulate output of githubApi methods like ListMatchingRefs
+// that return the tags list in chronological order, we should set the tag key
+// to be sorted by alphabetically+chronologically order. we do this by setting
+// tag keys to be the semver version tagged (which is alphabetically+chronologically
+// ordered by default). For example, chronologically tagging v0.0.1 and then v0.0.2
+// will produce an ordered tag list: ["v0.0.1", "v0.0.2"].
 func createCommitWithAnnotatedTag(w *git.Worktree, repo *git.Repository, tagCommitMap map[string]string, repoDir, fileName, tagName, branchName string) {
 	By(fmt.Sprintf("committing a new file on %s branch with annotated tag", branchName))
 	commitHash := createCommit(w, repoDir, fileName, branchName)
