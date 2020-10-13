@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -52,6 +53,16 @@ func openGitRepo(repoPath string) (*gitRepo, error) {
 		repo:     repo,
 		localDir: repoPath,
 	}, nil
+}
+
+func (cnaoRepoOps *gitCnaoRepo) getComponentsConfig(relativeConfigPath string) (componentsConfig, error) {
+	configPath := filepath.Join(cnaoRepoOps.gitRepo.localDir, relativeConfigPath)
+	return parseComponentsYaml(configPath)
+}
+
+func (cnaoRepoOps *gitCnaoRepo) updateComponentsConfig(relativeConfigPath string, componentsConfig componentsConfig) error {
+	configPath := filepath.Join(cnaoRepoOps.gitRepo.localDir, relativeConfigPath)
+	return updateComponentsYaml(configPath, componentsConfig)
 }
 
 func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy, proposedPrTitle string) (bool, error) {

@@ -43,9 +43,9 @@ func main() {
 	}
 
 	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
-	componentsConfig, err := parseComponentsYaml(inputArgs.componentsConfigPath)
+	componentsConfig, err := cnaoRepo.getComponentsConfig(inputArgs.componentsConfigPath)
 	if err != nil {
-		exitWithError(errors.Wrap(err, "Failed to parse components yaml"))
+		exitWithError(errors.Wrap(err, "Failed to get components config"))
 	}
 
 	for componentName, component := range componentsConfig.Components {
@@ -86,11 +86,17 @@ func main() {
 			// Create PR
 			exitWithError(fmt.Errorf("create PR not implemented yet"))
 
+			// update components yaml in the bumping repo instance
+			componentsConfig, err := cnaoRepo.getComponentsConfig(inputArgs.componentsConfigPath)
+			if err != nil {
+				exitWithError(errors.Wrap(err, "Failed to get components config during bump"))
+			}
+
 			// update component's entry in config yaml
 			component.Commit = updatedReleaseCommit
 			component.Metadata = updatedReleaseTag
 			componentsConfig.Components[componentName] = component
-			err = updateComponentsYaml(inputArgs.componentsConfigPath, componentsConfig)
+			err = cnaoRepo.updateComponentsConfig(inputArgs.componentsConfigPath, componentsConfig)
 			if err != nil {
 				exitWithError(errors.Wrap(err, "Failed to update components yaml"))
 			}
@@ -123,7 +129,7 @@ func initLog() *log.Logger {
 }
 
 func initFlags(paramArgs *inputParams) {
-	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "Full path to components yaml")
+	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "relative path to components yaml from bumping repo")
 	flag.StringVar(&paramArgs.gitToken, "token", "", "git Token")
 	flag.Parse()
 	if flag.NFlag() != 2 {
