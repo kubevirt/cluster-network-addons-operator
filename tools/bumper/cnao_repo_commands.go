@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -63,6 +65,18 @@ func (cnaoRepoOps *gitCnaoRepo) getComponentsConfig(relativeConfigPath string) (
 func (cnaoRepoOps *gitCnaoRepo) updateComponentsConfig(relativeConfigPath string, componentsConfig componentsConfig) error {
 	configPath := filepath.Join(cnaoRepoOps.gitRepo.localDir, relativeConfigPath)
 	return updateComponentsYaml(configPath, componentsConfig)
+}
+
+func (cnaoRepoOps *gitCnaoRepo) bumpComponent(componentName string) error {
+	logger.Printf("Running bump-%s script", componentName)
+	cmd := exec.Command("make", "-C", cnaoRepoOps.gitRepo.localDir, fmt.Sprintf("bump-%s", componentName))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "Failed to run bump script, \nStdout:\n%s\nStderr:\n%s", cmd.Stdout, cmd.Stderr)
+	}
+	return nil
 }
 
 func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy, proposedPrTitle string) (bool, error) {
