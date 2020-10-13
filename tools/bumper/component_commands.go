@@ -33,7 +33,12 @@ type githubApi struct {
 type githubInterface interface {
 	ListMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error)
 	ListCommits(owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error)
-	GetRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error)
+	GetBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error)
+	CreateBranchRef(owner string, repo string, ref *github.Reference) (*github.Reference, *github.Response, error)
+	CreateTree(owner string, repo string, baseTree string, entries []*github.TreeEntry) (*github.Tree, *github.Response, error)
+	GetCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error)
+	CreateCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error)
+	UpdateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error)
 	ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error)
 	CreatePullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error)
 }
@@ -46,8 +51,28 @@ func (g githubApi) ListCommits(owner, repo string, opts *github.CommitsListOptio
 	return g.client.Repositories.ListCommits(g.ctx, owner, repo, opts)
 }
 
-func (g githubApi) GetRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
+func (g githubApi) GetBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
 	return g.client.Git.GetRef(g.ctx, owner, repo, ref)
+}
+
+func (g githubApi) CreateBranchRef(owner string, repo string, newRef *github.Reference) (*github.Reference, *github.Response, error) {
+	return g.client.Git.CreateRef(g.ctx, owner, repo, newRef)
+}
+
+func (g githubApi) CreateTree(owner string, repo string, baseTree string, entries []*github.TreeEntry) (*github.Tree, *github.Response, error) {
+	return g.client.Git.CreateTree(g.ctx, owner, repo, baseTree, entries)
+}
+
+func (g githubApi) GetCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error) {
+	return g.client.Git.GetCommit(g.ctx, owner, repo, sha)
+}
+
+func (g githubApi) CreateCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error) {
+	return g.client.Git.CreateCommit(g.ctx, owner, repo, commit)
+}
+
+func (g githubApi) UpdateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error) {
+	return g.client.Git.UpdateRef(g.ctx, owner, repo, ref, force)
 }
 
 func (g githubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
@@ -210,7 +235,7 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 // since a this commit-sha is not necessarily tagged, we use the v-tag format in case needed.
 func (componentOps *gitComponent) getLatestFromBranch(repo, owner, branch, repoDir string) (string, string, error) {
 	logger.Printf("Getting Latest HEAD from branch %s in repo %s", branch, repo)
-	branchRef, _, err := componentOps.githubInterface.GetRef(owner, repo, "refs/heads/"+branch)
+	branchRef, _, err := componentOps.githubInterface.GetBranchRef(owner, repo, "refs/heads/"+branch)
 	if err != nil {
 		return "", "", errors.Wrapf(err, "Failed to get latest HEAD ref of branch %s from github client API", branch)
 	}

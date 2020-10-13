@@ -45,7 +45,7 @@ func (g mockGithubApi) ListCommits(owner, repo string, opts *github.CommitsListO
 	return convertLogToRepositoryCommitList(gitCommitObjList), nil, nil
 }
 
-func (g mockGithubApi) GetRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
+func (g mockGithubApi) GetBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -55,15 +55,35 @@ func (g mockGithubApi) GetRef(owner string, repo string, ref string) (*github.Re
 	return githubRef, nil, err
 }
 
+func (g mockGithubApi) CreateBranchRef(owner string, repo string, newRef *github.Reference) (*github.Reference, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) CreateTree(owner string, repo string, baseTree string, entries []*github.TreeEntry) (*github.Tree, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) GetCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) CreateCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) UpdateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g *mockGithubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
+	return g.fakePRList, nil, nil
+}
+
 func (g *mockGithubApi) CreatePullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
 	pullRequest := &github.PullRequest{Title: pull.Title}
 	g.fakePRList = append(g.fakePRList, pullRequest)
 
 	return pullRequest, nil, nil
-}
-
-func (g *mockGithubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
-	return g.fakePRList, nil, nil
 }
 
 type gitCommitMock struct {

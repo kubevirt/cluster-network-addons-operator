@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -98,9 +97,6 @@ func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, compo
 		}
 	}()
 
-	// Create PR
-	exitWithError(fmt.Errorf("create PR not implemented yet"))
-
 	// update components yaml in the bumping repo instance
 	componentsConfig, err := cnaoRepo.getComponentsConfig(componentsConfigPath)
 	if err != nil {
@@ -131,12 +127,12 @@ func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, compo
 		return nil
 	}
 
-	// create a new branch name
-	branchName := strings.Replace(strings.ToLower(proposedPrTitle), " ", "_", -1)
-	logger.Printf("Opening new Branch %s", branchName)
+	logger.Printf("Generate Bump PR using GithubAPI")
+	_, err = cnaoRepo.generateBumpPr(proposedPrTitle, bumpFilesList)
+	if err != nil {
+		exitWithError(errors.Wrap(err, "Failed to generate Bump PR"))
+	}
 
-	// push branch to PR
-	exitWithError(fmt.Errorf("push branch to PR not implemented yet"))
 	return nil
 }
 

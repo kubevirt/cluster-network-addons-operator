@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/go-git/go-git/v5"
@@ -27,6 +30,7 @@ type gitCnaoRepo struct {
 const (
 	repoUrl         = "https://github.com/kubevirt/cluster-network-addons-operator"
 	allowListString = "components.yaml,data/*,test/releases/99.0.0.go,pkg/components/components.go"
+	cnaoBaseBranch  = "master"
 )
 
 func getCnaoRepo(api *githubApi) (*gitCnaoRepo, error) {
@@ -208,6 +212,126 @@ func (cnaoRepoOps *gitCnaoRepo) collectModifiedToTreeList(allowedList []string) 
 	return entries, nil
 }
 
+// getNewBumpBranch creates a new bump branch.
+// Since we don't want to use already open branch
+// that may hold outdated/needs rebasing changes
+// we concat a random string to the end of the branch name
+func (cnaoRepoOps *gitCnaoRepo) getNewBumpBranch(prTitle string) (*github.Reference, string, error) {
+	branchBaseName := strings.Replace(strings.ToLower(prTitle), " ", "_", -1)
+
+	branchNameWithRandSuffix := fmt.Sprintf("%s_%s", branchBaseName, generateRandString())
+	_, resp, err := cnaoRepoOps.githubInterface.GetBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+branchNameWithRandSuffix)
+	if err != nil {
+		if resp.Response.StatusCode == http.StatusNotFound {
+			return cnaoRepoOps.createNewGithubBranch(branchNameWithRandSuffix)
+		} else {
+			return nil, "", errors.Wrap(err, "Failed to check if branch is already open")
+		}
+	}
+	return nil, "", fmt.Errorf("Failed to open new branch %s, already open", branchNameWithRandSuffix)
+}
+
+func (cnaoRepoOps *gitCnaoRepo) createNewGithubBranch(newBranchName string) (*github.Reference, string, error) {
+	logger.Printf("Creating new branch with githubApi: %s", newBranchName)
+	baseRef, _, err := cnaoRepoOps.githubInterface.GetBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+cnaoBaseBranch)
+	if err != nil {
+		return nil, "", errors.Wrapf(err, "Failed to get origin/%s github ref", cnaoBaseBranch)
+	}
+
+	newRef := &github.Reference{Ref: github.String("refs/heads/" + newBranchName), Object: &github.GitObject{SHA: baseRef.Object.SHA}}
+	newBranchRef, _, err := cnaoRepoOps.githubInterface.CreateBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newRef)
+	if err != nil {
+		return nil, "", errors.Wrap(err, "Failed to create new branch ref")
+	}
+
+	return newBranchRef, newBranchName, nil
+}
+
+// pushCommit creates the commit in the given reference using the given tree.
+func (cnaoRepoOps *gitCnaoRepo) pushCommit(commitTitle string, branch *github.Reference, tree *github.Tree) error {
+	logger.Printf("Pushing new commit")
+	// Get the parent commit to attach the commit to.
+	parent, _, err := cnaoRepoOps.githubInterface.GetCommit(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), *branch.Object.SHA)
+	if err != nil {
+		return errors.Wrap(err, "Failed to get parent commit")
+	}
+
+	date := time.Now()
+	authorName := ""
+	authorEmail := ""
+	repoConfig, err := cnaoRepoOps.gitRepo.repo.Config()
+	// if User is not set then assume Bot is operating Bump
+	if repoConfig.User.Name == "" || repoConfig.User.Email == "" {
+		authorName = "CNAO Bump Bot"
+		authorEmail = "noreply@github.com"
+	} else {
+		authorName = repoConfig.User.Name
+		authorEmail = repoConfig.User.Email
+	}
+	commitMessage := fmt.Sprintf("%s\n\nSigned-off-by: %s <%s>", commitTitle, authorName, authorEmail)
+
+	author := &github.CommitAuthor{Date: &date, Name: &authorName, Email: &authorEmail}
+	commit := &github.Commit{Author: author, Message: &commitMessage, Tree: tree, Parents: []*github.Commit{parent}}
+	newCommit, _, err := cnaoRepoOps.githubInterface.CreateCommit(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), commit)
+	if err != nil {
+		return errors.Wrap(err, "Failed to create new commit")
+	}
+
+	branch.Object.SHA = newCommit.SHA
+	_, _, err = cnaoRepoOps.githubInterface.UpdateRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), branch, false)
+	if err != nil {
+		return errors.Wrap(err, "Failed to attach the commit to the branch.")
+	}
+	return nil
+}
+
+func (cnaoRepoOps *gitCnaoRepo) createPR(prTitle, branchName string) (*github.PullRequest, error) {
+	logger.Printf("Creating new PR")
+	prBranch := cnaoBaseBranch
+	prDescription := fmt.Sprintf("%s\nExecuted by Bumper script\n\n```release-note\n%s\n```", prTitle, prTitle)
+	newPR := &github.NewPullRequest{
+		Title:               &prTitle,
+		Head:                &branchName,
+		Base:                &prBranch,
+		Body:                &prDescription,
+		MaintainerCanModify: github.Bool(true),
+		Draft:               github.Bool(true),
+	}
+
+	pr, _, err := cnaoRepoOps.githubInterface.CreatePullRequest(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newPR)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Printf("PR created: %s\n", pr.GetHTMLURL())
+	return pr, nil
+}
+
+// prepareBumpPr gathers all modified files, and pushed them to a PR using github API
+func (cnaoRepoOps *gitCnaoRepo) generateBumpPr(prTitle string, modifiedFilesList []*github.TreeEntry) (*github.PullRequest, error) {
+	branchRef, branchName, err := cnaoRepoOps.getNewBumpBranch(prTitle)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create bump branch")
+	}
+
+	fileTree, _, err := cnaoRepoOps.githubInterface.CreateTree(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), *branchRef.Object.SHA, modifiedFilesList)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to generate github file tree")
+	}
+
+	err = cnaoRepoOps.pushCommit(prTitle, branchRef, fileTree)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create and push the commit")
+	}
+
+	pr, err := cnaoRepoOps.createPR(prTitle, branchName)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create bump PR instance")
+	}
+
+	return pr, nil
+}
+
 func (cnaoRepoOps *gitCnaoRepo) getCnaoRepoNameFromUrl() string {
 	urlSlice := strings.Split(cnaoRepoOps.configParams.Url, "/")
 	return urlSlice[len(urlSlice)-1]
@@ -270,4 +394,15 @@ func runExternalGitCommand(args []string) error {
 // AllowedList is a string array of file globs, used to fine-pick the changes we want to bump.
 func getAllowedList() []string {
 	return strings.Split(allowListString, ",")
+}
+
+func generateRandString() string {
+	charset := []rune("abcdefghijklmnopqrstuvwxyz" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789")
+	rand.Seed(time.Now().UnixNano())
+	length := 5
+	var b strings.Builder
+	for i := 0; i < length; i++ {
+		b.WriteRune(charset[rand.Intn(len(charset))])
+	}
+	return b.String()
 }
