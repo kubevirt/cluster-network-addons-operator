@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -22,7 +22,7 @@ import (
 )
 
 type mockGithubApi struct {
-	repoDir string
+	repoDir    string
 	fakePRList []*github.PullRequest
 }
 
@@ -58,7 +58,7 @@ func (g *mockGithubApi) CreatePullRequest(owner string, repo string, pull *githu
 	pullRequest := &github.PullRequest{Title: pull.Title}
 	g.fakePRList = append(g.fakePRList, pullRequest)
 
-	return pullRequest,  nil, nil
+	return pullRequest, nil, nil
 }
 
 func (g *mockGithubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
@@ -204,7 +204,7 @@ func getNewMockReference(commitObj *gitCommitMock) *github.Reference {
 // newFakeGithubApi creates a fake interface
 func newFakeGithubApi(repoDir string) *mockGithubApi {
 	return &mockGithubApi{
-		repoDir: repoDir,
+		repoDir:    repoDir,
 		fakePRList: []*github.PullRequest{},
 	}
 }
@@ -213,6 +213,18 @@ func newFakeGitComponent(api *mockGithubApi, repoDir string, componentParams *co
 	componentGitRepo := newLocalGitRepo(repoDir, tagCommitMap)
 
 	gitComponent := &gitComponent{
+		configParams:    componentParams,
+		githubInterface: api,
+		gitRepo:         componentGitRepo,
+	}
+
+	return gitComponent
+}
+
+func newFakeGitCnaoRepo(api *mockGithubApi, repoDir string, componentParams *component, tagCommitMap map[string]string) *gitCnaoRepo {
+	componentGitRepo := newLocalGitRepo(repoDir, tagCommitMap)
+
+	gitComponent := &gitCnaoRepo{
 		configParams:    componentParams,
 		githubInterface: api,
 		gitRepo:         componentGitRepo,
@@ -330,5 +342,5 @@ func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCo
 }
 
 func getFakePrWithTitle(prTitle string) *github.NewPullRequest {
-	return &github.NewPullRequest{ Title: &prTitle}
+	return &github.NewPullRequest{Title: &prTitle}
 }

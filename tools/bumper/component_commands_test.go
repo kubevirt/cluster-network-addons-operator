@@ -227,15 +227,15 @@ var _ = Describe("Testing internal git", func() {
 		BeforeEach(func() {
 
 			newPr := getFakePrWithTitle("bump test-component to 0.0.2")
-			_, _, err := gitComponent.githubInterface.CreatePullRequest(dummyOwner,dummyRepo, newPr)
+			_, _, err := gitComponent.githubInterface.CreatePullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
 			newPr = getFakePrWithTitle("bump test-component to 1.0.0")
-			_, _, err = gitComponent.githubInterface.CreatePullRequest(dummyOwner,dummyRepo, newPr)
+			_, _, err = gitComponent.githubInterface.CreatePullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
 			newPr = getFakePrWithTitle("bump test-component to 1.0.1")
-			_, _, err = gitComponent.githubInterface.CreatePullRequest(dummyOwner,dummyRepo, newPr)
+			_, _, err = gitComponent.githubInterface.CreatePullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 		})
 
@@ -361,7 +361,7 @@ var _ = Describe("Testing internal git", func() {
 		}),
 	)
 
-	type isBumpNeededParams struct {
+	type isComponentBumpNeededParams struct {
 		currentReleaseVersion string
 		latestReleaseVersion  string
 		updatePolicy          string
@@ -370,12 +370,12 @@ var _ = Describe("Testing internal git", func() {
 		isValid               bool
 	}
 	dummyPRTitle := "dummy new PR title"
-	DescribeTable("isBumpNeeded function",
-		func(b isBumpNeededParams) {
+	DescribeTable("isComponentBumpNeeded function",
+		func(b isComponentBumpNeededParams) {
 			defer os.RemoveAll(gitComponent.gitRepo.localDir)
 
 			By("Checking if bump is needed")
-			isBumpNeeded, err := gitComponent.isBumpNeeded(b.currentReleaseVersion, b.latestReleaseVersion, b.updatePolicy, b.prTitle)
+			isComponentBumpNeeded, err := gitComponent.isComponentBumpNeeded(b.currentReleaseVersion, b.latestReleaseVersion, b.updatePolicy, b.prTitle)
 			By("Checking expected error received")
 			if b.isValid {
 				Expect(err).ToNot(HaveOccurred(), "Expect function to not return an Error")
@@ -384,9 +384,9 @@ var _ = Describe("Testing internal git", func() {
 			}
 
 			By("Checking if bump result is as expected")
-			Expect(isBumpNeeded).To(Equal(b.isBumpExpected), "Expect bump result to be equal to expected")
+			Expect(isComponentBumpNeeded).To(Equal(b.isBumpExpected), "Expect bump result to be equal to expected")
 		},
-		Entry("Should not bump since there is updatePolicy static", isBumpNeededParams{
+		Entry("Should not bump since there is updatePolicy static", isComponentBumpNeededParams{
 			currentReleaseVersion: "v2.5.1",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "static",
@@ -394,7 +394,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
-		Entry("Should not bump since there is updatePolicy static (vtag-format)", isBumpNeededParams{
+		Entry("Should not bump since there is updatePolicy static (vtag-format)", isComponentBumpNeededParams{
 			currentReleaseVersion: "v0.11.0-3-g1be91ab",
 			latestReleaseVersion:  "v0.11.0-4-g1ar46a5",
 			updatePolicy:          "latest",
@@ -402,7 +402,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
-		Entry("Should not bump since latest version is the same as current", isBumpNeededParams{
+		Entry("Should not bump since latest version is the same as current", isComponentBumpNeededParams{
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
@@ -410,7 +410,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
-		Entry("Should not bump since latest version is not bigger than current", isBumpNeededParams{
+		Entry("Should not bump since latest version is not bigger than current", isComponentBumpNeededParams{
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "v3.5.2",
 			updatePolicy:          "tagged",
@@ -418,7 +418,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
-		Entry("Should not bump since latest is in vtag-format and is the same as the current", isBumpNeededParams{
+		Entry("Should not bump since latest is in vtag-format and is the same as the current", isComponentBumpNeededParams{
 			currentReleaseVersion: "v0.11.0-3-g1be91ab",
 			latestReleaseVersion:  "v0.11.0-3-g1be91ab",
 			updatePolicy:          "tagged",
@@ -426,7 +426,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
-		Entry("Should bump since latest is in bigger than current", isBumpNeededParams{
+		Entry("Should bump since latest is in bigger than current", isComponentBumpNeededParams{
 			currentReleaseVersion: "v3.6.1",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
@@ -434,7 +434,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
-		Entry("Should bump since latest is in vtag-format and different than current", isBumpNeededParams{
+		Entry("Should bump since latest is in vtag-format and different than current", isComponentBumpNeededParams{
 			currentReleaseVersion: "v0.11.0-3-g1be91ab",
 			latestReleaseVersion:  "v0.11.0-4-g1ar46a5",
 			updatePolicy:          "latest",
@@ -442,7 +442,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
-		Entry("Should return error since current is not in correct semver version format", isBumpNeededParams{
+		Entry("Should return error since current is not in correct semver version format", isComponentBumpNeededParams{
 			currentReleaseVersion: "ver1.2.3",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
@@ -450,7 +450,7 @@ var _ = Describe("Testing internal git", func() {
 			isBumpExpected:        false,
 			isValid:               false,
 		}),
-		Entry("Should return error since latest is not in correct semver version format", isBumpNeededParams{
+		Entry("Should return error since latest is not in correct semver version format", isComponentBumpNeededParams{
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "ver1.2.3",
 			updatePolicy:          "tagged",

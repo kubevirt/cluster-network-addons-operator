@@ -37,6 +37,11 @@ func main() {
 		exitWithError(errors.Wrap(err, "Failed to create github api instance"))
 	}
 
+	cnaoRepo, err := getCnaoRepo(githubApi)
+	if err != nil {
+		exitWithError(errors.Wrap(err, "Failed to clone cnao repo"))
+	}
+
 	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
 	componentsConfig, err := parseComponentsYaml(inputArgs.componentsConfigPath)
 	if err != nil {
@@ -68,12 +73,12 @@ func main() {
 		}
 
 		proposedPrTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
-		bumpNeeded, err := gitComponent.isBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
+		componentBumpNeeded, err := cnaoRepo.isComponentBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to discover if Bump need for %s", componentName))
 		}
 
-		if bumpNeeded {
+		if componentBumpNeeded {
 			logger.Printf("Bumping %s from %s to %s", componentName, currentReleaseTag, updatedReleaseTag)
 			// reset --hard git repo
 			exitWithError(fmt.Errorf("reset --hader repo not implemented yet"))
