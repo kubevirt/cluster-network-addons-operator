@@ -56,8 +56,10 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		DescribeTable("and checking isPrAlreadyOpened function",
 			func(r isPrAlreadyOpenedParams) {
 				defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
+				gitCnaoRepo.configParams.Url = repoDir
+
 				By("Running api to check if a PR is already opened")
-				isPrAlreadyOpened, err := gitCnaoRepo.isPrAlreadyOpened(dummyOwner, dummyRepo, r.prTitle)
+				isPrAlreadyOpened, err := gitCnaoRepo.isPrAlreadyOpened(r.prTitle)
 
 				By("Checking that result is as expected")
 				Expect(err).ToNot(HaveOccurred(), "should not fail to run isPrAlreadyOpened")
@@ -272,6 +274,69 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               false,
+		}),
+	)
+
+	type resetInAllowedListParams struct {
+		files                  []string
+		allowedList            []string
+		expectedRemainingFiles []string
+	}
+
+	DescribeTable("resetInAllowedList function",
+		func(r resetInAllowedListParams) {
+			defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
+			worktree, err := gitCnaoRepo.gitRepo.repo.Worktree()
+
+			By("Modifying files in the Repo")
+			modifyFiles(gitCnaoRepo.gitRepo.localDir, r.files)
+			status, err := worktree.Status()
+			Expect(err).ToNot(HaveOccurred(), "should succeed to get repo status")
+			isFilesAdded := len(r.files) != 0
+			Expect(status.IsClean()).To(Equal(!isFilesAdded), "repo should have expected modified files")
+
+			By("Resetting the bumping repo")
+			err = gitCnaoRepo.resetInAllowedList(r.allowedList)
+			Expect(err).ToNot(HaveOccurred(), "should succeed to restore files in repo to HEAD")
+
+			By("Checking that repo is clean on allowedList paths")
+			status, err = worktree.Status()
+			Expect(err).ToNot(HaveOccurred(), "should succeed to get repo status after resetting repo")
+			remainingFilesList := []string{}
+			for file, _ := range status {
+				remainingFilesList = append(remainingFilesList, file)
+			}
+			Expect(remainingFilesList).To(ConsistOf(r.expectedRemainingFiles))
+		},
+		Entry("Should clean repo when no files are modified or created, allowedList allows all files", resetInAllowedListParams{
+			files:                  []string{},
+			allowedList:            []string{"*"},
+			expectedRemainingFiles: []string{},
+		}),
+		Entry("Should clean repo when existing file is modified, allowedList allows all files", resetInAllowedListParams{
+			files:                  []string{"static"},
+			allowedList:            []string{"*"},
+			expectedRemainingFiles: []string{},
+		}),
+		Entry("Should clean repo when new file is modified, allowedList allows all files", resetInAllowedListParams{
+			files:                  []string{"newFile"},
+			allowedList:            []string{"*"},
+			expectedRemainingFiles: []string{},
+		}),
+		Entry("Should clean repo when files are modified and created, allowedList allows all files", resetInAllowedListParams{
+			files:                  []string{"static", "tagged_annotated", "newFile"},
+			allowedList:            []string{"*"},
+			expectedRemainingFiles: []string{},
+		}),
+		Entry("Should not clean repo when files are modified and created, and allowed list is empty", resetInAllowedListParams{
+			files:                  []string{"static", "tagged_annotated", "newFile"},
+			allowedList:            []string{},
+			expectedRemainingFiles: []string{"static", "tagged_annotated", "newFile"},
+		}),
+		Entry("Should clean repo when files are modified and created, allowedList set only allow some files", resetInAllowedListParams{
+			files:                  []string{"static", "tagged_annotated", "tagged_lightweight", "newFile"},
+			allowedList:            []string{"tagged_*"},
+			expectedRemainingFiles: []string{"static", "newFile"},
 		}),
 	)
 })

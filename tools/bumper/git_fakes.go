@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -343,4 +344,33 @@ func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCo
 
 func getFakePrWithTitle(prTitle string) *github.NewPullRequest {
 	return &github.NewPullRequest{Title: &prTitle}
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed checking if file %s exists", filename))
+	return !info.IsDir()
+}
+
+func modifyFiles(repoDir string, files []string) {
+	for _, fileName := range files {
+		var err error
+		var f *os.File
+		defer f.Close()
+
+		fileNameWithPath := filepath.Join(repoDir, fileName)
+		if fileExists(fileNameWithPath) {
+			f, err = os.OpenFile(fileNameWithPath, os.O_RDWR, os.ModeAppend)
+			Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to open file %s", fileNameWithPath))
+		} else {
+			f, err = os.Create(fileNameWithPath)
+			Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to create file %s", fileNameWithPath))
+		}
+
+		_, err = f.WriteString(fileName)
+		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to write generic string (file name) to file %s", fileNameWithPath))
+	}
 }
