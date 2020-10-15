@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -37,10 +36,15 @@ func main() {
 		exitWithError(errors.Wrap(err, "Failed to create github api instance"))
 	}
 
-	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
-	componentsConfig, err := parseComponentsYaml(inputArgs.componentsConfigPath)
+	cnaoRepo, err := getCnaoRepo(githubApi)
 	if err != nil {
-		exitWithError(errors.Wrap(err, "Failed to parse components yaml"))
+		exitWithError(errors.Wrap(err, "Failed to clone cnao repo"))
+	}
+
+	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
+	componentsConfig, err := cnaoRepo.getComponentsConfig(inputArgs.componentsConfigPath)
+	if err != nil {
+		exitWithError(errors.Wrap(err, "Failed to get components config"))
 	}
 
 	for componentName, component := range componentsConfig.Components {
@@ -68,12 +72,12 @@ func main() {
 		}
 
 		proposedPrTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
-		bumpNeeded, err := gitComponent.isBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
+		componentBumpNeeded, err := cnaoRepo.isComponentBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to discover if Bump need for %s", componentName))
 		}
 
-		if bumpNeeded {
+		if componentBumpNeeded {
 			logger.Printf("Bumping %s from %s to %s", componentName, currentReleaseTag, updatedReleaseTag)
 			// reset --hard git repo
 			exitWithError(fmt.Errorf("reset --hader repo not implemented yet"))
@@ -81,21 +85,24 @@ func main() {
 			// Create PR
 			exitWithError(fmt.Errorf("create PR not implemented yet"))
 
+			// update components yaml in the bumping repo instance
+			componentsConfig, err := cnaoRepo.getComponentsConfig(inputArgs.componentsConfigPath)
+			if err != nil {
+				exitWithError(errors.Wrap(err, "Failed to get components config during bump"))
+			}
+
 			// update component's entry in config yaml
 			component.Commit = updatedReleaseCommit
 			component.Metadata = updatedReleaseTag
 			componentsConfig.Components[componentName] = component
-			err = updateComponentsYaml(inputArgs.componentsConfigPath, componentsConfig)
+			err = cnaoRepo.updateComponentsConfig(inputArgs.componentsConfigPath, componentsConfig)
 			if err != nil {
 				exitWithError(errors.Wrap(err, "Failed to update components yaml"))
 			}
 
-			logger.Printf("Running bump-%s script", componentName)
-			cmd := exec.Command("make", fmt.Sprintf("bump-%s", componentName))
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				exitWithError(errors.Wrapf(err, "Failed to run bump script, \nStdout:\n%s\nStderr:\n%s", cmd.Stdout, cmd.Stderr))
+			err = cnaoRepo.bumpComponent(componentName)
+			if err != nil {
+				exitWithError(errors.Wrapf(err, "Failed to bump component %s", componentName))
 			}
 
 			// create a new branch name
@@ -118,7 +125,7 @@ func initLog() *log.Logger {
 }
 
 func initFlags(paramArgs *inputParams) {
-	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "Full path to components yaml")
+	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "relative path to components yaml from bumping repo")
 	flag.StringVar(&paramArgs.gitToken, "token", "", "git Token")
 	flag.Parse()
 	if flag.NFlag() != 2 {
