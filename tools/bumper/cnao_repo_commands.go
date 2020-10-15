@@ -22,7 +22,8 @@ type gitCnaoRepo struct {
 }
 
 const (
-	repoUrl = "https://github.com/kubevirt/cluster-network-addons-operator"
+	repoUrl         = "https://github.com/kubevirt/cluster-network-addons-operator"
+	allowListString = "components.yaml,data/*,test/releases/99.0.0.go,pkg/components/components.go"
 )
 
 func getCnaoRepo(api *githubApi) (*gitCnaoRepo, error) {
@@ -65,6 +66,35 @@ func (cnaoRepoOps *gitCnaoRepo) getComponentsConfig(relativeConfigPath string) (
 func (cnaoRepoOps *gitCnaoRepo) updateComponentsConfig(relativeConfigPath string, componentsConfig componentsConfig) error {
 	configPath := filepath.Join(cnaoRepoOps.gitRepo.localDir, relativeConfigPath)
 	return updateComponentsYaml(configPath, componentsConfig)
+}
+
+// resetRepo is a wrapper for resetInAllowedList
+func (cnaoRepoOps *gitCnaoRepo) reset() error {
+	return cnaoRepoOps.resetInAllowedList(getAllowedList())
+}
+
+// resetInAllowedList resets all the files in AllowedList.
+func (cnaoRepoOps *gitCnaoRepo) resetInAllowedList(allowList []string) error {
+	if len(allowList) == 0 {
+		return nil
+	}
+	logger.Printf("Cleaning untracked files on bumping repo")
+	// TODO replace this when go-git adds advanced clean abilities so we could clean specific paths
+	cleanArgs := append([]string{"-C", cnaoRepoOps.gitRepo.localDir, "clean", "-fd", "--"}, allowList...)
+	err := runExternalGitCommand(cleanArgs)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to clean bumping repo")
+	}
+
+	logger.Printf("Resetting modified files in allowed list on bumping repo")
+	// TODO replace this when go-git adds advanced checkout/restore abilities so we could checkout specific paths
+	checkoutArgs := append([]string{"-C", cnaoRepoOps.gitRepo.localDir, "checkout", "HEAD", "--"}, allowList...)
+	err = runExternalGitCommand(checkoutArgs)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to checkout bumping repo")
+	}
+
+	return nil
 }
 
 func (cnaoRepoOps *gitCnaoRepo) bumpComponent(componentName string) error {
@@ -165,4 +195,21 @@ func canonicalizeVersion(version string) (*semver.Version, error) {
 func isVtagFormat(tagVersion string) bool {
 	var vtagSyntax = regexp.MustCompile(`^[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{7}`)
 	return vtagSyntax.MatchString(tagVersion)
+}
+
+func runExternalGitCommand(args []string) error {
+	// TODO replace this when go-git adds advanced checkout/restore/clean abilities so we could checkout specific paths
+	cmd := exec.Command("git", args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "Failed to run git command: git %s\nStdout:\n%s\nStderr:\n%s", strings.Join(args, " "), cmd.Stdout, cmd.Stderr)
+	}
+	return nil
+}
+
+// AllowedList is a string array of file globs, used to fine-pick the changes we want to bump.
+func getAllowedList() []string {
+	return strings.Split(allowListString, ",")
 }
