@@ -121,6 +121,16 @@ func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, compo
 		return errors.Wrap(err, "Failed to bump component")
 	}
 
+	logger.Printf("Gather bump output files to list")
+	bumpFilesList, err := cnaoRepo.collectBumpFile()
+	if err != nil {
+		return errors.Wrap(err, "Failed to collect bump output files")
+	}
+	if len(bumpFilesList) == 0 {
+		logger.Printf("No modified/untracked files to bump. Aborting bump.")
+		return nil
+	}
+
 	// create a new branch name
 	branchName := strings.Replace(strings.ToLower(proposedPrTitle), " ", "_", -1)
 	logger.Printf("Opening new Branch %s", branchName)
