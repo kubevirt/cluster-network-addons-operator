@@ -27,7 +27,7 @@ type mockGithubApi struct {
 	fakePRList []*github.PullRequest
 }
 
-func (g mockGithubApi) ListMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
+func (g mockGithubApi) listMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -36,7 +36,7 @@ func (g mockGithubApi) ListMatchingRefs(owner, repo string, opts *github.Referen
 	return convertLogToReferenceList(gitCommitObjList, opts.Ref), nil, nil
 }
 
-func (g mockGithubApi) ListCommits(owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
+func (g mockGithubApi) listCommits(owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, opts.SHA)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -45,7 +45,7 @@ func (g mockGithubApi) ListCommits(owner, repo string, opts *github.CommitsListO
 	return convertLogToRepositoryCommitList(gitCommitObjList), nil, nil
 }
 
-func (g mockGithubApi) GetBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
+func (g mockGithubApi) getBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -55,31 +55,31 @@ func (g mockGithubApi) GetBranchRef(owner string, repo string, ref string) (*git
 	return githubRef, nil, err
 }
 
-func (g mockGithubApi) CreateBranchRef(owner string, repo string, newRef *github.Reference) (*github.Reference, *github.Response, error) {
+func (g mockGithubApi) createBranchRef(owner string, repo string, newRef *github.Reference) (*github.Reference, *github.Response, error) {
 	return nil, nil, nil
 }
 
-func (g mockGithubApi) CreateTree(owner string, repo string, baseTree string, entries []*github.TreeEntry) (*github.Tree, *github.Response, error) {
+func (g mockGithubApi) createTree(owner string, repo string, baseTree string, entries []*github.TreeEntry) (*github.Tree, *github.Response, error) {
 	return nil, nil, nil
 }
 
-func (g mockGithubApi) GetCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error) {
+func (g mockGithubApi) getCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error) {
 	return nil, nil, nil
 }
 
-func (g mockGithubApi) CreateCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error) {
+func (g mockGithubApi) createCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error) {
 	return nil, nil, nil
 }
 
-func (g mockGithubApi) UpdateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error) {
+func (g mockGithubApi) updateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error) {
 	return nil, nil, nil
 }
 
-func (g *mockGithubApi) ListPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
+func (g *mockGithubApi) listPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
 	return g.fakePRList, nil, nil
 }
 
-func (g *mockGithubApi) CreatePullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
+func (g *mockGithubApi) createPullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
 	pullRequest := &github.PullRequest{Title: pull.Title}
 	g.fakePRList = append(g.fakePRList, pullRequest)
 
@@ -329,7 +329,7 @@ func createCommitWithoutTag(w *git.Worktree, tagCommitMap map[string]string, rep
 }
 
 // createCommitWithAnnotatedTag created commit and tags it in the repo.
-// In order to simulate output of githubApi methods like ListMatchingRefs
+// In order to simulate output of githubApi methods like listMatchingRefs
 // that return the tags list in chronological order, we should set the tag key
 // to be sorted by alphabetically+chronologically order. we do this by setting
 // tag keys to be the semver version tagged (which is alphabetically+chronologically

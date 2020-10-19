@@ -155,7 +155,7 @@ func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, lat
 func (cnaoRepoOps *gitCnaoRepo) isPrAlreadyOpened(proposedPrTitle string) (bool, error) {
 	logger.Printf("checking if there is an already open bump PR for this release")
 
-	prList, _, err := cnaoRepoOps.githubInterface.ListPullRequests(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl())
+	prList, _, err := cnaoRepoOps.githubInterface.listPullRequests(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl())
 	if err != nil {
 		return false, errors.Wrapf(err, "Failed to get list of PRs from %s/%s repo", cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl())
 	}
@@ -220,7 +220,7 @@ func (cnaoRepoOps *gitCnaoRepo) getNewBumpBranch(prTitle string) (*github.Refere
 	branchBaseName := strings.Replace(strings.ToLower(prTitle), " ", "_", -1)
 
 	branchNameWithRandSuffix := fmt.Sprintf("%s_%s", branchBaseName, generateRandString())
-	_, resp, err := cnaoRepoOps.githubInterface.GetBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+branchNameWithRandSuffix)
+	_, resp, err := cnaoRepoOps.githubInterface.getBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+branchNameWithRandSuffix)
 	if err != nil {
 		if resp.Response.StatusCode == http.StatusNotFound {
 			return cnaoRepoOps.createNewGithubBranch(branchNameWithRandSuffix)
@@ -233,13 +233,13 @@ func (cnaoRepoOps *gitCnaoRepo) getNewBumpBranch(prTitle string) (*github.Refere
 
 func (cnaoRepoOps *gitCnaoRepo) createNewGithubBranch(newBranchName string) (*github.Reference, string, error) {
 	logger.Printf("Creating new branch with githubApi: %s", newBranchName)
-	baseRef, _, err := cnaoRepoOps.githubInterface.GetBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+cnaoBaseBranch)
+	baseRef, _, err := cnaoRepoOps.githubInterface.getBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+cnaoBaseBranch)
 	if err != nil {
 		return nil, "", errors.Wrapf(err, "Failed to get origin/%s github ref", cnaoBaseBranch)
 	}
 
 	newRef := &github.Reference{Ref: github.String("refs/heads/" + newBranchName), Object: &github.GitObject{SHA: baseRef.Object.SHA}}
-	newBranchRef, _, err := cnaoRepoOps.githubInterface.CreateBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newRef)
+	newBranchRef, _, err := cnaoRepoOps.githubInterface.createBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newRef)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "Failed to create new branch ref")
 	}
@@ -251,7 +251,7 @@ func (cnaoRepoOps *gitCnaoRepo) createNewGithubBranch(newBranchName string) (*gi
 func (cnaoRepoOps *gitCnaoRepo) pushCommit(commitTitle string, branch *github.Reference, tree *github.Tree) error {
 	logger.Printf("Pushing new commit")
 	// Get the parent commit to attach the commit to.
-	parent, _, err := cnaoRepoOps.githubInterface.GetCommit(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), *branch.Object.SHA)
+	parent, _, err := cnaoRepoOps.githubInterface.getCommit(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), *branch.Object.SHA)
 	if err != nil {
 		return errors.Wrap(err, "Failed to get parent commit")
 	}
@@ -272,13 +272,13 @@ func (cnaoRepoOps *gitCnaoRepo) pushCommit(commitTitle string, branch *github.Re
 
 	author := &github.CommitAuthor{Date: &date, Name: &authorName, Email: &authorEmail}
 	commit := &github.Commit{Author: author, Message: &commitMessage, Tree: tree, Parents: []*github.Commit{parent}}
-	newCommit, _, err := cnaoRepoOps.githubInterface.CreateCommit(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), commit)
+	newCommit, _, err := cnaoRepoOps.githubInterface.createCommit(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), commit)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create new commit")
 	}
 
 	branch.Object.SHA = newCommit.SHA
-	_, _, err = cnaoRepoOps.githubInterface.UpdateRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), branch, false)
+	_, _, err = cnaoRepoOps.githubInterface.updateRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), branch, false)
 	if err != nil {
 		return errors.Wrap(err, "Failed to attach the commit to the branch.")
 	}
@@ -298,7 +298,7 @@ func (cnaoRepoOps *gitCnaoRepo) createPR(prTitle, branchName string) (*github.Pu
 		Draft:               github.Bool(true),
 	}
 
-	pr, _, err := cnaoRepoOps.githubInterface.CreatePullRequest(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newPR)
+	pr, _, err := cnaoRepoOps.githubInterface.createPullRequest(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newPR)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (cnaoRepoOps *gitCnaoRepo) generateBumpPr(prTitle string, modifiedFilesList
 		return nil, errors.Wrap(err, "Failed to create bump branch")
 	}
 
-	fileTree, _, err := cnaoRepoOps.githubInterface.CreateTree(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), *branchRef.Object.SHA, modifiedFilesList)
+	fileTree, _, err := cnaoRepoOps.githubInterface.createTree(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), *branchRef.Object.SHA, modifiedFilesList)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to generate github file tree")
 	}

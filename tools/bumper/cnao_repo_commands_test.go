@@ -42,15 +42,15 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		BeforeEach(func() {
 
 			newPr := getFakePrWithTitle("CNAO test-component to 0.0.2")
-			_, _, err := gitCnaoRepo.githubInterface.CreatePullRequest(dummyOwner, dummyRepo, newPr)
+			_, _, err := gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
 			newPr = getFakePrWithTitle("CNAO test-component to 1.0.0")
-			_, _, err = gitCnaoRepo.githubInterface.CreatePullRequest(dummyOwner, dummyRepo, newPr)
+			_, _, err = gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
 			newPr = getFakePrWithTitle("CNAO test-component to 1.0.1")
-			_, _, err = gitCnaoRepo.githubInterface.CreatePullRequest(dummyOwner, dummyRepo, newPr)
+			_, _, err = gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 		})
 
