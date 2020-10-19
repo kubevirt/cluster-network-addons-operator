@@ -27,7 +27,7 @@ components:
     url: https://github.com/intel/multus-cni
     commit: 4eac660359f223d34bcaf0fddbc42fd542f02ba1
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: v3.4.2
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
