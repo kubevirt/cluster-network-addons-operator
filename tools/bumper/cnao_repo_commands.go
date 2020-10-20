@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/go-git/go-git/v5"
+	"github.com/gobwas/glob"
+	"github.com/google/go-github/v32/github"
 	"github.com/pkg/errors"
 )
 
@@ -162,6 +165,49 @@ func (cnaoRepoOps *gitCnaoRepo) isPrAlreadyOpened(proposedPrTitle string) (bool,
 	return false, nil
 }
 
+// collectBumpFile is a wrapper for collectModifiedToTreeList
+func (cnaoRepoOps *gitCnaoRepo) collectBumpFile() ([]*github.TreeEntry, error) {
+	return cnaoRepoOps.collectModifiedToTreeList(getAllowedList())
+}
+
+// collectModifiedToTreeList collects the modified files in the allowedList paths and returns a github tree entry list
+func (cnaoRepoOps *gitCnaoRepo) collectModifiedToTreeList(allowedList []string) ([]*github.TreeEntry, error) {
+	w, err := cnaoRepoOps.gitRepo.repo.Worktree()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get bumping repo Worktree")
+	}
+
+	status, err := w.Status()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to get bumping repo status")
+	} else if status.IsClean() {
+		return []*github.TreeEntry{}, nil
+	}
+
+	// Create a tree with what to commit.
+	var entries []*github.TreeEntry
+	for localFile, status := range status {
+		if status.Staging == git.Unmodified && status.Worktree == git.Unmodified {
+			continue
+		}
+
+		fileNameWithPath := filepath.Join(cnaoRepoOps.gitRepo.localDir, localFile)
+		content, err := ioutil.ReadFile(fileNameWithPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to read local file %s", fileNameWithPath)
+		}
+
+		if fileInGlobList(localFile, allowedList) {
+			logger.Printf("File added to tree: %s", localFile)
+			entries = append(entries, &github.TreeEntry{Path: github.String(localFile), Type: github.String("blob"), Content: github.String(string(content)), Mode: github.String("100644")})
+		} else {
+			logger.Printf("Skipping file %s, not in allowed list", localFile)
+		}
+	}
+
+	return entries, nil
+}
+
 func (cnaoRepoOps *gitCnaoRepo) getCnaoRepoNameFromUrl() string {
 	urlSlice := strings.Split(cnaoRepoOps.configParams.Url, "/")
 	return urlSlice[len(urlSlice)-1]
@@ -170,6 +216,18 @@ func (cnaoRepoOps *gitCnaoRepo) getCnaoRepoNameFromUrl() string {
 func (cnaoRepoOps *gitCnaoRepo) getCnaoRepoOwnerFromUrl() string {
 	urlSlice := strings.Split(cnaoRepoOps.configParams.Url, "/")
 	return urlSlice[len(urlSlice)-2]
+}
+
+func fileInGlobList(fileName string, globList []string) bool {
+	isAnyMatch := false
+	for _, allowedGlob := range globList {
+		g := glob.MustCompile(allowedGlob)
+
+		if g.Match(fileName) {
+			isAnyMatch = true
+		}
+	}
+	return isAnyMatch
 }
 
 // since versioning of components can sometimes divert from semver standard, we do some refactoring

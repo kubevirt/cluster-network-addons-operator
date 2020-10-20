@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/google/go-github/v32/github"
 )
 
 var _ = Describe("Testing internal git CNAO Repo", func() {
@@ -337,6 +338,115 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			files:                  []string{"static", "tagged_annotated", "tagged_lightweight", "newFile"},
 			allowedList:            []string{"tagged_*"},
 			expectedRemainingFiles: []string{"static", "newFile"},
+		}),
+	)
+
+	type fileInGlobListParams struct {
+		fileName       string
+		globList       []string
+		expectedResult bool
+	}
+
+	DescribeTable("fileInGlobList function",
+		func(r fileInGlobListParams) {
+			defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
+
+			By("Running fileInGlobList on given input")
+			result := fileInGlobList(r.fileName, r.globList)
+
+			By("Checking that tree is as expected")
+			Expect(result).To(Equal(r.expectedResult), "Should match expected fileInGlobList result")
+
+		},
+		Entry("Should return false when globlist is empty", fileInGlobListParams{
+			fileName:       "",
+			globList:       []string{},
+			expectedResult: false,
+		}),
+		Entry("Should return false when globlist doesn't match file string", fileInGlobListParams{
+			fileName:       "fileName",
+			globList:       []string{"some", "other", "glob", "file"},
+			expectedResult: false,
+		}),
+		Entry("Should return true when globlist has glob match to file string", fileInGlobListParams{
+			fileName:       "fileName",
+			globList:       []string{"other", "file*"},
+			expectedResult: true,
+		}),
+		Entry("Should return true when globlist has exact match to file string", fileInGlobListParams{
+			fileName:       "fileName",
+			globList:       []string{"other", "fileName", "file"},
+			expectedResult: true,
+		}),
+	)
+
+	type collectModifiedToTreeListParams struct {
+		files                 []string
+		allowedList           []string
+		expectedTreeEntryList []*github.TreeEntry
+	}
+
+	DescribeTable("collectModifiedToTreeList function",
+		func(r collectModifiedToTreeListParams) {
+			defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
+
+			By("Modifying files in the Repo")
+			modifyFiles(gitCnaoRepo.gitRepo.localDir, r.files)
+
+			By("Running collectModifiedToTreeList api")
+			treeList, err := gitCnaoRepo.collectModifiedToTreeList(r.allowedList)
+			Expect(err).ToNot(HaveOccurred(), "should succeed collecting Modified files to tree list")
+
+			By("Checking that tree is as expected")
+			Expect(treeList).To(ConsistOf(r.expectedTreeEntryList), "tree list should be equal to expected")
+
+		},
+		Entry("Should return empty list when no file is modified, allowedList allows all files", collectModifiedToTreeListParams{
+			files:                 []string{},
+			allowedList:           []string{"*"},
+			expectedTreeEntryList: []*github.TreeEntry{},
+		}),
+		Entry("Should add file to tree list when existing file is modified, allowedList allows all files", collectModifiedToTreeListParams{
+			files:       []string{"static"},
+			allowedList: []string{"*"},
+			expectedTreeEntryList: []*github.TreeEntry{
+				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
+			},
+		}),
+		Entry("Should add file to tree list when a new file is created, allowedList allows all files", collectModifiedToTreeListParams{
+			files:       []string{"newFile"},
+			allowedList: []string{"*"},
+			expectedTreeEntryList: []*github.TreeEntry{
+				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
+			},
+		}),
+		Entry("Should add files to tree list when files are modified and created, allowedList allows all files", collectModifiedToTreeListParams{
+			files:       []string{"static", "tagged_annotated", "newFile"},
+			allowedList: []string{"*"},
+			expectedTreeEntryList: []*github.TreeEntry{
+				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
+				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
+				&github.TreeEntry{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
+			},
+		}),
+		Entry("Should return empty list when files were modified but allowedList is empty", collectModifiedToTreeListParams{
+			files:                 []string{"static", "tagged_annotated", "newFile"},
+			allowedList:           []string{},
+			expectedTreeEntryList: []*github.TreeEntry{},
+		}),
+		Entry("Should return empty list when files were modified but none match allowedList", collectModifiedToTreeListParams{
+			files:                 []string{"static", "tagged_annotated", "newFile"},
+			allowedList:           []string{"other"},
+			expectedTreeEntryList: []*github.TreeEntry{},
+		}),
+		Entry("Should add files to tree list according to allowedList when files are modified and created, allowedList set only add some files", collectModifiedToTreeListParams{
+			files:       []string{"static", "tagged_annotated", "newFile", "tagged_lightweight"},
+			allowedList: []string{"newFile", "tagged_*"},
+			expectedTreeEntryList: []*github.TreeEntry{
+				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
+				&github.TreeEntry{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
+				&github.TreeEntry{Path: github.String("tagged_lightweight"), Type: github.String("blob"), Content: github.String("tagged_lightweight"), Mode: github.String("100644")},
+			},
 		}),
 	)
 })
