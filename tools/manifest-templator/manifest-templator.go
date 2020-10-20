@@ -195,6 +195,7 @@ func getCNA(data *templateData) {
 	crd := components.GetCrd()
 	marshallObject(crd, &writer)
 	crdString := writer.String()
+	crdString = addPreserveUnknownFields(crdString)
 	crdVersion := crd.Spec.Versions[0].Name
 
 	// Get CNA CR
@@ -222,6 +223,12 @@ func getCNA(data *templateData) {
 		RelatedImages:     relatedImages,
 	}
 	data.CNA = &cnaData
+}
+
+func addPreserveUnknownFields(crdString string) string {
+	// TODO replace this solution with a better one once this issue get resolved:
+	// https://github.com/kubernetes/kubernetes/issues/95702
+	return crdString + "  preserveUnknownFields: false"
 }
 
 func main() {

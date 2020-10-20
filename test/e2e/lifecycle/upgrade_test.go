@@ -44,6 +44,10 @@ var _ = Context("Cluster Network Addons Operator", func() {
 					CheckConfigVersions(newReleaseGvk, expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, podsDeploymentTimeout, CheckDoNotRepeat)
 				})
 
+				It("Should be able to explain the crd object", func() {
+					CheckCrdExplainable()
+				})
+
 				It("it should report expected deployed container images and leave no leftovers from the previous version", func() {
 					By("Checking reported container images")
 					CheckReleaseUsesExpectedContainerImages(newReleaseGvk, newRelease)

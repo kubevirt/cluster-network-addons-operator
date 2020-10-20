@@ -374,6 +374,20 @@ func GetClusterRole() *rbacv1.ClusterRole {
 
 func GetCrd() *extv1.CustomResourceDefinition {
 	subResouceSchema := &extv1.CustomResourceSubresources{Status: &extv1.CustomResourceSubresourceStatus{}}
+	placementProps := map[string]extv1.JSONSchemaProps{
+		"NodeSelector" : extv1.JSONSchemaProps{
+			Type:        "object",
+		},
+		"Affinity" : extv1.JSONSchemaProps{
+			Description: "Affinity is a group of affinity scheduling rules.",
+			Type:        "object",
+		},
+		"Tolerations" : extv1.JSONSchemaProps{
+			Description: "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
+			Type:        "object",
+		},
+	}
+
 	validationSchema := &extv1.CustomResourceValidation{
 		OpenAPIV3Schema: &extv1.JSONSchemaProps{
 			Description: "NetworkAddonsConfig is the Schema for the networkaddonsconfigs API",
@@ -391,37 +405,80 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					Type: "object",
 				},
 				"spec": extv1.JSONSchemaProps{
-					Type: "object",
+					Description: "NetworkAddonsConfigSpec defines the desired state of NetworkAddonsConfig",
+					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
 						"imagePullPolicy": extv1.JSONSchemaProps{
 							Description: "PullPolicy describes a policy for if/when to pull a container image",
 							Type:        "string",
 						},
 						"kubeMacPool": extv1.JSONSchemaProps{
-							Type: "object",
+							Description: "KubeMacPool plugin manages MAC allocation to Pods and VMs in Kubernetes",
+							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
 								"rangeEnd": extv1.JSONSchemaProps{
-									Type: "string",
+									Description: "RangeEnd defines the first mac in range",
+									Type:        "string",
 								},
 								"rangeStart": extv1.JSONSchemaProps{
-									Type: "string",
+									Description: "RangeStart defines the first mac in range",
+									Type:        "string",
 								},
 							},
 						},
 						"linuxBridge": extv1.JSONSchemaProps{
-							Type: "object",
+							Description: "LinuxBridge plugin allows users to create a bridge and add the host and the container to it",
+							Type:        "object",
 						},
 						"macvtap": extv1.JSONSchemaProps{
-							Type: "object",
+							Description: "MacvtapCni plugin allows users to define Kubernetes networks on top of existing host interfaces",
+							Type:        "object",
 						},
 						"multus": extv1.JSONSchemaProps{
-							Type: "object",
+							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes",
+							Type:        "object",
 						},
 						"nmstate": extv1.JSONSchemaProps{
-							Type: "object",
+							Description: "NMState is a declarative node network configuration driven through Kubernetes API",
+							Type:        "object",
 						},
 						"ovs": extv1.JSONSchemaProps{
+							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
+							Type:        "object",
+						},
+						"selfSignConfiguration": extv1.JSONSchemaProps{
+							Description: "SelfSignConfiguration defines self sign configuration",
 							Type: "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"caRotateInterval": extv1.JSONSchemaProps{
+									Description: "CARotateInterval defines duration for CA and certificate",
+									Type:        "string",
+								},
+								"certRotateInterval": extv1.JSONSchemaProps{
+									Description: "CertRotateInterval defines duration for of service certificate",
+									Type:        "string",
+								},
+								"caOverlapInterval": extv1.JSONSchemaProps{
+									Description: "CAOverlapInterval defines the duration of CA Certificates at CABundle if not set it will default to CARotateInterval",
+									Type:        "string",
+								},
+							},
+						},
+						"PlacementConfiguration": extv1.JSONSchemaProps{
+							Description: "PlacementConfiguration defines node placement configuration",
+							Type: "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"Infra": extv1.JSONSchemaProps{
+									Description: "Infra defines placement configuration for master nodes",
+									Type:        "object",
+									Properties: placementProps,
+								},
+								"Workloads": extv1.JSONSchemaProps{
+									Description: "Workloads defines placement configuration for worker nodes",
+									Type:        "object",
+									Properties: placementProps,
+								},
+							},
 						},
 					},
 				},
@@ -430,19 +487,20 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
 						"conditions": extv1.JSONSchemaProps{
+							//Description: "Condition represents the state of the operator's reconciliation functionality.",
 							Type: "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
 								Schema: &extv1.JSONSchemaProps{
 									Type: "object",
 									Properties: map[string]extv1.JSONSchemaProps{
 										"lastHeartbeatTime": extv1.JSONSchemaProps{
-											Format:   "date-time",
-											Type:     "object",
+											Format: "date-time",
+											Type:   "string",
 											Nullable: true,
 										},
 										"lastTransitionTime": extv1.JSONSchemaProps{
-											Format:   "date-time",
-											Type:     "object",
+											Format: "date-time",
+											Type:   "string",
 											Nullable: true,
 										},
 										"message": extv1.JSONSchemaProps{

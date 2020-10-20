@@ -56,6 +56,15 @@ func CheckComponentsDeployment(components []Component) {
 	}
 }
 
+func CheckCrdExplainable() {
+	By("Checking crd is explainable")
+	explain, err := Kubectl("explain", "networkaddonsconfigs")
+	Expect(err).NotTo(HaveOccurred(), "explain should not return error")
+
+	Expect(explain).ToNot(BeEmpty(), "explain output should not be empty")
+	Expect(explain).ToNot(ContainSubstring("<empty>"), "explain output should not contain <empty> fields")
+}
+
 func CheckComponentsRemoval(components []Component) {
 	for _, component := range components {
 		if component.ComponentName == MultusComponent.ComponentName && IsOnOKDCluster() {
