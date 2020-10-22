@@ -182,7 +182,7 @@ vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
 
-auto-bumper:
+auto-bumper: $(GO)
 	$(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
 
 bump-%:
