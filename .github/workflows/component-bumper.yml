@@ -13,6 +13,11 @@ jobs:
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+      with:
+        ref: master
+
+    - name: Pull latest master
+      run:  git pull --ff-only --rebase origin master
 
     - name: Run bumper script
       run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }}" auto-bumper
