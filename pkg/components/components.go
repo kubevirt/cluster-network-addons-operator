@@ -152,6 +152,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 					Labels: map[string]string{
 						"name": Name,
 					},
+					Annotations: map[string]string{
+						"description": "cluster-network-addons-operator manages the lifecycle of different Kubernetes network components on top of Kubernetes cluster",
+					},
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: Name,
