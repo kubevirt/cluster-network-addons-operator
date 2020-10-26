@@ -1,10 +1,7 @@
 # Cluster Network Addons Operator
 
 This operator can be used to deploy additional networking components on top of
-Kubernetes/OpenShift cluster.
-
-On OpenShift 4, it is preferred to use the native [OpenShift ClusterNetworkOperator](https://github.com/openshift/cluster-network-operator).
-However, not all features might be supported there.
+Kubernetes cluster.
 
 # Configuration
 
@@ -42,8 +39,6 @@ spec:
 
 Additionally, container image used to deliver this plugin can be set using
 `MULTUS_IMAGE` environment variable in operator deployment manifest.
-
-**Note:** OpenShift 4 is shipped with [Cluster Network Operator](https://github.com/openshift/cluster-network-operator). OpenShift operator already supports Multus deployment. Therefore, if Multus is requested in our operator using `multus` attribute, we just make sure that is is not disabled in the OpenShift one.
 
 ## Linux Bridge
 
@@ -320,8 +315,8 @@ make docker-build-registry
 # bring up a local cluster with Kubernetes
 make cluster-up
 
-# bridge up a local cluster with OpenShift 3
-export CLUSTER_PROVIDER='os-3.11.0'
+# bridge up a local cluster with kubernetes 1.17
+export KUBEVIRT_PROVIDER=k8s-1.17
 make cluster-up
 
 # build images and push them to the local cluster
