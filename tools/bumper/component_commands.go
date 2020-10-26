@@ -117,11 +117,6 @@ func newGithubApi(token string) (*githubApi, error) {
 		ctx:    ctx,
 	}
 
-	_, _, err := githubApi.client.Users.Get(ctx, "")
-	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to get user from github client API")
-	}
-
 	return githubApi, nil
 }
 
