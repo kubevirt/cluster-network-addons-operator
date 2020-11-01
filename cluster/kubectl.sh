@@ -15,7 +15,7 @@
 # limitations under the License.
 
 SCRIPTS_PATH="$(dirname "$(realpath "$0")")"
-source ${SCRIPTS_PATH}/kubevirtci.sh
-kubevirtci::install
+source ${SCRIPTS_PATH}/cluster.sh
+cluster::install
 
-$(kubevirtci::path)/cluster-up/kubectl.sh "$@"
+$(cluster::path)/cluster-up/kubectl.sh "$@"

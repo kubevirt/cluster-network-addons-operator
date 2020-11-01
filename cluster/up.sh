@@ -17,10 +17,10 @@
 set -ex
 
 SCRIPTS_PATH="$(dirname "$(realpath "$0")")"
-source ${SCRIPTS_PATH}/kubevirtci.sh
-kubevirtci::install
+source ${SCRIPTS_PATH}/cluster.sh
+cluster::install
 
-$(kubevirtci::path)/cluster-up/up.sh
+$(cluster::path)/cluster-up/up.sh
 
 if [[ "$KUBEVIRT_PROVIDER" =~ (ocp|okd)- ]]; then
     echo 'Remove components we do not need to save some resources'

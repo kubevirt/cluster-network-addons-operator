@@ -19,7 +19,7 @@ set -exu
 
 source hack/components/git-utils.sh
 source hack/components/yaml-utils.sh
-source cluster/kubevirtci.sh
+source cluster/cluster.sh
 
 teardown() {
     make cluster-down
@@ -34,7 +34,7 @@ make cluster-down cluster-up
 
 # Export .kubeconfig full path, so it will be possible
 # to use 'kubectl' directly from the component directory path
-export KUBECONFIG=$(kubevirtci::kubeconfig)
+export KUBECONFIG=$(cluster::kubeconfig)
 
 # Deploy CNAO latest changes
 make cluster-operator-push

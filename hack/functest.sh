@@ -18,12 +18,12 @@
 
 set -ex
 
-source ./cluster/kubevirtci.sh
+source ./cluster/cluster.sh
 
 ${OPERATOR_SDK} test \
     local \
     ./${TEST_SUITE} \
     --operator-namespace cluster-network-addons \
     --no-setup \
-    --kubeconfig $(kubevirtci::kubeconfig) \
+    --kubeconfig $(cluster::kubeconfig) \
     --go-test-flags "${TEST_ARGS}"
