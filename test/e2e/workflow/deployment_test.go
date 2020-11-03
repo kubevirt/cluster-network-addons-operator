@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -8,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
@@ -129,6 +131,52 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.MacvtapCni = &cnao.MacvtapCni{}
 			components = append(components, MacvtapComponent)
 			testConfigUpdate(configSpec, components)
+		})
+		Context("and workload PlacementConfiguration is deployed on components", func() {
+			components := []Component{
+				MacvtapComponent,
+				OvsComponent,
+				LinuxBridgeComponent,
+				MultusComponent,
+			}
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				LinuxBridge: &cnao.LinuxBridge{},
+				Multus:      &cnao.Multus{},
+				Ovs:         &cnao.Ovs{},
+				MacvtapCni:  &cnao.MacvtapCni{},
+				PlacementConfiguration: &cnao.PlacementConfiguration{},
+			}
+			checkWorkloadPlacementOnComponents := func(expectedWorkLoadPlacement cnao.Placement) {
+				for _, component := range components {
+					componentPlacementList, err := PlacementListFromComponentDaemonSets(component)
+					Expect(err).ToNot(HaveOccurred(), "Should succeed getting the component Placement config")
+					for _, placement := range componentPlacementList {
+						Expect(placement).To(Equal(expectedWorkLoadPlacement), fmt.Sprintf("PlacementConfiguration of %s component should equal the default workload PlacementConfiguration", component.ComponentName))
+					}
+				}
+			}
+
+			BeforeEach(func() {
+				By("Deploying components with default PlacementConfiguration")
+				testConfigCreate(configSpec, components)
+
+				By("Checking PlacementConfiguration was set on components to default workload PlacementConfiguration")
+				checkWorkloadPlacementOnComponents(*network.GetDefaultPlacementConfiguration().Workloads)
+			})
+
+			It("should be able to update PlacementConfigurations on components specs", func() {
+				configSpec.PlacementConfiguration = &cnao.PlacementConfiguration{
+					Workloads: &cnao.Placement{ NodeSelector: map[string]string{
+						"kubernetes.io/hostname": "node01"},
+					},
+				}
+
+				By("Re-deploying PlacementConfiguration with different workloads values")
+				testConfigUpdate(configSpec, components)
+
+				By("Checking PlacementConfiguration was set on components to updated workload PlacementConfiguration")
+				checkWorkloadPlacementOnComponents(*configSpec.PlacementConfiguration.Workloads)
+			})
 		})
 	})
 
