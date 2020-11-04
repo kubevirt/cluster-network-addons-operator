@@ -19,7 +19,7 @@ set -exu
 
 source hack/components/git-utils.sh
 source hack/components/yaml-utils.sh
-source cluster/kubevirtci.sh
+source cluster/cluster.sh
 
 teardown() {
     make cluster-down
@@ -34,14 +34,14 @@ make cluster-down cluster-up
 
 # Export .kubeconfig full path, so it will be possible
 # to use 'kubectl' directly from the component directory path
-export KUBECONFIG=$(kubevirtci::kubeconfig)
+export KUBECONFIG=$(cluster::kubeconfig)
 
 # Deploy CNAO latest changes
 make cluster-operator-push
 make cluster-operator-install
 
 # Deploy all network addons components with CNAO
-    cat <<EOF | kubectl apply -f -
+    cat <<EOF | cluster/kubectl.sh apply -f -
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
 kind: NetworkAddonsConfig
 metadata:
@@ -58,7 +58,7 @@ spec:
   imagePullPolicy: Always
 EOF
 
-kubectl wait networkaddonsconfig cluster --for condition=Available --timeout=13m
+cluster/kubectl.sh wait networkaddonsconfig cluster --for condition=Available --timeout=13m
 
 # Clone component repository
 component_url=$(yaml-utils::get_component_url ${COMPONENT})
