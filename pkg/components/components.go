@@ -377,17 +377,288 @@ func GetClusterRole() *rbacv1.ClusterRole {
 
 func GetCrd() *extv1.CustomResourceDefinition {
 	subResouceSchema := &extv1.CustomResourceSubresources{Status: &extv1.CustomResourceSubresourceStatus{}}
-	placementProps := map[string]extv1.JSONSchemaProps{
-		"NodeSelector" : extv1.JSONSchemaProps{
-			Type:        "object",
+	labelSelectorRequirement := map[string]extv1.JSONSchemaProps {
+		"key": extv1.JSONSchemaProps{
+			Description: "key is the label key that the selector applies to.",
+			Type:        "string",
 		},
-		"Affinity" : extv1.JSONSchemaProps{
+		"operator": extv1.JSONSchemaProps{
+			Description: "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+			Type:        "string",
+		},
+		"values": extv1.JSONSchemaProps{
+			Description: "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
+			Type:        "array",
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Type: "string",
+				},
+			},
+		},
+	}
+	podLabelSelector := extv1.JSONSchemaProps{
+		Description: "A label query over a set of resources, in this case pods.",
+		Type:        "object",
+		Properties: map[string]extv1.JSONSchemaProps{
+			"matchExpressions": extv1.JSONSchemaProps{
+				Description: "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+				Type: "array",
+				Items: &extv1.JSONSchemaPropsOrArray{
+					Schema: &extv1.JSONSchemaProps{
+						Description: "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+						Type:        "object",
+						Properties: labelSelectorRequirement,
+						Required: []string{
+							"key",
+							"operator",
+						},
+					},
+				},
+			},
+			"matchLabels": extv1.JSONSchemaProps{
+				Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+				Type:        "object",
+				AdditionalProperties: &extv1.JSONSchemaPropsOrBool{
+					Schema: &extv1.JSONSchemaProps{
+						Type: "string",
+					},
+				},
+			},
+		},
+	}
+	getPodPreferredDuringSchedulingIgnoredDuringExecution := func(affinityPolarity string) extv1.JSONSchemaProps {
+		return extv1.JSONSchemaProps{
+			Description: fmt.Sprintf("The scheduler will prefer to schedule pods to nodes that satisfy the %s expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling %s expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.", affinityPolarity, affinityPolarity),
+			Type:        "array",
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Description: "The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)",
+					Type:        "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"podAffinityTerm": extv1.JSONSchemaProps{
+							Description: "Required. A pod affinity term, associated with the corresponding weight.",
+							Type:        "object",
+							Required: []string{
+								"topologyKey",
+							},
+							Properties: map[string]extv1.JSONSchemaProps{
+								"labelSelector": podLabelSelector,
+								"namespaces": extv1.JSONSchemaProps{
+									Description: "namespaces specifies which namespaces the labelSelector applies to (matches against); null or empty list means \"this pod's namespace\"",
+									Type:        "array",
+									Items: &extv1.JSONSchemaPropsOrArray{
+										Schema: &extv1.JSONSchemaProps{
+											Type: "string",
+										},
+									},
+								},
+								"topologyKey": extv1.JSONSchemaProps{
+									Description: "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed.",
+									Type:        "string",
+								},
+							},
+						},
+						"weight": extv1.JSONSchemaProps{
+							Description: "weight associated with matching the corresponding podAffinityTerm, in the range 1-100.",
+							Type:        "integer",
+							Format:      "int32",
+						},
+					},
+					Required: []string{
+						"podAffinityTerm",
+						"weight",
+					},
+				},
+			},
+		}
+	}
+	getPodRequiredDuringSchedulingIgnoredDuringExecution := func(affinityPolarity string) extv1.JSONSchemaProps {
+		return extv1.JSONSchemaProps{
+			Description: fmt.Sprintf("If the %s requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the %s requirements specified by this field cease to be met at some point during pod execution (e.g. due to a pod label update), the system may or may not try to eventually evict the pod from its node. When there are multiple elements, the lists of nodes corresponding to each podAffinityTerm are intersected, i.e. all terms must be satisfied.", affinityPolarity, affinityPolarity),
+			Type:        "array",
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Description: "Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key <topologyKey> matches that of any node on which a pod of the set of pods is running",
+					Type:        "object",
+					Required: []string{
+						"topologyKey",
+					},
+					Properties: map[string]extv1.JSONSchemaProps{
+						"labelSelector": podLabelSelector,
+						"namespaces": extv1.JSONSchemaProps{
+							Description: "namespaces specifies which namespaces the labelSelector applies to (matches against); null or empty list means \"this pod's namespace\"",
+							Type:        "array",
+							Items: &extv1.JSONSchemaPropsOrArray{
+								Schema: &extv1.JSONSchemaProps{
+									Type: "string",
+								},
+							},
+						},
+						"topologyKey": extv1.JSONSchemaProps{
+							Description: "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed.",
+							Type:        "string",
+						},
+					},
+				},
+			},
+		}
+	}
+	getNodeSelectorRequirement := func(description string) extv1.JSONSchemaProps {
+		return extv1.JSONSchemaProps{
+			Description: fmt.Sprintf("%s", description),
+			Type:        "array",
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Description: "A node selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
+					Type:        "object",
+					Required: []string{
+						"key",
+						"operator",
+					},
+					Properties: map[string]extv1.JSONSchemaProps {
+						"key": extv1.JSONSchemaProps{
+							Description: "The label key that the selector applies to.",
+							Type:        "string",
+						},
+						"operator": extv1.JSONSchemaProps{
+							Description: "Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.",
+							Type:        "string",
+						},
+						"values": extv1.JSONSchemaProps{
+							Description: "An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.",
+							Type:        "array",
+							Items: &extv1.JSONSchemaPropsOrArray{
+								Schema: &extv1.JSONSchemaProps{
+									Type: "string",
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	placementProps := map[string]extv1.JSONSchemaProps{
+		"nodeSelector" : extv1.JSONSchemaProps{
+			AdditionalProperties: &extv1.JSONSchemaPropsOrBool{
+				Schema: &extv1.JSONSchemaProps{
+					Type: "string",
+				},
+			},
+			Type: "object",
+		},
+		"affinity" : extv1.JSONSchemaProps{
 			Description: "Affinity is a group of affinity scheduling rules.",
 			Type:        "object",
+			Properties: map[string]extv1.JSONSchemaProps{
+				"nodeAffinity": extv1.JSONSchemaProps{
+					Description: "Describes node affinity scheduling rules for the pod.",
+					Type:        "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"preferredDuringSchedulingIgnoredDuringExecution": extv1.JSONSchemaProps{
+							Description: "The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred.",
+							Type:        "array",
+							Items: &extv1.JSONSchemaPropsOrArray{
+								Schema: &extv1.JSONSchemaProps{
+									Description: "An empty preferred scheduling term matches all objects with implicit weight 0 (i.e. it's a no-op). A null preferred scheduling term matches no objects (i.e. is also a no-op).",
+									Type:        "object",
+									Properties: map[string]extv1.JSONSchemaProps{
+										"preference": extv1.JSONSchemaProps{
+											Description: "A node selector term, associated with the corresponding weight.",
+											Type:        "object",
+											Properties: map[string]extv1.JSONSchemaProps{
+												"matchExpressions": getNodeSelectorRequirement("A list of node selector requirements by node's labels."),
+												"matchFields": getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
+											},
+										},
+										"weight": extv1.JSONSchemaProps{
+											Description: "Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100.",
+											Type: "integer",
+											Format: "int32",
+										},
+									},
+									Required: []string{
+										"preference",
+										"weight",
+									},
+								},
+							},
+						},
+						"requiredDuringSchedulingIgnoredDuringExecution": extv1.JSONSchemaProps{
+							Description: "If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to an update), the system may or may not try to eventually evict the pod from its node.",
+							Type: "object",
+							Required: []string{
+								"nodeSelectorTerms",
+							},
+							Properties: map[string]extv1.JSONSchemaProps{
+								"nodeSelectorTerms": extv1.JSONSchemaProps{
+									Description: "Required. A list of node selector terms. The terms are ORed.",
+									Type: "array",
+									Items: &extv1.JSONSchemaPropsOrArray{
+										Schema: &extv1.JSONSchemaProps{
+											Description: "A null or empty node selector term matches no objects. The requirements of them are ANDed. The TopologySelectorTerm type implements a subset of the NodeSelectorTerm.",
+											Type:        "object",
+											Properties: map[string]extv1.JSONSchemaProps{
+												"matchExpressions": getNodeSelectorRequirement("A list of node selector requirements by node's labels."),
+												"matchFields": getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"podAffinity": extv1.JSONSchemaProps{
+					Description: "Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).",
+					Type:        "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"preferredDuringSchedulingIgnoredDuringExecution": getPodPreferredDuringSchedulingIgnoredDuringExecution("affinity"),
+						"requiredDuringSchedulingIgnoredDuringExecution": getPodRequiredDuringSchedulingIgnoredDuringExecution("affinity"),
+					},
+				},
+				"podAntiAffinity": extv1.JSONSchemaProps{
+					Description: "Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).",
+					Type:        "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"preferredDuringSchedulingIgnoredDuringExecution": getPodPreferredDuringSchedulingIgnoredDuringExecution("anti-affinity"),
+						"requiredDuringSchedulingIgnoredDuringExecution": getPodRequiredDuringSchedulingIgnoredDuringExecution("anti-affinity"),
+					},
+				},
+			},
 		},
-		"Tolerations" : extv1.JSONSchemaProps{
-			Description: "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
-			Type:        "object",
+		"tolerations" : extv1.JSONSchemaProps{
+			Type: "array",
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Description: "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
+					Type:        "object",
+					Properties: map[string]extv1.JSONSchemaProps{
+						"effect": extv1.JSONSchemaProps{
+							Description: "Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.",
+							Type:        "string",
+						},
+						"key": extv1.JSONSchemaProps{
+							Description: "Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.",
+							Type:        "string",
+						},
+						"operator": extv1.JSONSchemaProps{
+							Description: "Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category.",
+							Type:        "string",
+						},
+						"tolerationSeconds": extv1.JSONSchemaProps{
+							Description: "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.",
+							Type:   "integer",
+							Format: "int64",
+						},
+						"value": extv1.JSONSchemaProps{
+							Description: "Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.",
+							Type:        "string",
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -467,17 +738,16 @@ func GetCrd() *extv1.CustomResourceDefinition {
 								},
 							},
 						},
-						"PlacementConfiguration": extv1.JSONSchemaProps{
+						"placementConfiguration": extv1.JSONSchemaProps{
 							Description: "PlacementConfiguration defines node placement configuration",
 							Type: "object",
 							Properties: map[string]extv1.JSONSchemaProps{
-								"Infra": extv1.JSONSchemaProps{
+								"infra": extv1.JSONSchemaProps{
 									Description: "Infra defines placement configuration for master nodes",
 									Type:        "object",
 									Properties: placementProps,
 								},
-								"Workloads": extv1.JSONSchemaProps{
-									Description: "Workloads defines placement configuration for worker nodes",
+								"workloads": extv1.JSONSchemaProps{
 									Type:        "object",
 									Properties: placementProps,
 								},
@@ -490,10 +760,10 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
 						"conditions": extv1.JSONSchemaProps{
-							//Description: "Condition represents the state of the operator's reconciliation functionality.",
 							Type: "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
 								Schema: &extv1.JSONSchemaProps{
+									Description: "Condition represents the state of the operator's reconciliation functionality.",
 									Type: "object",
 									Properties: map[string]extv1.JSONSchemaProps{
 										"lastHeartbeatTime": extv1.JSONSchemaProps{
