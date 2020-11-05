@@ -37,7 +37,7 @@ components:
     metadata: v0.32.0
   ovs-cni:
     url: https://github.com/kubevirt/ovs-cni
-    commit: 973a42b03f553234add72a909fd262560be61237
+    commit: 477353e47338fcde618716f51bd8ed80264bbb25
     branch: master
     update-policy: tagged
-    metadata: v0.13.0
+    metadata: v0.15.0
