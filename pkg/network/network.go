@@ -85,7 +85,6 @@ func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 
 	errs := []error{}
 
-	errs = append(errs, changeSafePlacementConfiguration(prev, next)...)
 	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
 	errs = append(errs, changeSafeSelfSignConfiguration(prev, next)...)
