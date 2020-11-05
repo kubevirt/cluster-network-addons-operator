@@ -1,9 +1,5 @@
-0.42.2
+0.42.3
 
 Bugs:
-* fix AddToScheme to add all served versions (#582)
-* kmp functests, skip KMP opt-mode tests not maching CNAO config (#579)
-* refactor fix of flaky validation test (#574)
-* bump kubemacpool to v0.20.2 (#568)
-* Fix release 0.41.0 manifest (#561)
+* placement-configuration, Allow day2 changes (#639)
 
