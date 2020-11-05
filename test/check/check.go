@@ -94,6 +94,26 @@ func CheckConfigCondition(conditionType ConditionType, conditionStatus Condition
 	}
 }
 
+func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement, error) {
+	placementList := []cnao.Placement{}
+	for _, daemonSetName := range component.DaemonSets {
+		daemonSet := appsv1.DaemonSet{}
+		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: daemonSetName, Namespace: components.Namespace}, &daemonSet)
+		if err != nil {
+			return placementList, err
+		}
+
+		daemonSetPlacement := cnao.Placement{}
+		daemonSetPlacement.NodeSelector = daemonSet.Spec.Template.Spec.NodeSelector
+		daemonSetPlacement.Affinity = *daemonSet.Spec.Template.Spec.Affinity
+		daemonSetPlacement.Tolerations = daemonSet.Spec.Template.Spec.Tolerations
+
+		placementList = append(placementList, daemonSetPlacement)
+	}
+
+	return placementList, nil
+}
+
 func CheckConfigVersions(operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
 	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q", operatorVersion, observedVersion, targetVersion))
 	config := &cnaov1.NetworkAddonsConfig{}
