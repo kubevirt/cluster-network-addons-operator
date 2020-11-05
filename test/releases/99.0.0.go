@@ -18,7 +18,7 @@ func init() {
 				ParentName: "bridge-marker",
 				ParentKind: "DaemonSet",
 				Name:       "bridge-marker",
-				Image:      "quay.io/kubevirt/bridge-marker@sha256:99d0fbd707deaf2136968aaa34862b54c73c9e5e963dc44140e726cf9ad41b58",
+				Image:      "quay.io/kubevirt/bridge-marker@sha256:6132543df838d324020d25979f088138534ca396f7ca995d5af76181fc8080e3",
 			},
 			{
 				ParentName: "kube-cni-linux-bridge-plugin",
