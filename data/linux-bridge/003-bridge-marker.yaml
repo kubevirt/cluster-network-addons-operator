@@ -17,6 +17,8 @@ spec:
         tier: node
         app: bridge-marker
         name: bridge-marker
+      annotations:
+        description: Bridge marker exposes network bridges available on nodes as node resources
     spec:
       serviceAccountName: bridge-marker
       hostNetwork: true
