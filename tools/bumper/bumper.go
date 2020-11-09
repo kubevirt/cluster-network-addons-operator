@@ -128,7 +128,6 @@ func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, compo
 		return nil
 	}
 
-	return nil
 	logger.Printf("Generate Bump PR using GithubAPI")
 	_, err = cnaoRepo.generateBumpPr(proposedPrTitle, bumpFilesList)
 	if err != nil {
