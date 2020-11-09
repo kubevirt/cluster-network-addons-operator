@@ -30,10 +30,9 @@ type gitCnaoRepo struct {
 const (
 	repoUrl         = "https://github.com/kubevirt/cluster-network-addons-operator"
 	allowListString = "components.yaml,data/*,test/releases/99.0.0.go,pkg/components/components.go"
-	cnaoBaseBranch  = "master"
 )
 
-func getCnaoRepo(api *githubApi) (*gitCnaoRepo, error) {
+func getCnaoRepo(api *githubApi, baseBranch string) (*gitCnaoRepo, error) {
 	cnaoGitRepo, err := openGitRepo(".")
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to get git repo for cnao repo")
@@ -41,6 +40,7 @@ func getCnaoRepo(api *githubApi) (*gitCnaoRepo, error) {
 
 	cnaoComponentParams := &component{
 		Url: repoUrl,
+		Branch: baseBranch,
 	}
 
 	gitCnaoRepo := &gitCnaoRepo{
@@ -233,9 +233,9 @@ func (cnaoRepoOps *gitCnaoRepo) getNewBumpBranch(prTitle string) (*github.Refere
 
 func (cnaoRepoOps *gitCnaoRepo) createNewGithubBranch(newBranchName string) (*github.Reference, string, error) {
 	logger.Printf("Creating new branch with githubApi: %s", newBranchName)
-	baseRef, _, err := cnaoRepoOps.githubInterface.getBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+cnaoBaseBranch)
+	baseRef, _, err := cnaoRepoOps.githubInterface.getBranchRef(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), "refs/heads/"+cnaoRepoOps.configParams.Branch)
 	if err != nil {
-		return nil, "", errors.Wrapf(err, "Failed to get origin/%s github ref", cnaoBaseBranch)
+		return nil, "", errors.Wrapf(err, "Failed to get origin/%s github ref", cnaoRepoOps.configParams.Branch)
 	}
 
 	newRef := &github.Reference{Ref: github.String("refs/heads/" + newBranchName), Object: &github.GitObject{SHA: baseRef.Object.SHA}}
@@ -287,7 +287,7 @@ func (cnaoRepoOps *gitCnaoRepo) pushCommit(commitTitle string, branch *github.Re
 
 func (cnaoRepoOps *gitCnaoRepo) createPR(prTitle, branchName string) (*github.PullRequest, error) {
 	logger.Printf("Creating new PR")
-	prBranch := cnaoBaseBranch
+	prBranch := cnaoRepoOps.configParams.Branch
 	prDescription := fmt.Sprintf("%s\nExecuted by Bumper script\n\n```release-note\n%s\n```", prTitle, prTitle)
 	newPR := &github.NewPullRequest{
 		Title:               &prTitle,
