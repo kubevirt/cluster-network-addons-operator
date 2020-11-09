@@ -32,7 +32,7 @@ const (
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler@sha256:b4bc41ce7f9e5fa7eef6a25c27ba13770c53fc6710ea8e4c4b5f6cf68e97821c"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:27ce180502ee9ed7dec708982d872a7c67937faefa60316a9b423bb0dead6e2d"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@sha256:a734fc4e8ce2a338c0501aaa1e294000e5f67e9847e58503606d8aefdf911dd2"
-	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:0fbb0f3cde7970c0786aec8213bbf28a9d6328e7644d965262783a8248a9ded9"
+	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:2d255b0385b9080bd0de7fa0d9214d03637e27ef5eab49a991cf75bede24719e"
 )
 
 type AddonsImages struct {
