@@ -15,7 +15,6 @@ var logger *log.Logger
 type inputParams struct {
 	componentsConfigPath string
 	gitToken             string
-	baseBranch           string
 }
 
 const (
@@ -36,7 +35,7 @@ func main() {
 		exitWithError(errors.Wrap(err, "Failed to create github api instance"))
 	}
 
-	cnaoRepo, err := getCnaoRepo(githubApi, inputArgs.baseBranch)
+	cnaoRepo, err := getCnaoRepo(githubApi)
 	if err != nil {
 		exitWithError(errors.Wrap(err, "Failed to clone cnao repo"))
 	}
@@ -145,15 +144,11 @@ func initLog() *log.Logger {
 }
 
 func initFlags(paramArgs *inputParams) {
-	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "relative path to components yaml from CNAO repo")
+	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "relative path to components yaml from bumping repo")
 	flag.StringVar(&paramArgs.gitToken, "token", "", "git Token")
-	flag.StringVar(&paramArgs.baseBranch, "base-branch", "master", "the branch CNAO is running the bumper script on, and on which the PRs will be opened")
 	flag.Parse()
-	if paramArgs.componentsConfigPath == "" {
-		exitWithError(fmt.Errorf("config-path mandatory input paramter not entered. Use --help for usage"))
-	}
-	if paramArgs.gitToken == "" {
-		exitWithError(fmt.Errorf("github token mandatory input paramter not entered. Use --help for usage"))
+	if flag.NFlag() != 2 {
+		exitWithError(fmt.Errorf("Wrong Number of input parameters %d, should be 2. Use --help for usage", flag.NFlag()))
 	}
 }
 
