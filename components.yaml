@@ -7,7 +7,7 @@ components:
     metadata: 0.5.0
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
-    commit: 932d5f04ee508c9f39516010b40d2170705d2cb7
+    commit: master
     branch: master
     update-policy: tagged
     metadata: v0.20.2
