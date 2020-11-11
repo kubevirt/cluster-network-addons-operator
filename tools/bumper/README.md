@@ -9,9 +9,10 @@ In order to run the script manually, you need to have a github token. To create 
 ## How to run the script
 
 ```
-make ARGS="-config-path=<path-to-components.yaml-relative-to-bumping-repo> -token=<git-token>" auto-bumper
+make ARGS="-config-path=<path-to-components.yaml-relative-to-bumping-repo> -token=<git-token>" -base-branch=<base-branch> auto-bumper
 ```
 
 Where:
 * config-path: relative path to components.yaml from the bumping repo. In its current position we'll simply: config-path="components.yaml"
 * token: personal/gitActions github-token.
+* base-branch: the branch on which the bumper script runs, and on which the PRs will be opened. default is master
