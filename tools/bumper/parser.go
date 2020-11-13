@@ -44,7 +44,7 @@ func parseComponentsYaml(componentsConfigPath string) (componentsConfig, error) 
 }
 
 func updateComponentsYaml(componentsConfigPath string, config componentsConfig) error {
-	logger.Printf("Marshaling components config")
+	logger.Printf("updating components config")
 	yamlConfig, err := yaml.Marshal(&config)
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal updated components config")

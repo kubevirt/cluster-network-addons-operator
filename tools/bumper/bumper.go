@@ -6,11 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
-	"regexp"
-	"strings"
 
-	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +15,7 @@ var logger *log.Logger
 type inputParams struct {
 	componentsConfigPath string
 	gitToken             string
+	baseBranch           string
 }
 
 const (
@@ -39,10 +36,15 @@ func main() {
 		exitWithError(errors.Wrap(err, "Failed to create github api instance"))
 	}
 
-	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
-	componentsConfig, err := parseComponentsYaml(inputArgs.componentsConfigPath)
+	cnaoRepo, err := getCnaoRepo(githubApi, inputArgs.baseBranch)
 	if err != nil {
-		exitWithError(errors.Wrap(err, "Failed to parse components yaml"))
+		exitWithError(errors.Wrap(err, "Failed to clone cnao repo"))
+	}
+
+	logger.Printf("Parsing %s", inputArgs.componentsConfigPath)
+	componentsConfig, err := cnaoRepo.getComponentsConfig(inputArgs.componentsConfigPath)
+	if err != nil {
+		exitWithError(errors.Wrap(err, "Failed to get components config"))
 	}
 
 	for componentName, component := range componentsConfig.Components {
@@ -69,70 +71,70 @@ func main() {
 			exitWithError(errors.Wrapf(err, "Failed to get latest release version tag from %s", componentName))
 		}
 
-		bumpNeeded, err := isBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy)
+		proposedPrTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
+		componentBumpNeeded, err := cnaoRepo.isComponentBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to discover if Bump need for %s", componentName))
 		}
 
-		if bumpNeeded {
+		if componentBumpNeeded {
 			logger.Printf("Bumping %s from %s to %s", componentName, currentReleaseTag, updatedReleaseTag)
-			// reset --hard git repo
-			exitWithError(fmt.Errorf("reset --hader repo not implemented yet"))
 
-			// PR name
-			prTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
-			logger.Printf("PR title: %s", prTitle)
-			// Create PR
-			exitWithError(fmt.Errorf("create PR not implemented yet"))
-
-			// update component's entry in config yaml
-			component.Commit = updatedReleaseCommit
-			component.Metadata = updatedReleaseTag
-			err = updateComponentsYaml(inputArgs.componentsConfigPath, componentsConfig)
+			err = handleBump(cnaoRepo, component, componentName, inputArgs.componentsConfigPath, updatedReleaseTag, updatedReleaseCommit, proposedPrTitle)
 			if err != nil {
-				exitWithError(errors.Wrap(err, "Failed to update components yaml"))
+				exitWithError(errors.Wrapf(err, "Failed to bump component %s", componentName))
 			}
-
-			cmd := exec.Command("make", fmt.Sprintf("bump-%s", componentName))
-			if out, err := cmd.CombinedOutput(); err != nil {
-				exitWithError(errors.Wrapf(err, "Failed to run bump script. StdOut = %s", string(out)))
-			}
-
-			// create a new branch name
-			BranchName := strings.Replace(strings.ToLower(prTitle), " ", "_", -1)
-			logger.Printf("Opening new Branch %s", BranchName)
-
-			// push branch to PR
-			exitWithError(fmt.Errorf("push branch to PR not implemented yet"))
 		} else {
 			logger.Printf("Bump not needed in component %s", componentName)
 		}
 	}
 }
 
-func isBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy string) (bool, error) {
-	logger.Printf("currentReleaseVersion: %s, latestReleaseVersion: %s, updatePolicy: %s\n", currentReleaseVersion, latestReleaseVersion, updatePolicy)
+func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, componentsConfigPath, updatedReleaseTag, updatedReleaseCommit, proposedPrTitle string) error {
+	defer func() {
+		err := cnaoRepo.reset()
+		if err != nil {
+			exitWithError(errors.Wrapf(err, "Failed to bump component %s: reset repo failed", componentName))
+		}
+	}()
 
-	if updatePolicy == updatePolicyStatic {
-		logger.Printf("updatePolicy is static. avoiding auto bump")
-		return false, nil
-	}
-
-	// if one of the tags is in vtag format (e.g 0.39.0-32-g1fcbe815), and not equal, then always bump
-	if isVtagFormat(currentReleaseVersion) || isVtagFormat(latestReleaseVersion) {
-		return currentReleaseVersion == latestReleaseVersion, nil
-	}
-
-	currentVersion, err := canonicalizeVersion(currentReleaseVersion)
+	// update components yaml in the bumping repo instance
+	componentsConfig, err := cnaoRepo.getComponentsConfig(componentsConfigPath)
 	if err != nil {
-		return false, errors.Wrapf(err, "Failed to digest current Version %s to semver", currentVersion)
-	}
-	latestVersion, err := canonicalizeVersion(latestReleaseVersion)
-	if err != nil {
-		return false, errors.Wrapf(err, "Failed to digest latest Version %s to semver", latestVersion)
+		return errors.Wrap(err, "Failed to get components config during bump")
 	}
 
-	return currentVersion.LessThan(*latestVersion), nil
+	// update component's entry in config yaml
+	component.Commit = updatedReleaseCommit
+	component.Metadata = updatedReleaseTag
+	componentsConfig.Components[componentName] = component
+	err = cnaoRepo.updateComponentsConfig(componentsConfigPath, componentsConfig)
+	if err != nil {
+		return errors.Wrap(err, "Failed to update components yaml")
+	}
+
+	err = cnaoRepo.bumpComponent(componentName)
+	if err != nil {
+		return errors.Wrap(err, "Failed to bump component")
+	}
+
+	logger.Printf("Gather bump output files to list")
+	bumpFilesList, err := cnaoRepo.collectBumpFile()
+	if err != nil {
+		return errors.Wrap(err, "Failed to collect bump output files")
+	}
+	if len(bumpFilesList) == 0 {
+		logger.Printf("No modified/untracked files to bump. Aborting bump.")
+		return nil
+	}
+
+	logger.Printf("Generate Bump PR using GithubAPI")
+	_, err = cnaoRepo.generateBumpPr(proposedPrTitle, bumpFilesList)
+	if err != nil {
+		exitWithError(errors.Wrap(err, "Failed to generate Bump PR"))
+	}
+
+	return nil
 }
 
 func initLog() *log.Logger {
@@ -143,37 +145,16 @@ func initLog() *log.Logger {
 }
 
 func initFlags(paramArgs *inputParams) {
-	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "Full path to components yaml")
+	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "relative path to components yaml from CNAO repo")
 	flag.StringVar(&paramArgs.gitToken, "token", "", "git Token")
+	flag.StringVar(&paramArgs.baseBranch, "base-branch", "master", "the branch CNAO is running the bumper script on, and on which the PRs will be opened")
 	flag.Parse()
-	if flag.NFlag() != 2 {
-		exitWithError(fmt.Errorf("Wrong Number of input parameters %d, should be 2. Use --help for usage", flag.NFlag()))
+	if paramArgs.componentsConfigPath == "" {
+		exitWithError(fmt.Errorf("config-path mandatory input paramter not entered. Use --help for usage"))
 	}
-}
-
-// since versioning of components can sometimes divert from semver standard, we do some refactoring
-func canonicalizeVersion(version string) (*semver.Version, error) {
-	// remove trailing "v" if exists
-	version = strings.TrimPrefix(version, "v")
-
-	// expand to 2 dotted format
-	versionSectionsNum := len(strings.Split(version, "."))
-	switch versionSectionsNum {
-	case 2:
-		version = version + ".0"
-	case 3:
-		break
-	default:
-		return nil, fmt.Errorf("Failed to refactor version string %s", version)
+	if paramArgs.gitToken == "" {
+		exitWithError(fmt.Errorf("github token mandatory input paramter not entered. Use --help for usage"))
 	}
-
-	return semver.NewVersion(version)
-}
-
-// check vtag format (example: 0.39.0-32-g1fcbe815)
-func isVtagFormat(tagVersion string) bool {
-	var vtagSyntax = regexp.MustCompile(`^[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{7}`)
-	return vtagSyntax.MatchString(tagVersion)
 }
 
 func exitWithError(err error) {

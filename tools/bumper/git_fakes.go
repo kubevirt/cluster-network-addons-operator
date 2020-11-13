@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -21,10 +23,11 @@ import (
 )
 
 type mockGithubApi struct {
-	repoDir string
+	repoDir    string
+	fakePRList []*github.PullRequest
 }
 
-func (g mockGithubApi) ListMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
+func (g mockGithubApi) listMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -33,7 +36,7 @@ func (g mockGithubApi) ListMatchingRefs(owner, repo string, opts *github.Referen
 	return convertLogToReferenceList(gitCommitObjList, opts.Ref), nil, nil
 }
 
-func (g mockGithubApi) ListCommits(owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
+func (g mockGithubApi) listCommits(owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, opts.SHA)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -42,7 +45,7 @@ func (g mockGithubApi) ListCommits(owner, repo string, opts *github.CommitsListO
 	return convertLogToRepositoryCommitList(gitCommitObjList), nil, nil
 }
 
-func (g mockGithubApi) GetRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
+func (g mockGithubApi) getBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {
 	gitCommitObjList, err := gitLogJson(g.repoDir, "")
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
@@ -50,6 +53,37 @@ func (g mockGithubApi) GetRef(owner string, repo string, ref string) (*github.Re
 
 	githubRef, err := getRefFromCommitObjList(gitCommitObjList, ref)
 	return githubRef, nil, err
+}
+
+func (g mockGithubApi) createBranchRef(owner string, repo string, newRef *github.Reference) (*github.Reference, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) createTree(owner string, repo string, baseTree string, entries []*github.TreeEntry) (*github.Tree, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) getCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) createCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g mockGithubApi) updateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error) {
+	return nil, nil, nil
+}
+
+func (g *mockGithubApi) listPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
+	return g.fakePRList, nil, nil
+}
+
+func (g *mockGithubApi) createPullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
+	pullRequest := &github.PullRequest{Title: pull.Title}
+	g.fakePRList = append(g.fakePRList, pullRequest)
+
+	return pullRequest, nil, nil
 }
 
 type gitCommitMock struct {
@@ -150,6 +184,10 @@ func convertLogToReferenceList(gitCommitObjList []gitCommitMock, refsFilter stri
 		}
 	}
 
+	sort.Slice(RefTagsGithubApi, func(i, j int) bool {
+		return RefTagsGithubApi[i].GetRef() < RefTagsGithubApi[j].GetRef()
+	})
+
 	return RefTagsGithubApi
 }
 
@@ -187,7 +225,8 @@ func getNewMockReference(commitObj *gitCommitMock) *github.Reference {
 // newFakeGithubApi creates a fake interface
 func newFakeGithubApi(repoDir string) *mockGithubApi {
 	return &mockGithubApi{
-		repoDir: repoDir,
+		repoDir:    repoDir,
+		fakePRList: []*github.PullRequest{},
 	}
 }
 
@@ -195,6 +234,18 @@ func newFakeGitComponent(api *mockGithubApi, repoDir string, componentParams *co
 	componentGitRepo := newLocalGitRepo(repoDir, tagCommitMap)
 
 	gitComponent := &gitComponent{
+		configParams:    componentParams,
+		githubInterface: api,
+		gitRepo:         componentGitRepo,
+	}
+
+	return gitComponent
+}
+
+func newFakeGitCnaoRepo(api *mockGithubApi, repoDir string, componentParams *component, tagCommitMap map[string]string) *gitCnaoRepo {
+	componentGitRepo := newLocalGitRepo(repoDir, tagCommitMap)
+
+	gitComponent := &gitCnaoRepo{
 		configParams:    componentParams,
 		githubInterface: api,
 		gitRepo:         componentGitRepo,
@@ -277,6 +328,13 @@ func createCommitWithoutTag(w *git.Worktree, tagCommitMap map[string]string, rep
 	}
 }
 
+// createCommitWithAnnotatedTag created commit and tags it in the repo.
+// In order to simulate output of githubApi methods like listMatchingRefs
+// that return the tags list in chronological order, we should set the tag key
+// to be sorted by alphabetically+chronologically order. we do this by setting
+// tag keys to be the semver version tagged (which is alphabetically+chronologically
+// ordered by default). For example, chronologically tagging v0.0.1 and then v0.0.2
+// will produce an ordered tag list: ["v0.0.1", "v0.0.2"].
 func createCommitWithAnnotatedTag(w *git.Worktree, repo *git.Repository, tagCommitMap map[string]string, repoDir, fileName, tagName, branchName string) {
 	By(fmt.Sprintf("committing a new file on %s branch with annotated tag", branchName))
 	commitHash := createCommit(w, repoDir, fileName, branchName)
@@ -302,4 +360,37 @@ func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCo
 	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed adding %s tag to commit Hash %s", tagName, commitHash))
 
 	tagCommitMap[tagName] = commitHash.String()
+}
+
+func getFakePrWithTitle(prTitle string) *github.NewPullRequest {
+	return &github.NewPullRequest{Title: &prTitle}
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed checking if file %s exists", filename))
+	return !info.IsDir()
+}
+
+func modifyFiles(repoDir string, files []string) {
+	for _, fileName := range files {
+		var err error
+		var f *os.File
+		defer f.Close()
+
+		fileNameWithPath := filepath.Join(repoDir, fileName)
+		if fileExists(fileNameWithPath) {
+			f, err = os.OpenFile(fileNameWithPath, os.O_RDWR, os.ModeAppend)
+			Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to open file %s", fileNameWithPath))
+		} else {
+			f, err = os.Create(fileNameWithPath)
+			Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to create file %s", fileNameWithPath))
+		}
+
+		_, err = f.WriteString(fileName)
+		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to write generic string (file name) to file %s", fileNameWithPath))
+	}
 }

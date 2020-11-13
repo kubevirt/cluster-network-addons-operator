@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Testing internal git", func() {
+var _ = Describe("Testing internal git component", func() {
 	var (
 		githubApi    *mockGithubApi
 		gitComponent *gitComponent
