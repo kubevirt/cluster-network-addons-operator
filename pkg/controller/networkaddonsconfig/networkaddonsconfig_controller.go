@@ -267,6 +267,9 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, err
 	}
 
+	// Track state of all deployed pods
+	r.trackDeployedObjects(objs, networkAddonsConfig.GetGeneration())
+
 	// Delete generated objsToRemove on Kubernetes API server
 	err = r.deleteObjects(objsToRemove)
 	if err != nil {
@@ -274,9 +277,6 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToDeleteObjects", err.Error())
 		return reconcile.Result{}, err
 	}
-
-	// Track state of all deployed pods
-	r.trackDeployedObjects(objs, networkAddonsConfig.GetGeneration())
 
 	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
 	// previous runs.
