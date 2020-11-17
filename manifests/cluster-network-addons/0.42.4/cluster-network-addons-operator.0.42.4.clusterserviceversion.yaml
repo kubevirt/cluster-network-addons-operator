@@ -1,0 +1,230 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: cluster-network-addons-operator.0.42.4
+  namespace: placeholder
+  annotations:
+    capabilities: "Full Lifecycle"
+    categories: "Networking"
+    alm-examples: |
+      [
+        {
+          "apiVersion":"networkaddonsoperator.network.kubevirt.io/v1",
+          "kind":"NetworkAddonsConfig",
+          "metadata": {
+            "name":"cluster"
+          },
+          "spec": {
+            "multus":{},
+            "linuxBridge":{},
+            "kubeMacPool": {
+              "rangeStart": "02:00:00:00:00:00",
+              "rangeEnd": "FD:FF:FF:FF:FF:FF"
+            },
+            "nmstate":{},
+            "ovs": {},
+            "macvtap": {},
+            "imagePullPolicy": "IfNotPresent"
+          }
+        }
+      ]
+    description: Additional networking components for Kubernetes
+spec:
+  displayName: Cluster Network Addons
+  description: Deploy additional networking components for Kubernetes
+  keywords:
+    - Networking
+    - Multus
+    - CNI
+    - macpool
+    - SR-IOV
+    - Bridge
+    - nmstate
+    - KubeVirt
+    - Virtualization
+  version: 0.42.4
+  minKubeVersion: 1.10.0
+  maturity: alpha
+
+  replaces: cluster-network-addons-operator.0.42.3
+
+  maintainers:
+    - name: KubeVirt project
+      email: kubevirt-dev@googlegroups.com
+  provider:
+    name: KubeVirt project
+  links:
+    - name: Cluster Network Addons Operator
+      url: https://github.com/kubevirt/cluster-network-addons-operator
+  icon: []
+  labels:
+    alm-owner-kubevirt: cluster-network-addons
+    operated-by: cluster-network-addons
+  selector:
+    matchLabels:
+      alm-owner-kubevirt: cluster-network-addons
+      operated-by: cluster-network-addons
+  installModes:
+    - type: OwnNamespace
+      supported: true
+    - type: SingleNamespace
+      supported: true
+    - type: MultiNamespace
+      supported: true
+    - type: AllNamespaces
+      supported: true
+  install:
+    strategy: deployment
+    spec:
+      permissions:
+        - serviceAccountName: cluster-network-addons-operator
+          rules:
+            - apiGroups:
+              - ""
+              resources:
+              - pods
+              - configmaps
+              verbs:
+              - get
+              - list
+              - watch
+              - create
+              - patch
+              - update
+              - delete
+            - apiGroups:
+              - apps
+              resources:
+              - deployments
+              - replicasets
+              verbs:
+              - get
+              - list
+              - watch
+              - create
+              - patch
+              - update
+              - delete
+
+      clusterPermissions:
+        - serviceAccountName: cluster-network-addons-operator
+          rules:
+            - apiGroups:
+              - security.openshift.io
+              resourceNames:
+              - privileged
+              resources:
+              - securitycontextconstraints
+              verbs:
+              - get
+              - list
+              - watch
+            - apiGroups:
+              - operator.openshift.io
+              resources:
+              - networks
+              verbs:
+              - get
+              - list
+              - watch
+            - apiGroups:
+              - networkaddonsoperator.network.kubevirt.io
+              resources:
+              - networkaddonsconfigs
+              verbs:
+              - get
+              - list
+              - watch
+            - apiGroups:
+              - '*'
+              resources:
+              - '*'
+              verbs:
+              - '*'
+
+      deployments:
+        - name: cluster-network-addons-operator
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                name: cluster-network-addons-operator
+            strategy:
+              type: Recreate
+            template:
+              metadata:
+                labels:
+                  name: cluster-network-addons-operator
+              spec:
+                containers:
+                - env:
+                  - name: MULTUS_IMAGE
+                    value: nfvpe/multus@sha256:167722b954355361bd69829466f27172b871dbdbf86b85a95816362885dc0aba
+                  - name: LINUX_BRIDGE_IMAGE
+                    value: quay.io/kubevirt/cni-default-plugins@sha256:3dd438117076016d6d2acd508b93f106ca80a28c0af6e2e914d812f9a1d55142
+                  - name: LINUX_BRIDGE_MARKER_IMAGE
+                    value: quay.io/kubevirt/bridge-marker@sha256:e55f73526468fee46a35ae41aa860f492d208b8a7a132832c5b9a76d4a51566a
+                  - name: NMSTATE_HANDLER_IMAGE
+                    value: quay.io/nmstate/kubernetes-nmstate-handler@sha256:3feeb377a4a89caf37fdab45d13f93620e1cf5ff8cbc91aa19ae32cd5cfa3a32
+                  - name: OVS_CNI_IMAGE
+                    value: quay.io/kubevirt/ovs-cni-plugin@sha256:4101c52617efb54a45181548c257a08e3689f634b79b9dfcff42bffd8b25af53
+                  - name: OVS_MARKER_IMAGE
+                    value: quay.io/kubevirt/ovs-cni-marker@sha256:0f08d6b1550a90c9f10221f2bb07709d1090e7c675ee1a711981bd429074d620
+                  - name: KUBEMACPOOL_IMAGE
+                    value: quay.io/kubevirt/kubemacpool@sha256:79c4534d418c4a350a663e38499c22d54dc68c400f517aead4479f6d862b408e
+                  - name: MACVTAP_CNI_IMAGE
+                    value: quay.io/kubevirt/macvtap-cni@sha256:407f75760fc096666becfa45d94f51757ebbe8f382e9e7b57ceeded0b8cfb6b8
+                  - name: OPERATOR_IMAGE
+                    value: quay.io/kubevirt/cluster-network-addons-operator:v0.42.4
+                  - name: OPERATOR_NAME
+                    value: cluster-network-addons-operator
+                  - name: OPERATOR_VERSION
+                    value: 0.42.4
+                  - name: OPERATOR_NAMESPACE
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                  - name: OPERAND_NAMESPACE
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                  - name: POD_NAME
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.name
+                  - name: WATCH_NAMESPACE
+                  image: quay.io/kubevirt/cluster-network-addons-operator:v0.42.4
+                  imagePullPolicy: Always
+                  name: cluster-network-addons-operator
+                  resources: {}
+                securityContext:
+                  runAsNonRoot: true
+                serviceAccountName: cluster-network-addons-operator
+
+  relatedImages:
+    - image: "nfvpe/multus@sha256:167722b954355361bd69829466f27172b871dbdbf86b85a95816362885dc0aba"
+      name: "multus"
+    - image: "quay.io/kubevirt/cni-default-plugins@sha256:3dd438117076016d6d2acd508b93f106ca80a28c0af6e2e914d812f9a1d55142"
+      name: "cni-default-plugins"
+    - image: "quay.io/kubevirt/bridge-marker@sha256:e55f73526468fee46a35ae41aa860f492d208b8a7a132832c5b9a76d4a51566a"
+      name: "bridge-marker"
+    - image: "quay.io/kubevirt/kubemacpool@sha256:79c4534d418c4a350a663e38499c22d54dc68c400f517aead4479f6d862b408e"
+      name: "kubemacpool"
+    - image: "quay.io/nmstate/kubernetes-nmstate-handler@sha256:3feeb377a4a89caf37fdab45d13f93620e1cf5ff8cbc91aa19ae32cd5cfa3a32"
+      name: "kubernetes-nmstate-handler"
+    - image: "quay.io/kubevirt/ovs-cni-plugin@sha256:4101c52617efb54a45181548c257a08e3689f634b79b9dfcff42bffd8b25af53"
+      name: "ovs-cni-plugin"
+    - image: "quay.io/kubevirt/ovs-cni-marker@sha256:0f08d6b1550a90c9f10221f2bb07709d1090e7c675ee1a711981bd429074d620"
+      name: "ovs-cni-marker"
+    - image: "quay.io/kubevirt/macvtap-cni@sha256:407f75760fc096666becfa45d94f51757ebbe8f382e9e7b57ceeded0b8cfb6b8"
+      name: "macvtap-cni"
+    - image: "quay.io/kubevirt/cluster-network-addons-operator:v0.42.4"
+      name: "cluster-network-addons-operator"
+  customresourcedefinitions:
+    owned:
+      - name: networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io
+        version: v1
+        group: networkaddonsoperator.network.kubevirt.io
+        kind: NetworkAddonsConfig
+        displayName: Cluster Network Addons
+        description: Cluster Network Addons
