@@ -12,15 +12,15 @@ jobs:
     steps:
 
     - name: Set environment variables
-      run: echo "::set-env name=BASE_BRANCH::master";
+      run: echo "BASE_BRANCH=master" >> $GITHUB_ENV
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
       with:
-        ref: ${{ env.BASE_BRANCH }}
+        ref: $BASE_BRANCH
 
     - name: Pull latest of latest branch
-      run:  git pull --ff-only --rebase origin ${{ env.BASE_BRANCH }}
+      run:  git pull --ff-only --rebase origin $BASE_BRANCH
 
     - name: Run bumper script
-      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
+      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=$BASE_BRANCH" auto-bumper
