@@ -17,10 +17,10 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
       with:
-        ref: $BASE_BRANCH
+        ref: ${{ env.BASE_BRANCH }}
 
     - name: Pull latest of latest branch
-      run:  git pull --ff-only --rebase origin $BASE_BRANCH
+      run:  git pull --ff-only --rebase origin ${{ env.BASE_BRANCH }}
 
     - name: Run bumper script
-      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=$BASE_BRANCH" auto-bumper
+      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
