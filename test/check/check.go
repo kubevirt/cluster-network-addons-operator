@@ -571,11 +571,10 @@ func retrieveRange() (string, string) {
 }
 
 func CheckAvailableEvent(gvk schema.GroupVersionKind) {
-	//checkConfigLatestEvent(eventemitter.AvailableReason, eventemitter.AvailableMessage, duration, timeout)
 	By("Check for Available event")
 	config := GetConfig(gvk)
 	configV1 := ConvertToConfigV1(config)
-	objectEventWatcher := NewObjectEventWatcher(configV1).SinceWatchedObjectResourceVersion().Timeout(time.Duration(15) * time.Minute)
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(time.Duration(15) * time.Minute)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.AvailableReason)

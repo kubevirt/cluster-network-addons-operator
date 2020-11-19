@@ -56,8 +56,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should remain at Available condition", func() {
-				By("Waiting for Modified event after config update")
-				CheckModifiedEvent(gvk)
+				By("Waiting for Available event after config update")
+				CheckAvailableEvent(gvk)
 
 				By("Checking that Available status turn to True")
 				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)

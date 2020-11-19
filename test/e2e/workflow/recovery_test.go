@@ -32,9 +32,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 
 			It("should turn from Failing to Available", func() {
+				CheckAvailableEvent(gvk)
 				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 5*time.Second, CheckDoNotRepeat)
 				CheckConfigCondition(gvk, ConditionDegraded, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
-				CheckAvailableEvent(gvk)
 			})
 		})
 	})
