@@ -1,0 +1,26 @@
+name: Auto-Bump Components' Versions
+
+on:
+  schedule:
+    - cron:  '0 5 * * *'
+
+jobs:
+
+  build:
+    name: release-0.42 - CNAO Component Bump Job
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set environment variables
+      run: echo "BASE_BRANCH=release-0.42" >> $GITHUB_ENV
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ env.BASE_BRANCH }}
+
+    - name: Pull latest of latest branch
+      run:  git pull --ff-only --rebase origin ${{ env.BASE_BRANCH }}
+
+    - name: Run bumper script
+      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
