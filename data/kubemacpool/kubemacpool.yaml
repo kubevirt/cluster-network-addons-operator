@@ -246,6 +246,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        description: KubeMacPool manages MAC allocation to Pods and VMs
       labels:
         app: kubemacpool
         control-plane: mac-controller-manager
