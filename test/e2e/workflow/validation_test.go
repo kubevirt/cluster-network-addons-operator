@@ -13,6 +13,9 @@ import (
 
 var _ = Describe("NetworkAddonsConfig", func() {
 	gvk := GetCnaoV1GroupVersionKind()
+	AfterEach(func() {
+		DeleteConfig(gvk)
+	})
 	Context("when there is no running config", func() {
 		Context("and an invalid config is created", func() {
 			BeforeEach(func() {
