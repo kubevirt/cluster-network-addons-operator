@@ -394,3 +394,15 @@ func modifyFiles(repoDir string, files []string) {
 		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to write generic string (file name) to file %s", fileNameWithPath))
 	}
 }
+
+func deleteFiles(repoDir string, files []string) {
+	for _, fileName := range files {
+		fileNameWithPath := filepath.Join(repoDir, fileName)
+		if !fileExists(fileNameWithPath) {
+			Fail(fmt.Sprintf("file %s cannot be deleted since it doesn't exist", fileName))
+		}
+
+		err := os.Remove(fileNameWithPath)
+		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("should not fail to deleting file %s", fileNameWithPath))
+	}
+}
