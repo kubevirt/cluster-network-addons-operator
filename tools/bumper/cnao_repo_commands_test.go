@@ -382,6 +382,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 
 	type collectModifiedToTreeListParams struct {
 		files                 []string
+		deleted               []string
 		allowedList           []string
 		expectedTreeEntryList []*github.TreeEntry
 	}
@@ -390,8 +391,15 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		func(r collectModifiedToTreeListParams) {
 			defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
 
-			By("Modifying files in the Repo")
-			modifyFiles(gitCnaoRepo.gitRepo.localDir, r.files)
+			if len(r.files) != 0 {
+				By("Modifying files in the Repo")
+				modifyFiles(gitCnaoRepo.gitRepo.localDir, r.files)
+			}
+
+			if len(r.deleted) != 0 {
+				By("Deleting files in the Repo")
+				deleteFiles(gitCnaoRepo.gitRepo.localDir, r.deleted)
+			}
 
 			By("Running collectModifiedToTreeList api")
 			treeList, err := gitCnaoRepo.collectModifiedToTreeList(r.allowedList)
@@ -403,11 +411,13 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		},
 		Entry("Should return empty list when no file is modified, allowedList allows all files", collectModifiedToTreeListParams{
 			files:                 []string{},
+			deleted:               []string{},
 			allowedList:           []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{},
 		}),
 		Entry("Should add file to tree list when existing file is modified, allowedList allows all files", collectModifiedToTreeListParams{
 			files:       []string{"static"},
+			deleted:     []string{},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
 				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
@@ -415,18 +425,29 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		}),
 		Entry("Should add file to tree list when a new file is created, allowedList allows all files", collectModifiedToTreeListParams{
 			files:       []string{"newFile"},
+			deleted:     []string{},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
 				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
 			},
 		}),
+		Entry("Should add deleted file to tree list when files are deleted, allowedList allows all files", collectModifiedToTreeListParams{
+			files:       []string{},
+			deleted:     []string{"static"},
+			allowedList: []string{"*"},
+			expectedTreeEntryList: []*github.TreeEntry{
+				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Mode: github.String("100644")},
+			},
+		}),
 		Entry("Should add files to tree list when files are modified and created, allowedList allows all files", collectModifiedToTreeListParams{
 			files:       []string{"static", "tagged_annotated", "newFile"},
+			deleted:     []string{"tagged_lightweight"},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
 				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
 				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
 				&github.TreeEntry{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
+				&github.TreeEntry{Path: github.String("tagged_lightweight"), Type: github.String("blob"), Mode: github.String("100644")},
 			},
 		}),
 		Entry("Should return empty list when files were modified but allowedList is empty", collectModifiedToTreeListParams{
