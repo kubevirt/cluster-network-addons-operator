@@ -1,5 +1,3 @@
-0.42.3
+0.42.4
 
-Bugs:
-* placement-configuration, Allow day2 changes (#639)
-
+* Bump kubernetes-nmstate to v0.31.1 (#666)
