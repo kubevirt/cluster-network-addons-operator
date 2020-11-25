@@ -1,22 +1,32 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: nodenetworkstates.nmstate.io
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.0
+  creationTimestamp: null
+  name: nodenetworkconfigurationenactments.nmstate.io
 spec:
   group: nmstate.io
   names:
-    kind: NodeNetworkState
-    listKind: NodeNetworkStateList
-    plural: nodenetworkstates
+    kind: NodeNetworkConfigurationEnactment
+    listKind: NodeNetworkConfigurationEnactmentList
+    plural: nodenetworkconfigurationenactments
     shortNames:
-    - nns
-    singular: nodenetworkstate
+    - nnce
+    singular: nodenetworkconfigurationenactment
   scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Status
+      jsonPath: .status.conditions[?(@.type=="Available")].reason
+      name: Status
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: NodeNetworkState is the Schema for the nodenetworkstates API
+        description: NodeNetworkConfigurationEnactment is the Schema for the nodenetworkconfigurationenactments API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -27,7 +37,7 @@ spec:
           metadata:
             type: object
           status:
-            description: NodeNetworkStateStatus is the status of the NodeNetworkState of a specific node
+            description: NodeNetworkConfigurationEnactmentStatus defines the observed state of NodeNetworkConfigurationEnactment
             properties:
               conditions:
                 items:
@@ -51,23 +61,29 @@ spec:
                   - type
                   type: object
                 type: array
-              currentState:
-                description: "State contains the namestatectl yaml [1] as string instead of golang struct so we don't need to be in sync with the schema. \n [1] https://github.com/nmstate/nmstate/blob/master/libnmstate/schemas/operational-state.yaml"
+              desiredState:
+                description: The desired state rendered for the enactment's node using the policy desiredState as template
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
-              lastSuccessfulUpdateTime:
-                format: date-time
-                type: string
+              policyGeneration:
+                description: The generation from policy needed to check if an enactment condition status belongs to the same policy version
+                format: int64
+                type: integer
             type: object
         type: object
     served: true
     storage: false
     subresources:
       status: {}
-  - name: v1beta1
+  - additionalPrinterColumns:
+    - description: Status
+      jsonPath: .status.conditions[?(@.type=="Available")].reason
+      name: Status
+      type: string
+    name: v1beta1
     schema:
       openAPIV3Schema:
-        description: NodeNetworkState is the Schema for the nodenetworkstates API
+        description: NodeNetworkConfigurationEnactment is the Schema for the nodenetworkconfigurationenactments API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -78,7 +94,7 @@ spec:
           metadata:
             type: object
           status:
-            description: NodeNetworkStateStatus is the status of the NodeNetworkState of a specific node
+            description: NodeNetworkConfigurationEnactmentStatus defines the observed state of NodeNetworkConfigurationEnactment
             properties:
               conditions:
                 items:
@@ -102,16 +118,23 @@ spec:
                   - type
                   type: object
                 type: array
-              currentState:
-                description: "State contains the namestatectl yaml [1] as string instead of golang struct so we don't need to be in sync with the schema. \n [1] https://github.com/nmstate/nmstate/blob/master/libnmstate/schemas/operational-state.yaml"
+              desiredState:
+                description: The desired state rendered for the enactment's node using the policy desiredState as template
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
-              lastSuccessfulUpdateTime:
-                format: date-time
-                type: string
+              policyGeneration:
+                description: The generation from policy needed to check if an enactment condition status belongs to the same policy version
+                format: int64
+                type: integer
             type: object
         type: object
     served: true
     storage: true
     subresources:
       status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
