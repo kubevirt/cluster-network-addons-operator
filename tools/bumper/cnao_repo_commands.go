@@ -299,7 +299,6 @@ func (cnaoRepoOps *gitCnaoRepo) createPR(prTitle, branchName string) (*github.Pu
 		Base:                &prBranch,
 		Body:                &prDescription,
 		MaintainerCanModify: github.Bool(true),
-		Draft:               github.Bool(true),
 	}
 
 	pr, _, err := cnaoRepoOps.githubInterface.createPullRequest(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), newPR)
