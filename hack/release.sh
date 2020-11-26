@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+make IMAGE_TAG=$TAG docker-build docker-push
+
 git tag $TAG
 git push https://github.com/kubevirt/cluster-network-addons-operator $TAG
 
