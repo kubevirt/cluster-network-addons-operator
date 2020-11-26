@@ -237,8 +237,6 @@ spec:
         node-role.kubernetes.io/worker: ""
 ```
 
-`PlacementConfiguration` cannot be changed after `NetworkAddonsConfig` is deployed.
-
 # Deployment
 
 First install the operator itself:
