@@ -31,7 +31,7 @@ components:
     metadata: v3.4.2
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
-    commit: 402aa3ad97fdeef27677a018e428ba2e2e5cda29
+    commit: master
     branch: master
     update-policy: tagged
     metadata: v0.33.0
