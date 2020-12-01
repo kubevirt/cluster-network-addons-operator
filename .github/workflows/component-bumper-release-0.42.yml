@@ -1,4 +1,4 @@
-name: Auto-Bump Components' Versions
+name: release-0.42 - Auto-Bump Components' Versions
 
 on:
   schedule:
