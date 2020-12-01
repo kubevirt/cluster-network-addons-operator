@@ -40,9 +40,10 @@ main() {
     cd ${TMP_COMPONENT_PATH}
 
     make test-e2e-handler \
-        E2E_TEST_TIMEOUT=${TIMEOUT} \
-        E2E_TEST_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" \
-        HANDLER_NAMESPACE=$NAMESPACE \
+        E2E_TEST_TIMEOUT=$TIMEOUT \
+        e2e_test_args="-noColor" \
+        E2E_TEST_SUITE_ARGS="--junit-output=$ARTIFACTS/junit.functest.xml" \
+        OPERATOR_NAMESPACE=$NAMESPACE \
         CLUSTER_PATH=$CLUSTER_PATH \
         KUBECONFIG=$KUBECONFIG \
         KUBECTL=$KUBECTL
