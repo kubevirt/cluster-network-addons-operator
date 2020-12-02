@@ -182,9 +182,12 @@ vendor: $(GO)
 	$(GO) mod tidy
 	$(GO) mod vendor
 
+auto-bumper: $(GO)
+	$(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
+
 bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
-bump-all: bump-knmstate bump-kubemacpool bump-macvtap bump-linux-bridge bump-multus bump-ovs-cni bump-bridge-marker
+bump-all: bump-nmstate bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-multus bump-ovs-cni bump-bridge-marker
 
 .PHONY: \
 	$(E2E_SUITES) \
@@ -212,6 +215,7 @@ bump-all: bump-knmstate bump-kubemacpool bump-macvtap bump-linux-bridge bump-mul
 	prepare-minor \
 	prepare-major \
 	vendor \
+	auto-bumper \
 	bump-% \
 	bump-all \
 	gen-k8s \
