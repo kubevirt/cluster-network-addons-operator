@@ -39,7 +39,7 @@ func getCnaoRepo(api *githubApi, baseBranch string) (*gitCnaoRepo, error) {
 	}
 
 	cnaoComponentParams := &component{
-		Url: repoUrl,
+		Url:    repoUrl,
 		Branch: baseBranch,
 	}
 
@@ -196,14 +196,18 @@ func (cnaoRepoOps *gitCnaoRepo) collectModifiedToTreeList(allowedList []string) 
 		}
 
 		fileNameWithPath := filepath.Join(cnaoRepoOps.gitRepo.localDir, localFile)
-		content, err := ioutil.ReadFile(fileNameWithPath)
-		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to read local file %s", fileNameWithPath)
+		var treeEntryContent *string
+		if status.Worktree != git.Deleted {
+			content, err := ioutil.ReadFile(fileNameWithPath)
+			if err != nil {
+				return nil, errors.Wrapf(err, "Failed to read local file %s", fileNameWithPath)
+			}
+			treeEntryContent = github.String(string(content))
 		}
 
 		if fileInGlobList(localFile, allowedList) {
 			logger.Printf("File added to tree: %s", localFile)
-			entries = append(entries, &github.TreeEntry{Path: github.String(localFile), Type: github.String("blob"), Content: github.String(string(content)), Mode: github.String("100644")})
+			entries = append(entries, &github.TreeEntry{Path: github.String(localFile), Type: github.String("blob"), Content: treeEntryContent, Mode: github.String("100644")})
 		} else {
 			logger.Printf("Skipping file %s, not in allowed list", localFile)
 		}
