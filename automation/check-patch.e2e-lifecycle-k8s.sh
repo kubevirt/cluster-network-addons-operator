@@ -25,6 +25,7 @@ main() {
         # Since we cannot test upgrade of to-be-released version, drop it from the lifecycle tests
         to_be_released=$(hack/version.sh)
         export RELEASES_DESELECTOR="${to_be_released}"
+        export E2E_TEST_TIMEOUT=4h
     else
         # Don't run all upgrade tests in regular PRs, stick to those released under HCO
         export RELEASES_SELECTOR="{0.18.0,0.23.0,0.27.7,0.39.3,99.0.0}"
