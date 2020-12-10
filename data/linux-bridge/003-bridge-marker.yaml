@@ -39,7 +39,7 @@ spec:
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 ---
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: bridge-marker-cr
 rules:
@@ -54,7 +54,7 @@ rules:
   - patch
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: bridge-marker-crb
 roleRef:
