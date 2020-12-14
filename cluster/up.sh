@@ -33,8 +33,8 @@ if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
     echo 'Install NetworkManager on nodes'
     for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
         ./cluster/cli.sh ssh ${node} sudo -- yum install -y yum-plugin-copr
-        ./cluster/cli.sh ssh ${node} sudo -- yum copr enable -y networkmanager/NetworkManager-1.22
-        ./cluster/cli.sh ssh ${node} sudo -- yum install -y NetworkManager NetworkManager-ovs
+        ./cluster/cli.sh ssh ${node} sudo -- yum copr enable -y networkmanager/NetworkManager-1.26
+        ./cluster/cli.sh ssh ${node} sudo -- yum install -y NetworkManager-1.26.2 NetworkManager-ovs-1.26.2
         ./cluster/cli.sh ssh ${node} sudo -- systemctl daemon-reload
         ./cluster/cli.sh ssh ${node} sudo -- systemctl restart NetworkManager
         echo "Check NetworkManager is working fine on node $node"
