@@ -12,8 +12,12 @@ set -xeu
 # automation/check-patch.e2e-nmstate-functests.sh
 
 teardown() {
-    rm -rf "${TMP_COMPONENT_PATH}"
+    $KUBECTL get pod -n nmstate -o wide > $ARTIFACTS/kubernetes-nmstate.pod.list.txt || true
+    $KUBECTL logs --tail=1000 -n nmstate -l app=kubernetes-nmstate > $ARTIFACTS/kubernetes-nmstate.pod.logs || true
     make cluster-down
+    # Don't fail if there is no logs
+    cp ${E2E_LOGS}/handler/*.log ${ARTIFACTS} || true
+    rm -rf "${TMP_COMPONENT_PATH}"
 }
 
 main() {
@@ -25,9 +29,9 @@ main() {
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
     export KUBEVIRT_NUM_NODES=3 # 1 master, 2 workers
     export KUBEVIRT_NUM_SECONDARY_NICS=2
+    export E2E_LOGS=${TMP_PROJECT_PATH}/test_logs/e2e
     COMPONENT="nmstate" source automation/components-functests.setup.sh
 
-    trap teardown EXIT
 
     echo "Configure test parameters"
     export TIMEOUT=1h
@@ -35,6 +39,8 @@ main() {
     export KUBECTL=${TMP_PROJECT_PATH}/cluster/kubectl.sh
     export SSH=${TMP_PROJECT_PATH}/cluster/ssh.sh
     export CLUSTER_PATH=${TMP_PROJECT_PATH}/_kubevirtci/
+
+    trap teardown EXIT
 
     echo "Run nmstate functional tests"
     cd ${TMP_COMPONENT_PATH}
