@@ -185,7 +185,7 @@ vendor: $(GO)
 	$(GO) mod vendor
 
 auto-bumper: $(GO)
-	$(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
+	PUSH_IMAGES=true $(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
 
 bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
