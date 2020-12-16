@@ -14,10 +14,11 @@ set -xeu
 teardown() {
     $KUBECTL get pod -n cluster-network-addons -o wide > $ARTIFACTS/kubernetes-nmstate.pod.list.txt || true
     $KUBECTL logs --tail=1000 -n cluster-network-addons -l app=kubernetes-nmstate > $ARTIFACTS/kubernetes-nmstate.pod.logs || true
-    make cluster-down
     # Don't fail if there is no logs
     cp ${E2E_LOGS}/handler/*.log ${ARTIFACTS} || true
     rm -rf "${TMP_COMPONENT_PATH}"
+    cd ${TMP_PROJECT_PATH}
+    make cluster-down
 }
 
 main() {

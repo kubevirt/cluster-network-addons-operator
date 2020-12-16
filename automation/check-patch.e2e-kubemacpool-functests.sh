@@ -28,8 +28,9 @@ function __get_skipped_tests() {
 }
 
 teardown() {
-    make cluster-down
     rm -rf "${TMP_COMPONENT_PATH}"
+    cd ${TMP_PROJECT_PATH}
+    make cluster-down
 }
 
 main() {
