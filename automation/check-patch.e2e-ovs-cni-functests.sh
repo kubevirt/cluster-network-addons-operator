@@ -10,8 +10,9 @@
 # automation/check-patch.e2e-kubemacpool-functests.sh
 
 teardown() {
-    make cluster-down
     rm -rf "${TMP_COMPONENT_PATH}"
+    cd ${TMP_PROJECT_PATH}
+    make cluster-down
 }
 
 main() {

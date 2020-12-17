@@ -14,6 +14,7 @@ set -xeuE
 
 teardown() {
     rm -rf "${TMP_COMPONENT_PATH}"
+    cd ${TMP_PROJECT_PATH}
     make cluster-down
 }
 

@@ -21,15 +21,8 @@ source hack/components/git-utils.sh
 source hack/components/yaml-utils.sh
 source cluster/cluster.sh
 
-teardown() {
-    make cluster-down
-    rm -rf "$component_temp_dir"
-}
-
-trap teardown EXIT SIGINT SIGTERM SIGQUIT
-
 # Spin up Kubernetes cluster
-export KUBEVIRT_PROVIDER='k8s-1.17'
+export KUBEVIRT_PROVIDER='k8s-1.19'
 make cluster-down cluster-up
 
 # Export .kubeconfig full path, so it will be possible

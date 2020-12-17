@@ -12,8 +12,9 @@ set -xeuE
 # automation/check-patch.e2e-macvtap-functests.sh
 
 teardown() {
-    rm -rf "${TMP_COMPONENT_PATH}"
     cp $(find . -name "*junit*.xml") $ARTIFACTS || true
+    rm -rf "${TMP_COMPONENT_PATH}"
+    cd ${TMP_PROJECT_PATH}
     make cluster-down
 }
 
