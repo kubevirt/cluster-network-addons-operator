@@ -28,7 +28,7 @@ type mockGithubApi struct {
 }
 
 func (g mockGithubApi) listMatchingRefs(owner, repo string, opts *github.ReferenceListOptions) ([]*github.Reference, *github.Response, error) {
-	gitCommitObjList, err := gitLogJson(g.repoDir, "")
+	gitCommitObjList, err := gitShowRefJson(g.repoDir)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
 	}
@@ -112,6 +112,31 @@ func gitCommand(args []string) (string, error) {
 	logOut = logOut[:len(logOut)-1] // Remove the last ","
 
 	return logOut, err
+}
+
+func gitShowRefJson(repo string) ([]gitCommitMock, error) {
+	args := []string{
+		"-C",
+		repo,
+		"show-ref",
+		"--tags",
+	}
+
+	logOut, err := gitCommand(args)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run git show-ref")
+	}
+
+	var gitCommitObjList []gitCommitMock
+	commitIdx := 0
+	refIdx := 1
+	for _, line := range strings.Split(logOut, "\n") {
+		fields := strings.Fields(line)
+		commitMock := gitCommitMock{Commit: fields[commitIdx], Refs: fields[refIdx]}
+		gitCommitObjList = append(gitCommitObjList, commitMock)
+	}
+
+	return gitCommitObjList, err
 }
 
 func gitLogJson(repo, branchName string) ([]gitCommitMock, error) {
@@ -278,6 +303,8 @@ func initializeRepo(repo *git.Repository, repoDir string, tagCommitMap map[strin
 	createBranch(repo, "release-v1.0.0")
 	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch", "v1.0.0", "release-v1.0.0")
 	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight_branch", "v1.0.1", "release-v1.0.0")
+	// we want the last tag to be annotated, to make sure the tag is retrieved in the commit-sha form (and not the annotated tag sha).
+	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch", "v1.0.2", "release-v1.0.0")
 	createCommitWithoutTag(w, tagCommitMap, repoDir, "latest_branch", "release-v1.0.0", true)
 	// adding a non-existing commit to check negative scenarios
 	tagCommitMap["dummy_false_commit"] = randstr.Hex(40)
