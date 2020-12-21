@@ -144,6 +144,8 @@ var _ = Describe("Testing internal git component", func() {
 			if r.shouldReturnErr {
 				Expect(err).To(HaveOccurred(), "should fail to run getUpdatedReleaseInfo")
 			} else {
+				Expect(err).ToNot(HaveOccurred(), "should not fail to run getUpdatedReleaseInfo")
+
 				expectedCommit := expectedTagCommitMap[r.expectedTagKey]
 				expectedTag, err := describeHash(repoDir, expectedCommit)
 				Expect(err).ToNot(HaveOccurred(), "should not fail to run describeHash")
@@ -180,13 +182,13 @@ var _ = Describe("Testing internal git component", func() {
 		Entry("Update-policy tagged: should return latest tag in release branch. current: v0.0.2", updatedReleaseParams{
 			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "release-v1.0.0", Metadata: "v0.0.2"},
 			currentTagKey:   "v0.0.2",
-			expectedTagKey:  "v1.0.1",
+			expectedTagKey:  "v1.0.2",
 			shouldReturnErr: false,
 		}),
 		Entry("Update-policy tagged: should return latest tag in release branch. current: v1.0.0", updatedReleaseParams{
 			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "release-v1.0.0", Metadata: "v1.0.0"},
 			currentTagKey:   "v1.0.0",
-			expectedTagKey:  "v1.0.1",
+			expectedTagKey:  "v1.0.2",
 			shouldReturnErr: false,
 		}),
 		Entry("Update-policy tagged: should fail if unknown branch", updatedReleaseParams{
