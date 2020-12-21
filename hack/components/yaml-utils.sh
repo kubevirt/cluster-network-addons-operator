@@ -3,7 +3,7 @@
 set -xeo pipefail
 
 function __yq() {
-  docker run --rm -i -v ${PWD}:/workdir mikefarah/yq yq "$@"
+  docker run --rm -i -v ${PWD}:/workdir mikefarah/yq:3.3.4 yq "$@"
 }
 
 function __get_parameter_from_yaml() {
