@@ -218,7 +218,7 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 
 		for _, commit := range branchCommits {
 			if commit.GetSHA() == commitShaOfTag {
-				return tagName, tag.GetObject().GetSHA(), nil
+				return tagName, commit.GetSHA(), nil
 			}
 		}
 	}
