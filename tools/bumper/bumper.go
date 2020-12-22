@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"strings"
 	"log"
 	"os"
 
@@ -47,6 +48,7 @@ func main() {
 		exitWithError(errors.Wrap(err, "Failed to get components config"))
 	}
 
+	var failedComponents []string
 	for componentName, component := range componentsConfig.Components {
 		logger.Printf("~~Checking if %s needs bumping~~", componentName)
 
@@ -82,11 +84,16 @@ func main() {
 
 			err = handleBump(cnaoRepo, component, componentName, inputArgs.componentsConfigPath, updatedReleaseTag, updatedReleaseCommit, proposedPrTitle)
 			if err != nil {
-				exitWithError(errors.Wrapf(err, "Failed to bump component %s", componentName))
+				logger.Printf("Bump %s component was initiated but did not succeed. err = %s", componentName, err)
+				failedComponents = append(failedComponents, componentName)
 			}
 		} else {
 			logger.Printf("Bump not needed in component %s", componentName)
 		}
+	}
+
+	if len(failedComponents) != 0 {
+		exitWithError(fmt.Errorf("Not all component bumps were successful, failed components: %s", strings.Join(failedComponents, ",")))
 	}
 }
 
@@ -131,7 +138,7 @@ func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, compo
 	logger.Printf("Generate Bump PR using GithubAPI")
 	_, err = cnaoRepo.generateBumpPr(proposedPrTitle, bumpFilesList)
 	if err != nil {
-		exitWithError(errors.Wrap(err, "Failed to generate Bump PR"))
+		return errors.Wrap(err, "Failed to generate Bump PR")
 	}
 
 	return nil
