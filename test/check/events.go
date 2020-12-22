@@ -209,3 +209,16 @@ func (w *ObjectEventWatcher) WaitNotFor(stopChan chan struct{}, eventType EventT
 	}, fmt.Sprintf("not happen event type %s, reason = %s", string(eventType), reflect.ValueOf(reason).String()))
 	return
 }
+
+func (w *ObjectEventWatcher) WaitNotForType(stopChan chan struct{}, eventType EventType) (e *corev1.Event) {
+	w.dontFailOnMissingEvent = true
+	w.Watch(stopChan, func(event *corev1.Event) bool {
+		if event.Type == string(eventType) {
+			e = event
+			Fail(fmt.Sprintf("Did not expect %s. reason is %s", string(eventType), event.Reason), 1)
+			return true
+		}
+		return false
+	}, fmt.Sprintf("Event type %s did not occur", string(eventType)))
+	return
+}

@@ -609,3 +609,13 @@ func CheckFailedEvent(gvk schema.GroupVersionKind, reason string) {
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, WarningEvent, fmt.Sprintf("%s: %s", eventemitter.FailedReason, reason))
 }
+
+func CheckNoWarningEvents(gvk schema.GroupVersionKind, rv string) {
+	By("Check absence of Warning events")
+	config := GetConfig(gvk)
+	configV1 := ConvertToConfigV1(config)
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceResourceVersion(rv).Timeout(time.Minute)
+	stopChan := make(chan struct{})
+	defer close(stopChan)
+	objectEventWatcher.WaitNotForType(stopChan, WarningEvent)
+}
