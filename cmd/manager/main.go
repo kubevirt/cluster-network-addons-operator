@@ -20,7 +20,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
