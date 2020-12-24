@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/kubernetes/client-go/util/retry"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -52,12 +53,15 @@ func CreateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConf
 func UpdateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConfigSpec) {
 	By(fmt.Sprintf("Updating NetworkAddonsConfig:\n%s", configSpecToYaml(configSpec)))
 
-	// Get current Config
-	config := GetConfig(gvk)
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		// Get current Config
+		config := GetConfig(gvk)
 
-	// Update the Config with the desired Spec
-	config.Object["spec"] = configSpec
-	err := framework.Global.Client.Update(context.TODO(), config)
+		// Update the Config with the desired Spec
+		config.Object["spec"] = configSpec
+		return framework.Global.Client.Update(context.TODO(), config)
+	})
+
 	Expect(err).NotTo(HaveOccurred(), "Failed to update the Config")
 }
 
