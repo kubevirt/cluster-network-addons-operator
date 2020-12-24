@@ -4,6 +4,8 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	v1 "k8s.io/api/core/v1"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -48,16 +50,24 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 
 		Context("and a component which does support removal is removed from the Spec", func() {
+			var resourceVersion string
+			var updatedConfigSpec cnao.NetworkAddonsConfigSpec
+
 			BeforeEach(func() {
-				configSpec := cnao.NetworkAddonsConfigSpec{
+				updatedConfigSpec = cnao.NetworkAddonsConfigSpec{
 					LinuxBridge: &cnao.LinuxBridge{},
 				}
-				UpdateConfig(gvk, configSpec)
+				UpdateConfig(gvk, updatedConfigSpec)
+				resourceVersion = GetConfig(gvk).GetResourceVersion()
 			})
 
 			It("should remain at Available condition", func() {
-				By("Waiting for Available event after config update")
-				CheckAvailableEvent(gvk)
+				By("Checking these were no Warning events during the component's removal")
+				CheckNoWarningEvents(gvk, resourceVersion)
+
+				By("Checking that spec has been deployed")
+				currentConfigSpec := ConvertToConfigV1(GetConfig(gvk)).Spec
+				Expect(currentConfigSpec).To(Equal(updatedConfigSpec))
 
 				By("Checking that Available status turn to True")
 				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, CheckImmediately, time.Minute)
