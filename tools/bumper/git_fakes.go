@@ -75,12 +75,21 @@ func (g mockGithubApi) updateRef(owner string, repo string, ref *github.Referenc
 	return nil, nil, nil
 }
 
-func (g *mockGithubApi) listPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
-	return g.fakePRList, nil, nil
+func (g *mockGithubApi) listPullRequests(owner string, repo string, branch string) ([]*github.PullRequest, *github.Response, error) {
+	var prList []*github.PullRequest
+	for _, pr := range g.fakePRList {
+		if *pr.Base.Ref == branch {
+			prList = append(prList, pr)
+		}
+	}
+	return prList, nil, nil
 }
 
 func (g *mockGithubApi) createPullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
-	pullRequest := &github.PullRequest{Title: pull.Title}
+	base := &github.PullRequestBranch{
+		Ref:  pull.Base,
+	}
+	pullRequest := &github.PullRequest{Title: pull.Title, Base: base}
 	g.fakePRList = append(g.fakePRList, pullRequest)
 
 	return pullRequest, nil, nil
@@ -389,8 +398,8 @@ func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCo
 	tagCommitMap[tagName] = commitHash.String()
 }
 
-func getFakePrWithTitle(prTitle string) *github.NewPullRequest {
-	return &github.NewPullRequest{Title: &prTitle}
+func getFakePrWithTitle(prTitle, branchName string) *github.NewPullRequest {
+	return &github.NewPullRequest{Title: &prTitle, Base: &branchName}
 }
 
 func fileExists(filename string) bool {
