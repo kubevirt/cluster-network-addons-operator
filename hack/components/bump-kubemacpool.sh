@@ -89,7 +89,7 @@ EOF
         echo setting pods to opt-in mode
         cp ../default/mutatepods_opt_in_patch.yaml mutatepods_opt_mode_patch.yaml
         echo setting vms to opt-in mode
-        cp ../default/mutatevirtualmachines_opt_in_patch.yaml mutatevirtualmachines_opt_mode_patch.yaml
+        cp ../default/mutatevirtualmachines_opt_out_patch.yaml mutatevirtualmachines_opt_mode_patch.yaml
     )
 
 )
