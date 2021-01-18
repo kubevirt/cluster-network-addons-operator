@@ -39,7 +39,7 @@ type githubInterface interface {
 	getCommit(owner string, repo string, sha string) (*github.Commit, *github.Response, error)
 	createCommit(owner string, repo string, commit *github.Commit) (*github.Commit, *github.Response, error)
 	updateRef(owner string, repo string, ref *github.Reference, force bool) (*github.Reference, *github.Response, error)
-	listPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error)
+	listPullRequests(owner string, repo string, branch string) ([]*github.PullRequest, *github.Response, error)
 	createPullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error)
 }
 
@@ -75,8 +75,8 @@ func (g githubApi) updateRef(owner string, repo string, ref *github.Reference, f
 	return g.client.Git.UpdateRef(g.ctx, owner, repo, ref, force)
 }
 
-func (g githubApi) listPullRequests(owner string, repo string) ([]*github.PullRequest, *github.Response, error) {
-	return g.client.PullRequests.List(g.ctx, owner, repo, &github.PullRequestListOptions{State: "open", Base: "master"})
+func (g githubApi) listPullRequests(owner string, repo string, branch string) ([]*github.PullRequest, *github.Response, error) {
+	return g.client.PullRequests.List(g.ctx, owner, repo, &github.PullRequestListOptions{State: "open", Base: branch})
 }
 
 func (g githubApi) createPullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {

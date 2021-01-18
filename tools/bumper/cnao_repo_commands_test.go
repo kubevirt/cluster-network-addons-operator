@@ -35,21 +35,22 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 	Context("Creating fake PRs", func() {
 		type isPrAlreadyOpenedParams struct {
 			prTitle      string
+			branch       string
 			expectResult bool
 		}
 		dummyOwner := "dummyOwner"
 		dummyRepo := "dummyRepo"
 		BeforeEach(func() {
 
-			newPr := getFakePrWithTitle("CNAO test-component to 0.0.2")
+			newPr := getFakePrWithTitle("CNAO test-component to 0.0.2", "master")
 			_, _, err := gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
-			newPr = getFakePrWithTitle("CNAO test-component to 1.0.0")
+			newPr = getFakePrWithTitle("CNAO test-component to 1.0.0", "release-v1.0.0")
 			_, _, err = gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
-			newPr = getFakePrWithTitle("CNAO test-component to 1.0.1")
+			newPr = getFakePrWithTitle("CNAO test-component to 1.0.1", "release-v1.0.0")
 			_, _, err = gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 		})
@@ -58,6 +59,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			func(r isPrAlreadyOpenedParams) {
 				defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
 				gitCnaoRepo.configParams.Url = repoDir
+				gitCnaoRepo.configParams.Branch = r.branch
 
 				By("Running api to check if a PR is already opened")
 				isPrAlreadyOpened, err := gitCnaoRepo.isPrAlreadyOpened(r.prTitle)
@@ -68,22 +70,37 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			},
 			Entry("should find PR that is first in the list", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 0.0.2",
+				branch:       "master",
 				expectResult: true,
 			}),
 			Entry("should find PR that is in the middle of the list", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 1.0.0",
+				branch:       "release-v1.0.0",
 				expectResult: true,
 			}),
 			Entry("should find PR that is last in the list", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 1.0.1",
+				branch:       "release-v1.0.0",
 				expectResult: true,
+			}),
+			Entry("should not find PR on master branch if it was issued on another branch", isPrAlreadyOpenedParams{
+				prTitle:      "CNAO test-component to 1.0.1",
+				branch:       "master",
+				expectResult: false,
+			}),
+			Entry("should not find PR on a certain branch if it was issued on master branch", isPrAlreadyOpenedParams{
+				prTitle:      "CNAO test-component to 0.0.2",
+				branch:       "release-v1.0.0",
+				expectResult: false,
 			}),
 			Entry("should not find PR that has empty title string", isPrAlreadyOpenedParams{
 				prTitle:      "",
+				branch:       "master",
 				expectResult: false,
 			}),
 			Entry("should not find PR that is not in the list", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 1.0.3",
+				branch:       "release-v1.0.0",
 				expectResult: false,
 			}),
 		)
