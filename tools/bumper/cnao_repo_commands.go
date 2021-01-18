@@ -155,7 +155,7 @@ func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, lat
 func (cnaoRepoOps *gitCnaoRepo) isPrAlreadyOpened(proposedPrTitle string) (bool, error) {
 	logger.Printf("checking if there is an already open bump PR for this release")
 
-	prList, _, err := cnaoRepoOps.githubInterface.listPullRequests(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl())
+	prList, _, err := cnaoRepoOps.githubInterface.listPullRequests(cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl(), cnaoRepoOps.configParams.Branch)
 	if err != nil {
 		return false, errors.Wrapf(err, "Failed to get list of PRs from %s/%s repo", cnaoRepoOps.getCnaoRepoOwnerFromUrl(), cnaoRepoOps.getCnaoRepoNameFromUrl())
 	}
