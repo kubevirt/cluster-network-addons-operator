@@ -35,7 +35,7 @@ make cluster-operator-install
 
 # Deploy all network addons components with CNAO
     cat <<EOF | cluster/kubectl.sh apply -f -
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1alpha1
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
