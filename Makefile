@@ -3,7 +3,7 @@ all: fmt check
 VERSION ?= 99.0.0
 export VERSION := $(VERSION)
 # Always keep the last released version here
-VERSION_REPLACES ?= 0.44.0
+VERSION_REPLACES ?= 0.45.0
 
 DEPLOY_DIR ?= manifests
 
