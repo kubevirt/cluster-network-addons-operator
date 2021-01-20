@@ -1,17 +1,14 @@
-0.44.0
+0.45.0
 
-Features:
-* bump nmstate to v0.37.0 (#712)
-* bump linux-bridge to v0.9.0 (#701)
-* bump bridge-marker to 0.6.0 (#692)
-
-Bugs:
-* bumper, Change bumper fail policy (#708)
-* bumper, fix returning annotated tag sha on tagged update-policy (#709)
-* components, fix linux-bridge wrong tagged commit (#710)
-* dockerized yq, Pin yq to version 3.3.4 (#711)
-* bumper, Add quay login to bumper job (#698)
-* bumper, add PUSH_IMAGES allow linux-bridge docker push (#696)
-
-Infra:
-* ci, Bump provider to k8s-1.19 on ci lanes (#700)
+* bump nmstate to v0.38.0 (#750)
+* automation, Update CNAO CR to v1 in tier1 setup (#748)
+* bump kubemacpool to v0.22.0 (#747)
+* bumper, fix isPrAlreadyOpened on non master branches (#740)
+* cluster-up, remove NetworkManager installation (#742)
+* bumper, add a new bumper workflow for release-0.44 (#727)
+* unit-test, Remove copy to artifact in script (#730)
+* ci, Remove travis and create prow unit-test automation (#729)
+* pin golang.org/x/text vendor to v0.3.3 (#722)
+* validation test, Change test look for warning events (#717)
+* bump kubemacpool to v0.21.0 (#718)
+* Stop Using Deprecated Packages (#707)
