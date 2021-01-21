@@ -1,13 +1,9 @@
-0.44.1
+0.44.2
 
 Features:
-* ci, Remove travis and create prow unit-test automation (#731)
-* bumper, set components.yaml to track stable branches (#728)
-* bump kubemacpool to v0.21.0 (#724)
+* bump nmstate to v0.37.3 (#751)
+* automation, Update CNAO CR to v1 in tier1 setup (#749)
 
 Bugs:
-* unit-test, Remove copy to artifact in script (#732)
-* pin golang.org/x/text vendor to v0.3.3 (#726)
-* validation test, Change test look for warning events (#725)
-* [release-0.44] Stop Using Deprecated Packages (#723)
-
+* bumper, fix isPrAlreadyOpened on non master branches (#746)
+* cluster-up, remove NetworkManager installation (#745)
