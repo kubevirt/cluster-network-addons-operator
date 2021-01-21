@@ -15,12 +15,8 @@ var _ = Context("Cluster Network Addons Operator", func() {
 		masterRelease := LatestRelease()
 		BeforeEach(func() {
 			InstallRelease(masterRelease)
-		})
-
-		It("successfully turns ready", func() {
 			CheckOperatorIsReady(15 * time.Minute)
 		})
-
 		Context("and when NodeNetworkConfig with supported spec is created", func() {
 			gvk := GetCnaoV1GroupVersionKind()
 			BeforeEach(func() {
