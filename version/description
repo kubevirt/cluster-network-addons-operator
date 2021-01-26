@@ -1,14 +1,4 @@
-0.45.0
+0.46.0
 
-* bump nmstate to v0.38.0 (#750)
-* automation, Update CNAO CR to v1 in tier1 setup (#748)
-* bump kubemacpool to v0.22.0 (#747)
-* bumper, fix isPrAlreadyOpened on non master branches (#740)
-* cluster-up, remove NetworkManager installation (#742)
-* bumper, add a new bumper workflow for release-0.44 (#727)
-* unit-test, Remove copy to artifact in script (#730)
-* ci, Remove travis and create prow unit-test automation (#729)
-* pin golang.org/x/text vendor to v0.3.3 (#722)
-* validation test, Change test look for warning events (#717)
-* bump kubemacpool to v0.21.0 (#718)
-* Stop Using Deprecated Packages (#707)
+* bump nmstate to v0.39.0 (#756)
+* Check cnao readiness at lifecycle deployment test (#754)
