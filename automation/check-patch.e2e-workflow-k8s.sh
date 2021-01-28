@@ -8,6 +8,8 @@
 # automation/check-patch.e2e-workflow-k8s.sh
 
 teardown() {
+    # Don't fail if there is no logs
+    cp ${E2E_LOGS}/workflow/*.log ${ARTIFACTS} || true
     make cluster-down
 }
 
