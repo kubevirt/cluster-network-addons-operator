@@ -20,6 +20,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
+	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 var operatorVersion string
@@ -30,12 +31,13 @@ func TestMain(m *testing.M) {
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-
 	reporters := make([]Reporter, 0)
+	reporters = append(reporters, cnaoreporter.New("test_logs/e2e/workflow", components.Namespace))
 	if ginkgoreporters.JunitOutput != "" {
 		reporters = append(reporters, ginkgoreporters.NewJunitReporter())
 	}
-	RunSpecsWithDefaultAndCustomReporters(t, "E2E Workflow Test Suite", reporters)
+	RunSpecsWithDefaultAndCustomReporters(t, "Workflow E2E Test Suite", reporters)
+
 }
 
 var _ = BeforeSuite(func() {
