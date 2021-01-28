@@ -13,9 +13,11 @@ import (
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
+	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 func TestMain(m *testing.M) {
@@ -25,10 +27,12 @@ func TestMain(m *testing.M) {
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	reporters := make([]Reporter, 0)
+	reporters = append(reporters, cnaoreporter.New("test_logs/e2e/lifecycle", components.Namespace))
 	if ginkgoreporters.JunitOutput != "" {
 		reporters = append(reporters, ginkgoreporters.NewJunitReporter())
 	}
-	RunSpecsWithDefaultAndCustomReporters(t, "E2E Lifecycle Test Suite", reporters)
+	RunSpecsWithDefaultAndCustomReporters(t, "Lifecycle E2E Test Suite", reporters)
+
 }
 
 var _ = BeforeSuite(func() {
