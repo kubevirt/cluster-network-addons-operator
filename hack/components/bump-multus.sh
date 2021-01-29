@@ -106,11 +106,44 @@ rm -rf data/multus/*
 cp ${MULTUS_PATH}/config/cnao/000-ns.yaml data/multus/
 cp ${MULTUS_PATH}/config/cnao/001-multus.yaml data/multus/
 
-echo 'Get multus image name and update it under CNAO'
+echo 'Build multus image, push it to quay.io and update it under CNAO'
 MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
-MULTUS_IMAGE=nfvpe/multus
+MULTUS_IMAGE=quay.io/kubevirt/cluster-network-addon-multus
 MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}
-MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
+(
+    cd ${MULTUS_PATH}
+    cat <<EOF > Dockerfile
 
+FROM openshift/origin-release:golang-1.15 as builder
+
+ADD . /usr/src/multus-cni
+
+WORKDIR /usr/src/multus-cni
+RUN ./build
+
+FROM registry.access.redhat.com/ubi8/ubi-minimal
+RUN mkdir -p /usr/src/multus-cni/images && mkdir -p /usr/src/multus-cni/bin
+COPY --from=builder /usr/src/multus-cni/bin/multus /usr/src/multus-cni/bin
+ADD ./images/entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]
+EOF
+    docker build -t ${MULTUS_IMAGE_TAGGED} .
+)
+
+if [ ! -z ${PUSH_IMAGES} ]; then
+    echo 'Push the image to KubeVirt repo'
+    docker push "${MULTUS_IMAGE_TAGGED}"
+fi
+
+if [[ -n "$(docker-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
+    MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
+else
+    MULTUS_IMAGE_DIGEST=${MULTUS_IMAGE_TAGGED}
+fi
+
+
+
+echo 'Update multus references under CNAO'
 sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
