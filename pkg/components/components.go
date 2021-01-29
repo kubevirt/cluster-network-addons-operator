@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	MultusImageDefault            = "nfvpe/multus@sha256:ac1266b87ba44c09dc2a336f0d5dad968fccd389ce1944a85e87b32cd21f7224"
+	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus@sha256:32867c73cda4d605651b898dc85fea67d93191c47f27e1ad9e9f2b9041c518de"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:606eaa06262ad6edd5aa809491c7e46b9ddbc9c52ba8c47e89e734e3e80cd311"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:799459f8509a06ea643aa2f6ac02826721a641333aacab07e53166139a5a66c3"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:e2318880e4b71d7734cc30d070ec8a898934e408fc878287858b6ecb0d61fc20"
@@ -377,7 +377,7 @@ func GetClusterRole() *rbacv1.ClusterRole {
 
 func GetCrd() *extv1.CustomResourceDefinition {
 	subResouceSchema := &extv1.CustomResourceSubresources{Status: &extv1.CustomResourceSubresourceStatus{}}
-	labelSelectorRequirement := map[string]extv1.JSONSchemaProps {
+	labelSelectorRequirement := map[string]extv1.JSONSchemaProps{
 		"key": extv1.JSONSchemaProps{
 			Description: "key is the label key that the selector applies to.",
 			Type:        "string",
@@ -402,12 +402,12 @@ func GetCrd() *extv1.CustomResourceDefinition {
 		Properties: map[string]extv1.JSONSchemaProps{
 			"matchExpressions": extv1.JSONSchemaProps{
 				Description: "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
-				Type: "array",
+				Type:        "array",
 				Items: &extv1.JSONSchemaPropsOrArray{
 					Schema: &extv1.JSONSchemaProps{
 						Description: "A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.",
 						Type:        "object",
-						Properties: labelSelectorRequirement,
+						Properties:  labelSelectorRequirement,
 						Required: []string{
 							"key",
 							"operator",
@@ -515,7 +515,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"key",
 						"operator",
 					},
-					Properties: map[string]extv1.JSONSchemaProps {
+					Properties: map[string]extv1.JSONSchemaProps{
 						"key": extv1.JSONSchemaProps{
 							Description: "The label key that the selector applies to.",
 							Type:        "string",
@@ -540,7 +540,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 	}
 
 	placementProps := map[string]extv1.JSONSchemaProps{
-		"nodeSelector" : extv1.JSONSchemaProps{
+		"nodeSelector": extv1.JSONSchemaProps{
 			AdditionalProperties: &extv1.JSONSchemaPropsOrBool{
 				Schema: &extv1.JSONSchemaProps{
 					Type: "string",
@@ -548,7 +548,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 			},
 			Type: "object",
 		},
-		"affinity" : extv1.JSONSchemaProps{
+		"affinity": extv1.JSONSchemaProps{
 			Description: "Affinity is a group of affinity scheduling rules.",
 			Type:        "object",
 			Properties: map[string]extv1.JSONSchemaProps{
@@ -569,13 +569,13 @@ func GetCrd() *extv1.CustomResourceDefinition {
 											Type:        "object",
 											Properties: map[string]extv1.JSONSchemaProps{
 												"matchExpressions": getNodeSelectorRequirement("A list of node selector requirements by node's labels."),
-												"matchFields": getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
+												"matchFields":      getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
 											},
 										},
 										"weight": extv1.JSONSchemaProps{
 											Description: "Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100.",
-											Type: "integer",
-											Format: "int32",
+											Type:        "integer",
+											Format:      "int32",
 										},
 									},
 									Required: []string{
@@ -587,21 +587,21 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 						"requiredDuringSchedulingIgnoredDuringExecution": extv1.JSONSchemaProps{
 							Description: "If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to an update), the system may or may not try to eventually evict the pod from its node.",
-							Type: "object",
+							Type:        "object",
 							Required: []string{
 								"nodeSelectorTerms",
 							},
 							Properties: map[string]extv1.JSONSchemaProps{
 								"nodeSelectorTerms": extv1.JSONSchemaProps{
 									Description: "Required. A list of node selector terms. The terms are ORed.",
-									Type: "array",
+									Type:        "array",
 									Items: &extv1.JSONSchemaPropsOrArray{
 										Schema: &extv1.JSONSchemaProps{
 											Description: "A null or empty node selector term matches no objects. The requirements of them are ANDed. The TopologySelectorTerm type implements a subset of the NodeSelectorTerm.",
 											Type:        "object",
 											Properties: map[string]extv1.JSONSchemaProps{
 												"matchExpressions": getNodeSelectorRequirement("A list of node selector requirements by node's labels."),
-												"matchFields": getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
+												"matchFields":      getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
 											},
 										},
 									},
@@ -615,7 +615,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
 						"preferredDuringSchedulingIgnoredDuringExecution": getPodPreferredDuringSchedulingIgnoredDuringExecution("affinity"),
-						"requiredDuringSchedulingIgnoredDuringExecution": getPodRequiredDuringSchedulingIgnoredDuringExecution("affinity"),
+						"requiredDuringSchedulingIgnoredDuringExecution":  getPodRequiredDuringSchedulingIgnoredDuringExecution("affinity"),
 					},
 				},
 				"podAntiAffinity": extv1.JSONSchemaProps{
@@ -623,12 +623,12 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
 						"preferredDuringSchedulingIgnoredDuringExecution": getPodPreferredDuringSchedulingIgnoredDuringExecution("anti-affinity"),
-						"requiredDuringSchedulingIgnoredDuringExecution": getPodRequiredDuringSchedulingIgnoredDuringExecution("anti-affinity"),
+						"requiredDuringSchedulingIgnoredDuringExecution":  getPodRequiredDuringSchedulingIgnoredDuringExecution("anti-affinity"),
 					},
 				},
 			},
 		},
-		"tolerations" : extv1.JSONSchemaProps{
+		"tolerations": extv1.JSONSchemaProps{
 			Type: "array",
 			Items: &extv1.JSONSchemaPropsOrArray{
 				Schema: &extv1.JSONSchemaProps{
@@ -649,8 +649,8 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 						"tolerationSeconds": extv1.JSONSchemaProps{
 							Description: "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.",
-							Type:   "integer",
-							Format: "int64",
+							Type:        "integer",
+							Format:      "int64",
 						},
 						"value": extv1.JSONSchemaProps{
 							Description: "Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.",
@@ -722,7 +722,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 						"selfSignConfiguration": extv1.JSONSchemaProps{
 							Description: "SelfSignConfiguration defines self sign configuration",
-							Type: "object",
+							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
 								"caRotateInterval": extv1.JSONSchemaProps{
 									Description: "CARotateInterval defines duration for CA and certificate",
@@ -740,15 +740,15 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 						"placementConfiguration": extv1.JSONSchemaProps{
 							Description: "PlacementConfiguration defines node placement configuration",
-							Type: "object",
+							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
 								"infra": extv1.JSONSchemaProps{
 									Description: "Infra defines placement configuration for master nodes",
 									Type:        "object",
-									Properties: placementProps,
+									Properties:  placementProps,
 								},
 								"workloads": extv1.JSONSchemaProps{
-									Type:        "object",
+									Type:       "object",
 									Properties: placementProps,
 								},
 							},
@@ -764,16 +764,16 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Items: &extv1.JSONSchemaPropsOrArray{
 								Schema: &extv1.JSONSchemaProps{
 									Description: "Condition represents the state of the operator's reconciliation functionality.",
-									Type: "object",
+									Type:        "object",
 									Properties: map[string]extv1.JSONSchemaProps{
 										"lastHeartbeatTime": extv1.JSONSchemaProps{
-											Format: "date-time",
-											Type:   "string",
+											Format:   "date-time",
+											Type:     "string",
 											Nullable: true,
 										},
 										"lastTransitionTime": extv1.JSONSchemaProps{
-											Format: "date-time",
-											Type:   "string",
+											Format:   "date-time",
+											Type:     "string",
 											Nullable: true,
 										},
 										"message": extv1.JSONSchemaProps{
