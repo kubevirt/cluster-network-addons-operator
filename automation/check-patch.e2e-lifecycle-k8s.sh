@@ -10,6 +10,8 @@
 teardown() {
     # Don't fail if there is no logs
     cp ${E2E_LOGS}/lifecycle/*.log ${ARTIFACTS} || true
+    ./cluster/kubectl.sh logs -n kube-system kube-apiserver-node01 > ${ARTIFACTS}/kube-apiserver-node01.log || true
+    ./cluster/kubectl.sh get pod -n cluster-network-addons -o wide > $ARTIFACTS/cnao.pod.list.txt || true
     make cluster-down
 }
 
