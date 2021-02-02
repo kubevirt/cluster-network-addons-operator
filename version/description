@@ -1,9 +1,6 @@
-0.44.2
+0.44.3
 
-Features:
-* bump nmstate to v0.37.3 (#751)
-* automation, Update CNAO CR to v1 in tier1 setup (#749)
-
-Bugs:
-* bumper, fix isPrAlreadyOpened on non master branches (#746)
-* cluster-up, remove NetworkManager installation (#745)
+* bump nmstate to v0.37.5 (#770)
+* Build and push multus container to quay.io (#767)
+* Add e2e tests custom reporter (#763)
+* Check cnao readiness at lifecycle deployment test (#755)
