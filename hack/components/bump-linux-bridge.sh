@@ -29,11 +29,21 @@ LINUX_BRIDGE_IMAGE_TAGGED=${LINUX_BRIDGE_IMAGE}:${LINUX_BRIDGE_TAG}
 (
     cd ${LINUX_BRIDGE_PATH}
     cat <<EOF > Dockerfile
+FROM registry.access.redhat.com/ubi8/ubi-minimal AS builder
+RUN microdnf install -y golang git
+RUN \
+    git clone https://${LINUX_BRIDGE_REPO} ${LINUX_BRIDGE_PATH} && \
+    cd ${LINUX_BRIDGE_PATH} && \
+    git checkout ${LINUX_BRIDGE_TAG}
+WORKDIR ${LINUX_BRIDGE_PATH}
+RUN GOFLAGS=-mod=vendor ./build_linux.sh
+
 FROM registry.access.redhat.com/ubi8/ubi-minimal
-RUN microdnf install -y findutils tar gzip
-RUN mkdir -p ${LINUX_BRIDGE_TAR_CONTAINER_DIR}
-ADD ${LINUX_BRIDGE_URL}/releases/download/${LINUX_BRIDGE_TAG}/${LINUX_BRIDGE_TAR_FILE} ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/${LINUX_BRIDGE_TAR_FILE}
-RUN tar xvzf ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/${LINUX_BRIDGE_TAR_FILE} -C ${LINUX_BRIDGE_TAR_CONTAINER_DIR} ./bridge ./tuning && rm -rf ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/${LINUX_BRIDGE_TAR_FILE}
+ENV SOURCE_DIR=${REMOTE_SOURCE_DIR}/app
+RUN mkdir -p /usr/src/containernetworking/plugins/bin
+RUN microdnf install -y findutils
+COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/bridge /usr/src/github.com/containernetworking/plugins/bin/bridge
+COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/tuning /usr/src/github.com/containernetworking/plugins/bin/tuning
 EOF
     docker build -t ${LINUX_BRIDGE_IMAGE_TAGGED} .
 )
