@@ -1,9 +1,12 @@
-0.44.2
+0.44.3
 
 Features:
-* bump nmstate to v0.37.3 (#751)
-* automation, Update CNAO CR to v1 in tier1 setup (#749)
+* Bump CNI plugins version (#772) (#774)
+* bump ovs-cni to v0.18.0 (#775)
+* bump nmstate to v0.37.5 (#770)
 
 Bugs:
-* bumper, fix isPrAlreadyOpened on non master branches (#746)
-* cluster-up, remove NetworkManager installation (#745)
+* Don't run etcd in memory by default (#777)
+* Build and push multus container to quay.io (#767)
+* Add e2e tests custom reporter (#763)
+* Check cnao readiness at lifecycle deployment test (#755)
