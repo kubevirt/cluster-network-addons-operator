@@ -13,9 +13,9 @@
 # limitations under the License.
 
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.19'}
-export KUBEVIRTCI_TAG='2012111613-af55d4f'
+export KUBEVIRTCI_TAG='2102031339-9306210'
 
-KUBEVIRTCI_VERSION='af55d4ff8553d54463bc99452af744f0dd9e8f46'
+KUBEVIRTCI_VERSION="9306210cbf3905b7df2e11a62a30a0c3bc60c470"
 KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
 # The CLUSTER_PATH var is used in cluster folder and points to the _kubevirtci where the cluster is deployed from.
 CLUSTER_PATH=${CLUSTER_PATH:-"${PWD}/_kubevirtci/"}
