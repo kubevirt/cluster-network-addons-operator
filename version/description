@@ -1,4 +1,10 @@
-0.46.0
+0.47.0
 
-* bump nmstate to v0.39.0 (#756)
-* Check cnao readiness at lifecycle deployment test (#754)
+Features:
+* bump ovs-cni to v0.18.0 (#773)
+* Bump CNI plugins version (#772)
+* bump nmstate to v0.40.0 (#769)
+
+Bugs:
+* Don't run etcd in memory by default (#776)
+
