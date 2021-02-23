@@ -30,7 +30,6 @@ namespace: "{{ .Namespace }}"
 bases:
 - ../default
 patchesStrategicMerge:
-- cnao_image_patch.yaml
 - cnao_placement_patch.yaml
 - cnao_rejectowner_patch.yaml
 - mutatevirtualmachines_opt_mode_patch.yaml
