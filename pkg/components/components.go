@@ -725,15 +725,19 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
 								"caRotateInterval": extv1.JSONSchemaProps{
-									Description: "CARotateInterval defines duration for CA and certificate",
+									Description: "CARotateInterval defines duration for CA expiration",
 									Type:        "string",
 								},
 								"certRotateInterval": extv1.JSONSchemaProps{
-									Description: "CertRotateInterval defines duration for of service certificate",
+									Description: "CertRotateInterval defines duration for of service certificate expiration",
 									Type:        "string",
 								},
 								"caOverlapInterval": extv1.JSONSchemaProps{
-									Description: "CAOverlapInterval defines the duration of CA Certificates at CABundle if not set it will default to CARotateInterval",
+									Description: "CAOverlapInterval defines the duration where expired CA certificate can overlap with new one, in order to allow fluent CA rotation transitioning",
+									Type:        "string",
+								},
+								"certOverlapInterval": extv1.JSONSchemaProps{
+									Description: "CertOverlapInterval defines the duration where expired service certificate can overlap with new one, in order to allow fluent service rotation transitioning",
 									Type:        "string",
 								},
 							},

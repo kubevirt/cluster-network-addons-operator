@@ -286,7 +286,7 @@ spec:
         - name: CERT_ROTATE_INTERVAL
           value: '{{ .CertRotateInterval }}'
         - name: CERT_OVERLAP_INTERVAL
-          value: 24h0m0s
+          value: '{{ .CertOverlapInterval }}'
         - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
           value: v1
         image: '{{ .KubeMacPoolImage }}'

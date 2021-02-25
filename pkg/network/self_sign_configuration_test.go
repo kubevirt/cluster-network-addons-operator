@@ -26,9 +26,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CARotateInterval is the only empty one should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "",
-					CAOverlapInterval:  "48h30m50s",
-					CertRotateInterval: "48h30m50s",
+					CARotateInterval:    "",
+					CAOverlapInterval:   "48h30m50s",
+					CertRotateInterval:  "48h30m50s",
+					CertOverlapInterval: "48h30m50s",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: caRotateInterval is missing",
@@ -36,9 +37,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CAOverlapInterval is the only empty one should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "48h30m50s",
-					CAOverlapInterval:  "",
-					CertRotateInterval: "48h30m50s",
+					CARotateInterval:    "48h30m50s",
+					CAOverlapInterval:   "",
+					CertRotateInterval:  "48h30m50s",
+					CertOverlapInterval: "48h30m50s",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: caOverlapInterval is missing",
@@ -46,19 +48,32 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CertRotateInterval is the only empty one should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "48h30m50s",
-					CAOverlapInterval:  "48h30m50s",
-					CertRotateInterval: "",
+					CARotateInterval:    "48h30m50s",
+					CAOverlapInterval:   "48h30m50s",
+					CertRotateInterval:  "",
+					CertOverlapInterval: "48h30m50s",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: certRotateInterval is missing",
 		}),
-		Entry("When selfSignConfiguration is valid sould not return an error", validateCase{
+		Entry("When CertOverlapInterval is the only empty one should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "24h",
-					CAOverlapInterval:  "12h",
-					CertRotateInterval: "10h",
+					CARotateInterval:    "48h30m50s",
+					CAOverlapInterval:   "48h30m50s",
+					CertRotateInterval:  "48h30m50s",
+					CertOverlapInterval: "",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: certOverlapInterval is missing",
+		}),
+		Entry("When selfSignConfiguration is valid should not return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "24h",
+					CAOverlapInterval:   "12h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "",
@@ -66,9 +81,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CARotateInterval is invalid duration string should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "asdfasfda",
-					CAOverlapInterval:  "12h",
-					CertRotateInterval: "10h",
+					CARotateInterval:    "asdfasfda",
+					CAOverlapInterval:   "12h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: error parsing caRotateInterval: time",
@@ -76,9 +92,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CAOverlapInterval is invalid duration string should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "12h",
-					CAOverlapInterval:  "asdfasfsa",
-					CertRotateInterval: "10h",
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "asdfasfsa",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: error parsing caOverlapInterval: time",
@@ -86,19 +103,32 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CertRotateInterval is invalid duration string should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "12h",
-					CAOverlapInterval:  "10h",
-					CertRotateInterval: "asdfasfa",
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "asdfasfa",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: error parsing certRotateInterval: time",
 		}),
+		Entry("When CertOverlapInterval is invalid duration string should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "asdfasfa",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: error parsing certOverlapInterval: time",
+		}),
 		Entry("When CARotateInterval is zero should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "0",
-					CAOverlapInterval:  "12h",
-					CertRotateInterval: "10h",
+					CARotateInterval:    "0",
+					CAOverlapInterval:   "12h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: caRotateInterval duration has to be > 0",
@@ -106,9 +136,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CAOverlapInterval is zero should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "12h",
-					CAOverlapInterval:  "0",
-					CertRotateInterval: "10h",
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "0",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: caOverlapInterval duration has to be > 0",
@@ -116,19 +147,32 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CertRotateInterval is zero should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "12h",
-					CAOverlapInterval:  "10h",
-					CertRotateInterval: "0",
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "0",
+					CertOverlapInterval: "8h",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: certRotateInterval duration has to be > 0",
 		}),
-		Entry("When CAOverlapInterval == CARotateInterval == CertRotateInterval should not return an error", validateCase{
+		Entry("When CertOverlapInterval is zero should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "1h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "0",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: certOverlapInterval duration has to be > 0",
+		}),
+		Entry("When CAOverlapInterval == CARotateInterval == CertRotateInterval == CertOverlapInterval should not return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			expectedError: "",
@@ -136,9 +180,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CAOverlapInterval is > CARotateInterval should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "1h",
-					CAOverlapInterval:  "2h",
-					CertRotateInterval: "30m",
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "2h",
+					CertRotateInterval:  "30m",
+					CertOverlapInterval: "30m",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: caOverlapInterval[(]2h0m0s[)] has to be <= caRotateInterval[(]1h0m0s[)]",
@@ -146,19 +191,43 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When CertRotateInterval is > CARotateInterval should return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "1h",
-					CAOverlapInterval:  "30m",
-					CertRotateInterval: "2h",
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "30m",
+					CertRotateInterval:  "2h",
+					CertOverlapInterval: "30m",
 				},
 			},
 			expectedError: "failed to validate selfSignConfiguration: certRotateInterval[(]2h0m0s[)] has to be <= caRotateInterval[(]1h0m0s[)]",
 		}),
+		Entry("When CertRotateInterval is > CARotateInterval should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "30m",
+					CertRotateInterval:  "2h",
+					CertOverlapInterval: "30m",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: certRotateInterval[(]2h0m0s[)] has to be <= caRotateInterval[(]1h0m0s[)]",
+		}),
+		Entry("When CertOverlapInterval is > CertRotateInterval should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "30m",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "2h",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: certOverlapInterval[(]2h0m0s[)] has to be <= certRotateInterval[(]1h0m0s[)]",
+		}),
 	)
 	var (
 		defaultSelfSignConfiguration = cnao.SelfSignConfiguration{
-			CARotateInterval:   caRotateIntervalDefault.String(),
-			CAOverlapInterval:  caOverlapIntervalDefault.String(),
-			CertRotateInterval: certRotateIntervalDefault.String(),
+			CARotateInterval:    caRotateIntervalDefault.String(),
+			CAOverlapInterval:   caOverlapIntervalDefault.String(),
+			CertRotateInterval:  certRotateIntervalDefault.String(),
+			CertOverlapInterval: certOverlapIntervalDefault.String(),
 		}
 	)
 	type fillDefaultsCase struct {
@@ -181,9 +250,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 			previousConfig: &cnao.NetworkAddonsConfigSpec{},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "",
-					CAOverlapInterval:  "3h",
-					CertRotateInterval: "4h",
+					CARotateInterval:    "",
+					CAOverlapInterval:   "3h",
+					CertRotateInterval:  "4h",
+					CertOverlapInterval: "5h",
 				},
 			},
 			expectedConfig: defaultSelfSignConfiguration,
@@ -192,9 +262,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 			previousConfig: &cnao.NetworkAddonsConfigSpec{},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "4h",
-					CAOverlapInterval:  "",
-					CertRotateInterval: "3h",
+					CARotateInterval:    "4h",
+					CAOverlapInterval:   "",
+					CertRotateInterval:  "3h",
+					CertOverlapInterval: "5h",
 				},
 			},
 			expectedConfig: defaultSelfSignConfiguration,
@@ -203,32 +274,49 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 			previousConfig: &cnao.NetworkAddonsConfigSpec{},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "4h",
-					CAOverlapInterval:  "3h",
-					CertRotateInterval: "",
+					CARotateInterval:    "4h",
+					CAOverlapInterval:   "3h",
+					CertRotateInterval:  "",
+					CertOverlapInterval: "5h",
 				},
 			},
 			expectedConfig: defaultSelfSignConfiguration,
 		}),
+		Entry("When CertOverlapInterval is empty should return default values", fillDefaultsCase{
+			previousConfig: &cnao.NetworkAddonsConfigSpec{},
+			currentConfig: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "4h",
+					CAOverlapInterval:   "3h",
+					CertRotateInterval:  "3h",
+					CertOverlapInterval: "",
+				},
+			},
+			expectedConfig: defaultSelfSignConfiguration,
+		}),
+
 		Entry("When the user hasn't explicitly change certificate knobs and a previous selfSignConfiguration exits should use the previous knobs values on the current one", fillDefaultsCase{
 			previousConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "2h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "2h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "",
-					CAOverlapInterval:  "",
-					CertRotateInterval: "",
+					CARotateInterval:    "",
+					CAOverlapInterval:   "",
+					CertRotateInterval:  "",
+					CertOverlapInterval: "",
 				},
 			},
 			expectedConfig: cnao.SelfSignConfiguration{
-				CARotateInterval:   "2h",
-				CAOverlapInterval:  "1h",
-				CertRotateInterval: "1h",
+				CARotateInterval:    "2h",
+				CAOverlapInterval:   "1h",
+				CertRotateInterval:  "1h",
+				CertOverlapInterval: "1h",
 			},
 		}),
 	)
@@ -250,16 +338,18 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When they are equal should NOT return an error", changeSafeCase{
 			previousConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "2h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "2h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "2h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "2h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			expectedError: "",
@@ -267,16 +357,18 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When they are not equal should return an error", changeSafeCase{
 			previousConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "2h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "2h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "4h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "4h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			expectedError: "cannot modify SelfSignConfiguration configuration once it is deployed",
@@ -284,9 +376,10 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 		Entry("When trying to remove selfSignConfiguration should NOT return an error", changeSafeCase{
 			previousConfig: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
-					CARotateInterval:   "2h",
-					CAOverlapInterval:  "1h",
-					CertRotateInterval: "1h",
+					CARotateInterval:    "2h",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "1h",
 				},
 			},
 			currentConfig: &cnao.NetworkAddonsConfigSpec{},
