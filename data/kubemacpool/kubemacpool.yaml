@@ -70,7 +70,7 @@ webhooks:
   - apiGroups:
     - kubevirt.io
     apiVersions:
-    - v1alpha3
+    - v1
     operations:
     - CREATE
     - UPDATE
@@ -285,6 +285,10 @@ spec:
           value: '{{ .CAOverlapInterval }}'
         - name: CERT_ROTATE_INTERVAL
           value: '{{ .CertRotateInterval }}'
+        - name: CERT_OVERLAP_INTERVAL
+          value: 24h0m0s
+        - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
+          value: v1
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
