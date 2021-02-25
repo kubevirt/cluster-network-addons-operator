@@ -184,8 +184,8 @@ spec:
 
 ## Self Signed Certificates Configuration
 
-Administrator can specify [webhook self signed certificates configuration](https://pkg.go.dev/github.com/qinqon/kube-admission-webhook@v0.12.0/pkg/certificate?tab=doc#Options)
-for deployed components. Default is `caRotateInterval: 168h`, `caOverlapInterval: 7h`, `certRotateInterval: 7h`
+Administrator can specify [webhook self signed certificates configuration](https://pkg.go.dev/github.com/qinqon/kube-admission-webhook@v0.13.0/pkg/certificate?tab=doc#Options)
+for deployed components. Default is `caRotateInterval: 168h`, `caOverlapInterval: 24h`, `certRotateInterval: 24h`, `certOverlapInterval: 8h`
 
 ```yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1
@@ -195,14 +195,16 @@ metadata:
 spec:
   selfSignConfiguration:
     caRotateInterval: 168h
-    caOverlapInterval: 7h
-    certRotateInterval: 7h
+    caOverlapInterval: 24h
+    certRotateInterval: 24h
+    certOverlapInterval: 8h
 ```
 The selfSignConfiguration parameters has to be all or none set, setting some of
-them fails at validation, also they have to conform to golang time.Duration
-string format also the following checks are done at validation: caRotateInterval => caOverlapInterval && caRotateInterval => certRotateInterval
+them fails at validation. They have to conform to golang time.Duration
+string format. Additionally the following checks are done at validation:
+- caRotateInterval >= caOverlapInterval && caRotateInterval >= certRotateInterval && certRotateInterval >= certOverlapInterval
 
-This parameters are consumed by kubemacpool and kubernetes-nmstate components.
+This parameters are consumed by Kubemacpool and Kubernetes-nmstate components.
 
 ## Placement Configuration
 

@@ -10,15 +10,17 @@ import (
 )
 
 const (
-	caRotateIntervalDefault   = 7 * 24 * time.Hour // 7 days
-	caOverlapIntervalDefault  = 24 * time.Hour     // 1 day
-	certRotateIntervalDefault = 24 * time.Hour     // 1 day
+	caRotateIntervalDefault    = 7 * 24 * time.Hour // 7 days
+	caOverlapIntervalDefault   = 24 * time.Hour     // 1 day
+	certRotateIntervalDefault  = 24 * time.Hour     // 1 day
+	certOverlapIntervalDefault = 8 * time.Hour      // 8 hour
 )
 
 // validateSelfSignConfiguration validates the following fields
 // - CARotateInterval
 // - CAOverlapInterval
 // - CertRotateInterval
+// - CertOverlapInterval
 func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.SelfSignConfiguration == nil {
 		return []error{}
@@ -37,6 +39,9 @@ func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 	err = validateNotEmpty("certRotateInterval", selfSignConfiguration.CertRotateInterval)
 	errs = appendOnError(errs, err)
 
+	err = validateNotEmpty("certOverlapInterval", selfSignConfiguration.CertOverlapInterval)
+	errs = appendOnError(errs, err)
+
 	// There are empty values don't continue
 	if len(errs) > 0 {
 		return errs
@@ -49,6 +54,9 @@ func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 	errs = appendOnError(errs, err)
 
 	certRotateInterval, err := parseCertificateKnob("certRotateInterval", selfSignConfiguration.CertRotateInterval)
+	errs = appendOnError(errs, err)
+
+	certOverlapInterval, err := parseCertificateKnob("certOverlapInterval", selfSignConfiguration.CertOverlapInterval)
 	errs = appendOnError(errs, err)
 
 	// If they cannot be parsed don't continue
@@ -65,6 +73,9 @@ func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 	err = validateGreaterThanZero("certRotateInterval", certRotateInterval)
 	errs = appendOnError(errs, err)
 
+	err = validateGreaterThanZero("certOverlapInterval", certOverlapInterval)
+	errs = appendOnError(errs, err)
+
 	// If we have a zero value don't continue
 	if len(errs) > 0 {
 		return errs
@@ -75,20 +86,24 @@ func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 
 	err = validateGreaterThan("caRotateInterval", caRotateInterval, "certRotateInterval", certRotateInterval)
 	errs = appendOnError(errs, err)
+
+	err = validateGreaterThan("certRotateInterval", certRotateInterval, "certOverlapInterval", certOverlapInterval)
+	errs = appendOnError(errs, err)
 	return errs
 }
 
 func fillDefaultsSelfSignConfiguration(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
-	if conf.SelfSignConfiguration == nil || conf.SelfSignConfiguration.CARotateInterval == "" || conf.SelfSignConfiguration.CAOverlapInterval == "" || conf.SelfSignConfiguration.CertRotateInterval == "" {
+	if conf.SelfSignConfiguration == nil || conf.SelfSignConfiguration.CARotateInterval == "" || conf.SelfSignConfiguration.CAOverlapInterval == "" || conf.SelfSignConfiguration.CertRotateInterval == "" || conf.SelfSignConfiguration.CertOverlapInterval == "" {
 		if previous != nil && previous.SelfSignConfiguration != nil {
 			conf.SelfSignConfiguration = previous.SelfSignConfiguration
 			return []error{}
 		}
 
 		conf.SelfSignConfiguration = &cnao.SelfSignConfiguration{
-			CARotateInterval:   caRotateIntervalDefault.String(),
-			CAOverlapInterval:  caOverlapIntervalDefault.String(),
-			CertRotateInterval: certRotateIntervalDefault.String(),
+			CARotateInterval:    caRotateIntervalDefault.String(),
+			CAOverlapInterval:   caOverlapIntervalDefault.String(),
+			CertRotateInterval:  certRotateIntervalDefault.String(),
+			CertOverlapInterval: certOverlapIntervalDefault.String(),
 		}
 
 	}

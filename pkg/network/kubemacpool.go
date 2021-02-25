@@ -111,6 +111,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string) (
 	data.Data["CARotateInterval"] = conf.SelfSignConfiguration.CARotateInterval
 	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
+	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
 	if err != nil {

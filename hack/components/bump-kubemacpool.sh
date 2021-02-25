@@ -57,6 +57,8 @@ spec:
             value: "{{ .CAOverlapInterval }}"
           - name: CERT_ROTATE_INTERVAL
             value: "{{ .CertRotateInterval }}"
+          - name: CERT_OVERLAP_INTERVAL
+            value: "{{ .CertOverlapInterval }}"
 EOF
 
     cat <<EOF > config/cnao/cnao_placement_patch.yaml
