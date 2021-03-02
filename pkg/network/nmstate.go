@@ -35,6 +35,7 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["CARotateInterval"] = conf.SelfSignConfiguration.CARotateInterval
 	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
+	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
 	data.Data["PlacementConfiguration"] = conf.PlacementConfiguration
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "nmstate"), &data)
