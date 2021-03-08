@@ -280,13 +280,13 @@ spec:
               key: RANGE_END
               name: kubemacpool-mac-range-config
         - name: CA_ROTATE_INTERVAL
-          value: '{{ .CARotateInterval }}'
+          value: '{{ .CARotateInterval | default "8760h0m0s" }}'
         - name: CA_OVERLAP_INTERVAL
-          value: '{{ .CAOverlapInterval }}'
+          value: '{{ .CAOverlapInterval | default "24h0m0s" }}'
         - name: CERT_ROTATE_INTERVAL
-          value: '{{ .CertRotateInterval }}'
+          value: '{{ .CertRotateInterval | default "4380h0m0s" }}'
         - name: CERT_OVERLAP_INTERVAL
-          value: '{{ .CertOverlapInterval }}'
+          value: '{{ .CertOverlapInterval | default "24h0m0s" }}'
         - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
           value: v1
         image: '{{ .KubeMacPoolImage }}'

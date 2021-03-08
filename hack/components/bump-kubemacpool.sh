@@ -52,13 +52,13 @@ spec:
         name: manager
         env:
           - name: CA_ROTATE_INTERVAL
-            value: "{{ .CARotateInterval }}"
+            value: "{{ .CARotateInterval | default \"8760h0m0s\" }}"
           - name: CA_OVERLAP_INTERVAL
-            value: "{{ .CAOverlapInterval }}"
+            value: "{{ .CAOverlapInterval | default \"24h0m0s\" }}"
           - name: CERT_ROTATE_INTERVAL
-            value: "{{ .CertRotateInterval }}"
+            value: "{{ .CertRotateInterval | default \"4380h0m0s\" }}"
           - name: CERT_OVERLAP_INTERVAL
-            value: "{{ .CertOverlapInterval }}"
+            value: "{{ .CertOverlapInterval | default \"24h0m0s\" }}"
 EOF
 
     cat <<EOF > config/cnao/cnao_placement_patch.yaml
