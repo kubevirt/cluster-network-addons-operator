@@ -30,7 +30,7 @@ main() {
         export E2E_TEST_TIMEOUT=4h
     else
         # Don't run all upgrade tests in regular PRs, stick to those released under HCO
-        export RELEASES_SELECTOR="{0.18.0,0.39.3,0.42.0,0.44.0,99.0.0}"
+        export RELEASES_SELECTOR="{0.39.3,0.44.3,0.45.0,0.46.0,0.47.0,99.0.0}"
     fi
 
     make cluster-down
