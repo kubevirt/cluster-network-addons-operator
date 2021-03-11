@@ -1,10 +1,11 @@
-0.47.0
+0.48.0
 
 Features:
-* bump ovs-cni to v0.18.0 (#773)
-* Bump CNI plugins version (#772)
-* bump nmstate to v0.40.0 (#769)
+* bump nmstate to v0.42.0 (#792)
+* bump kubemacpool to v0.23.0 (#788)
+* bump ovs-cni to v0.19.1 (#786)
 
 Bugs:
-* Don't run etcd in memory by default (#776)
-
+* lifecycle, ci, Update versions tested on lifecycle ci (#798)
+* ci, add pod status when ci tests fail (#796)
+* certs, Add cert defaults to kubemacpool's bump script and manifest (#795)
