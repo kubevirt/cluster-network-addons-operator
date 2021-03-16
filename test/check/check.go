@@ -199,7 +199,10 @@ func CheckForLeftoverObjects(currentVersion string) {
 	secrets := corev1.SecretList{}
 	err = framework.Global.Client.List(context.Background(), &secrets, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(secrets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+	for _, secret := range secrets.Items {
+		_, ok := secret.GetAnnotations()[names.REJECT_OWNER_ANNOTATION]
+		Expect(ok).To(BeTrue(), "Found leftover secret objects from the previous operator version")
+	}
 
 	clusterRoles := rbacv1.ClusterRoleList{}
 	err = framework.Global.Client.List(context.Background(), &clusterRoles, &listOptions)
