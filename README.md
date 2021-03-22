@@ -208,6 +208,10 @@ This parameters are consumed by Kubemacpool and Kubernetes-nmstate components.
 
 ## Placement Configuration
 
+CNAO deploys two component categories: infra and workload. Workload components manage node configuration
+and need to be scheduled on the nodes where actual user workload is scheduled.
+Infra components provide cluster-wide service and do not need to be running on the same nodes as user workload.
+
 Administrator can specify placement preferences for deployed infra and workload components
 by defining [affinity, nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
 and [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/).
