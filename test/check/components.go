@@ -51,12 +51,8 @@ var (
 		},
 		Deployments: []string{
 			"nmstate-webhook",
+			"nmstate-cert-manager",
 		},
-		// TODO: KubeMacPool secret is not owned by NetworkAddonsConfig and
-		// knmstate is currently not cleaning it up upon removal. Therefore we
-		// cannot really check for it. Once is the cleanup implemented, we
-		// should check it again.
-		// Secret:                       "nmstate-webhook",
 		MutatingWebhookConfiguration: "nmstate",
 	}
 	OvsComponent = Component{

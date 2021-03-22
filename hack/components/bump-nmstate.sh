@@ -20,7 +20,7 @@ git-utils::fetch_component ${NMSTATE_PATH} ${NMSTATE_URL} ${NMSTATE_COMMIT}
 
 echo 'Get kubernetes-nmstate image name and update it under CNAO'
 NMSTATE_TAG=$(git-utils::get_component_tag ${NMSTATE_PATH})
-NMSTATE_IMAGE=quay.io/nmstate/kubernetes-nmstate-handler
+NMSTATE_IMAGE=quay.io/qinqon/kubernetes-nmstate-handler
 NMSTATE_IMAGE_TAGGED=${NMSTATE_IMAGE}:${NMSTATE_TAG}
 NMSTATE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${NMSTATE_IMAGE_TAGGED}" "${NMSTATE_IMAGE}")"
 

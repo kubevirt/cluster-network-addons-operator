@@ -30,10 +30,10 @@ components:
     update-policy: static
     metadata: v3.4.2
   nmstate:
-    url: https://github.com/nmstate/kubernetes-nmstate
-    commit: 125a7c54642d9456ecd4eb284de70ac85dafbfc7
-    branch: master
-    update-policy: tagged
+    url: https://github.com/qinqon/kubernetes-nmstate
+    commit: ada5f0e214316fdf5dae28b0b4a221a7620a7f9d
+    branch: cert-manager-pod
+    update-policy: static
     metadata: v0.43.0
   ovs-cni:
     url: https://github.com/kubevirt/ovs-cni
