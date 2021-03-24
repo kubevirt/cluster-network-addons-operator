@@ -8,6 +8,7 @@ jobs:
 
   build:
     name: master - CNAO Component Bump Job
+    if: (github.repository == 'kubevirt/cluster-network-addons-operator')
     runs-on: ubuntu-latest
     steps:
 
