@@ -1,7 +1,6 @@
 package network
 
 import (
-	"reflect"
 	"time"
 
 	"github.com/pkg/errors"
@@ -91,7 +90,14 @@ func validateSelfSignConfiguration(conf *cnao.NetworkAddonsConfigSpec) []error {
 	errs = appendOnError(errs, err)
 	return errs
 }
-
+func DefaultSelfSignConfiguration() *cnao.SelfSignConfiguration {
+	return &cnao.SelfSignConfiguration{
+		CARotateInterval:    caRotateIntervalDefault.String(),
+		CAOverlapInterval:   caOverlapIntervalDefault.String(),
+		CertRotateInterval:  certRotateIntervalDefault.String(),
+		CertOverlapInterval: certOverlapIntervalDefault.String(),
+	}
+}
 func fillDefaultsSelfSignConfiguration(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
 	if conf.SelfSignConfiguration == nil || conf.SelfSignConfiguration.CARotateInterval == "" || conf.SelfSignConfiguration.CAOverlapInterval == "" || conf.SelfSignConfiguration.CertRotateInterval == "" || conf.SelfSignConfiguration.CertOverlapInterval == "" {
 		if previous != nil && previous.SelfSignConfiguration != nil {
@@ -99,20 +105,7 @@ func fillDefaultsSelfSignConfiguration(conf, previous *cnao.NetworkAddonsConfigS
 			return []error{}
 		}
 
-		conf.SelfSignConfiguration = &cnao.SelfSignConfiguration{
-			CARotateInterval:    caRotateIntervalDefault.String(),
-			CAOverlapInterval:   caOverlapIntervalDefault.String(),
-			CertRotateInterval:  certRotateIntervalDefault.String(),
-			CertOverlapInterval: certOverlapIntervalDefault.String(),
-		}
-
-	}
-	return []error{}
-}
-
-func changeSafeSelfSignConfiguration(prev, next *cnao.NetworkAddonsConfigSpec) []error {
-	if prev.SelfSignConfiguration != nil && next.SelfSignConfiguration != nil && !reflect.DeepEqual(prev.SelfSignConfiguration, next.SelfSignConfiguration) {
-		return []error{errors.Errorf("cannot modify SelfSignConfiguration configuration once it is deployed")}
+		conf.SelfSignConfiguration = DefaultSelfSignConfiguration()
 	}
 	return []error{}
 }
