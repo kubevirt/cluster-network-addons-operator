@@ -120,6 +120,20 @@ func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement
 	return placementList, nil
 }
 
+func GetEnvVarsFromDeployment(deploymentName string) ([]corev1.EnvVar, error) {
+	deployment := appsv1.Deployment{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
+	if err != nil {
+		return nil, err
+	}
+	envVars := []corev1.EnvVar{}
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		envVars = append(envVars, container.Env...)
+	}
+
+	return envVars, nil
+}
+
 func CheckConfigVersions(gvk schema.GroupVersionKind, operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
 	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q", operatorVersion, observedVersion, targetVersion))
 	getAndCheckVersions := func() error {

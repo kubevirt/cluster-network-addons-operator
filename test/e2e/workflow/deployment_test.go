@@ -7,6 +7,7 @@ import (
 
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
@@ -149,10 +150,10 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				MultusComponent,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
-				LinuxBridge: &cnao.LinuxBridge{},
-				Multus:      &cnao.Multus{},
-				Ovs:         &cnao.Ovs{},
-				MacvtapCni:  &cnao.MacvtapCni{},
+				LinuxBridge:            &cnao.LinuxBridge{},
+				Multus:                 &cnao.Multus{},
+				Ovs:                    &cnao.Ovs{},
+				MacvtapCni:             &cnao.MacvtapCni{},
 				PlacementConfiguration: &cnao.PlacementConfiguration{},
 			}
 			checkWorkloadPlacementOnComponents := func(expectedWorkLoadPlacement cnao.Placement) {
@@ -175,7 +176,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 			It("should be able to update PlacementConfigurations on components specs", func() {
 				configSpec.PlacementConfiguration = &cnao.PlacementConfiguration{
-					Workloads: &cnao.Placement{ NodeSelector: map[string]string{
+					Workloads: &cnao.Placement{NodeSelector: map[string]string{
 						"kubernetes.io/hostname": "node01"},
 					},
 				}
@@ -187,6 +188,46 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				checkWorkloadPlacementOnComponents(*configSpec.PlacementConfiguration.Workloads)
 			})
 		})
+		Context("and SelfSignConfiguration is deployed on components", func() {
+			components := []Component{
+				KubeMacPoolComponent,
+				NMStateComponent,
+			}
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool: &cnao.KubeMacPool{},
+				NMState:     &cnao.NMState{},
+			}
+			checkSelfSignConfigurationOnComponents := func(expectedSelfSignConfiguration *cnao.SelfSignConfiguration) {
+				for _, deploymentName := range []string{NMStateComponent.Deployments[0], KubeMacPoolComponent.Deployments[0]} {
+					envVars, err := GetEnvVarsFromDeployment(deploymentName)
+					Expect(err).ToNot(HaveOccurred(), "Should succeed getting env vars from deployment %s", deploymentName)
+					Expect(envVars).To(ContainElement(corev1.EnvVar{Name: "CA_ROTATE_INTERVAL", Value: expectedSelfSignConfiguration.CARotateInterval}))
+					Expect(envVars).To(ContainElement(corev1.EnvVar{Name: "CA_OVERLAP_INTERVAL", Value: expectedSelfSignConfiguration.CAOverlapInterval}))
+					Expect(envVars).To(ContainElement(corev1.EnvVar{Name: "CERT_ROTATE_INTERVAL", Value: expectedSelfSignConfiguration.CertRotateInterval}))
+					Expect(envVars).To(ContainElement(corev1.EnvVar{Name: "CERT_OVERLAP_INTERVAL", Value: expectedSelfSignConfiguration.CertOverlapInterval}))
+				}
+			}
+
+			BeforeEach(func() {
+				By("Deploying components with default SelfSignConfiguration")
+				testConfigCreate(gvk, configSpec, components)
+
+				By("Checking cert rotation env vars were set on components according to default SelfSignConfiguration")
+				checkSelfSignConfigurationOnComponents(network.DefaultSelfSignConfiguration())
+			})
+
+			It("should be able to update SelfSignConfiguration on components specs", func() {
+				configSpec.SelfSignConfiguration = network.DefaultSelfSignConfiguration()
+				configSpec.SelfSignConfiguration.CARotateInterval = "200h20m2s"
+
+				By("Re-deploying SelfSignConfiguration with different workloads values")
+				testConfigUpdate(gvk, configSpec, components)
+
+				By("Checking cert rotation env vars were  set on components to updated SelfSignConfiguration")
+				checkSelfSignConfigurationOnComponents(configSpec.SelfSignConfiguration)
+			})
+		})
+
 	})
 
 	Context("when all components are already deployed", func() {

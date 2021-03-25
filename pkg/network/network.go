@@ -87,7 +87,6 @@ func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 
 	errs = append(errs, changeSafeKubeMacPool(prev, next)...)
 	errs = append(errs, changeSafeImagePullPolicy(prev, next)...)
-	errs = append(errs, changeSafeSelfSignConfiguration(prev, next)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
