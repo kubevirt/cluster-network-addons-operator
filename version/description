@@ -1,7 +1,4 @@
-0.49.0
+0.50.0
 
-Features:
-* bump nmstate to v0.43.0 (#800)
-
-Bugs:
-* Remove Secret leftover checks at lifecycle test (#803)
+* Allow self sign config modification (#808)
+* gitActions, Restrict bumper workflows only to non-fork repo (#805)
