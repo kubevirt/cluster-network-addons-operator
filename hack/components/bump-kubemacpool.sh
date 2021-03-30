@@ -32,7 +32,6 @@ bases:
 patchesStrategicMerge:
 - cnao_image_patch.yaml
 - cnao_placement_patch.yaml
-- cnao_rejectowner_patch.yaml
 - mutatevirtualmachines_opt_mode_patch.yaml
 - mutatepods_opt_mode_patch.yaml
 EOF
@@ -73,16 +72,6 @@ spec:
       affinity: AFFINITY
       nodeSelector: NODE_SELECTOR
       tolerations: TOLERATIONS
-EOF
-
-    cat <<EOF > config/cnao/cnao_rejectowner_patch.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: service
-  namespace: system
-  annotations:
-    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
 EOF
 
     (
