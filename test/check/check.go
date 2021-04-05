@@ -183,6 +183,17 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	}
 }
 
+func CheckNMStateOperatorIsReady(timeout time.Duration) {
+	By("Checking that the operator is up and running")
+	if timeout != CheckImmediately {
+		Eventually(func() error {
+			return checkForGenericDeployment("nmstate-operator", "nmstate", false)
+		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
+	} else {
+		Expect(checkForGenericDeployment("nmstate-operator", "nmstate", false)).ShouldNot(HaveOccurred(), "Operator is not ready")
+	}
+}
+
 func CheckForLeftoverObjects(currentVersion string) {
 	listOptions := client.ListOptions{}
 	key := cnaov1.SchemeGroupVersion.Group + "/version"
@@ -358,17 +369,23 @@ func checkForSecurityContextConstraints(name string) error {
 }
 
 func checkForDeployment(name string) error {
+	return checkForGenericDeployment(name, components.Namespace, true)
+}
+
+func checkForGenericDeployment(name, namespace string, checkLabels bool) error {
 	deployment := appsv1.Deployment{}
 
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &deployment)
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &deployment)
 	if err != nil {
 		return err
 	}
 
-	labels := deployment.GetLabels()
-	if labels != nil {
-		if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
-			return fmt.Errorf("Deployment %s/%s is missing operator label", components.Namespace, name)
+	if checkLabels {
+		labels := deployment.GetLabels()
+		if labels != nil {
+			if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+				return fmt.Errorf("Deployment %s/%s is missing operator label", components.Namespace, name)
+			}
 		}
 	}
 
@@ -377,7 +394,7 @@ func checkForDeployment(name string) error {
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v\ncluster Info:\n%v", components.Namespace, name, string(manifest), gatherClusterInfo())
+		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v\ncluster Info:\n%v", namespace, name, string(manifest), gatherClusterInfo())
 	}
 
 	return nil
