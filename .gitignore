@@ -29,3 +29,5 @@ whitespace-check
 
 # Goland IDE folder
 .idea/
+# VS Code IDE folder
+.vscode/

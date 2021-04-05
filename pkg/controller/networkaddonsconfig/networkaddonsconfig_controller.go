@@ -191,9 +191,19 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, nil
 	}
 
+	// Check for NMState Operator
+	nmstateOperator, err := isRunningKubernetesNMStateOperator(r.client)
+	if err != nil {
+		return reconcile.Result{}, errors.Wrap(err, "failed to check whether running Kubernetes NMState Operator")
+	}
+	if nmstateOperator {
+		log.Printf("Kubernetes NMState Operator is running")
+	}
+	r.clusterInfo.NmstateOperator = nmstateOperator
+
 	// Fetch the NetworkAddonsConfig instance
 	networkAddonsConfigStorageVersion := &cnaov1.NetworkAddonsConfig{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
+	err = r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -316,7 +326,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 
 	// Perform any special object changes that are impossible to do with regular Apply. e.g. Remove outdated objects
 	// and objects that cannot be modified by Apply method due to incompatible changes.
-	if err := network.SpecialCleanUp(&networkAddonsConfig.Spec, r.client); err != nil {
+	if err := network.SpecialCleanUp(&networkAddonsConfig.Spec, r.client, r.clusterInfo); err != nil {
 		log.Printf("failed to Clean Up outdated objects: %v", err)
 		return objs, err
 	}
@@ -527,6 +537,21 @@ func isRunningOnOpenShift4(c kubernetes.Interface) (bool, error) {
 
 func isSCCAvailable(c kubernetes.Interface) (bool, error) {
 	return isResourceAvailable(c, "securitycontextconstraints", "security.openshift.io", "v1")
+}
+
+func isRunningKubernetesNMStateOperator(c k8sclient.Client) (bool, error) {
+	deployments := &appsv1.DeploymentList{}
+	err := c.List(context.TODO(), deployments, k8sclient.MatchingLabels{"app": "kubernetes-nmstate-operator"})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	if len(deployments.Items) == 0 {
+		return false, nil
+	}
+	return true, nil
 }
 
 func isResourceAvailable(kubeClient kubernetes.Interface, name string, group string, version string) (bool, error) {
