@@ -1,4 +1,3 @@
-0.50.0
+0.51.0
 
-* Allow self sign config modification (#808)
-* gitActions, Restrict bumper workflows only to non-fork repo (#805)
+* Use HCO cert rotation default values (#811)
