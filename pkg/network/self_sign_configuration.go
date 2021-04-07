@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	caRotateIntervalDefault    = 7 * 24 * time.Hour // 7 days
-	caOverlapIntervalDefault   = 24 * time.Hour     // 1 day
-	certRotateIntervalDefault  = 24 * time.Hour     // 1 day
-	certOverlapIntervalDefault = 8 * time.Hour      // 8 hour
+	caRotateIntervalDefault    = 48 * time.Hour
+	caOverlapIntervalDefault   = 24 * time.Hour
+	certRotateIntervalDefault  = 24 * time.Hour
+	certOverlapIntervalDefault = 12 * time.Hour
 )
 
 // validateSelfSignConfiguration validates the following fields
