@@ -99,13 +99,21 @@ func DefaultSelfSignConfiguration() *cnao.SelfSignConfiguration {
 	}
 }
 func fillDefaultsSelfSignConfiguration(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
-	if conf.SelfSignConfiguration == nil || conf.SelfSignConfiguration.CARotateInterval == "" || conf.SelfSignConfiguration.CAOverlapInterval == "" || conf.SelfSignConfiguration.CertRotateInterval == "" || conf.SelfSignConfiguration.CertOverlapInterval == "" {
-		if previous != nil && previous.SelfSignConfiguration != nil {
-			conf.SelfSignConfiguration = previous.SelfSignConfiguration
-			return []error{}
-		}
+	isMissingSelfSignConfiguration := func(confToCheck *cnao.NetworkAddonsConfigSpec) bool {
+		return confToCheck.SelfSignConfiguration == nil ||
+			confToCheck.SelfSignConfiguration.CARotateInterval == "" ||
+			confToCheck.SelfSignConfiguration.CAOverlapInterval == "" ||
+			confToCheck.SelfSignConfiguration.CertRotateInterval == "" ||
+			confToCheck.SelfSignConfiguration.CertOverlapInterval == ""
+	}
 
-		conf.SelfSignConfiguration = DefaultSelfSignConfiguration()
+	if isMissingSelfSignConfiguration(conf) {
+		if previous != nil && !isMissingSelfSignConfiguration(previous) {
+			conf.SelfSignConfiguration = previous.SelfSignConfiguration
+
+		} else {
+			conf.SelfSignConfiguration = DefaultSelfSignConfiguration()
+		}
 	}
 	return []error{}
 }

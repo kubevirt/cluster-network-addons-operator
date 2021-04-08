@@ -319,5 +319,53 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 				CertOverlapInterval: "1h",
 			},
 		}),
+		Entry("When self sign is nil and a previous conf selfSignConfiguration is missing CARotateInterval should return default values", fillDefaultsCase{
+			previousConfig: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "",
+					CAOverlapInterval:   "1h",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "2h",
+				},
+			},
+			currentConfig:  &cnao.NetworkAddonsConfigSpec{},
+			expectedConfig: defaultSelfSignConfiguration,
+		}),
+		Entry("When self sign is nil and a previous conf selfSignConfiguration is missing CAOverlapInterval should return default values", fillDefaultsCase{
+			previousConfig: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "",
+					CertRotateInterval:  "1h",
+					CertOverlapInterval: "2h",
+				},
+			},
+			currentConfig:  &cnao.NetworkAddonsConfigSpec{},
+			expectedConfig: defaultSelfSignConfiguration,
+		}),
+		Entry("When self sign is nil and a previous conf selfSignConfiguration is missing CertRotateInterval should return default values", fillDefaultsCase{
+			previousConfig: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "3h",
+					CertRotateInterval:  "",
+					CertOverlapInterval: "2h",
+				},
+			},
+			currentConfig:  &cnao.NetworkAddonsConfigSpec{},
+			expectedConfig: defaultSelfSignConfiguration,
+		}),
+		Entry("When self sign is nil and a previous conf selfSignConfiguration is missing CertOverlapIntervalOverlapInterval  should return default values", fillDefaultsCase{
+			previousConfig: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "1h",
+					CAOverlapInterval:   "3h",
+					CertRotateInterval:  "4h",
+					CertOverlapInterval: "",
+				},
+			},
+			currentConfig:  &cnao.NetworkAddonsConfigSpec{},
+			expectedConfig: defaultSelfSignConfiguration,
+		}),
 	)
 })
