@@ -6,7 +6,7 @@ ENV ENTRYPOINT=/entrypoint \
     USER_UID=1001 \
     USER_NAME=cluster-network-addons-operator
 RUN \
-    yum -y update \
+    yum -y update && \
     yum clean all
 COPY build/operator/bin/user_setup /user_setup
 COPY build/operator/bin/csv-generator /usr/bin/csv-generator
