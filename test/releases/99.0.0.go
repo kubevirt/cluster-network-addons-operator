@@ -33,6 +33,12 @@ func init() {
 				Image:      "quay.io/kubevirt/kubemacpool@sha256:9f04a0b958d744c043535e024d3647113a72ec73e399682ceee3f1a1228c3435",
 			},
 			{
+				ParentName: "kubemacpool-cert-manager",
+				ParentKind: "Deployment",
+				Name:       "manager",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:9f04a0b958d744c043535e024d3647113a72ec73e399682ceee3f1a1228c3435",
+			},
+			{
 				ParentName: "nmstate-handler",
 				ParentKind: "DaemonSet",
 				Name:       "nmstate-handler",

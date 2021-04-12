@@ -198,7 +198,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				NMState:     &cnao.NMState{},
 			}
 			checkSelfSignConfigurationOnComponents := func(expectedSelfSignConfiguration *cnao.SelfSignConfiguration) {
-				for _, deploymentName := range []string{NMStateComponent.Deployments[1], KubeMacPoolComponent.Deployments[0]} {
+				for _, deploymentName := range []string{NMStateComponent.Deployments[1], KubeMacPoolComponent.Deployments[1]} {
 					envVars, err := GetEnvVarsFromDeployment(deploymentName)
 					Expect(err).ToNot(HaveOccurred(), "Should succeed getting env vars from deployment %s", deploymentName)
 					Expect(envVars).To(ContainElement(corev1.EnvVar{Name: "CA_ROTATE_INTERVAL", Value: expectedSelfSignConfiguration.CARotateInterval}))
