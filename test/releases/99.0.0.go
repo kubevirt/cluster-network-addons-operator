@@ -45,6 +45,12 @@ func init() {
 				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:16f3089f919c173c3f673a775f4a5f5786790905db8ef9e1b9bf4c8eb103a1d1",
 			},
 			{
+				ParentName: "nmstate-cert-manager",
+				ParentKind: "Deployment",
+				Name:       "nmstate-cert-manager",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:16f3089f919c173c3f673a775f4a5f5786790905db8ef9e1b9bf4c8eb103a1d1",
+			},
+			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
