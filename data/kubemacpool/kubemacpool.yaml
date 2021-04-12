@@ -5,13 +5,15 @@ metadata:
     control-plane: mac-controller-manager
   name: {{ .Namespace }}
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  labels: null
   name: kubemacpool-mutator
 webhooks:
-- clientConfig:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: kubemacpool-service
       namespace: {{ .Namespace }}
@@ -43,7 +45,11 @@ webhooks:
     - CREATE
     resources:
     - pods
-- clientConfig:
+  sideEffects: NoneOnDryRun
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: kubemacpool-service
       namespace: {{ .Namespace }}
@@ -76,6 +82,7 @@ webhooks:
     - UPDATE
     resources:
     - virtualmachines
+  sideEffects: NoneOnDryRun
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -204,18 +211,6 @@ metadata:
   namespace: '{{ .Namespace }}'
 ---
 apiVersion: v1
-data:
-  tls.crt: YmFkIGNlcnRpZmljYXRlCg==
-  tls.key: YmFkIGtleQo=
-kind: Secret
-metadata:
-  annotations:
-    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
-  name: kubemacpool-service
-  namespace: '{{ .Namespace }}'
-type: kubernetes.io/tls
----
-apiVersion: v1
 kind: Service
 metadata:
   name: kubemacpool-service
@@ -226,7 +221,60 @@ spec:
     targetPort: 8000
   publishNotReadyAddresses: true
   selector:
-    app: kubemacpool
+    control-plane: mac-controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: cert-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-cert-manager
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: cert-manager
+      controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: kubemacpool
+        control-plane: cert-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      containers:
+      - args:
+        - --v=production
+        command:
+        - /manager
+        env:
+        - name: RUN_CERT_MANAGER
+          value: ""
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CA_ROTATE_INTERVAL
+          value: '{{ .CARotateInterval | default "8760h0m0s" }}'
+        - name: CA_OVERLAP_INTERVAL
+          value: '{{ .CAOverlapInterval | default "24h0m0s" }}'
+        - name: CERT_ROTATE_INTERVAL
+          value: '{{ .CertRotateInterval | default "4380h0m0s" }}'
+        - name: CERT_OVERLAP_INTERVAL
+          value: '{{ .CertOverlapInterval | default "24h0m0s" }}'
+        image: '{{ .KubeMacPoolImage }}'
+        imagePullPolicy: '{{ .ImagePullPolicy }}'
+        name: manager
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 5
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -257,7 +305,7 @@ spec:
       containers:
       - args:
         - --v=production
-        - --wait-time=600
+        - --wait-time=300
         command:
         - /manager
         env:
@@ -279,14 +327,6 @@ spec:
             configMapKeyRef:
               key: RANGE_END
               name: kubemacpool-mac-range-config
-        - name: CA_ROTATE_INTERVAL
-          value: '{{ .CARotateInterval | default "8760h0m0s" }}'
-        - name: CA_OVERLAP_INTERVAL
-          value: '{{ .CAOverlapInterval | default "24h0m0s" }}'
-        - name: CERT_ROTATE_INTERVAL
-          value: '{{ .CertRotateInterval | default "4380h0m0s" }}'
-        - name: CERT_OVERLAP_INTERVAL
-          value: '{{ .CertOverlapInterval | default "24h0m0s" }}'
         - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
           value: v1
         image: '{{ .KubeMacPoolImage }}'
@@ -314,7 +354,7 @@ spec:
             cpu: 100m
             memory: 300Mi
         volumeMounts:
-        - mountPath: /etc/webhook/certs
+        - mountPath: /tmp/k8s-webhook-server/serving-certs/
           name: tls-key-pair
           readOnly: true
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
