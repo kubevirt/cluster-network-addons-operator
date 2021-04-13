@@ -150,7 +150,7 @@ func CheckReleaseUsesExpectedContainerImages(gvk schema.GroupVersionKind, releas
 	configStatus := GetConfigStatus(gvk)
 	deployedContainers := sortContainers(configStatus.Containers)
 
-	Expect(deployedContainers).To(Equal(expectedContainers))
+	Expect(deployedContainers).To(ConsistOf(expectedContainers))
 }
 
 func sortContainers(containers []cnao.Container) []cnao.Container {
