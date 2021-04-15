@@ -30,18 +30,33 @@ namespace: "{{ .Namespace }}"
 bases:
 - ../default
 patchesStrategicMerge:
-- cnao_image_patch.yaml
+- cnao_kubemacpool_manager_patch.yaml
+- cnao_cert-manager_patch.yaml
 - cnao_placement_patch.yaml
-- cnao_rejectowner_patch.yaml
 - mutatevirtualmachines_opt_mode_patch.yaml
 - mutatepods_opt_mode_patch.yaml
 EOF
 
-    cat <<EOF > config/cnao/cnao_image_patch.yaml
+    cat <<EOF > config/cnao/cnao_kubemacpool_manager_patch.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mac-controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - image: "{{ .KubeMacPoolImage }}"
+        imagePullPolicy: "{{ .ImagePullPolicy }}"
+        name: manager
+EOF
+
+    cat <<EOF > config/cnao/cnao_cert-manager_patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager
   namespace: system
 spec:
   template:
@@ -73,16 +88,6 @@ spec:
       affinity: AFFINITY
       nodeSelector: NODE_SELECTOR
       tolerations: TOLERATIONS
-EOF
-
-    cat <<EOF > config/cnao/cnao_rejectowner_patch.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: service
-  namespace: system
-  annotations:
-    networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
 EOF
 
     (
