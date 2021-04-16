@@ -1,4 +1,5 @@
-0.51.0
+0.52.0
 
-* Use default at bad old self signed conf (#813)
-* Use HCO cert rotation default values (#811)
+* bump nmstate to v0.45.0 (#820)
+* Bump kubemacpool to v0.24.0 (#818)
+* Correct the Dockerfile at yum update (#819)
