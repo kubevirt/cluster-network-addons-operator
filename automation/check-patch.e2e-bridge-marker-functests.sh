@@ -13,6 +13,8 @@ set -xeu
 
 teardown() {
     cp $(find . -name "*junit*.xml") $ARTIFACTS || true
+    cluster/kubectl.sh logs -n cluster-network-addons -l app=bridge-marker > $ARTIFACTS/bridge-marker.log || true
+    cluster/kubectl.sh get nodes -o yaml > $ARTIFACTS/nodes.yaml || true
     rm -rf "${TMP_COMPONENT_PATH}"
     cd ${TMP_PROJECT_PATH}
     make cluster-down
@@ -30,12 +32,10 @@ main() {
     trap teardown EXIT
 
     echo "Run bridge-marker functional tests"
-    cd ${TMP_COMPONENT_PATH}
-
-    if ! KUBECONFIG=$KUBECONFIG FUNC_TEST_ARGS="--ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" make functest; then
-        ./cluster/kubectl.sh logs -n kube-system -l app=bridge-marker
-        return 1
-    fi
+    (
+        cd ${TMP_COMPONENT_PATH}
+        KUBECONFIG=$KUBECONFIG FUNC_TEST_ARGS="--ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" make functest
+    )
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
