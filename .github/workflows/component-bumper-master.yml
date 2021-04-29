@@ -2,7 +2,7 @@ name: Auto-Bump Components' Versions
 
 on:
   schedule:
-    - cron:  '0 5 * * *'
+    - cron:  '0 * * * *'
 
 jobs:
 
