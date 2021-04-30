@@ -1,8 +1,6 @@
-0.52.0
+0.53.0
 
-* bump kubemacpool to v0.25.0 (#824)
-* kubevirt, Increase kubevirt deploy timeout (#823)
-* bump nmstate to v0.45.0 (#820)
-* Bump kubemacpool to v0.24.0 (#818)
-* bump nmstate to v0.44.0 (#817)
-* Correct the Dockerfile at yum update (#819)
+* bump nmstate to v0.47.0 (#833)
+* bump kubemacpool to v0.26.0 (#829)
+* Run autobumper every hour (#830)
+* test/unit, update admissionregistration to v1 in merge_test.go (#825)
