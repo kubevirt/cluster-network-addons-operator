@@ -3,12 +3,12 @@ components:
     url: https://github.com/kubevirt/bridge-marker
     commit: 967fd7e43523a12a5c97cde834815522e1515a0d
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: 0.6.0
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: b53a3f83ed79f329ecd52fa11fab0a7ef6e8b420
-    branch: master
+    branch: release-v0.26
     update-policy: tagged
     metadata: v0.26.0
   linux-bridge:
@@ -21,7 +21,7 @@ components:
     url: https://github.com/kubevirt/macvtap-cni
     commit: 0d5eeca624a707faa018678bd906e3c9f838a3bd
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: v0.4.2
   multus:
     url: https://github.com/intel/multus-cni
@@ -33,11 +33,11 @@ components:
     url: https://github.com/nmstate/kubernetes-nmstate
     commit: 9fa5fe079caafd0a06baf356f9311cdc1c676408
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: v0.47.0
   ovs-cni:
     url: https://github.com/kubevirt/ovs-cni
     commit: 95d453c97fa7d68af8b6f63fd9697689d68b5bf5
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: v0.19.1
