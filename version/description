@@ -1,6 +1,5 @@
-0.53.0
+0.54.0
 
-* bump nmstate to v0.47.0 (#833)
-* bump kubemacpool to v0.26.0 (#829)
-* Run autobumper every hour (#830)
-* test/unit, update admissionregistration to v1 in merge_test.go (#825)
+* bump kubemacpool to v0.27.0 (#839)
+* auto-bumper, Add new stable branch release-0.53 workflow (#835)
+
