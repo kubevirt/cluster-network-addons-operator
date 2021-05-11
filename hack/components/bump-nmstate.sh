@@ -46,11 +46,14 @@ echo 'Configure nmstate-webhook and nmstate-handler templates and save the rende
 
 echo 'Copy kubernetes-nmstate manifests'
 rm -rf data/nmstate/*
-cp $NMSTATE_PATH/config/cnao/handler/* data/nmstate/
-cp $NMSTATE_PATH/deploy/crds/nmstate.io_nodenetwork*.yaml data/nmstate/
-cp $NMSTATE_PATH/deploy/openshift/scc.yaml data/nmstate/scc.yaml
-sed -i "s/---/{{ if .EnableSCC }}\n---/" data/nmstate/scc.yaml
-echo "{{ end }}" >> data/nmstate/scc.yaml
+mkdir -p data/nmstate/{operator,operand}/
+cp $NMSTATE_PATH/config/cnao/handler/* data/nmstate/operand/
+cp $NMSTATE_PATH/deploy/crds/nmstate.io_nodenetwork*.yaml data/nmstate/operand/
+cp $NMSTATE_PATH/deploy/openshift/scc.yaml data/nmstate/operand/scc.yaml
+sed -i "s/---/{{ if .EnableSCC }}\n---/" data/nmstate/operand/scc.yaml
+echo "{{ end }}" >> data/nmstate/operand/scc.yaml
+
+cp $NMSTATE_PATH/deploy/crds/nmstate.io_v1beta1_nmstate_cr.yaml data/nmstate/operator/
 
 echo 'Apply custom CNAO patches on kubernetes-nmstate manifests'
-sed -i -z 's#kind: Secret\nmetadata:#kind: Secret\nmetadata:\n  annotations:\n    networkaddonsoperator.network.kubevirt.io\/rejectOwner: ""#' data/nmstate/operator.yaml
+sed -i -z 's#kind: Secret\nmetadata:#kind: Secret\nmetadata:\n  annotations:\n    networkaddonsoperator.network.kubevirt.io\/rejectOwner: ""#' data/nmstate/operand/operator.yaml

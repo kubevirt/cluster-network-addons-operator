@@ -1,5 +1,13 @@
 package check
 
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
+)
+
 type Component struct {
 	ComponentName                string
 	ClusterRole                  string
@@ -77,3 +85,57 @@ var (
 		MacvtapComponent,
 	}
 )
+
+type ComponentUpdatePolicy string
+
+const (
+	Tagged ComponentUpdatePolicy = "tagged"
+	Static ComponentUpdatePolicy = "static"
+	Latest ComponentUpdatePolicy = "latest"
+)
+
+type ComponentsConfig struct {
+	Components map[string]ComponentSource `yaml:"components"`
+}
+
+type ComponentSource struct {
+	Url          string                `yaml:"url"`
+	Commit       string                `yaml:"commit"`
+	Branch       string                `yaml:"branch"`
+	UpdatePolicy ComponentUpdatePolicy `yaml:"update-policy"`
+	Metadata     string                `yaml:"metadata"`
+}
+
+func GetComponentSource(component string) (ComponentSource, error) {
+	componentsConfig, err := parseComponentsYaml("components.yaml")
+	if err != nil {
+		return ComponentSource{}, errors.Wrapf(err, "Failed to get components config")
+	}
+
+	componentSource, ok := componentsConfig.Components[component]
+	if !ok {
+		return ComponentSource{}, errors.Wrapf(err, "Failed to get component %s", component)
+	}
+
+	return componentSource, nil
+}
+
+func parseComponentsYaml(componentsConfigPath string) (ComponentsConfig, error) {
+	config := ComponentsConfig{}
+
+	componentsData, err := ioutil.ReadFile(componentsConfigPath)
+	if err != nil {
+		return ComponentsConfig{}, errors.Wrapf(err, "Failed to open file %s", componentsConfigPath)
+	}
+
+	err = yaml.Unmarshal(componentsData, &config)
+	if err != nil {
+		return ComponentsConfig{}, errors.Wrapf(err, "Failed to Unmarshal %s", componentsConfigPath)
+	}
+
+	if len(config.Components) == 0 {
+		return ComponentsConfig{}, fmt.Errorf("Failed to Unmarshal %s. Output is empty", componentsConfigPath)
+	}
+
+	return config, nil
+}
