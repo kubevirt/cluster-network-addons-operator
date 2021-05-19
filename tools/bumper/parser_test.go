@@ -55,7 +55,7 @@ var _ = Describe("Testing internal parser", func() {
 				Commit:   "6f41747788235c3363a314dfae46a4ed90e1846a",
 				Metadata: "v0.25.0"},
 			"ovs-cni": {
-				Url:      "https://github.com/kubevirt/ovs-cni",
+				Url:      "https://github.com/k8snetworkplumbingwg/ovs-cni",
 				Commit:   "edb4754d08f49be54c399c938895fe82aab6aa5a",
 				Metadata: "v0.12.0"},
 			"macvtap-cni": {
@@ -88,7 +88,7 @@ components:
     commit: "6f41747788235c3363a314dfae46a4ed90e1846a"
     metadata: "v0.25.0"
   ovs-cni:
-    url: "https://github.com/kubevirt/ovs-cni"
+    url: "https://github.com/k8snetworkplumbingwg/ovs-cni"
     commit: "edb4754d08f49be54c399c938895fe82aab6aa5a"
     metadata: "v0.12.0"
   macvtap-cni:
