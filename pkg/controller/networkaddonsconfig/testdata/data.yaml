@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-mac-controller-manager
+  namespace: test-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: mac-controller-manager
+      controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        description: KubeMacPool manages MAC allocation to Pods and VMs
+      labels:
+        app: kubemacpool
+        control-plane: mac-controller-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+        image: dummy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-mac-range-config
+  namespace: cluster-network-addons
+data:
+  RANGE_START: 00:00:00:00:00:04
+  RANGE_END: 00:00:00:00:00:05
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    component: kubernetes-nmstate-handler
+    networkaddonsoperator.network.kubevirt.io/version: 99.0.0
+  name: nmstate-handler
+  namespace: cluster-network-addons
+spec:
+  selector:
+    matchLabels:
+      name: nmstate-handler
+  template:
+    metadata:
+      labels:
+        app: kubernetes-nmstate
+        component: kubernetes-nmstate-handler
+        name: nmstate-handler
+    spec:
+        image: dummy
+        imagePullPolicy: IfNotPresent
+        name: nmstate-handler
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kubernetes.io/service-account.name: cluster-network-addons-operator
+  name: cluster-network-addons-operator-token-test
+  namespace: cluster-network-addons
+type: kubernetes.io/service-account-token

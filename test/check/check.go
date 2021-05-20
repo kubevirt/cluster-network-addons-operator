@@ -176,10 +176,10 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	By("Checking that the operator is up and running")
 	if timeout != CheckImmediately {
 		Eventually(func() error {
-			return checkForDeployment(components.Name)
+			return checkForDeployment(components.Name, false)
 		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
 	} else {
-		Expect(checkForDeployment(components.Name)).ShouldNot(HaveOccurred(), "Operator is not ready")
+		Expect(checkForDeployment(components.Name, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
 }
 
@@ -187,10 +187,10 @@ func CheckNMStateOperatorIsReady(timeout time.Duration) {
 	By("Checking that the operator is up and running")
 	if timeout != CheckImmediately {
 		Eventually(func() error {
-			return checkForGenericDeployment("nmstate-operator", "nmstate", false)
+			return checkForGenericDeployment("nmstate-operator", "nmstate", false, false)
 		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
 	} else {
-		Expect(checkForGenericDeployment("nmstate-operator", "nmstate", false)).ShouldNot(HaveOccurred(), "Operator is not ready")
+		Expect(checkForGenericDeployment("nmstate-operator", "nmstate", false, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
 }
 
@@ -296,7 +296,7 @@ func checkForComponent(component *Component) error {
 	}
 
 	for _, deployment := range component.Deployments {
-		errsAppend(checkForDeployment(deployment))
+		errsAppend(checkForDeployment(deployment, true))
 	}
 
 	if component.Secret != "" {
@@ -353,26 +353,58 @@ func errsToErr(errs []error) error {
 }
 
 func checkForClusterRole(name string) error {
-	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRole{})
+	clusterRole := rbacv1.ClusterRole{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &clusterRole)
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(clusterRole.GetLabels(), "ClusterRole", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func checkForClusterRoleBinding(name string) error {
-	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRoleBinding{})
+	clusterRoleBinding := rbacv1.ClusterRoleBinding{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &clusterRoleBinding)
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(clusterRoleBinding.GetLabels(), "ClusterRoleBinding", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func checkForSecurityContextConstraints(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &securityapi.SecurityContextConstraints{})
+	scc := securityapi.SecurityContextConstraints{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &scc)
 	if isNotSupportedKind(err) {
 		return nil
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(scc.GetLabels(), "SecurityContextConstraint", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func checkForDeployment(name string) error {
-	return checkForGenericDeployment(name, components.Namespace, true)
+func checkForDeployment(name string, checkRelationshipLabels bool) error {
+	return checkForGenericDeployment(name, components.Namespace, true, checkRelationshipLabels)
 }
 
-func checkForGenericDeployment(name, namespace string, checkLabels bool) error {
+func checkForGenericDeployment(name, namespace string, checkVersionLabels, checkRelationshipLabels bool) error {
 	deployment := appsv1.Deployment{}
 
 	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &deployment)
@@ -380,12 +412,19 @@ func checkForGenericDeployment(name, namespace string, checkLabels bool) error {
 		return err
 	}
 
-	if checkLabels {
+	if checkVersionLabels {
 		labels := deployment.GetLabels()
 		if labels != nil {
 			if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
-				return fmt.Errorf("Deployment %s/%s is missing operator label", components.Namespace, name)
+				return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
 			}
+		}
+	}
+
+	if checkRelationshipLabels {
+		err := checkWorkloadRelationshipLabels([]map[string]string{deployment.GetLabels(), deployment.Spec.Template.GetLabels()}, "Deployment", name)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -395,6 +434,16 @@ func checkForGenericDeployment(name, namespace string, checkLabels bool) error {
 			panic(err)
 		}
 		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v\ncluster Info:\n%v", namespace, name, string(manifest), gatherClusterInfo())
+	}
+
+	return nil
+}
+
+func checkWorkloadRelationshipLabels(labelMapList []map[string]string, kind, name string) error {
+	for _, labels := range labelMapList {
+		if err := checkRelationshipLabels(labels, kind, name); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -456,6 +505,11 @@ func checkForDaemonSet(name string) error {
 		}
 	}
 
+	err = checkWorkloadRelationshipLabels([]map[string]string{daemonSet.GetLabels(), daemonSet.Spec.Template.GetLabels()}, "DaemonSet", name)
+	if err != nil {
+		return err
+	}
+
 	if daemonSet.Status.NumberUnavailable > 0 || (daemonSet.Status.NumberAvailable == 0 && daemonSet.Status.DesiredNumberScheduled != 0) {
 		manifest, err := yaml.Marshal(daemonSet)
 		if err != nil {
@@ -468,11 +522,49 @@ func checkForDaemonSet(name string) error {
 }
 
 func checkForSecret(name string) error {
-	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
+	secret := corev1.Secret{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &secret)
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(secret.GetLabels(), "Secret", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func checkForMutatingWebhookConfiguration(name string) error {
-	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
+	mutatingWebhookConfig := admissionregistrationv1.MutatingWebhookConfiguration{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &mutatingWebhookConfig)
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(mutatingWebhookConfig.GetLabels(), "MutatingWebhookConfiguration", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkRelationshipLabels(labels map[string]string, kind, name string) error {
+	expectedValues := map[string]string{
+		names.COMPONENT_LABEL_KEY:  names.COMPONENT_LABEL_DEFAULT_VALUE,
+		names.MANAGED_BY_LABEL_KEY: names.MANAGED_BY_LABEL_DEFAULT_VALUE,
+	}
+
+	for key, expectedValue := range expectedValues {
+		value, found := labels[key]
+		if !found || value != expectedValue {
+			return fmt.Errorf("%s %s is missing label %s", kind, name, key)
+		}
+	}
+
+	return nil
 }
 
 func checkForClusterRoleRemoval(name string) error {
