@@ -20,7 +20,7 @@ components:
   macvtap-cni:
     url: https://github.com/kubevirt/macvtap-cni
     commit: 0d5eeca624a707faa018678bd906e3c9f838a3bd
-    branch: master
+    branch: main
     update-policy: static
     metadata: v0.4.2
   multus:
