@@ -20,8 +20,8 @@ components:
   kubemacpool:
     url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
     commit: "932d5f04ee508c9f39516010b40d2170705d2cb7"
-    branch: "master"
-    update-policy: "static"
+    branch: "release-v0.20"
+    update-policy: "tagged"
     metadata: "v0.20.2"
   nmstate:
     url: "https://github.com/nmstate/kubernetes-nmstate"
