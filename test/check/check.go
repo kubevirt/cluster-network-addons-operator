@@ -384,8 +384,10 @@ func checkForGenericDeployment(name, namespace string, checkLabels bool) error {
 		labels := deployment.GetLabels()
 		if labels != nil {
 			if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
-				return fmt.Errorf("Deployment %s/%s is missing operator label", components.Namespace, name)
+				return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
 			}
+		} else {
+			return fmt.Errorf("Deployment %s/%s is missing meta labels", namespace, name)
 		}
 	}
 
