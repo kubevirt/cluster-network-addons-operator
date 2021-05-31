@@ -1,12 +1,7 @@
-0.44.3
+0.44.4
 
-Features:
-* Bump CNI plugins version (#772) (#774)
-* bump ovs-cni to v0.18.0 (#775)
-* bump nmstate to v0.37.5 (#770)
+* bump kubemacpool to v0.21.1 (#854)
+* macvtap-cni, update repo main branch in release-0.44 (#848)
+* bump nmstate to v0.37.7 (#793)
+* bump nmstate to v0.37.6 (#789)
 
-Bugs:
-* Don't run etcd in memory by default (#777)
-* Build and push multus container to quay.io (#767)
-* Add e2e tests custom reporter (#763)
-* Check cnao readiness at lifecycle deployment test (#755)
