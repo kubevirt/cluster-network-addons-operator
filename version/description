@@ -1,3 +1,14 @@
-0.42.4
+0.42.5
 
-* Bump kubernetes-nmstate to v0.31.1 (#666)
+* kubemacpool, bump kubemacpool to v0.20.2-1-gf6c5fc0d (#857)
+* components, change kubemacpool to follow stable branch (#853)
+* macvtap-cni, update repo main branch in release-0.42 (#849)
+* automation, add missing unit-test script (#850)
+* bumper, Change bumper fail policy (#715)
+* bumper, fix returning annotated tag sha on tagged update-policy (#713)
+* dockerized yq, Pin yq to version 3.3.4 (#714)
+* bumper, Remove unused workflow from release_0.42 branch (#699)
+* [release-0.42] backport bumper commits to release-0.42 branch (#687)
+* bumper, add support of deleted files (#686)
+* Use prow to push container at release (#679)
+
