@@ -15,7 +15,7 @@ import (
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
-	v1betav1 "k8s.io/api/admissionregistration/v1beta1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -472,7 +472,7 @@ func checkForSecret(name string) error {
 }
 
 func checkForMutatingWebhookConfiguration(name string) error {
-	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &v1betav1.MutatingWebhookConfiguration{})
+	return framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
 }
 
 func checkForClusterRoleRemoval(name string) error {
@@ -499,7 +499,7 @@ func checkForSecretRemoval(name string) error {
 }
 
 func checkForMutatingWebhookConfigurationRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &v1betav1.MutatingWebhookConfiguration{})
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
 	return isNotFound("MutatingWebhookConfiguration", name, err)
 }
 
