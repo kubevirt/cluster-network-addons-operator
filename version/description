@@ -1,5 +1,9 @@
-0.53.1
+0.53.2
 
-* bump kubemacpool to v0.26.1 (#838)
-* auto-bumper, Set components to follow stable branches (#836)
+Features:
+* ci, Bump deprecated MutatingWebhookConfiguration to v1 in check test (#866)
+* bump kubemacpool to v0.26.3 (#864)
+* bump kubemacpool to v0.26.2 (#855)
+* knmstate, update repo main branch in release-0.53 (#851)
+* macvtap-cni, update repo main branch in release-0.53 (#847)
 
