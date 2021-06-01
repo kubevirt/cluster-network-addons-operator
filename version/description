@@ -1,5 +1,12 @@
-0.54.0
+0.55.0
 
-* bump kubemacpool to v0.27.0 (#839)
-* auto-bumper, Add new stable branch release-0.53 workflow (#835)
+* ci, Bump deprecated MutatingWebhookConfiguration to v1 in check test (#863)
+* bump kubemacpool to v0.29.0 (#865)
+* bump nmstate to v0.48.0 (#858)
+* bump kubemacpool to v0.28.0 (#856)
+* Change OVS CNI source to NPWG org (#844)
+* macvtap-cni: update repo main branch (#845)
+* Use new default knmstate branch 'main' (#843)
+* Migrate NMState to use kubernetes-nmstate-operator if available (#815)
+* auto-bumper, set release-0.53 workflow to hourly (#837)
 
