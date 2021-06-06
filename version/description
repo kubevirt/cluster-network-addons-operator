@@ -1,7 +1,3 @@
-0.44.4
+0.44.5
 
-* bump kubemacpool to v0.21.1 (#854)
-* macvtap-cni, update repo main branch in release-0.44 (#848)
-* bump nmstate to v0.37.7 (#793)
-* bump nmstate to v0.37.6 (#789)
-
+* bump nmstate to v0.37.9 (#872)
