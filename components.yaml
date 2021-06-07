@@ -30,7 +30,7 @@ components:
     update-policy: "tagged"
     metadata: "v0.31.1"
   ovs-cni:
-    url: "https://github.com/kubevirt/ovs-cni"
+    url: "https://github.com/k8snetworkplumbingwg/ovs-cni"
     commit: "edb4754d08f49be54c399c938895fe82aab6aa5a"
     branch: "release-0.12"
     update-policy: "static"
