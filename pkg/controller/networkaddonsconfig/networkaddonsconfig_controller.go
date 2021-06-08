@@ -340,14 +340,11 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 	}
 	objs = append([]*unstructured.Unstructured{applied}, objs...)
 
-	// Label objects with version of the operator they were created by
-	for _, obj := range objs {
-		labels := obj.GetLabels()
-		if labels == nil {
-			labels = map[string]string{}
-		}
-		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
-		obj.SetLabels(labels)
+	err = updateObjectsLabels(networkAddonsConfig.GetLabels(), objs)
+	if err != nil {
+		log.Printf("failed to update objects labels: %v", err)
+		err = errors.Wrapf(err, "failed to update objects labels")
+		return objs, err
 	}
 
 	return objs, nil
@@ -496,6 +493,63 @@ func (r *ReconcileNetworkAddonsConfig) stopTrackingObjects() {
 
 	// Trigger status manager to notice the change
 	r.statusManager.SetFromPods()
+}
+
+func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstructured) error {
+	var err error
+	for _, obj := range objs {
+		labels := obj.GetLabels()
+		if labels == nil {
+			labels = map[string]string{}
+		}
+		// Label objects with version of the operator they were created by
+		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
+
+		appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY, names.MANAGED_BY_LABEL_KEY}
+
+		labels = updateLabelsFromCR(labels, crLables, appLabelKeys)
+		if err != nil {
+			return err
+		}
+		obj.SetLabels(labels)
+
+		err = updateObjectTemplateLabels(obj, labels, appLabelKeys)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func updateLabelsFromCR(labels, crLables map[string]string, appLabelKeys []string) map[string]string {
+	labels[names.COMPONENT_LABEL_KEY] = names.COMPONENT_LABEL_DEFAULT_VALUE
+	labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
+	for _, key := range appLabelKeys {
+		if value, exist := crLables[key]; exist == true {
+			labels[key] = value
+		}
+	}
+
+	return labels
+}
+
+func updateObjectTemplateLabels(obj *unstructured.Unstructured, labels map[string]string, appLabelKeys []string) error {
+	kind := obj.GetKind()
+	if kind == "DaemonSet" || kind == "ReplicaSet" || kind == "Deployment" || kind == "StatefulSet" {
+		for _, key := range appLabelKeys {
+			if value, exist := labels[key]; exist == true {
+				err := unstructured.SetNestedField(obj.Object, value, "spec", "template", "metadata", "labels", key)
+				if err != nil {
+					log.Printf("failed to add relationship label %s: %v", key, err)
+					err = errors.Wrapf(err, "failed to add relationship labels")
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func collectContainersInfo(parentKind string, parentName string, containers []v1.Container) []cnao.Container {
