@@ -1,9 +1,5 @@
-0.53.2
+0.53.3
 
-Features:
-* ci, Bump deprecated MutatingWebhookConfiguration to v1 in check test (#866)
-* bump kubemacpool to v0.26.3 (#864)
-* bump kubemacpool to v0.26.2 (#855)
-* knmstate, update repo main branch in release-0.53 (#851)
-* macvtap-cni, update repo main branch in release-0.53 (#847)
+* Change ovs-cni repo to k8snetworkplumbing (#878)
+* bump kubemacpool to v0.26.4 (#871)
 
