@@ -78,7 +78,7 @@ func CheckComponentsRemoval(components []Component) {
 		By(fmt.Sprintf("Checking that component %s has been removed", component.ComponentName))
 		Eventually(func() error {
 			return checkForComponentRemoval(&component)
-		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout\ncluster Info:\n%v", component.ComponentName, gatherClusterInfo()))
+		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout\n", component.ComponentName))
 	}
 }
 
@@ -629,8 +629,10 @@ func checkConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 
 func gatherClusterInfo() string {
 	podsStatus := cnaoPodsStatus()
+	nodesInfo := nodesInfo()
 	describeAll := describeAll()
-	return strings.Join([]string{podsStatus, describeAll}, "\n")
+	kmpLogs := kmpLogs()
+	return strings.Join([]string{podsStatus, nodesInfo, describeAll, kmpLogs}, "\n")
 }
 
 func cnaoPodsStatus() string {
@@ -640,6 +642,16 @@ func cnaoPodsStatus() string {
 
 func describeAll() string {
 	description, err := Kubectl("-n", components.Namespace, "describe", "all")
+	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description, err)
+}
+
+func nodesInfo() string {
+	nodes, err := Kubectl("-n", components.Namespace, "get", "nodes", "-oyaml")
+	return fmt.Sprintf("nodes:\n%v\nerror:\n%v", nodes, err)
+}
+
+func kmpLogs() string {
+	description, err := Kubectl("-n", components.Namespace, "logs", "-l", "app=kubemacpool", "--since=15m")
 	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description, err)
 }
 
