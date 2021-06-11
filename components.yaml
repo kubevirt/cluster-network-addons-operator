@@ -2,7 +2,7 @@ components:
   bridge-marker:
     url: https://github.com/kubevirt/bridge-marker
     commit: 967fd7e43523a12a5c97cde834815522e1515a0d
-    branch: master
+    branch: main
     update-policy: tagged
     metadata: 0.6.0
   kubemacpool:
