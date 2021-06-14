@@ -2,7 +2,7 @@ components:
   bridge-marker:
     url: https://github.com/kubevirt/bridge-marker
     commit: 967fd7e43523a12a5c97cde834815522e1515a0d
-    branch: master
+    branch: main
     update-policy: static
     metadata: 0.6.0
   kubemacpool:
@@ -38,6 +38,6 @@ components:
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: 1af837399f4524b33c58a17a23217a71572e7b30
-    branch: master
+    branch: main
     update-policy: static
     metadata: v0.18.0
