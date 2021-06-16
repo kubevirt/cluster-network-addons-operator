@@ -1,5 +1,4 @@
-0.53.3
+0.53.4
 
-* Change ovs-cni repo to k8snetworkplumbing (#878)
-* bump kubemacpool to v0.26.4 (#871)
-
+* release-0.53: bump nmstate to 0.47.1 (#889)
+* Follow main branches on marker and ovs cni (#884)
