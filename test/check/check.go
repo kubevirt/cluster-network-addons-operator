@@ -632,7 +632,8 @@ func gatherClusterInfo() string {
 	nodesInfo := nodesInfo()
 	describeAll := describeAll()
 	kmpLogs := kmpLogs()
-	return strings.Join([]string{podsStatus, nodesInfo, describeAll, kmpLogs}, "\n")
+	csrs := getCsr()
+	return strings.Join([]string{podsStatus, nodesInfo, describeAll, kmpLogs, csrs}, "\n")
 }
 
 func cnaoPodsStatus() string {
@@ -651,8 +652,13 @@ func nodesInfo() string {
 }
 
 func kmpLogs() string {
-	description, err := Kubectl("-n", components.Namespace, "logs", "-l", "app=kubemacpool", "--since=15m")
-	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description, err)
+	description, err := Kubectl("-n", components.Namespace, "logs", "-l", "app=kubemacpool", "--tail=10000")
+	return fmt.Sprintf("KMP Logs:\n%v\nerror:\n%v", description, err)
+}
+
+func getCsr() string {
+	description, err := Kubectl("get", "csr", "-A", "-oyaml")
+	return fmt.Sprintf("CSRs:\n%v\nerror:\n%v", description, err)
 }
 
 func isNotSupportedKind(err error) bool {
