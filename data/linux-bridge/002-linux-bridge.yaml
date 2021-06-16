@@ -26,6 +26,7 @@ spec:
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
+      priorityClassName: system-cluster-critical
       containers:
         - name: cni-plugins
           image: {{ .LinuxBridgeImage }}
