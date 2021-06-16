@@ -161,6 +161,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 					SecurityContext: &corev1.PodSecurityContext{
 						RunAsNonRoot: &runAsNonRoot,
 					},
+					PriorityClassName: "system-cluster-critical",
 					Containers: []corev1.Container{
 						{
 							Name:            Name,
