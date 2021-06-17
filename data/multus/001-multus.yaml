@@ -133,6 +133,7 @@ spec:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
+      priorityClassName: system-cluster-critical
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 {{ if .EnableSCC }}
 ---
