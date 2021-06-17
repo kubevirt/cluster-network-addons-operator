@@ -262,6 +262,22 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: COMPONENT
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/component']
+        - name: PART_OF
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/part-of']
+        - name: VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/version']
+        - name: MANAGED_BY
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/managed-by']
         - name: CA_ROTATE_INTERVAL
           value: '{{ .CARotateInterval | default "8760h0m0s" }}'
         - name: CA_OVERLAP_INTERVAL
@@ -273,6 +289,7 @@ spec:
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
+      priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
 ---
@@ -355,6 +372,7 @@ spec:
           name: tls-key-pair
           readOnly: true
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
