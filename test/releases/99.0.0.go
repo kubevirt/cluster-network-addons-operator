@@ -30,13 +30,13 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:89de9849fd8b96fe2590f74c4972a8382aa2bcb4fc3e610daadc3175f6f4cafe",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:ef759a6e8960d895e777621381c3e94d677f1401435bc00c7663dc1b828272cb",
 			},
 			{
 				ParentName: "kubemacpool-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:89de9849fd8b96fe2590f74c4972a8382aa2bcb4fc3e610daadc3175f6f4cafe",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:ef759a6e8960d895e777621381c3e94d677f1401435bc00c7663dc1b828272cb",
 			},
 			{
 				ParentName: "nmstate-handler",
