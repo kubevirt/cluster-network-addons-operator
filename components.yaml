@@ -24,7 +24,7 @@ components:
     update-policy: tagged
     metadata: v0.5.0
   multus:
-    url: https://github.com/intel/multus-cni
+    url: https://github.com/k8snetworkplumbingwg/multus-cni
     commit: 4eac660359f223d34bcaf0fddbc42fd542f02ba1
     branch: master
     update-policy: static
