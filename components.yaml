@@ -1,6 +1,6 @@
 components:
   multus:
-    url: "https://github.com/intel/multus-cni"
+    url: "https://github.com/k8snetworkplumbingwg/multus-cni"
     commit: "bfaf22964b51b93b08dcb1f10cbd8f8cb9a3603a"
     branch: "master"
     update-policy: "static"
