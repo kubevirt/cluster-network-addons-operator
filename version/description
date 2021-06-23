@@ -1,4 +1,17 @@
-0.56.0
+0.57.0
 
-* Add relationship labels to all directly deployed components (#846)
-* bump ovs-cni to v0.20.0 (#870)
+* components, Update multus repo url (#902)
+* operator, Add Priority class (#893)
+* multus, Add Priority class (#898)
+* bump ovs-cni to v0.21.0 (#901)
+* bump macvtap-cni to v0.5.0 (#899)
+* bump kubemacpool to v0.30.0 (#900)
+* bump bridge-marker to 0.7.0 (#894)
+* bump nmstate to v0.51.0 (#896)
+* bump nmstate to v0.50.0 (#890)
+* linux-bridge, Add Priority class (#895)
+* components, Update kubemacpool branch to main (#888)
+* bump nmstate to v0.49.0 (#887)
+* Follow the renamed branch of OVS CNI (#883)
+* Follow bridge-marker's renamed branch (#882)
+
