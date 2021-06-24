@@ -273,6 +273,7 @@ spec:
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
+      priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
 ---
@@ -355,6 +356,7 @@ spec:
           name: tls-key-pair
           readOnly: true
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
