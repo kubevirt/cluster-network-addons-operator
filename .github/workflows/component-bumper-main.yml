@@ -7,13 +7,13 @@ on:
 jobs:
 
   build:
-    name: master - CNAO Component Bump Job
+    name: main - CNAO Component Bump Job
     if: (github.repository == 'kubevirt/cluster-network-addons-operator')
     runs-on: ubuntu-latest
     steps:
 
     - name: Set environment variables
-      run: echo "BASE_BRANCH=master" >> $GITHUB_ENV
+      run: echo "BASE_BRANCH=main" >> $GITHUB_ENV
 
     - name: Login to Quay
       run: docker login -u="kubevirt+network" -p="${{ secrets.QUAY_ROBOT_TOKEN }}" quay.io
