@@ -33,6 +33,7 @@ spec:
           volumeMounts:
             - name: cnibin
               mountPath: /host{{ .CNIBinDir }}
+      priorityClassName: system-node-critical
       containers:
         - name: ovs-cni-marker
           image: {{ .OvsMarkerImage }}
