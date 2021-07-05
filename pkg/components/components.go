@@ -8,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -167,6 +168,12 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 							Name:            Name,
 							Image:           image,
 							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("50m"),
+									corev1.ResourceMemory: resource.MustParse("20Mi"),
+								},
+							},
 							Env: []corev1.EnvVar{
 								{
 									Name:  "MULTUS_IMAGE",
