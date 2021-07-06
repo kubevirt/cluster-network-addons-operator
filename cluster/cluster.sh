@@ -15,7 +15,6 @@
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.19'}
 export KUBEVIRTCI_TAG='2102031339-9306210'
 
-KUBEVIRTCI_VERSION="9306210cbf3905b7df2e11a62a30a0c3bc60c470"
 KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
 # The CLUSTER_PATH var is used in cluster folder and points to the _kubevirtci where the cluster is deployed from.
 CLUSTER_PATH=${CLUSTER_PATH:-"${PWD}/_kubevirtci/"}
@@ -24,14 +23,14 @@ function cluster::_get_repo() {
     git --git-dir ${CLUSTER_PATH}/.git remote get-url origin
 }
 
-function cluster::_get_version() {
-    git --git-dir ${CLUSTER_PATH}/.git log --format="%H" -n 1
+function cluster::_get_tag() {
+    git -C ${CLUSTER_PATH} describe --tags
 }
 
 function cluster::install() {
     # Remove cloned kubevirtci repository if it does not match the requested one
     if [ -d ${CLUSTER_PATH} ]; then
-        if [ $(cluster::_get_repo) != ${KUBEVIRTCI_REPO} -o $(cluster::_get_version) != ${KUBEVIRTCI_VERSION} ]; then
+        if [ $(cluster::_get_repo) != ${KUBEVIRTCI_REPO} -o $(cluster::_get_tag) != ${KUBEVIRTCI_TAG} ]; then
             rm -rf ${CLUSTER_PATH}
         fi
     fi
@@ -40,7 +39,7 @@ function cluster::install() {
         git clone https://github.com/kubevirt/kubevirtci.git ${CLUSTER_PATH}
         (
             cd ${CLUSTER_PATH}
-            git checkout ${KUBEVIRTCI_VERSION}
+            git checkout ${KUBEVIRTCI_TAG}
         )
     fi
 }
