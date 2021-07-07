@@ -32,8 +32,10 @@ fi
 if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
     echo 'Installing Open vSwitch on nodes'
     for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
-        ./cluster/cli.sh ssh ${node} -- sudo yum install -y http://cbs.centos.org/kojifiles/packages/openvswitch/2.9.2/1.el7/x86_64/openvswitch-2.9.2-1.el7.x86_64.rpm http://cbs.centos.org/kojifiles/packages/openvswitch/2.9.2/1.el7/x86_64/openvswitch-devel-2.9.2-1.el7.x86_64.rpm http://cbs.centos.org/kojifiles/packages/dpdk/17.11/3.el7/x86_64/dpdk-17.11-3.el7.x86_64.rpm
-        ./cluster/cli.sh ssh ${node} -- sudo systemctl daemon-reload
+        ./cluster/cli.sh ssh ${node} -- sudo yum config-manager --set-enabled powertools
+        ./cluster/cli.sh ssh ${node} -- sudo yum install -y epel-release centos-release-openstack-wallaby epel-release centos-release-openstack-train https://rdoproject.org/repos/rdo-release.rpm
+        ./cluster/cli.sh ssh ${node} -- sudo yum install -y openvswitch libibverbs
+        ./cluster/cli.sh ssh ${node} -- sudo systemctl enable --now openvswitch
         ./cluster/cli.sh ssh ${node} -- sudo systemctl restart openvswitch
     done
 fi
