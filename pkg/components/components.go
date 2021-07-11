@@ -171,7 +171,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse("50m"),
-									corev1.ResourceMemory: resource.MustParse("20Mi"),
+									corev1.ResourceMemory: resource.MustParse("30Mi"),
 								},
 							},
 							Env: []corev1.EnvVar{
