@@ -13,6 +13,7 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -137,6 +138,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Annotations: map[string]string{
 				cnaov1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
+			Labels: map[string]string{
+				names.PROMETHEUS_LABEL_KEY: "",
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),
@@ -151,7 +155,8 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"name": Name,
+						"name":                     Name,
+						names.PROMETHEUS_LABEL_KEY: "",
 					},
 					Annotations: map[string]string{
 						"description": "cluster-network-addons-operator manages the lifecycle of different Kubernetes network components on top of Kubernetes cluster",
