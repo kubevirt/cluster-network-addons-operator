@@ -1,0 +1,9 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus.cnao.io: ""
+  name: prometheus-rules-cluster-network-addons-operator
+  namespace: {{ .Namespace }}
+spec:
+  groups:

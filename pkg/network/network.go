@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
+
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -136,6 +138,13 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 
 	// render MacvtapCni
 	o, err = renderMacvtapCni(conf, manifestDir, clusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
+	// render Monitoring Service
+	o, err = monitoring.RenderMonitoring(manifestDir, clusterInfo.MonitoringAvailable)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: ""
+    prometheus.cnao.io: ""
+  name: service-monitor-cluster-network-addons-operator
+  namespace: {{ .Namespace }}
+spec:
+  selector:
+    matchLabels:
+      prometheus.cnao.io: ""
+  namespaceSelector:
+    matchNames:
+      - {{ .Namespace }}
+  endpoints:
+    - port: metrics
+      scheme: http
+      tlsConfig:
+        insecureSkipVerify: true

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	osv1 "github.com/openshift/api/operator/v1"
 	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
 	"github.com/pkg/errors"
@@ -90,6 +91,14 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("failed to check for availability of SCC: %v", err)
 	}
 	clusterInfo.SCCAvailable = sccAvailable
+
+	addMonitorServiceResources, err := isMonitoringAvailable(clientset)
+	if err != nil {
+		// we don't want CNAO to fail only if monitoring cannot be activated.
+		addMonitorServiceResources = false
+		log.Printf("failed to check for availability of Monitoring namespace: %v", err)
+	}
+	clusterInfo.MonitoringAvailable = addMonitorServiceResources
 
 	return add(mgr, newReconciler(mgr, namespace, clusterInfo))
 }
@@ -596,6 +605,26 @@ func isRunningOnOpenShift4(c kubernetes.Interface) (bool, error) {
 
 func isSCCAvailable(c kubernetes.Interface) (bool, error) {
 	return isResourceAvailable(c, "securitycontextconstraints", "security.openshift.io", "v1")
+}
+
+// isMonitoringAvailable checks if we can deploy the monitoring component
+func isMonitoringAvailable(c kubernetes.Interface) (bool, error) {
+	prometheusRuleResourceAvailable, err := isResourceAvailable(c, "customresourcedefinitions/prometheusrules.monitoring.coreos.com", "apiextensions.k8s.io", "v1")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if prometheusRule resource is available")
+	}
+
+	serviceMonitorResourceAvailable, err := isResourceAvailable(c, "customresourcedefinitions/servicemonitors.monitoring.coreos.com", "apiextensions.k8s.io", "v1")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check if serviceMonitor resource is available")
+	}
+
+	if prometheusRuleResourceAvailable && serviceMonitorResourceAvailable {
+		return true, nil
+	}
+
+	log.Printf("will not deploy monitoring manifests: not all monitoring resources are available: %s: %v, %s, %v", monitoringv1.PrometheusRuleKind, prometheusRuleResourceAvailable, monitoringv1.ServiceMonitorsKind, serviceMonitorResourceAvailable)
+	return false, nil
 }
 
 func isRunningKubernetesNMStateOperator(c k8sclient.Client) (bool, error) {
