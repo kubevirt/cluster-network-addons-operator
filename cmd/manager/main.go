@@ -12,7 +12,7 @@ import (
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
-	"github.com/operator-framework/operator-sdk/pkg/metrics"
+	operatorSdkMetrics "github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
@@ -28,9 +28,9 @@ import (
 )
 
 var (
-	metricsHost               = "0.0.0.0"
-	metricsPort         int32 = 8383
-	operatorMetricsPort int32 = 8686
+	operatorSdkMetricsHost           = "0.0.0.0"
+	operatorSdkHttpMetricsPort int32 = 8383
+	operatorSdkCrMetricsPort   int32 = 8686
 )
 
 func printVersion() {
@@ -72,7 +72,7 @@ func main() {
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
-		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		MetricsBindAddress: fmt.Sprintf("%s:%d", operatorSdkMetricsHost, operatorSdkHttpMetricsPort),
 		MapperProvider:     k8s.NewDynamicRESTMapper,
 	})
 	if err != nil {
@@ -99,12 +99,12 @@ func main() {
 	}
 
 	servicePorts := []v1.ServicePort{
-		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
-		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
+		{Port: operatorSdkHttpMetricsPort, Name: operatorSdkMetrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorSdkHttpMetricsPort}},
+		{Port: operatorSdkCrMetricsPort, Name: operatorSdkMetrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorSdkCrMetricsPort}},
 	}
 
 	// Create Service object to expose the metrics port.
-	if _, err = metrics.CreateMetricsService(ctx, cfg, servicePorts); err != nil {
+	if _, err = operatorSdkMetrics.CreateMetricsService(ctx, cfg, servicePorts); err != nil {
 		log.Printf("failed to create metrics server: %v", err)
 		os.Exit(1)
 	}
