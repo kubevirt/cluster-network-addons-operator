@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -258,6 +259,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "WATCH_NAMESPACE",
 									Value: "",
+								},
+								{
+									Name:  "MONITORING_NAMESPACE",
+									Value: "monitoring",
 								},
 							},
 						},

@@ -1,0 +1,81 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: ""
+    prometheus.cluster-network-addons-operator.io: ""
+  name: prometheus-rules-cluster-network-addons-operator
+  namespace: {{ .MonitoringNamespace }}
+spec:
+  selector:
+    matchLabels:
+      prometheus.cluster-network-addons-operator.io: ""
+  namespaceSelector:
+    matchNames:
+      - {{ .Namespace }}
+  endpoints:
+    - port: metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus.cluster-network-addons-operator.io: ""
+  name: prometheus-rules-cluster-network-addons-operator
+  namespace: {{ .Namespace }}
+spec:
+  groups:
+    - name: cnao.rules
+      rules:
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prometheus.cluster-network-addons-operator.io: ""
+  name: cluster-network-addons-operator-prometheus-metrics
+  namespace: {{ .Namespace }}
+spec:
+  ports:
+    - name: metrics
+      port: 443
+      protocol: TCP
+      targetPort: metrics
+  selector:
+    prometheus.cluster-network-addons-operator.io: ""
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-network-addons-operator-monitoring
+  namespace: {{ .Namespace }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-network-addons-operator-monitoring
+  namespace: {{ .Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-network-addons-operator-monitoring
+subjects:
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: {{ .MonitoringNamespace }}

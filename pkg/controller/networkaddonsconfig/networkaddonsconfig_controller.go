@@ -91,6 +91,12 @@ func Add(mgr manager.Manager) error {
 	}
 	clusterInfo.SCCAvailable = sccAvailable
 
+	addMonitorServiceResources, err := isMonitoringAvailable(clientset)
+	if err != nil {
+		return fmt.Errorf("failed to check for availability of Monitoring namespace: %v", err)
+	}
+	clusterInfo.PrometheusDeployed = addMonitorServiceResources
+
 	return add(mgr, newReconciler(mgr, namespace, clusterInfo))
 }
 
@@ -598,6 +604,11 @@ func isSCCAvailable(c kubernetes.Interface) (bool, error) {
 	return isResourceAvailable(c, "securitycontextconstraints", "security.openshift.io", "v1")
 }
 
+func isMonitoringAvailable(c kubernetes.Interface) (bool, error) {
+	monitoringNamespace := os.Getenv("MONITORING_NAMESPACE")
+	return isNamespaceExist(c, monitoringNamespace)
+}
+
 func isRunningKubernetesNMStateOperator(c k8sclient.Client) (bool, error) {
 	deployments := &appsv1.DeploymentList{}
 	err := c.List(context.TODO(), deployments, k8sclient.MatchingLabels{"app": "kubernetes-nmstate-operator"})
@@ -623,6 +634,19 @@ func isResourceAvailable(kubeClient kubernetes.Interface, name string, group str
 	}
 
 	return true, nil
+}
+
+func isNamespaceExist(kubeClient kubernetes.Interface, ns string) (bool, error) {
+	_, err := kubeClient.CoreV1().Namespaces().Get(context.Background(), ns, metav1.GetOptions{})
+	if err == nil {
+		return true, nil
+	}
+
+	if apierrors.IsNotFound(err) {
+		return false, nil
+	}
+
+	return false, err
 }
 
 func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*cnao.NetworkAddonsConfig, error) {
