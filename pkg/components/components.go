@@ -179,6 +179,13 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 									corev1.ResourceMemory: resource.MustParse("30Mi"),
 								},
 							},
+							Ports: []corev1.ContainerPort{
+								corev1.ContainerPort{
+									Name:          "metrics",
+									Protocol:      "TCP",
+									ContainerPort: 8443,
+								},
+							},
 							Env: []corev1.EnvVar{
 								{
 									Name:  "MULTUS_IMAGE",

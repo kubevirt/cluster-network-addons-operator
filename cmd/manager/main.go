@@ -24,6 +24,7 @@ import (
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -95,6 +96,11 @@ func main() {
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
 		log.Printf("failed setting up operator controllers: %v", err)
+		os.Exit(1)
+	}
+
+	if err := monitoring.StartPrometheus(); err != nil {
+		log.Printf("failed starting Prometheus endpoint: %v", err)
 		os.Exit(1)
 	}
 
