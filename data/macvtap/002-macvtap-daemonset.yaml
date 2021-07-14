@@ -47,6 +47,10 @@ spec:
           command: ["cp", "/macvtap-cni", "/host/opt/cni/bin/macvtap"]
           image: {{ .MacvtapImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "15Mi"
           securityContext:
             privileged: true
           volumeMounts:
