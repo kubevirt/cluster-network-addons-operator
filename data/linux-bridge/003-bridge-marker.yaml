@@ -32,6 +32,10 @@ spec:
           args:
             - -node-name
             - $(NODE_NAME)
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "15Mi"
           env:
             - name: NODE_NAME
               valueFrom:
