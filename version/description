@@ -1,15 +1,9 @@
-0.53.5
+0.53.6
 
 Features:
-* bump ovs-cni to v0.19.2 (#918)
-* ovs-cni, release-0.53, Set source as tagged (#917)
-* bump nmstate to v0.47.2 (#914)
-* bump bridge-marker to 0.6.1 (#916)
-* bridge-marker, release-0.53, Set source as tagged (#915)
-* macvtap, release-0.53, Bump to version 0.5.0 (#913)
-* release-0.53, Update k8s-nmstate to use tagged policy (#912)
-* bump kubemacpool to v0.26.5 (#911)
-* linux-bridge, Add Priority class (#908)
-* operator, Add Priority class (#907)
-* multus, Add Priority class (#909)
-* components, Update multus repo url (#903)
+* bump bridge-marker to 0.6.3 (#938)
+* bump ovs-cni to v0.19.3 (#936)
+* [release-0.53], macvtap, Bump to v0.5.1 (#932)
+* bump kubemacpool to v0.26.6 (#933)
+* bump nmstate to v0.47.3 (#930)
+* [Release-0.53] resources, Update minimum resources request (#929)
