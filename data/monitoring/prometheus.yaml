@@ -30,6 +30,15 @@ spec:
   groups:
     - name: cnao.rules
       rules:
+        - expr: sum(up{namespace='cluster-network-addons', pod=~'cluster-network-addons-operator-.*'} or vector(0))
+          record: kubevirt_cnao_num_up_operators
+        - alert: CnaoOperatorDown
+          annotations:
+            summary: CNAO operator pod is down.
+          expr: kubevirt_cnao_num_up_operators == 0
+          for: 5m
+          labels:
+            severity: critical
 ---
 apiVersion: v1
 kind: Service
