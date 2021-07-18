@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"strings"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 )
