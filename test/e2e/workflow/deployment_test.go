@@ -89,6 +89,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				[]Component{MacvtapComponent},
 			),
 		)
+		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {
+			testConfigCreate(gvk, cnao.NetworkAddonsConfigSpec{MacvtapCni: &cnao.MacvtapCni{}}, []Component{MacvtapComponent, MonitoringComponent})
+		})
 		//2264
 		It("should be able to deploy all components at once", func() {
 			components := []Component{
@@ -245,6 +248,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			KubeMacPoolComponent,
 			OvsComponent,
 			MacvtapComponent,
+			MonitoringComponent,
 		}
 		configSpec := cnao.NetworkAddonsConfigSpec{
 			LinuxBridge: &cnao.LinuxBridge{},

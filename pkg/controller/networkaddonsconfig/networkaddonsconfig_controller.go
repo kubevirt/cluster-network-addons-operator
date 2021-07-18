@@ -92,7 +92,7 @@ func Add(mgr manager.Manager) error {
 	}
 	clusterInfo.SCCAvailable = sccAvailable
 
-	addMonitorServiceResources, err := isMonitoringAvailable(clientset)
+	addMonitorServiceResources, err := IsMonitoringAvailable(clientset)
 	if err != nil {
 		// we don't want CNAO to fail only if monitoring cannot be activated.
 		addMonitorServiceResources = false
@@ -608,7 +608,7 @@ func isSCCAvailable(c kubernetes.Interface) (bool, error) {
 }
 
 // isMonitoringAvailable checks if we can deploy the monitoring component
-func isMonitoringAvailable(c kubernetes.Interface) (bool, error) {
+func IsMonitoringAvailable(c kubernetes.Interface) (bool, error) {
 	prometheusRuleResourceAvailable, err := isResourceAvailable(c, "customresourcedefinitions/prometheusrules.monitoring.coreos.com", "apiextensions.k8s.io", "v1")
 	if err != nil {
 		return false, errors.Wrap(err, "failed to check if prometheusRule resource is available")
