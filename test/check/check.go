@@ -475,7 +475,7 @@ func checkForGenericDeployment(name, namespace string, checkVersionLabels, check
 		labels := deployment.GetLabels()
 		if labels != nil {
 			if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
-				return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
+				return fmt.Errorf("Deployment %s/%s is missing operator label: %v, expected %v/version\n status: %v", namespace, name, labels, cnaov1.SchemeGroupVersion.Group, deployment.Status)
 			}
 		}
 	}
