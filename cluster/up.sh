@@ -18,6 +18,13 @@ set -ex
 
 SCRIPTS_PATH="$(dirname "$(realpath "$0")")"
 source ${SCRIPTS_PATH}/cluster.sh
+
+export KUBEVIRT_DEPLOY_PROMETHEUS=true
+if [[ ($KUBEVIRT_PROVIDER =~ k8s-1\.1.*) || ($KUBEVIRT_PROVIDER =~ k8s-1.20) ]]; then
+	  echo "Prometheus is only supported for providers >= k8s-1.21\n Disabling Prometheus"
+    export KUBEVIRT_DEPLOY_PROMETHEUS=false
+fi
+
 cluster::install
 
 $(cluster::path)/cluster-up/up.sh

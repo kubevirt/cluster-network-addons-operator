@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -137,6 +139,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Annotations: map[string]string{
 				cnaov1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
+			Labels: map[string]string{
+				names.PROMETHEUS_LABEL_KEY: "",
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: int32Ptr(1),
@@ -151,7 +156,8 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"name": Name,
+						"name":                     Name,
+						names.PROMETHEUS_LABEL_KEY: "",
 					},
 					Annotations: map[string]string{
 						"description": "cluster-network-addons-operator manages the lifecycle of different Kubernetes network components on top of Kubernetes cluster",
@@ -172,6 +178,13 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse("50m"),
 									corev1.ResourceMemory: resource.MustParse("30Mi"),
+								},
+							},
+							Ports: []corev1.ContainerPort{
+								corev1.ContainerPort{
+									Name:          "metrics",
+									Protocol:      "TCP",
+									ContainerPort: 8443,
 								},
 							},
 							Env: []corev1.EnvVar{
@@ -246,6 +259,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "WATCH_NAMESPACE",
 									Value: "",
+								},
+								{
+									Name:  "MONITORING_NAMESPACE",
+									Value: "monitoring",
 								},
 							},
 						},
