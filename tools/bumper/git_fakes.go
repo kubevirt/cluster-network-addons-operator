@@ -87,7 +87,7 @@ func (g *mockGithubApi) listPullRequests(owner string, repo string, branch strin
 
 func (g *mockGithubApi) createPullRequest(owner string, repo string, pull *github.NewPullRequest) (*github.PullRequest, *github.Response, error) {
 	base := &github.PullRequestBranch{
-		Ref:  pull.Base,
+		Ref: pull.Base,
 	}
 	pullRequest := &github.PullRequest{Title: pull.Title, Base: base}
 	g.fakePRList = append(g.fakePRList, pullRequest)
