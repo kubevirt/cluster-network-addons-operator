@@ -45,7 +45,6 @@ func Releases() []Release {
 	// Keep only releases matching the selector
 	if releasesSelectorRaw, found := os.LookupEnv("RELEASES_SELECTOR"); found {
 		releasesSelector := glob.MustCompile(releasesSelectorRaw)
-
 		filteredReleases := []Release{}
 
 		for _, release := range releases {
@@ -87,6 +86,8 @@ func Releases() []Release {
 
 	releasesProcessed = true
 
+	releases = append(releases, releases...)
+	releases = append(releases, releases...)
 	return releases
 }
 

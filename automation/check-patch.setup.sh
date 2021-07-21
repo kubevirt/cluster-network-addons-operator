@@ -16,7 +16,7 @@ set -exu
 # cd ${TMP_PROJECT_PATH}
 # go test --junit-output=$ARTIFACTS/junit.functest.xml
 
-tmp_dir=/tmp/cnao/
+tmp_dir=/tmp/cnao
 
 rm -rf $tmp_dir
 mkdir -p $tmp_dir
