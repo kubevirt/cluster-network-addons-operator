@@ -19,3 +19,11 @@ spec:
           for: 5m
           labels:
             severity: warning
+        - alert: NetworkAddonsConfigNotReady
+          annotations:
+            summary: CNAO CR NetworkAddonsConfig is not ready.
+            runbook_url: http://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady
+          expr: sum(kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'} or vector(0)) == 0
+          for: 5m
+          labels:
+            severity: warning

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
@@ -19,8 +20,24 @@ const (
 	defaultServiceAccountName  = "prometheus-k8s"
 )
 
+var (
+	readyGauge = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "kubevirt_cnao_cr_ready",
+			Help: "Cnao CR Ready",
+		})
+)
+
 func init() {
-	metrics.Registry.MustRegister()
+	metrics.Registry.MustRegister(readyGauge)
+}
+
+func SetReadyGauge(isReady bool) {
+	if isReady {
+		readyGauge.Set(1)
+	} else {
+		readyGauge.Set(0)
+	}
 }
 
 func RenderMonitoring(manifestDir string, monitoringAvailable bool) ([]*unstructured.Unstructured, error) {

@@ -22,6 +22,7 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	eventemitter "github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
@@ -83,6 +84,7 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 	for i := 0; i < conditionsUpdateRetries; i++ {
 		err := status.set(reachedAvailableLevel, conditions...)
 		if err == nil {
+			monitoring.SetReadyGauge(reachedAvailableLevel)
 			log.Print("Successfully updated status conditions")
 			return
 		}
