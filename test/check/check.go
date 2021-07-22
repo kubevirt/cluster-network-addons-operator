@@ -176,10 +176,10 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	By("Checking that the operator is up and running")
 	if timeout != CheckImmediately {
 		Eventually(func() error {
-			return checkForDeployment(components.Name, false)
+			return checkForDeployment(components.Name, false, false)
 		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
 	} else {
-		Expect(checkForDeployment(components.Name, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
+		Expect(checkForDeployment(components.Name, false, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
 }
 
@@ -296,7 +296,7 @@ func checkForComponent(component *Component) error {
 	}
 
 	for _, deployment := range component.Deployments {
-		errsAppend(checkForDeployment(deployment, true))
+		errsAppend(checkForDeployment(deployment, true, true))
 	}
 
 	if component.Secret != "" {
@@ -400,8 +400,8 @@ func checkForSecurityContextConstraints(name string) error {
 	return nil
 }
 
-func checkForDeployment(name string, checkRelationshipLabels bool) error {
-	return checkForGenericDeployment(name, components.Namespace, true, checkRelationshipLabels)
+func checkForDeployment(name string, checkVersionLabels, checkRelationshipLabels bool) error {
+	return checkForGenericDeployment(name, components.Namespace, checkVersionLabels, checkRelationshipLabels)
 }
 
 func checkForGenericDeployment(name, namespace string, checkVersionLabels, checkRelationshipLabels bool) error {
@@ -418,6 +418,8 @@ func checkForGenericDeployment(name, namespace string, checkVersionLabels, check
 			if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
 				return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
 			}
+		} else {
+			return fmt.Errorf("Deployment %s/%s has no labels. Should have operator label", namespace, name)
 		}
 	}
 
