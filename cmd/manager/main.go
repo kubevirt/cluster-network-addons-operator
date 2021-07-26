@@ -87,7 +87,7 @@ func main() {
 		log.Printf("failed adding network addons scheme to the client: %v", err)
 		os.Exit(1)
 	}
-	if err := osv1.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := osv1.Install(mgr.GetScheme()); err != nil {
 		log.Printf("failed adding openshift scheme to the client: %v", err)
 		os.Exit(1)
 	}
