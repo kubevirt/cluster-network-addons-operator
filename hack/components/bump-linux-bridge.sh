@@ -23,7 +23,6 @@ LINUX_BRIDGE_TAG=$(git-utils::get_component_tag ${LINUX_BRIDGE_PATH})
 
 echo 'Build container image with linux-bridge binaries'
 LINUX_BRIDGE_TAR_CONTAINER_DIR=/usr/src/github.com/containernetworking/plugins/bin
-LINUX_BRIDGE_TAR_FILE=cni-plugins-linux-amd64-${LINUX_BRIDGE_TAG}.tgz
 LINUX_BRIDGE_IMAGE=quay.io/kubevirt/cni-default-plugins
 LINUX_BRIDGE_IMAGE_TAGGED=${LINUX_BRIDGE_IMAGE}:${LINUX_BRIDGE_TAG}
 (
@@ -40,10 +39,10 @@ RUN GOFLAGS=-mod=vendor ./build_linux.sh
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal
 ENV SOURCE_DIR=${REMOTE_SOURCE_DIR}/app
-RUN mkdir -p /usr/src/containernetworking/plugins/bin
+RUN mkdir -p ${LINUX_BRIDGE_TAR_CONTAINER_DIR}
 RUN microdnf install -y findutils
-COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/bridge /usr/src/github.com/containernetworking/plugins/bin/bridge
-COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/tuning /usr/src/github.com/containernetworking/plugins/bin/tuning
+COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/bridge ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/bridge
+COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/tuning ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning
 EOF
     docker build -t ${LINUX_BRIDGE_IMAGE_TAGGED} .
 )
