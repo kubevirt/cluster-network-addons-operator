@@ -35,8 +35,9 @@ spec:
             - /bin/bash
             - -c
             - |
-              cp -rf /usr/src/containernetworking/plugins/bin/*bridge /opt/cni/bin/
-              cp -rf /usr/src/containernetworking/plugins/bin/*tuning /opt/cni/bin/
+              echo 'Installing bridge and tuning CNIs'
+              cp -f /usr/src/containernetworking/plugins/bin/*bridge /opt/cni/bin/ || exit 1
+              cp -f /usr/src/containernetworking/plugins/bin/*tuning /opt/cni/bin/ || exit 1
               # Some projects (e.g. openshift/console) use cnv- prefix to distinguish between
               # binaries shipped by OpenShift and those shipped by KubeVirt (D/S matters).
               # Following two lines make sure we will provide both names when needed.
