@@ -22,8 +22,6 @@ echo 'Get linux-bridge tag'
 LINUX_BRIDGE_TAG=$(git-utils::get_component_tag ${LINUX_BRIDGE_PATH})
 
 echo 'Build container image with linux-bridge binaries'
-LINUX_BRIDGE_TAR_CONTAINER_DIR=/usr/src/github.com/containernetworking/plugins/bin
-LINUX_BRIDGE_TAR_FILE=cni-plugins-linux-amd64-${LINUX_BRIDGE_TAG}.tgz
 LINUX_BRIDGE_IMAGE=quay.io/kubevirt/cni-default-plugins
 LINUX_BRIDGE_IMAGE_TAGGED=${LINUX_BRIDGE_IMAGE}:${LINUX_BRIDGE_TAG}
 (
