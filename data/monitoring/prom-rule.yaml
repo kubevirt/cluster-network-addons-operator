@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus.cnao.io: ""
+  name: prometheus-rules-cluster-network-addons-operator
+  namespace: {{ .Namespace }}
+spec:
+  groups:
+    - name: kubevirt.cnao.rules
+      rules:
+        - expr: sum(up{namespace='{{ .Namespace }}', pod=~'cluster-network-addons-operator-.*'} or vector(0))
+          record: kubevirt_cnao_num_up_operators
+        - alert: CnaoDown
+          annotations:
+            summary: CNAO pod is down.
+            runbook_url: http://kubevirt.io/monitoring/runbooks/CnaoDown
+          expr: kubevirt_cnao_num_up_operators == 0
+          for: 5m
+          labels:
+            severity: warning

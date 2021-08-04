@@ -5,3 +5,4 @@ metadata:
   name: {{.Namespace}}
   labels:
     name: {{.Namespace}}
+    openshift.io/cluster-monitoring: "true"

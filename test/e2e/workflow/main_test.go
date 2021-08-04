@@ -10,6 +10,7 @@ import (
 
 	ginkgoreporters "kubevirt.io/qe-tools/pkg/ginkgo-reporters"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	f "github.com/operator-framework/operator-sdk/pkg/test"
 	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	appsv1 "k8s.io/api/apps/v1"
@@ -44,6 +45,9 @@ var _ = BeforeSuite(func() {
 	By("Adding custom resource scheme to framework")
 	err := framework.AddToFrameworkScheme(apis.AddToScheme, &cnaov1.NetworkAddonsConfigList{})
 	Expect(err).ToNot(HaveOccurred())
+
+	Expect(framework.AddToFrameworkScheme(monitoringv1.AddToScheme, &monitoringv1.ServiceMonitorList{})).To(Succeed())
+	Expect(framework.AddToFrameworkScheme(monitoringv1.AddToScheme, &monitoringv1.PrometheusRuleList{})).To(Succeed())
 
 	By("Detecting operator version")
 	operatorVersion, err = getRunningOperatorVersion()

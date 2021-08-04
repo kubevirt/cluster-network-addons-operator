@@ -17,6 +17,9 @@ type Component struct {
 	Deployments                  []string
 	Secret                       string
 	MutatingWebhookConfiguration string
+	Service                      string
+	ServiceMonitor               string
+	PrometheusRule               string
 }
 
 var (
@@ -32,6 +35,7 @@ var (
 		ClusterRole:                "bridge-marker-cr",
 		ClusterRoleBinding:         "bridge-marker-crb",
 		SecurityContextConstraints: "linux-bridge",
+		ServiceMonitor:             "",
 		DaemonSets: []string{
 			"bridge-marker",
 			"kube-cni-linux-bridge-plugin",
@@ -76,6 +80,12 @@ var (
 			"macvtap-cni",
 		},
 	}
+	MonitoringComponent = Component{
+		ComponentName:  "Monitoring",
+		Service:        "cluster-network-addons-operator-prometheus-metrics",
+		ServiceMonitor: "service-monitor-cluster-network-addons-operator",
+		PrometheusRule: "prometheus-rules-cluster-network-addons-operator",
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
@@ -83,6 +93,7 @@ var (
 		NMStateComponent,
 		OvsComponent,
 		MacvtapComponent,
+		MonitoringComponent,
 	}
 )
 

@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
-
 	"log"
 	"os"
 	"runtime"
@@ -12,11 +10,8 @@ import (
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
-	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -24,13 +19,8 @@ import (
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
-)
-
-var (
-	metricsHost               = "0.0.0.0"
-	metricsPort         int32 = 8383
-	operatorMetricsPort int32 = 8686
 )
 
 func printVersion() {
@@ -72,7 +62,7 @@ func main() {
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
-		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		MetricsBindAddress: monitoring.GetMetricsAddress(),
 		MapperProvider:     k8s.NewDynamicRESTMapper,
 	})
 	if err != nil {
@@ -95,17 +85,6 @@ func main() {
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
 		log.Printf("failed setting up operator controllers: %v", err)
-		os.Exit(1)
-	}
-
-	servicePorts := []v1.ServicePort{
-		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: metricsPort}},
-		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: operatorMetricsPort}},
-	}
-
-	// Create Service object to expose the metrics port.
-	if _, err = metrics.CreateMetricsService(ctx, cfg, servicePorts); err != nil {
-		log.Printf("failed to create metrics server: %v", err)
 		os.Exit(1)
 	}
 

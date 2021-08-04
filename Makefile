@@ -81,7 +81,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace-check vet goimports-check gen-k8s-check test/unit
+check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify
 	./hack/check.sh
 
 whitespace-check: $(all_sources)
@@ -120,6 +120,11 @@ docker-push-operator:
 
 docker-push-registry:
 	docker push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
+
+prom-rules-verify:
+	hack/prom-rule-ci/verify-rules.sh \
+	data/monitoring/prom-rule.yaml \
+	hack/prom-rule-ci/prom-rules-tests.yaml
 
 cluster-up:
 	./cluster/up.sh
@@ -221,4 +226,5 @@ bump-all: bump-nmstate bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-
 	bump-% \
 	bump-all \
 	gen-k8s \
+	prom-rules-verify \
 	release
