@@ -12,9 +12,9 @@ components:
     update-policy: tagged
     metadata: v0.30.0
   linux-bridge:
-    url: https://github.com/containernetworking/plugins
-    commit: 74a6b28a2c2796a2638ba61a85bb620640bfeb31
-    branch: master
+    url: https://github.com/EdDev/plugins
+    commit: bf36e4c2e3ce64a00ba496d7d91bb768a635469a
+    branch: bridge-macspoofchk
     update-policy: static
     metadata: ""
   macvtap-cni:
