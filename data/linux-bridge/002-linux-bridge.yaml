@@ -37,8 +37,16 @@ spec:
             - |
               echo 'Installing bridge and tuning CNIs'
               cni_mount_dir=/opt/cni/bin
-              cp --remove-destination /usr/src/github.com/containernetworking/plugins/bin/bridge ${cni_mount_dir}/cnv-bridge || exit 1
-              cp --remove-destination /usr/src/github.com/containernetworking/plugins/bin/tuning ${cni_mount_dir}/cnv-tuning || exit 1
+              sourcebinpath=/usr/src/github.com/containernetworking/plugins/bin
+              cp --remove-destination ${sourcebinpath}/bridge ${cni_mount_dir}/cnv-bridge || exit 1
+              cp --remove-destination ${sourcebinpath}/tuning ${cni_mount_dir}/cnv-tuning || exit 1
+
+              echo 'Checking bridge and tuning CNIs deployment on node'
+              printf -v bridgechecksum "%s" "$(<$sourcebinpath/bridge.checksum)"
+              printf -v tuningchecksum "%s" "$(<$sourcebinpath/tuning.checksum)"
+              printf "%s %s" "${bridgechecksum% *}" "${cni_mount_dir}/cnv-bridge" | sha256sum --check || exit 1
+              printf "%s %s" "${tuningchecksum% *}" "${cni_mount_dir}/cnv-tuning" | sha256sum --check || exit 1
+
               # Some projects (e.g. openshift/console) use cnv- prefix to distinguish between
               # binaries shipped by OpenShift and those shipped by KubeVirt (D/S matters).
               # Following two lines make sure we will provide both names when needed.
