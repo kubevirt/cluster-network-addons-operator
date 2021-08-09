@@ -35,3 +35,36 @@ tests:
       - eval_time: 5m
         alertname: CnaoDown
         exp_alerts:
+
+# NetworkAddonsConfigNotReady positive tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+        values: "0 0 0 0 0 0"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: NetworkAddonsConfigNotReady
+        exp_alerts:
+          - exp_annotations:
+              summary: "CNAO CR NetworkAddonsConfig is not ready."
+              runbook_url: "http://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady"
+            exp_labels:
+              severity: "warning"
+
+# NetworkAddonsConfigNotReady negative tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+        values: "1 1 1 0 1 1"
+      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+        values: "1 1 1 1 1 1"
+      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+        values: "0 0 0 0 0 1"
+      - series: "kubevirt_cnao_cr_ready{namespace='other-namespace'}"
+        values: "0 0 0 0 0 0"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: NetworkAddonsConfigNotReady
+        exp_alerts:

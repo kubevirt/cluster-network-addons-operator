@@ -281,6 +281,25 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, 30*time.Second)
 		})
+		Context("and checking CNAO prometheus endpoint", func() {
+			var err error
+			var scrapedData string
+			BeforeEach(func() {
+				scrapedData, err = GetScrapedDataFromMonitoringEndpoint()
+				Expect(err).ToNot(HaveOccurred())
+			})
+			It("Should report the expected metrics", func() {
+				expectedMetricValueMap := map[string]string{
+					"kubevirt_cnao_cr_ready": "1",
+				}
+
+				for metricName, expectedValue := range expectedMetricValueMap {
+					metricEntry := FindMetric(scrapedData, metricName)
+					Expect(metricEntry).ToNot(BeEmpty(), fmt.Sprintf("metric %s does not appear in endpoint scrape", metricName))
+					Expect(metricEntry).To(Equal(fmt.Sprintf("%s %s", metricName, expectedValue)), fmt.Sprintf("metric %s does not have the expected value %s", metricName, expectedValue))
+				}
+			})
+		})
 	})
 	//2178
 	Context("when kubeMacPool is deployed", func() {

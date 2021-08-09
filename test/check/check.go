@@ -695,6 +695,50 @@ func checkForPrometheusRuleRemoval(name string) error {
 	return isNotFound("PrometheusRule", name, err)
 }
 
+func getMonitoringEndpoint() (*corev1.Endpoints, error) {
+	By("Finding CNAO prometheus endpoint")
+	endpoint := &corev1.Endpoints{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: MonitoringComponent.Service, Namespace: components.Namespace}, endpoint)
+	if err != nil {
+		return nil, err
+	}
+	return endpoint, nil
+}
+
+func scrapeEndpointAddress(epAddress corev1.EndpointAddress, epPort int32) (string, error) {
+	stdout, err := Kubectl("exec", "-n", epAddress.TargetRef.Namespace, epAddress.TargetRef.Name, "--", "curl", "-L", "-s", "-k", fmt.Sprintf("http://%s:%d/metrics", epAddress.IP, epPort))
+	if err != nil {
+		return "", err
+	}
+	return stdout, nil
+}
+
+func GetScrapedDataFromMonitoringEndpoint() (string, error) {
+	endpoint, err := getMonitoringEndpoint()
+	if err != nil {
+		return "", err
+	}
+
+	By("scraping the metrics endpoint on CNAO pod")
+	epPort := endpoint.Subsets[0].Ports[0].Port
+	for _, epAddress := range endpoint.Subsets[0].Addresses {
+		if !strings.HasPrefix(epAddress.TargetRef.Name, components.Name) {
+			continue
+		}
+		return scrapeEndpointAddress(epAddress, epPort)
+	}
+	return "", errors.New("no endpoint target ref name matches CNAO component")
+}
+
+func FindMetric(metrics string, expectedMetric string) string {
+	for _, line := range strings.Split(metrics, "\n") {
+		if strings.HasPrefix(line, expectedMetric+" ") {
+			return line
+		}
+	}
+	return ""
+}
+
 func isNotFound(componentType string, componentName string, clientGetOutput error) error {
 	if clientGetOutput != nil {
 		if apierrors.IsNotFound(clientGetOutput) {
