@@ -68,3 +68,32 @@ tests:
       - eval_time: 5m
         alertname: NetworkAddonsConfigNotReady
         exp_alerts:
+
+# KubeMacPoolDuplicateMacsFound positive tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'}"
+        values: "1 1 1 1 1 1"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KubeMacPoolDuplicateMacsFound
+        exp_alerts:
+          - exp_annotations:
+              summary: "Duplicate macs found."
+              runbook_url: "http://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound"
+            exp_labels:
+              severity: "warning"
+
+# KubeMacPoolDuplicateMacsFound negative tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'}"
+        values: "1 0 0 0 0 0"
+      - series: "kubevirt_kmp_duplicate_macs{namespace='other-namespace'}"
+        values: "1 1 1 1 1 1"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KubeMacPoolDuplicateMacsFound
+        exp_alerts:
