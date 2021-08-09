@@ -1,17 +1,28 @@
-0.57.0
+0.58.0
 
-* components, Update multus repo url (#902)
-* operator, Add Priority class (#893)
-* multus, Add Priority class (#898)
-* bump ovs-cni to v0.21.0 (#901)
-* bump macvtap-cni to v0.5.0 (#899)
-* bump kubemacpool to v0.30.0 (#900)
-* bump bridge-marker to 0.7.0 (#894)
-* bump nmstate to v0.51.0 (#896)
-* bump nmstate to v0.50.0 (#890)
-* linux-bridge, Add Priority class (#895)
-* components, Update kubemacpool branch to main (#888)
-* bump nmstate to v0.49.0 (#887)
-* Follow the renamed branch of OVS CNI (#883)
-* Follow bridge-marker's renamed branch (#882)
+Features:
+* linux-bridge, Add shasum check in linux-bridge pod (#949)
+* bump bridge-marker to 0.9.0 (#953)
+* Add kubevirt_cnao_cr_ready metric and NetworkAddonsConfigNotReady alert (#944)
+* components: Consume CNI Bridge with macspoofchk support (#945)
+* Add alerts infra and basic alert CnaoDown (#928)
+* hack/components: Support build on SELinux enabled platforms (#946)
+* main, Update deprecated AddToScheme function (#943)
+* fix make fmt outputs (#940)
+* bump ovs-cni to v0.22.0 (#937)
+* bump macvtap-cni to v0.5.1 (#931)
+* update default provider to k8s 1.21 (#923)
+* bump bridge-marker to 0.8.0 (#927)
+* linux bridge, Update linux bridge minimum resources request (#925)
+* resources, Update minimum resources request (#926)
+* resources, Update multus resources section (#924)
+* resources, Update minimum resources request (#921)
+* resources, Update linux bridge minimum resources request (#922)
+* resources, Update multus resources section (#920)
+* bumper, update default branch workflow (#910)
+
+Bugs:
+* data/linux-bridge, Fix copying over symlink (#950)
+* Fix installation of bridge and tuning CNIs (#948)
+* checkForDeployment, don't check on CNAO operator itself (#942)
 
