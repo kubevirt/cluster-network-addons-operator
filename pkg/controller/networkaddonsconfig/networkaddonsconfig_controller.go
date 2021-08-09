@@ -39,6 +39,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/apply"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
@@ -220,6 +221,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 			// TODO: This can be dropped once we implement a finalizer waiting for all components to be removed
 			r.stopTrackingObjects()
 
+			if r.clusterInfo.MonitoringAvailable {
+				monitoring.ResetMonitoredComponents()
+			}
+
 			// Owned objects are automatically garbage collected. Return and don't requeue
 			return reconcile.Result{}, nil
 		}
@@ -295,6 +300,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		// If failed, set NetworkAddonsConfig to failing and requeue
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToDeleteObjects", err.Error())
 		return reconcile.Result{}, err
+	}
+
+	if r.clusterInfo.MonitoringAvailable {
+		monitoring.TrackMonitoredComponents(&networkAddonsConfig.Spec)
 	}
 
 	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
