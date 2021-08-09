@@ -33,19 +33,19 @@ spec:
           imagePullPolicy: {{ .ImagePullPolicy }}
           command:
             - /bin/bash
-            - -c
+            - -ce
             - |
               echo 'Installing bridge and tuning CNIs'
               cni_mount_dir=/opt/cni/bin
               sourcebinpath=/usr/src/github.com/containernetworking/plugins/bin
-              cp --remove-destination ${sourcebinpath}/bridge ${cni_mount_dir}/cnv-bridge || exit 1
-              cp --remove-destination ${sourcebinpath}/tuning ${cni_mount_dir}/cnv-tuning || exit 1
+              cp --remove-destination ${sourcebinpath}/bridge ${cni_mount_dir}/cnv-bridge
+              cp --remove-destination ${sourcebinpath}/tuning ${cni_mount_dir}/cnv-tuning
 
               echo 'Checking bridge and tuning CNIs deployment on node'
               printf -v bridgechecksum "%s" "$(<$sourcebinpath/bridge.checksum)"
               printf -v tuningchecksum "%s" "$(<$sourcebinpath/tuning.checksum)"
-              printf "%s %s" "${bridgechecksum% *}" "${cni_mount_dir}/cnv-bridge" | sha256sum --check || exit 1
-              printf "%s %s" "${tuningchecksum% *}" "${cni_mount_dir}/cnv-tuning" | sha256sum --check || exit 1
+              printf "%s %s" "${bridgechecksum% *}" "${cni_mount_dir}/cnv-bridge" | sha256sum --check
+              printf "%s %s" "${tuningchecksum% *}" "${cni_mount_dir}/cnv-tuning" | sha256sum --check
 
               # Some projects (e.g. openshift/console) use cnv- prefix to distinguish between
               # binaries shipped by OpenShift and those shipped by KubeVirt (D/S matters).
