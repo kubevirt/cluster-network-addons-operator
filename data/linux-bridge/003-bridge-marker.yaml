@@ -11,6 +11,10 @@ spec:
   selector:
     matchLabels:
       name: bridge-marker
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 10%
   template:
     metadata:
       labels:
