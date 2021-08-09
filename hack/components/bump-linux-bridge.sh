@@ -43,6 +43,8 @@ RUN mkdir -p ${LINUX_BRIDGE_TAR_CONTAINER_DIR}
 RUN microdnf install -y findutils
 COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/bridge ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/bridge
 COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/tuning ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning
+RUN sha256sum ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/bridge >${LINUX_BRIDGE_TAR_CONTAINER_DIR}/bridge.checksum
+RUN sha256sum ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning >${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning.checksum
 EOF
     docker build -t ${LINUX_BRIDGE_IMAGE_TAGGED} .
 )
