@@ -289,6 +289,10 @@ spec:
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
+        resources:
+          requests:
+            cpu: 30m
+            memory: 30Mi
       priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
@@ -366,7 +370,7 @@ spec:
         resources:
           requests:
             cpu: 100m
-            memory: 300Mi
+            memory: 100Mi
         volumeMounts:
         - mountPath: /tmp/k8s-webhook-server/serving-certs/
           name: tls-key-pair
