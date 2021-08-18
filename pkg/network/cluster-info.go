@@ -5,4 +5,5 @@ type ClusterInfo struct {
 	OpenShift4          bool
 	NmstateOperator     bool
 	MonitoringAvailable bool
+	IsSingleReplica     bool
 }

@@ -17,11 +17,6 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
-const (
-	WEBHOOK_REPLICAS     = int32(2)
-	WEBHOOK_MIN_REPLICAS = int32(1)
-)
-
 // renderNMState generates the manifests of NMState handler
 func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.NMState == nil {
@@ -41,8 +36,8 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
 	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
 	data.Data["PlacementConfiguration"] = conf.PlacementConfiguration
-	data.Data["WebhookReplicas"] = WEBHOOK_REPLICAS
-	data.Data["WebhookMinReplicas"] = WEBHOOK_MIN_REPLICAS
+	data.Data["WebhookReplicas"] = getNumberOfWebhookReplicas(clusterInfo)
+	data.Data["WebhookMinReplicas"] = getMinNumberOfWebhookReplicas(clusterInfo)
 
 	log.Printf("NMStateOperator == %t", clusterInfo.NmstateOperator)
 	fullManifestDir := filepath.Join(manifestDir, "nmstate", "operand")
@@ -144,4 +139,30 @@ func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, cli
 	}
 
 	return errList
+}
+
+func getNumberOfWebhookReplicas(clusterInfo *ClusterInfo) int32 {
+	const (
+		highlyAvailableWebhookReplicas = int32(2)
+		singleReplicaWebhookReplicas   = int32(1)
+	)
+
+	if clusterInfo.OpenShift4 && clusterInfo.IsSingleReplica {
+		return singleReplicaWebhookReplicas
+	}
+
+	return highlyAvailableWebhookReplicas
+}
+
+func getMinNumberOfWebhookReplicas(clusterInfo *ClusterInfo) int32 {
+	const (
+		highlyAvailableMinWebhookReplicas = int32(1)
+		singleReplicaMinWebhookReplicas   = int32(0)
+	)
+
+	if clusterInfo.OpenShift4 && clusterInfo.IsSingleReplica {
+		return singleReplicaMinWebhookReplicas
+	}
+
+	return highlyAvailableMinWebhookReplicas
 }
