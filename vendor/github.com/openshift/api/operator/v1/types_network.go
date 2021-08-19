@@ -19,9 +19,10 @@ type Network struct {
 	Status NetworkStatus `json:"status,omitempty"`
 }
 
-// NetworkStatus is currently unused. Instead, status
-// is reported in the Network.config.openshift.io object.
+// NetworkStatus is detailed operator status, which is distilled
+// up to the Network clusteroperator object.
 type NetworkStatus struct {
+	OperatorStatus `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -35,6 +36,8 @@ type NetworkList struct {
 
 // NetworkSpec is the top-level network configuration object.
 type NetworkSpec struct {
+	OperatorSpec `json:",inline"`
+
 	// clusterNetwork is the IP address pool to use for pod IPs.
 	// Some network providers, e.g. OpenShift SDN, support multiple ClusterNetworks.
 	// Others only support one. This is equivalent to the cluster-cidr.
@@ -65,6 +68,14 @@ type NetworkSpec struct {
 	// +optional
 	DeployKubeProxy *bool `json:"deployKubeProxy,omitempty"`
 
+	// disableNetworkDiagnostics specifies whether or not PodNetworkConnectivityCheck
+	// CRs from a test pod to every node, apiserver and LB should be disabled or not.
+	// If unset, this property defaults to 'false' and network diagnostics is enabled.
+	// Setting this to 'true' would reduce the additional load of the pods performing the checks.
+	// +optional
+	// +kubebuilder:default:=false
+	DisableNetworkDiagnostics bool `json:"disableNetworkDiagnostics"`
+
 	// kubeProxyConfig lets us configure desired proxy configuration.
 	// If not specified, sensible defaults will be chosen by OpenShift directly.
 	// Not consumed by all network providers - currently only openshift-sdn.
@@ -72,11 +83,14 @@ type NetworkSpec struct {
 }
 
 // ClusterNetworkEntry is a subnet from which to allocate PodIPs. A network of size
-// HostPrefix (in CIDR notation) will be allocated when nodes join the cluster.
+// HostPrefix (in CIDR notation) will be allocated when nodes join the cluster. If
+// the HostPrefix field is not used by the plugin, it can be left unset.
 // Not all network providers support multiple ClusterNetworks
 type ClusterNetworkEntry struct {
-	CIDR       string `json:"cidr"`
-	HostPrefix uint32 `json:"hostPrefix"`
+	CIDR string `json:"cidr"`
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	HostPrefix uint32 `json:"hostPrefix,omitempty"`
 }
 
 // DefaultNetworkDefinition represents a single network plugin's configuration.
@@ -117,6 +131,7 @@ type SimpleMacvlanConfig struct {
 
 	// mtu is the mtu to use for the macvlan interface. if unset, host's
 	// kernel will select the value.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	MTU uint32 `json:"mtu,omitempty"`
 }
@@ -209,11 +224,13 @@ type OpenShiftSDNConfig struct {
 	Mode SDNMode `json:"mode"`
 
 	// vxlanPort is the port to use for all vxlan packets. The default is 4789.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	VXLANPort *uint32 `json:"vxlanPort,omitempty"`
 
 	// mtu is the mtu to use for the tunnel interface. Defaults to 1450 if unset.
 	// This must be 50 bytes smaller than the machine's uplink.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	MTU *uint32 `json:"mtu,omitempty"`
 
@@ -230,10 +247,12 @@ type OpenShiftSDNConfig struct {
 // KuryrConfig configures the Kuryr-Kubernetes SDN
 type KuryrConfig struct {
 	// The port kuryr-daemon will listen for readiness and liveness requests.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	DaemonProbesPort *uint32 `json:"daemonProbesPort,omitempty"`
 
 	// The port kuryr-controller will listen for readiness and liveness requests.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	ControllerProbesPort *uint32 `json:"controllerProbesPort,omitempty"`
 
@@ -250,15 +269,74 @@ type KuryrConfig struct {
 	// size by 1.
 	// +optional
 	OpenStackServiceNetwork string `json:"openStackServiceNetwork,omitempty"`
+
+	// enablePortPoolsPrepopulation when true will make Kuryr prepopulate each newly created port
+	// pool with a minimum number of ports. Kuryr uses Neutron port pooling to fight the fact
+	// that it takes a significant amount of time to create one. Instead of creating it when
+	// pod is being deployed, Kuryr keeps a number of ports ready to be attached to pods. By
+	// default port prepopulation is disabled.
+	// +optional
+	EnablePortPoolsPrepopulation bool `json:"enablePortPoolsPrepopulation,omitempty"`
+
+	// poolMaxPorts sets a maximum number of free ports that are being kept in a port pool.
+	// If the number of ports exceeds this setting, free ports will get deleted. Setting 0
+	// will disable this upper bound, effectively preventing pools from shrinking and this
+	// is the default value. For more information about port pools see
+	// enablePortPoolsPrepopulation setting.
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	PoolMaxPorts uint `json:"poolMaxPorts,omitempty"`
+
+	// poolMinPorts sets a minimum number of free ports that should be kept in a port pool.
+	// If the number of ports is lower than this setting, new ports will get created and
+	// added to pool. The default is 1. For more information about port pools see
+	// enablePortPoolsPrepopulation setting.
+	// +kubebuilder:validation:Minimum=1
+	// +optional
+	PoolMinPorts uint `json:"poolMinPorts,omitempty"`
+
+	// poolBatchPorts sets a number of ports that should be created in a single batch request
+	// to extend the port pool. The default is 3. For more information about port pools see
+	// enablePortPoolsPrepopulation setting.
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	PoolBatchPorts *uint `json:"poolBatchPorts,omitempty"`
 }
 
-// ovnKubernetesConfig is the proposed configuration parameters for networks
+// ovnKubernetesConfig contains the configuration parameters for networks
 // using the ovn-kubernetes network project
 type OVNKubernetesConfig struct {
 	// mtu is the MTU to use for the tunnel interface. This must be 100
 	// bytes smaller than the uplink mtu.
 	// Default is 1400
+	// +kubebuilder:validation:Minimum=0
+	// +optional
 	MTU *uint32 `json:"mtu,omitempty"`
+	// geneve port is the UDP port to be used by geneve encapulation.
+	// Default is 6081
+	// +kubebuilder:validation:Minimum=1
+	// +optional
+	GenevePort *uint32 `json:"genevePort,omitempty"`
+	// HybridOverlayConfig configures an additional overlay network for peers that are
+	// not using OVN.
+	// +optional
+	HybridOverlayConfig *HybridOverlayConfig `json:"hybridOverlayConfig,omitempty"`
+	// ipsecConfig enables and configures IPsec for pods on the pod network within the
+	// cluster.
+	// +optional
+	IPsecConfig *IPsecConfig `json:"ipsecConfig,omitempty"`
+}
+
+type HybridOverlayConfig struct {
+	// HybridClusterNetwork defines a network space given to nodes on an additional overlay network.
+	HybridClusterNetwork []ClusterNetworkEntry `json:"hybridClusterNetwork"`
+	// HybridOverlayVXLANPort defines the VXLAN port number to be used by the additional overlay network.
+	// Default is 4789
+	// +optional
+	HybridOverlayVXLANPort *uint32 `json:"hybridOverlayVXLANPort,omitempty"`
+}
+
+type IPsecConfig struct {
 }
 
 // NetworkType describes the network plugin type to configure
@@ -270,7 +348,9 @@ type ProxyArgumentList []string
 // ProxyConfig defines the configuration knobs for kubeproxy
 // All of these are optional and have sensible defaults
 type ProxyConfig struct {
-	// The period that iptables rules are refreshed.
+	// An internal kube-proxy parameter. In older releases of OCP, this sometimes needed to be adjusted
+	// in large clusters for performance reasons, but this is no longer necessary, and there is no reason
+	// to change this from the default value.
 	// Default: 30s
 	IptablesSyncPeriod string `json:"iptablesSyncPeriod,omitempty"`
 
