@@ -1,0 +1,30 @@
+name: Auto-Bump Components' Versions
+
+on:
+  schedule:
+    - cron:  '0 * * * *'
+
+jobs:
+
+  build:
+    name: release-0.58 - CNAO Component Bump Job
+    if: (github.repository == 'kubevirt/cluster-network-addons-operator')
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set environment variables
+      run: echo "BASE_BRANCH=release-0.58" >> $GITHUB_ENV
+
+    - name: Login to Quay
+      run: docker login -u="kubevirt+network" -p="${{ secrets.QUAY_ROBOT_TOKEN }}" quay.io
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ env.BASE_BRANCH }}
+
+    - name: Pull latest of latest branch
+      run:  git pull --ff-only --rebase origin ${{ env.BASE_BRANCH }}
+
+    - name: Run bumper script
+      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
