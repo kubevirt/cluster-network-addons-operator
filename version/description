@@ -1,3 +1,6 @@
-0.44.5
+0.44.6
 
-* bump nmstate to v0.37.9 (#872)
+* bump nmstate to v0.37.10 (#966)
+* components, Update multus repo url (#904)
+* Follow main branch on marker and ovs cni (#885)
+* Change ovs-cni repo to k8snetworkplumbinggw (#876)
