@@ -258,7 +258,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								},
 								{
 									Name:  "WATCH_NAMESPACE",
-									Value: "",
+									Value: Namespace,
 								},
 								{
 									Name:  "MONITORING_NAMESPACE",
