@@ -28,7 +28,7 @@ var (
 const (
 	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus@sha256:32867c73cda4d605651b898dc85fea67d93191c47f27e1ad9e9f2b9041c518de"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:a90902cf3e5154424148bf3ba3c1bf90316cc77a54042cf6584fe8aedbe6daec"
-	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:91da5ba9546f9917f69c70f28e214797bcd4ce6741201bb5b96e6c60fe38b911"
+	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:b6e1537149dbfed3969b23ffc5714b148f8bde86fa5f8c28a5cca7f0f2c28b80"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:fc432bf7d0ca51923cb66ea764cfff3ea2a2c90d92f16ed7e07c13d5171aebd2"
 	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler@sha256:61005b3c90613fe735c598c9a02e7e04ca5b20663e54acfec81c3edc5c159689"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:631b9151909cc12fe7e4d750e41ab831b06834773a46c5fa7ba95c670df39623"
