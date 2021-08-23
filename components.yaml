@@ -7,10 +7,10 @@ components:
     metadata: 0.9.0
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
-    commit: 81e03248c05027aef599d8ae75003615eb7990a4
+    commit: 4cdd2681f206156a09bae61af86407f6b450cf09
     branch: main
     update-policy: tagged
-    metadata: v0.31.0
+    metadata: v0.32.0
   linux-bridge:
     url: https://github.com/EdDev/plugins
     commit: bf36e4c2e3ce64a00ba496d7d91bb768a635469a
