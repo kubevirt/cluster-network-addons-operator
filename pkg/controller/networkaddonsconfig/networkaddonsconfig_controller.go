@@ -131,7 +131,7 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 	// Create custom predicate for NetworkAddonsConfig watcher. This makes sure that Status field
 	// updates will not trigger reconciling of the object. Reconciliation is trigger only if
 	// Spec fields differ.
-	pred := predicate.Funcs{
+	crPred := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
 			if err != nil {
@@ -148,10 +148,10 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 	}
 
 	// Watch for changes to primary resource NetworkAddonsConfig
-	if err := c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+	if err := c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, crPred); err != nil {
 		return err
 	}
-	if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+	if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, crPred); err != nil {
 		return err
 	}
 
@@ -161,12 +161,27 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 		return err
 	}
 
+	pred := predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			return r.namespace == e.Meta.GetNamespace()
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return r.namespace == e.Meta.GetNamespace()
+		},
+		GenericFunc: func(e event.GenericEvent) bool {
+			return r.namespace == e.Meta.GetNamespace()
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			return r.namespace == e.MetaNew.GetNamespace()
+		},
+	}
+
 	// Watch for changes on DaemonSet and Deployment resources
-	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForObject{}, pred)
 	if err != nil {
 		return err
 	}
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForObject{}, pred)
 	if err != nil {
 		return err
 	}
