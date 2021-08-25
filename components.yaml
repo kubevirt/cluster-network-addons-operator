@@ -13,8 +13,8 @@ components:
     metadata: v0.31.0
   linux-bridge:
     url: https://github.com/EdDev/plugins
-    commit: bf36e4c2e3ce64a00ba496d7d91bb768a635469a
-    branch: bridge-macspoofchk
+    commit: cbec9bf876f07f284a9b102f775f97346e341593
+    branch: bridge-macspoofchk-clone
     update-policy: static
     metadata: ""
   macvtap-cni:
