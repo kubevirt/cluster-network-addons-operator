@@ -1,9 +1,7 @@
-0.53.6
+0.53.7
 
 Features:
-* bump bridge-marker to 0.6.3 (#938)
-* bump ovs-cni to v0.19.3 (#936)
-* [release-0.53], macvtap, Bump to v0.5.1 (#932)
-* bump kubemacpool to v0.26.6 (#933)
-* bump nmstate to v0.47.3 (#930)
-* [Release-0.53] resources, Update minimum resources request (#929)
+* Bump knmstate to v0.47.5
+* Bump OVS CNI to v0.19.5
+* Bump bridge-marker to v0.6.5
+* Set max unavailable during upgrade to 10%
