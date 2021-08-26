@@ -17,6 +17,8 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
+const WEBHOOK_REPLICAS = int32(2)
+
 // renderNMState generates the manifests of NMState handler
 func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.NMState == nil {
@@ -36,6 +38,7 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
 	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
 	data.Data["PlacementConfiguration"] = conf.PlacementConfiguration
+	data.Data["WebhookReplicas"] = WEBHOOK_REPLICAS
 
 	log.Printf("NMStateOperator == %t", clusterInfo.NmstateOperator)
 	fullManifestDir := filepath.Join(manifestDir, "nmstate", "operand")
