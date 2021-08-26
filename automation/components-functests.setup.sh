@@ -51,7 +51,11 @@ spec:
   imagePullPolicy: Always
 EOF
 
-cluster/kubectl.sh wait networkaddonsconfig cluster --for condition=Available --timeout=13m
+if [[ ! $(cluster/kubectl.sh wait networkaddonsconfig cluster --for condition=Available --timeout=13m) ]]; then
+	echo "Failed to wait for CNAO CR to be ready"
+	cluster/kubectl.sh get networkaddonsconfig -o custom-columns="":.status.conditions[*].message
+	exit 1
+fi
 
 # Clone component repository
 component_url=$(yaml-utils::get_component_url ${COMPONENT})
