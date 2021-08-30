@@ -27,3 +27,13 @@ spec:
           for: 5m
           labels:
             severity: warning
+        - expr: sum(kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'} or vector(0))
+          record: kubevirt_kubemacpool_duplicate_macs_total
+        - alert: KubeMacPoolDuplicateMacsFound
+          annotations:
+            summary: Duplicate macs found.
+            runbook_url: http://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound
+          expr: kubevirt_kubemacpool_duplicate_macs_total != 0
+          for: 5m
+          labels:
+            severity: warning
