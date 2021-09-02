@@ -97,3 +97,58 @@ tests:
       - eval_time: 5m
         alertname: KubeMacPoolDuplicateMacsFound
         exp_alerts:
+
+# KubemacpoolDown positive tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+        values: "0 0 0 0 0 0"
+      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+        values: "1 1 1 1 1 1"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KubemacpoolDown
+        exp_alerts:
+          - exp_annotations:
+              summary: "Kubemacpool is deployed by CNAO CR but kubemacpool pod is down."
+              runbook_url: "http://kubevirt.io/monitoring/runbooks/KubemacpoolDown"
+            exp_labels:
+              severity: "critical"
+
+  # KubemacpoolDown negative tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+        values: "0 0 0 0 1 0"
+      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+        values: "1 1 1 1 1 1"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KubemacpoolDown
+        exp_alerts:
+
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+        values: "0 0 0 0 0 0"
+      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+        values: "1 1 1 1 0 1"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KubemacpoolDown
+        exp_alerts:
+
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+        values: "1 1 1 1 1 1"
+      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+        values: "0 0 0 0 0 0"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KubemacpoolDown
+        exp_alerts:
