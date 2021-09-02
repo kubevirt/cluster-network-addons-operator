@@ -15,7 +15,6 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
-	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
@@ -142,11 +141,6 @@ func CheckReleaseUsesExpectedContainerImages(gvk schema.GroupVersionKind, releas
 	By(fmt.Sprintf("Checking that all deployed images match release %s", release.Version))
 
 	expectedContainers := sortContainers(release.Containers)
-	if IsOnOKDCluster() {
-		// On OpenShift 4, Multus is not owned by us and will not be reported in Status
-		expectedContainers = dropMultusContainers(expectedContainers)
-	}
-
 	configStatus := GetConfigStatus(gvk)
 	deployedContainers := sortContainers(configStatus.Containers)
 

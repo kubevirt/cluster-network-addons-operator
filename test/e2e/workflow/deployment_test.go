@@ -27,7 +27,6 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
-	. "github.com/kubevirt/cluster-network-addons-operator/test/okd"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
@@ -562,12 +561,7 @@ func checkConfigChange(gvk schema.GroupVersionKind, components []Component, whil
 		while()
 	}()
 
-	// On OpenShift 4, Multus is already deployed by default
-	onlyMultusOnOKDCluster := (len(components) == 1 &&
-		IsOnOKDCluster() &&
-		components[0].ComponentName == MultusComponent.ComponentName)
-	noComponentToDeploy := len(components) == 0 || onlyMultusOnOKDCluster
-	if noComponentToDeploy {
+	if len(components) == 0 {
 		// Wait until Available condition is reported. Should be fast when no components are
 		// being deployed
 		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
