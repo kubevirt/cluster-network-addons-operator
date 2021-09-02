@@ -302,10 +302,6 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, err
 	}
 
-	if r.clusterInfo.MonitoringAvailable {
-		monitoring.TrackMonitoredComponents(&networkAddonsConfig.Spec)
-	}
-
 	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
 	// previous runs.
 	r.statusManager.SetNotFailing(statusmanager.OperatorConfig)
@@ -315,6 +311,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// deployed, there is nothing that would trigger initial reconciliation. Therefore, let's
 	// perform the first check manually.
 	r.statusManager.SetFromPods()
+
+	if r.clusterInfo.MonitoringAvailable {
+		monitoring.TrackMonitoredComponents(&networkAddonsConfig.Spec, r.statusManager)
+	}
 
 	// Kubernetes sometimes fails to apply objects while we remove and recreate
 	// components, despite reporting success. In order to self-heal after these

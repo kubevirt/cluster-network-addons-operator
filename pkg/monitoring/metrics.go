@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 )
 
@@ -38,30 +39,23 @@ func init() {
 	metrics.Registry.MustRegister(readyGauge, kmpDeployedGauge)
 }
 
-func SetReadyGauge(isReady bool) {
-	if isReady {
-		readyGauge.Set(1)
+func setGaugeParam(setTrueFlag bool, gaugeParam *prometheus.Gauge) {
+	if setTrueFlag {
+		(*gaugeParam).Set(1)
 	} else {
-		readyGauge.Set(0)
-	}
-}
-
-func setKubemacpoolDeployedGauge(isDeployed bool) {
-	if isDeployed {
-		kmpDeployedGauge.Set(1)
-	} else {
-		kmpDeployedGauge.Set(0)
+		(*gaugeParam).Set(0)
 	}
 }
 
 func ResetMonitoredComponents() {
-	SetReadyGauge(false)
-	setKubemacpoolDeployedGauge(false)
+	setGaugeParam(false, &readyGauge)
+	setGaugeParam(false, &kmpDeployedGauge)
 }
 
-func TrackMonitoredComponents(conf *cnao.NetworkAddonsConfigSpec) {
+func TrackMonitoredComponents(conf *cnao.NetworkAddonsConfigSpec, statusManager *statusmanager.StatusManager) {
 	isKubemacpoolDeployed := conf.KubeMacPool != nil
-	setKubemacpoolDeployedGauge(isKubemacpoolDeployed)
+	setGaugeParam(isKubemacpoolDeployed, &kmpDeployedGauge)
+	setGaugeParam(statusManager.IsStatusAvailable(), &readyGauge)
 }
 
 func RenderMonitoring(manifestDir string, monitoringAvailable bool) ([]*unstructured.Unstructured, error) {

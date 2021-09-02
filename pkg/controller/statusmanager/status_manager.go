@@ -22,8 +22,6 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	eventemitter "github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
 const (
@@ -84,7 +82,6 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 	for i := 0; i < conditionsUpdateRetries; i++ {
 		err := status.set(reachedAvailableLevel, conditions...)
 		if err == nil {
-			monitoring.SetReadyGauge(reachedAvailableLevel)
 			log.Print("Successfully updated status conditions")
 			return
 		}
@@ -96,9 +93,7 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 
 // set updates the NetworkAddonsConfig.Status with the provided conditions
 func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) error {
-	// Read the current NetworkAddonsConfig
-	config := &cnaov1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
-	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
+	config, err := status.getCurrentNetworkAddonsConfig()
 	if err != nil {
 		log.Printf("Failed to get NetworkAddonsOperator %q in order to update its State: %v", status.name, err)
 		return nil
@@ -193,6 +188,34 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		return fmt.Errorf("Failed to update NetworkAddonsConfig %q Status: %v", config.Name, err)
 	}
 	return nil
+}
+
+func (status *StatusManager) getCurrentNetworkAddonsConfig() (*cnaov1.NetworkAddonsConfig, error) {
+	// Read the current NetworkAddonsConfig
+	config := &cnaov1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
+	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+// IsStatusAvailable returns true if NetworkAddonsConfig intance is in Available True state
+func (status *StatusManager) IsStatusAvailable() bool {
+	config, err := status.getCurrentNetworkAddonsConfig()
+	if err != nil {
+		log.Printf("Failed to get NetworkAddonsOperator %q in order to assess availability: %v", status.name, err)
+		return false
+	}
+
+	for _, condition := range config.Status.Conditions {
+		if condition.Type == conditionsv1.ConditionAvailable && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+
+	return false
 }
 
 // syncFailing syncs the current Failing status
@@ -366,8 +389,8 @@ func (status *StatusManager) SetFromPods() {
 	// If all pods are being created, mark deployment as not failing
 	status.SetNotFailing(PodDeployment)
 
-	config := &cnaov1.NetworkAddonsConfig{}
-	if err := status.client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config); err != nil {
+	config, err := status.getCurrentNetworkAddonsConfig()
+	if err != nil {
 		return
 	}
 
