@@ -43,6 +43,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
+	osconfv1 "github.com/openshift/api/config/v1"
 )
 
 // ManifestPath is the path to the manifest templates
@@ -211,6 +212,14 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	}
 	r.clusterInfo.NmstateOperator = nmstateOperator
 
+	if r.clusterInfo.OpenShift4 {
+		isSingleReplica, err := isOpenshiftSingleReplica(r.client)
+		if err != nil {
+			log.Printf("failed to check if running on a singleReplica infrastrcuture: %v", err)
+		}
+		r.clusterInfo.IsSingleReplica = isSingleReplica
+	}
+	
 	// Fetch the NetworkAddonsConfig instance
 	networkAddonsConfigStorageVersion := &cnaov1.NetworkAddonsConfig{}
 	err = r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
@@ -693,4 +702,13 @@ func unstructuredToDeployment(obj *unstructured.Unstructured) (*appsv1.Deploymen
 		return nil, err
 	}
 	return deployment, nil
+}
+
+func isOpenshiftSingleReplica(c k8sclient.Client) (bool, error) {
+	infraConfig := &osconfv1.Infrastructure{}
+	if err := c.Get(context.TODO(), types.NamespacedName{Name: "cluster"}, infraConfig); err != nil {
+		return false, err
+	}
+
+	return infraConfig.Status.InfrastructureTopology == osconfv1.SingleReplicaTopologyMode, nil
 }
