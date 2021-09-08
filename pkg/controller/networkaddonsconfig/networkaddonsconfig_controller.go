@@ -219,7 +219,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		}
 		r.clusterInfo.IsSingleReplica = isSingleReplica
 	}
-	
+
 	// Fetch the NetworkAddonsConfig instance
 	networkAddonsConfigStorageVersion := &cnaov1.NetworkAddonsConfig{}
 	err = r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
