@@ -292,16 +292,22 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				CreateConfig(gvk, p.configSpec)
 				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 
-				By("scraping the monitoring endpoint")
-				scrapedData, err := GetScrapedDataFromMonitoringEndpoint()
-				Expect(err).ToNot(HaveOccurred())
+				Eventually(func() error {
+					By("scraping the monitoring endpoint")
+					scrapedData, err := GetScrapedDataFromMonitoringEndpoint()
+					Expect(err).ToNot(HaveOccurred())
 
-				By("comparing the scraped Data to the expected metrics' values")
-				for metricName, expectedValue := range p.expectedMetricValueMap {
-					metricEntry := FindMetric(scrapedData, metricName)
-					Expect(metricEntry).ToNot(BeEmpty(), fmt.Sprintf("metric %s does not appear in endpoint scrape", metricName))
-					Expect(metricEntry).To(Equal(fmt.Sprintf("%s %s", metricName, expectedValue)), fmt.Sprintf("metric %s does not have the expected value %s", metricName, expectedValue))
-				}
+					By("comparing the scraped Data to the expected metrics' values")
+					for metricName, expectedValue := range p.expectedMetricValueMap {
+						metricEntry := FindMetric(scrapedData, metricName)
+						Expect(metricEntry).ToNot(BeEmpty(), fmt.Sprintf("metric %s does not appear in endpoint scrape", metricName))
+
+						if metricEntry != fmt.Sprintf("%s %s", metricName, expectedValue) {
+							return fmt.Errorf("metric %s does not have the expected value %s", metricName, expectedValue)
+						}
+					}
+					return nil
+				}, 3*time.Minute, time.Minute).Should(Succeed(), "Should scrape the correct metrics")
 			},
 			Entry("should report the expected metrics when deploying all components", prometheusScrapeParams{
 				configSpec: cnao.NetworkAddonsConfigSpec{
