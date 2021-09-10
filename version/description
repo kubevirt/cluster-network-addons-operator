@@ -1,33 +1,17 @@
-0.58.0
+0.59.0
 
-Features:
-* bump nmstate to v0.52.2 (#962)
-* bump ovs-cni to v0.23.0 (#957)
-* Set max unavailable to 10% (#951)
-* tests/e2e/lifecycle, Remove unsupported versions (#959)
-* bump kubemacpool to v0.31.0 (#958)
-* linux-bridge, Add shasum check in linux-bridge pod (#949)
-* bump bridge-marker to 0.9.0 (#953)
-* Add kubevirt_cnao_cr_ready metric and NetworkAddonsConfigNotReady alert (#944)
-* components: Consume CNI Bridge with macspoofchk support (#945)
-* Add alerts infra and basic alert CnaoDown (#928)
-* hack/components: Support build on SELinux enabled platforms (#946)
-* main, Update deprecated AddToScheme function (#943)
-* checkForDeployment, don't check on CNAO operator itself (#942)
-* fix make fmt outputs (#940)
-* bump ovs-cni to v0.22.0 (#937)
-* bump macvtap-cni to v0.5.1 (#931)
-* update default provider to k8s 1.21 (#923)
-* bump bridge-marker to 0.8.0 (#927)
-* linux bridge, Update linux bridge minimum resources request (#925)
-* resources, Update minimum resources request (#926)
-* resources, Update multus resources section (#924)
-* resources, Update minimum resources request (#921)
-* resources, Update linux bridge minimum resources request (#922)
-* resources, Update multus resources section (#920)
-* bumper, update default branch workflow (#910)
-
-Bugs:
-* data/linux-bridge, Fix copying over symlink (#950)
-* Fix installation of bridge and tuning CNIs (#948)
-
+* Bump kubernetes-nmstate to v0.54.0 (#1010)
+* bump bridge-marker to 0.9.1 (#1000)
+* bump ovs-cni to v0.23.2 (#1001)
+* bump kubemacpool to v0.32.1 (#993)
+* vendor, Bump protobuf to v1.3.2
+* Add NMSTATE_ENABLE_OVS knob
+* monitoring, collect readyGauge during reconcile (#1003)
+* tests: remove OKD special configuration (#1004)
+* Determine webhook replicas based on infra (#973)
+* monitoring, Adding a new alert KubemacpoolDown (#955)
+* prometheus, Add rule for KubeMacPoolDuplicateMacsFound (#952)
+* tier1, Add informative fail error in case CNAO cr timed out (#992)
+* kmp functests, Fix getMetrics e2e test (#988)
+* templates, Remove kubevirt.io label from intances (#975)
+* components: Update CNI Bridge with macspoofchk source (#985)
