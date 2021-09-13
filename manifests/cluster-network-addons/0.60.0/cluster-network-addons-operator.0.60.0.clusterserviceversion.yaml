@@ -46,7 +46,7 @@ spec:
   minKubeVersion: 1.10.0
   maturity: alpha
 
-  replaces: cluster-network-addons-operator.0.59.0
+  replaces: cluster-network-addons-operator.0.58.0
 
   maintainers:
     - name: KubeVirt project
