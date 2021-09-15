@@ -36,8 +36,8 @@ echo 'Configure nmstate-webhook and nmstate-handler templates and save the rende
 
     sed -i \
         -e "s#WebhookAffinity#PlacementConfiguration.Infra.Affinity#" \
-        -e "s#InfraTolerations#PlacementConfiguration.Infra.Tolerations#" \
-        -e "s#InfraNodeSelector#PlacementConfiguration.Infra.NodeSelector#" \
+        -e "s#WebhookTolerations#PlacementConfiguration.Infra.Tolerations#" \
+        -e "s#WebhookNodeSelector#PlacementConfiguration.Infra.NodeSelector#" \
         -e "s#HandlerAffinity#PlacementConfiguration.Workloads.Affinity#" \
         -e "s#HandlerTolerations#PlacementConfiguration.Workloads.Tolerations#" \
         -e "s#HandlerNodeSelector#PlacementConfiguration.Workloads.NodeSelector#" \
