@@ -1,14 +1,3 @@
-0.58.1
+0.58.2
 
-* [release-0.58] components: Update CNI Bridge (#1018)
-* bump nmstate to v0.54.0 (#1014)
-* bump ovs-cni to v0.23.2 (#1002)
-* bump bridge-marker to 0.9.1 (#999)
-* bump nmstate to v0.52.5 (#998)
-* bump nmstate to v0.52.4 (#994)
-* bump kubemacpool to v0.31.1 (#996)
-* vendor, Bump protobuf to v1.3.2 (#984)
-* components: Update CNI Bridge with macspoofchk source (#985) (#991)
-* components, Follow kubemacpool stable branch release-v0.31 (#969)
-* bump ovs-cni to v0.23.1 (#965)
-
+* Revert "bump nmstate to v0.54.0 (#1014)" (#1021)
