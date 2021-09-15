@@ -25,8 +25,8 @@ spec:
         description: kubernetes-nmstate-webhook resets NNCP status
     spec:
       serviceAccountName: {{template "handlerPrefix" .}}nmstate-handler
-      nodeSelector: {{ toYaml .PlacementConfiguration.Infra.NodeSelector | nindent 8 }}
-      tolerations: {{ toYaml .PlacementConfiguration.Infra.Tolerations | nindent 8 }}
+      nodeSelector: {{ toYaml .InfraNodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .InfraTolerations | nindent 8 }}
       affinity: {{ toYaml .PlacementConfiguration.Infra.Affinity | nindent 8 }}
       priorityClassName: system-cluster-critical
       containers:
@@ -109,8 +109,8 @@ spec:
         description: kubernetes-nmstate-webhook rotate webhook certs
     spec:
       serviceAccountName: {{template "handlerPrefix" .}}nmstate-handler
-      nodeSelector: {{ toYaml .PlacementConfiguration.Infra.NodeSelector | nindent 8 }}
-      tolerations: {{ toYaml .PlacementConfiguration.Infra.Tolerations | nindent 8 }}
+      nodeSelector: {{ toYaml .InfraNodeSelector | nindent 8 }}
+      tolerations: {{ toYaml .InfraTolerations | nindent 8 }}
       affinity: {{ toYaml .PlacementConfiguration.Infra.Affinity | nindent 8 }}
       priorityClassName: system-cluster-critical
       containers:
@@ -249,8 +249,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: INTERFACES_FILTER
-              value: "{veth*,cali*}"
             - name: ENABLE_PROFILER
               value: "False"
             - name: PROFILER_PORT
@@ -262,6 +260,10 @@ spec:
               mountPath: /run/dbus/system_bus_socket
             - name: nmstate-lock
               mountPath: /var/k8s_nmstate
+{{if .EnableOVS}}
+            - name: ovs-socket
+              mountPath: /run/openvswitch/db.sock
+{{end}}
           securityContext:
             privileged: true
           readinessProbe:
@@ -280,6 +282,12 @@ spec:
         - name: nmstate-lock
           hostPath:
             path: /var/k8s_nmstate
+{{if .EnableOVS}}
+        - name: ovs-socket
+          hostPath:
+            path: /run/openvswitch/db.sock
+            type: Socket
+{{end}}
 ---
 apiVersion: v1
 kind: Service
@@ -356,7 +364,7 @@ webhooks:
         apiVersions: ["v1alpha1","v1beta1"]
         resources: ["nodenetworkconfigurationpolicies"]
 ---
-apiVersion: policy/v1beta1
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   namespace: {{ .HandlerNamespace }}
