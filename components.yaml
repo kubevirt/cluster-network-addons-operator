@@ -31,10 +31,10 @@ components:
     metadata: v3.4.2
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
-    commit: cfdb2a5279377d946a37282a1d7e25185aa8923e
+    commit: 959168eb839c897c05a98cbd0e620e3820098c02
     branch: release-0.47
     update-policy: tagged
-    metadata: v0.47.5
+    metadata: v0.47.6
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: fe0f335bd9c309de9b3b4802ab8a14942c0d3ca9
