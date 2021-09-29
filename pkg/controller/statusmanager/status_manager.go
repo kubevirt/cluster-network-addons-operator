@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -183,7 +182,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	// Failing condition had been replaced by Degraded in 0.12.0, drop it from CR if needed
 	conditionsv1.RemoveStatusCondition(&config.Status.Conditions, conditionsv1.ConditionType("Failing"))
 
-	if reflect.DeepEqual(oldStatus, config.Status) {
+	if (*oldStatus).DeepEqual(config.Status) {
 		return nil
 	}
 
