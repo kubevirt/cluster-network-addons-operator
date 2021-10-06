@@ -66,7 +66,7 @@ github.com/blang/semver
 github.com/cespare/xxhash/v2
 # github.com/containerd/cgroups v0.0.0-20190919134610-bf292b21730f
 github.com/containerd/cgroups/stats/v1
-# github.com/containerd/containerd v1.3.2
+# github.com/containerd/containerd v1.3.2 => github.com/containerd/containerd v1.4.11
 github.com/containerd/containerd/archive
 github.com/containerd/containerd/archive/compression
 github.com/containerd/containerd/containers
@@ -485,9 +485,6 @@ github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v1.0.0-rc9
-github.com/opencontainers/runc/libcontainer/system
-github.com/opencontainers/runc/libcontainer/user
 # github.com/openshift/api v0.0.0-20210208192252-670ac3fc997c
 github.com/openshift/api/config/v1
 github.com/openshift/api/operator/v1
