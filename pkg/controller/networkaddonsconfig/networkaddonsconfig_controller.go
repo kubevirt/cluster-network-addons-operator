@@ -318,7 +318,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 	// From now on, r.podReconciler takes over NetworkAddonsConfig handling, it will track deployed
 	// objects if needed and set NetworkAddonsConfig.Status accordingly. However, if no pod was
 	// deployed, there is nothing that would trigger initial reconciliation. Therefore, let's
-	// perform the first check manually.
+	// perform this check manually.
 	r.statusManager.SetFromPods()
 
 	if r.clusterInfo.MonitoringAvailable {
@@ -506,9 +506,6 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 	allResources = append(allResources, deployments...)
 
 	r.podReconciler.SetResources(allResources)
-
-	// Trigger status manager to notice the change
-	r.statusManager.SetFromPods()
 }
 
 // Stop tracking current state of Deployments and DaemonSets deployed by the operator.
