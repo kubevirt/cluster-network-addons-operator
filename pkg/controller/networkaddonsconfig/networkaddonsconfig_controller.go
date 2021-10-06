@@ -313,7 +313,8 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 
 	// Everything went smooth, remove failures from NetworkAddonsConfig if there are any from
 	// previous runs.
-	r.statusManager.SetNotFailing(statusmanager.OperatorConfig)
+	r.statusManager.MarkStatusLevelNotFailing(statusmanager.OperatorConfig)
+	r.statusManager.SetFromOperator()
 
 	// From now on, r.podReconciler takes over NetworkAddonsConfig handling, it will track deployed
 	// objects if needed and set NetworkAddonsConfig.Status accordingly. However, if no pod was
