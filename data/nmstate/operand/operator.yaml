@@ -9,7 +9,7 @@ metadata:
     app: kubernetes-nmstate
     component: kubernetes-nmstate-webhook
 spec:
-  replicas: {{ .WebhookReplicas }}
+  replicas: 2
   strategy:
     type: Recreate
   selector:
@@ -362,7 +362,7 @@ metadata:
   namespace: {{ .HandlerNamespace }}
   name: {{template "handlerPrefix" .}}nmstate-webhook
 spec:
-  minAvailable: {{  .WebhookMinReplicas  }}
+  minAvailable: 1
   selector:
     matchLabels:
       name: {{template "handlerPrefix" .}}nmstate-webhook
