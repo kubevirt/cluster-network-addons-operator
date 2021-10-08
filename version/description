@@ -1,7 +1,4 @@
-0.53.7
+0.53.8
 
-Features:
-* Bump knmstate to v0.47.5
-* Bump OVS CNI to v0.19.5
-* Bump bridge-marker to v0.6.5
-* Set max unavailable during upgrade to 10%
+* bump kubemacpool to v0.26.7 (#1044)
+* bump nmstate to v0.47.7 (#1040)
