@@ -1,28 +1,7 @@
-0.59.0
+0.60.0
 
-* components: Update CNI Bridge (#1016)
-* Revert "Release 0.59.0 (#1012)" (#1017)
-* Chane kubernetes-nmstate commit (#1013)
-* Release 0.59.0 (#1012)
-* Bump kubernetes-nmstate to v0.54.0 (#1010)
-* manually bump knmstate to v0.53.0 (#1005)
-* monitoring, collect readyGauge during reconcile (#1003)
-* tests: remove OKD special configuration (#1004)
-* Determine webhook replicas based on infra (#973)
-* monitoring, Adding a new alert KubemacpoolDown (#955)
-* bump nmstate to v0.52.5 (#997)
-* bump bridge-marker to 0.9.1 (#1000)
-* bump ovs-cni to v0.23.2 (#1001)
-* prometheus, Add rule for KubeMacPoolDuplicateMacsFound (#952)
-* bump nmstate to v0.52.4 (#990)
-* bump kubemacpool to v0.32.1 (#993)
-* tier1, Add informative fail error in case CNAO cr timed out (#992)
-* Merge pull request #970 from RamLavi/create_release_0.58_umper_workflow
-* kmp functests, Fix getMetrics e2e test (#988)
-* templates, Remove kubevirt.io label from intances (#975)
-* components: Update CNI Bridge with macspoofchk source (#985)
-* Merge pull request #982 from RamLavi/bump_protobuf_1.3.2
-* gitActions, Add stable workflow to branch release-0.58
-* vendor, Bump protobuf to v1.3.2
-* bump ovs-cni to v0.23.1 (#965)
-
+* bump nmstate to v0.55.0 (#1045)
+* bump ovs-cni to v0.25.0 (#1037)
+* bump kubemacpool to v0.32.2 (#1038)
+* vendor, Bump containerd to v1.4.11 (#1035)
+* status-manager, Fix bad compare of status (#1031)
