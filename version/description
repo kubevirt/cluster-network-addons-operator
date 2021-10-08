@@ -1,6 +1,7 @@
 0.44.6
 
-* bump nmstate to v0.37.10 (#966)
+* bump kubemacpool to v0.21.2 (#1043)
+* bump nmstate to v0.37.11 (#1039)
 * components, Update multus repo url (#904)
 * Follow main branch on marker and ovs cni (#885)
 * Change ovs-cni repo to k8snetworkplumbinggw (#876)

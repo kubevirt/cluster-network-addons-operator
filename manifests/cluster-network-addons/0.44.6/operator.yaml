@@ -148,13 +148,13 @@ spec:
         - name: LINUX_BRIDGE_MARKER_IMAGE
           value: quay.io/kubevirt/bridge-marker@sha256:799459f8509a06ea643aa2f6ac02826721a641333aacab07e53166139a5a66c3
         - name: NMSTATE_HANDLER_IMAGE
-          value: quay.io/nmstate/kubernetes-nmstate-handler@sha256:dafa17d90d5fea4d028c3ce5959002d7a05985177ccffd8295ca27917520b7df
+          value: quay.io/nmstate/kubernetes-nmstate-handler@sha256:ef675a2e3922ef2236085557c377b500f93ae15b91ddea7dbf8f0169d677c068
         - name: OVS_CNI_IMAGE
           value: quay.io/kubevirt/ovs-cni-plugin@sha256:931cf8e546fd54544a4545fb9299baf373a17864dc1612198901ed1f4de5b9ca
         - name: OVS_MARKER_IMAGE
           value: quay.io/kubevirt/ovs-cni-marker@sha256:f4d47dd43e70a79eedae6d25513a44e40795601d15f35e525da43cda6b1f4299
         - name: KUBEMACPOOL_IMAGE
-          value: quay.io/kubevirt/kubemacpool@sha256:95aae7d11c4b009ed3be320b55b36a33a4e8d19418ae49b66285223a219bed0c
+          value: quay.io/kubevirt/kubemacpool@sha256:063e988996043c8c4de58c082dd7a4114c84acda5de1cbc87e9eb85162645ae7
         - name: MACVTAP_CNI_IMAGE
           value: quay.io/kubevirt/macvtap-cni@sha256:f20d5e56f8b8c1ab7e5a64e536b66f65aa688b2d1dc0b37e3c26c2af2b481266
         - name: OPERATOR_IMAGE
