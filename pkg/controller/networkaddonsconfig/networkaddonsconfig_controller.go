@@ -531,7 +531,7 @@ func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstru
 		}
 		// Label objects with version of the operator they were created by
 		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
-		labels[names.PROMETHEUS_LABEL_KEY] = ""
+		labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
 		err = updateObjectTemplateLabels(obj, labels, []string{names.PROMETHEUS_LABEL_KEY})
 		if err != nil {
 			return err

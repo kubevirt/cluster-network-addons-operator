@@ -140,7 +140,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 				cnaov1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
 			Labels: map[string]string{
-				names.PROMETHEUS_LABEL_KEY: "",
+				names.PROMETHEUS_LABEL_KEY: names.PROMETHEUS_LABEL_VALUE,
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -157,7 +157,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"name":                     Name,
-						names.PROMETHEUS_LABEL_KEY: "",
+						names.PROMETHEUS_LABEL_KEY: names.PROMETHEUS_LABEL_VALUE,
 					},
 					Annotations: map[string]string{
 						"description": "cluster-network-addons-operator manages the lifecycle of different Kubernetes network components on top of Kubernetes cluster",

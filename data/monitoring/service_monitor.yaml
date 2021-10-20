@@ -3,13 +3,13 @@ kind: ServiceMonitor
 metadata:
   labels:
     openshift.io/cluster-monitoring: ""
-    prometheus.cnao.io: ""
+    prometheus.cnao.io: "true"
   name: service-monitor-cluster-network-addons-operator
   namespace: {{ .Namespace }}
 spec:
   selector:
     matchLabels:
-      prometheus.cnao.io: ""
+      prometheus.cnao.io: "true"
   namespaceSelector:
     matchNames:
       - {{ .Namespace }}
