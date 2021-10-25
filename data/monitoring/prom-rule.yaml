@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
-    prometheus.cnao.io: ""
+    prometheus.cnao.io: "true"
   name: prometheus-rules-cluster-network-addons-operator
   namespace: {{ .Namespace }}
 spec:
