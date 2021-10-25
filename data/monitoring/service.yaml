@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    prometheus.cnao.io: ""
+    prometheus.cnao.io: "true"
   name: cluster-network-addons-operator-prometheus-metrics
   namespace: {{ .Namespace }}
 spec:
@@ -12,6 +12,6 @@ spec:
       protocol: TCP
       targetPort: metrics
   selector:
-    prometheus.cnao.io: ""
+    prometheus.cnao.io: "true"
   sessionAffinity: None
   type: ClusterIP
