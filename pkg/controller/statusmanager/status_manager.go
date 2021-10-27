@@ -22,7 +22,6 @@ import (
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	eventemitter "github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
 const (
@@ -95,9 +94,7 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 
 // set updates the NetworkAddonsConfig.Status with the provided conditions
 func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) error {
-	// Read the current NetworkAddonsConfig
-	config := &cnaov1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
-	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
+	config, err := status.getCurrentNetworkAddonsConfig()
 	if err != nil {
 		log.Printf("Failed to get NetworkAddonsOperator %q in order to update its State: %v", status.name, err)
 		return nil
@@ -194,21 +191,47 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	return nil
 }
 
-// syncFailing syncs the current Failing status
-func (status *StatusManager) syncFailing() {
-	for _, c := range status.failing {
-		if c != nil {
-			status.Set(false, *c)
-			return
+func (status *StatusManager) getCurrentNetworkAddonsConfig() (*cnaov1.NetworkAddonsConfig, error) {
+	// Read the current NetworkAddonsConfig
+	config := &cnaov1.NetworkAddonsConfig{ObjectMeta: metav1.ObjectMeta{Name: status.name}}
+	err := status.client.Get(context.TODO(), types.NamespacedName{Name: status.name}, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+// IsStatusAvailable returns true if NetworkAddonsConfig intance is in Available True state
+func (status *StatusManager) IsStatusAvailable() bool {
+	config, err := status.getCurrentNetworkAddonsConfig()
+	if err != nil {
+		log.Printf("Failed to get NetworkAddonsOperator %q in order to assess availability: %v", status.name, err)
+		return false
+	}
+
+	for _, condition := range config.Status.Conditions {
+		if condition.Type == conditionsv1.ConditionAvailable && condition.Status == corev1.ConditionTrue {
+			return true
 		}
 	}
-	status.Set(
-		false,
-		conditionsv1.Condition{
-			Type:   conditionsv1.ConditionDegraded,
-			Status: corev1.ConditionFalse,
-		},
-	)
+
+	return false
+}
+
+// getFailureStateCondition returns a general state condition of the system. if any of the status.Failing statuses
+// are on, returns the highest priority, otherwise return Degraded=False condition
+func (status *StatusManager) getFailureStateCondition() conditionsv1.Condition {
+	for _, c := range status.failing {
+		if c != nil {
+			return *c
+		}
+	}
+
+	return conditionsv1.Condition{
+		Type:   conditionsv1.ConditionDegraded,
+		Status: corev1.ConditionFalse,
+	}
 }
 
 // SetFailing marks the operator as Failing with the given reason and message. If it
@@ -221,17 +244,15 @@ func (status *StatusManager) SetFailing(level StatusLevel, reason, message strin
 		Reason:  reason,
 		Message: message,
 	}
-	status.syncFailing()
+	reachedAvailableLevel := false
+	status.Set(reachedAvailableLevel, status.getFailureStateCondition())
 }
 
-// SetNotFailing marks the operator as not Failing at the given level. If the operator
-// status previously indicated failure at this level, it will updated to show the next
-// higher-level failure, or else to show that the operator is no longer failing.
-func (status *StatusManager) SetNotFailing(level StatusLevel) {
+// MarkStatusLevelNotFailing marks the operator as not Failing at the given level.
+func (status *StatusManager) MarkStatusLevelNotFailing(level StatusLevel) {
 	if status.failing[level] != nil {
 		status.failing[level] = nil
 	}
-	status.syncFailing()
 }
 
 func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []cnao.Container, generation int64) {
@@ -247,6 +268,18 @@ func (status *StatusManager) GetAttributes() ([]types.NamespacedName, []types.Na
 	status.mux.Lock()
 	defer status.mux.Unlock()
 	return status.daemonSets, status.deployments, status.containers, status.generation
+}
+
+// SetFromOperator sets the operator status
+func (status *StatusManager) SetFromOperator() {
+	conditions := []conditionsv1.Condition{}
+	conditions = append(conditions, status.getFailureStateCondition())
+	// Available state is set to true when all tracked objects are ready, and thus is not
+	// related to the status of the operator itself
+	availableStatusReached := false
+
+	// set the aggregated conditions to status-manager
+	status.Set(availableStatusReached, conditions...)
 }
 
 // SetFromPods sets the operator status to Failing, Progressing, or Available, based on
@@ -339,44 +372,42 @@ func (status *StatusManager) SetFromPods() {
 		}
 	}
 
+	// aggregate non-failing conditions
+	conditions := []conditionsv1.Condition{}
+	availableStatusReached := false
+
 	// If there are any progressing Pods, list them in the condition with their state. Otherwise,
 	// mark Progressing condition as False.
 	if len(progressing) > 0 {
 		status.eventEmitter.EmitProgressingForConfig()
-		status.Set(
-			false,
-			conditionsv1.Condition{
-				Type:    conditionsv1.ConditionProgressing,
-				Status:  corev1.ConditionTrue,
-				Reason:  "Deploying",
-				Message: strings.Join(progressing, "\n"),
-			},
-		)
+		conditions = append(conditions, conditionsv1.Condition{
+			Type:    conditionsv1.ConditionProgressing,
+			Status:  corev1.ConditionTrue,
+			Reason:  "Deploying",
+			Message: strings.Join(progressing, "\n"),
+		})
+
 	} else {
-		status.Set(
-			false,
-			conditionsv1.Condition{
-				Type:   conditionsv1.ConditionProgressing,
-				Status: corev1.ConditionFalse,
-			},
-		)
+		conditions = append(conditions, conditionsv1.Condition{
+			Type:   conditionsv1.ConditionProgressing,
+			Status: corev1.ConditionFalse,
+		})
 	}
 
 	// If all pods are being created, mark deployment as not failing
-	status.SetNotFailing(PodDeployment)
+	status.MarkStatusLevelNotFailing(PodDeployment)
+	conditions = append(conditions, status.getFailureStateCondition())
 
-	config := &cnaov1.NetworkAddonsConfig{}
-	if err := status.client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config); err != nil {
+	config, err := status.getCurrentNetworkAddonsConfig()
+	if err != nil {
 		return
 	}
 
-	// if we didn't get current generation, don't mark as Available yet
-	if config.GetGeneration() != generation {
-		return
+	// if generation hasn't changed and all containers are deployed, mark as Available
+	if config.GetGeneration() == generation && len(progressing) == 0 {
+		availableStatusReached = true
 	}
 
-	// Finally, if all containers are deployed, mark as Available
-	if len(progressing) == 0 {
-		status.Set(true)
-	}
+	// set the aggregated conditions to status-manager
+	status.Set(availableStatusReached, conditions...)
 }

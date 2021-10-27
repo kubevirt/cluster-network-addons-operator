@@ -2,7 +2,6 @@ package networkaddonsconfig
 
 import (
 	"log"
-	"time"
 
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -11,8 +10,6 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 )
-
-var resyncPeriod = 5 * time.Minute
 
 // newPodReconciler returns a new reconcile.Reconciler
 func newPodReconciler(statusManager *statusmanager.StatusManager, mgr manager.Manager) *ReconcilePods {
@@ -44,7 +41,7 @@ func (r *ReconcilePods) Reconcile(request reconcile.Request) (reconcile.Result, 
 			log.Printf("Reconciling update to %s/%s\n", request.Namespace, request.Name)
 			r.eventEmitter.EmitModifiedForConfig()
 			r.statusManager.SetFromPods()
-			return reconcile.Result{RequeueAfter: resyncPeriod}, nil
+			return reconcile.Result{}, nil
 		}
 	}
 	return reconcile.Result{}, nil
