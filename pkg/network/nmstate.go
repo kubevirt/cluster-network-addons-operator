@@ -44,6 +44,9 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["WebhookReplicas"] = WEBHOOK_REPLICAS
 	data.Data["WebhookMinReplicas"] = WEBHOOK_MIN_REPLICAS
 
+	_, enableOVS := os.LookupEnv("NMSTATE_ENABLE_OVS")
+	data.Data["EnableOVS"] = enableOVS
+
 	log.Printf("NMStateOperator == %t", clusterInfo.NmstateOperator)
 	fullManifestDir := filepath.Join(manifestDir, "nmstate", "operand")
 	if clusterInfo.NmstateOperator {
