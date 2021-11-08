@@ -6,4 +6,5 @@ type ClusterInfo struct {
 	NmstateOperator     bool
 	MonitoringAvailable bool
 	IsSingleReplica     bool
+	PodSecurityEnabled  bool
 }

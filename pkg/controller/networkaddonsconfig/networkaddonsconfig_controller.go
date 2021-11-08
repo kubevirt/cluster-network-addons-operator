@@ -202,6 +202,15 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (rec
 		return reconcile.Result{}, nil
 	}
 
+	podSecurityEnabled, err := isPodSecurityEnabled(r.client)
+	if err != nil {
+		return reconcile.Result{}, errors.Wrap(err, "failed to check if PodSecurity admission enabled")
+	}
+	if podSecurityEnabled {
+		log.Printf("PodSecurity admission contorller is enabled")
+	}
+	r.clusterInfo.PodSecurityEnabled = podSecurityEnabled
+
 	// Check for NMState Operator
 	nmstateOperator, err := isRunningKubernetesNMStateOperator(r.client)
 	if err != nil {
@@ -709,4 +718,31 @@ func isOpenshiftSingleReplica(c k8sclient.Client) (bool, error) {
 	}
 
 	return infraConfig.Status.InfrastructureTopology == osconfv1.SingleReplicaTopologyMode, nil
+}
+
+func isPodSecurityEnabled(c k8sclient.Client) (bool, error) {
+	apiPod, err := apiServerPod(c)
+	if err != nil {
+		return false, err
+	}
+
+	for _, cmd := range apiPod.Spec.Containers[0].Command {
+		if strings.Contains(cmd, "PodSecurity=true") {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func apiServerPod(c k8sclient.Client) (*v1.Pod, error) {
+	pods := &v1.PodList{}
+	if err := c.List(context.TODO(), pods, k8sclient.MatchingLabels{"component": "kube-apiserver"}); err != nil {
+		return nil, err
+	}
+
+	if len(pods.Items) == 0 {
+		return nil, fmt.Errorf("api-server pod not found")
+	}
+	return &pods.Items[0], nil
 }
