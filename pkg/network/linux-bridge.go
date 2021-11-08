@@ -31,6 +31,7 @@ func renderLinuxBridge(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	}
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
+	data.Data["PodSecurityEnabled"] = clusterInfo.PodSecurityEnabled
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "linux-bridge"), &data)
 	if err != nil {
