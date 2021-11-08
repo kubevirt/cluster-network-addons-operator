@@ -38,6 +38,7 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["PlacementConfiguration"] = conf.PlacementConfiguration
 	data.Data["WebhookReplicas"] = getNumberOfWebhookReplicas(clusterInfo)
 	data.Data["WebhookMinReplicas"] = getMinNumberOfWebhookReplicas(clusterInfo)
+	data.Data["PodSecurityEnabled"] = clusterInfo.PodSecurityEnabled
 
 	_, enableOVS := os.LookupEnv("NMSTATE_ENABLE_OVS")
 	data.Data["EnableOVS"] = enableOVS
