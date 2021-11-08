@@ -32,6 +32,7 @@ func renderOvs(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterIn
 		data.Data["CNIBinDir"] = cni.BinDir
 	}
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
+	data.Data["PodSecurityEnabled"] = clusterInfo.PodSecurityEnabled
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "ovs"), &data)
 	if err != nil {
