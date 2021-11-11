@@ -24,10 +24,13 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("NetworkAddonsConfig", func() {
@@ -451,6 +454,123 @@ var _ = Describe("NetworkAddonsConfig", func() {
 						return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
 					}, 5*time.Minute, time.Second).Should(BeNil(), fmt.Sprintf("Timed out waiting for nmstate-operator daemonset"))
 				})
+			})
+		})
+	})
+
+	Context("NetworkAddonsConfig labels", func() {
+		var (
+			configSpec   cnao.NetworkAddonsConfigSpec
+			ovsDaemonSet = &v1.DaemonSet{}
+			ovsPods      = &corev1.PodList{}
+		)
+
+		BeforeEach(func() {
+			configSpec = cnao.NetworkAddonsConfigSpec{
+				Ovs: &cnao.Ovs{},
+			}
+
+			CreateConfig(gvk, configSpec)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+		})
+
+		Context("When NetworkAddonsConfig is labeled with `part-of`, `version` and `component` labels", func() {
+			const (
+				partOfLabelCRVal     = "part-of-cr-value"
+				versionLabelCRVal    = "version-cr-value"
+				componentLabelCRlVal = "component-cr-value"
+			)
+			labels := map[string]string{names.PART_OF_LABEL_KEY: partOfLabelCRVal,
+				names.VERSION_LABEL_KEY: versionLabelCRVal, names.COMPONENT_LABEL_KEY: componentLabelCRlVal}
+
+			BeforeEach(func() {
+				LabelConfig(gvk, labels)
+
+				Eventually(func() bool {
+					config := GetConfig(gvk)
+					configLabels := config.GetLabels()
+					return configLabels[names.PART_OF_LABEL_KEY] == partOfLabelCRVal && configLabels[names.VERSION_LABEL_KEY] == versionLabelCRVal &&
+						configLabels[names.COMPONENT_LABEL_KEY] == componentLabelCRlVal
+				}, 2*time.Minute, time.Minute).Should(BeTrue(), "should succeed setting labels on NetworkAddonsConfig")
+			})
+
+			It("Should take the `part-of`, `version` and `component` labels value and apply it to the deployed component daemonset", func() {
+				Eventually(func() bool {
+					err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: OvsComponent.DaemonSets[0], Namespace: components.Namespace}, ovsDaemonSet)
+					Expect(err).ToNot(HaveOccurred(), "should succeed getting the ovs daemonSet")
+
+					deamonSetLabels := ovsDaemonSet.Labels
+
+					return deamonSetLabels[names.PART_OF_LABEL_KEY] == partOfLabelCRVal && deamonSetLabels[names.VERSION_LABEL_KEY] == versionLabelCRVal &&
+						deamonSetLabels[names.COMPONENT_LABEL_KEY] == componentLabelCRlVal
+				}, 2*time.Minute, time.Minute).Should(BeTrue(),
+					"label values of the deployed component ds should be equal to the values on NetworkAddonsConfig")
+
+			})
+
+			It("Should take the `part-of`, `version` and `component` labels value and apply it to the deployed component pods", func() {
+				listOptions := []client.ListOption{
+					client.MatchingLabels(labels),
+					client.InNamespace(components.Namespace),
+				}
+				Eventually(func() bool {
+					err := framework.Global.Client.List(context.TODO(), ovsPods, listOptions...)
+					Expect(err).ToNot(HaveOccurred(), "should succeed getting the ovs pods")
+
+					return int32(len(ovsPods.Items)) == ovsDaemonSet.Status.DesiredNumberScheduled
+				}, 2*time.Minute, time.Minute).Should(BeTrue(),
+					"should be able to list ovs pods based on the NetworkAddonsConfig labels")
+			})
+		})
+
+		Context("When NetworkAddonsConfig is labeled with `managed-by` label", func() {
+			const (
+				managedByLabelCRVal        = "managed-by-cr-value"
+				managedByLabelComponentVal = names.MANAGED_BY_LABEL_DEFAULT_VALUE
+			)
+			labels := map[string]string{names.MANAGED_BY_LABEL_KEY: managedByLabelCRVal}
+
+			BeforeEach(func() {
+				Eventually(func() bool {
+					err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: OvsComponent.DaemonSets[0], Namespace: components.Namespace}, ovsDaemonSet)
+					Expect(err).ToNot(HaveOccurred(), "should succeed getting the ovs daemonSet")
+
+					daemonSetLabels := ovsDaemonSet.Labels
+					return daemonSetLabels[names.MANAGED_BY_LABEL_KEY] == managedByLabelComponentVal
+				}, 2*time.Minute, time.Minute).Should(BeTrue(),
+					"Component should have been labeled with `managed-by` label with value %s", managedByLabelComponentVal)
+
+				LabelConfig(gvk, labels)
+				Eventually(func() bool {
+					config := GetConfig(gvk)
+					configlabels := config.GetLabels()
+					return configlabels[names.MANAGED_BY_LABEL_KEY] == managedByLabelCRVal
+				}, 2*time.Minute, time.Minute).Should(BeTrue(), "should succeed setting labels on NetworkAddonsConfig")
+			})
+
+			It("Should NOT apply `managed-by` label value to the deployed component daemonSet", func() {
+				Consistently(func() bool {
+					err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: OvsComponent.DaemonSets[0], Namespace: components.Namespace}, ovsDaemonSet)
+					Expect(err).ToNot(HaveOccurred(), "should succeed getting the ovs daemonSet")
+
+					daemonSetLabels := ovsDaemonSet.Labels
+					return daemonSetLabels[names.MANAGED_BY_LABEL_KEY] == managedByLabelComponentVal
+				}, 1*time.Minute, time.Minute).Should(BeTrue(),
+					"label values of the deployed component ds should be equal to the values on NetworkAddonsConfig")
+			})
+
+			It("Should NOT apply `managed-by` label value to the deployed component pods", func() {
+				listOptions := []client.ListOption{
+					client.MatchingLabels(labels),
+					client.InNamespace(components.Namespace),
+				}
+				Consistently(func() int {
+					err := framework.Global.Client.List(context.TODO(), ovsPods, listOptions...)
+					Expect(err).ToNot(HaveOccurred(), "should succeed getting the ovs pods")
+
+					return len(ovsPods.Items)
+				}, 1*time.Minute, time.Minute).Should(BeZero(),
+					"should not be able to list ovs pods based on the NetworkAddonsConfig `managed-by` label")
 			})
 		})
 	})

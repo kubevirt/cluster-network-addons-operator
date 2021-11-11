@@ -154,3 +154,22 @@ func configSpecToYaml(configSpec cnao.NetworkAddonsConfigSpec) string {
 	// Note that it is empty otherwise
 	return "Empty Spec"
 }
+
+func LabelConfig(gvk schema.GroupVersionKind, newLabels map[string]string) {
+	By(fmt.Sprintf("Labeling NetworkAddonsConfig with:\n%v", newLabels))
+
+	// Get current Config
+	config := GetConfig(gvk)
+
+	// Label the Config with the desired new labels
+	labels := config.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	for k, v := range newLabels {
+		labels[k] = v
+	}
+	config.SetLabels(labels)
+	err := framework.Global.Client.Update(context.TODO(), config)
+	Expect(err).NotTo(HaveOccurred(), "Failed to label the Config")
+}

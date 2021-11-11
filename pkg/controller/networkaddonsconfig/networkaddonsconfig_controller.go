@@ -530,19 +530,20 @@ func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstru
 		// Label objects with version of the operator they were created by
 		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
 		labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
+		labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 		err = updateObjectTemplateLabels(obj, labels, []string{names.PROMETHEUS_LABEL_KEY})
 		if err != nil {
 			return err
 		}
 
-		appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY, names.MANAGED_BY_LABEL_KEY}
-
+		appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
 		labels = updateLabelsFromCR(labels, crLables, appLabelKeys)
 		if err != nil {
 			return err
 		}
 		obj.SetLabels(labels)
 
+		appLabelKeys = append(appLabelKeys, names.MANAGED_BY_LABEL_KEY)
 		err = updateObjectTemplateLabels(obj, labels, appLabelKeys)
 		if err != nil {
 			return err
@@ -554,7 +555,6 @@ func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstru
 
 func updateLabelsFromCR(labels, crLables map[string]string, appLabelKeys []string) map[string]string {
 	labels[names.COMPONENT_LABEL_KEY] = names.COMPONENT_LABEL_DEFAULT_VALUE
-	labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 	for _, key := range appLabelKeys {
 		if value, exist := crLables[key]; exist == true {
 			labels[key] = value

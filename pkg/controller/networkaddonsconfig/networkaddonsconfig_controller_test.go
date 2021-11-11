@@ -66,7 +66,7 @@ var _ = Describe("Networkaddonsconfig", func() {
 		var objs []*unstructured.Unstructured
 		var crLabels map[string]string
 		const expectedComponentLabel = "component_unit_tests"
-		const expectedManagedByLabel = "managed_by_unit_tests"
+		const expectedManagedByLabel = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 		const expectedPartOfLabel = "part_of_unit_tests"
 		const expectedVersionLabel = "version_of_unit_tests"
 
