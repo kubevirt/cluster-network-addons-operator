@@ -49,5 +49,10 @@ function cluster::path() {
 }
 
 function cluster::kubeconfig() {
-    echo -n ${CLUSTER_PATH}/_ci-configs/${KUBEVIRT_PROVIDER}/.kubeconfig
+    if [ ${KUBEVIRT_PROVIDER} != "external" ]; then
+        echo -n ${CLUSTER_PATH}/_ci-configs/${KUBEVIRT_PROVIDER}/.kubeconfig
+    else
+        [[ -n $KUBECONFIG ]] || (echo "missing KUBECONFIG"; exit 1)
+        echo -n ${KUBECONFIG}
+    fi
 }
