@@ -4,7 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
-source hack/components/docker-utils.sh
+source hack/components/podman-utils.sh
 
 #here we do all the object specific parametizing
 function __parametize_by_object() {
@@ -140,8 +140,8 @@ if [ ! -z ${PUSH_IMAGES} ]; then
     docker push "${MULTUS_IMAGE_TAGGED}"
 fi
 
-if [[ -n "$(docker-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
-    MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
+if [[ -n "$(podman-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
+    MULTUS_IMAGE_DIGEST="$(podman-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
 else
     MULTUS_IMAGE_DIGEST=${MULTUS_IMAGE_TAGGED}
 fi

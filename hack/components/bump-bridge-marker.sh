@@ -4,7 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
-source hack/components/docker-utils.sh
+source hack/components/podman-utils.sh
 
 #here we do all the object specific parametizing
 function __parametize_by_object() {
@@ -96,7 +96,7 @@ echo 'Get bridge-marker image name and update it under CNAO'
 BRIDGE_MARKER_TAG=$(git-utils::get_component_tag ${BRIDGE_MARKER_PATH})
 BRIDGE_MARKER_IMAGE=quay.io/kubevirt/bridge-marker
 BRIDGE_MARKER_IMAGE_TAGGED=${BRIDGE_MARKER_IMAGE}:${BRIDGE_MARKER_TAG}
-BRIDGE_MARKER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${BRIDGE_MARKER_IMAGE_TAGGED}" "${BRIDGE_MARKER_IMAGE}")"
+BRIDGE_MARKER_IMAGE_DIGEST="$(podman-utils::get_image_digest "${BRIDGE_MARKER_IMAGE_TAGGED}" "${BRIDGE_MARKER_IMAGE}")"
 
 sed -i -r "s#\"${BRIDGE_MARKER_IMAGE}(@sha256)?:.*\"#\"${BRIDGE_MARKER_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${BRIDGE_MARKER_IMAGE}(@sha256)?:.*\"#\"${BRIDGE_MARKER_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

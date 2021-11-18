@@ -12,8 +12,8 @@ set -xo pipefail
 # Returns
 # The image digest
 #
-function docker-utils::get_image_digest() {
-  echo "${2}@$(docker run --rm quay.io/skopeo/stable:latest inspect "docker://${1}" | jq -r '.Digest')"
+function podman-utils::get_image_digest() {
+  echo "${2}@$(podman run --rm quay.io/skopeo/stable:latest inspect "podman://${1}" | jq -r '.Digest')"
 }
 
 # The check_image_exists function checks if an image already exists in the registry.
@@ -24,6 +24,6 @@ function docker-utils::get_image_digest() {
 #
 # returns the image tag if found; else, returns an empty result
 #
-function docker-utils::check_image_exists() {
-  docker run --rm quay.io/skopeo/stable:latest list-tags "docker://${1}" | grep "\"${2}\""
+function podman-utils::check_image_exists() {
+  podman run --rm quay.io/skopeo/stable:latest list-tags "podman://${1}" | grep "\"${2}\""
 }

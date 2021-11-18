@@ -4,7 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
-source hack/components/docker-utils.sh
+source hack/components/podman-utils.sh
 
 echo 'Bumping kubemacpool'
 KUBEMACPOOL_URL=$(yaml-utils::get_component_url kubemacpool)
@@ -118,7 +118,7 @@ echo 'Get kubemacpool image name and update it under CNAO'
 KUBEMACPOOL_TAG=$(git-utils::get_component_tag ${KUBEMACPOOL_PATH})
 KUBEMACPOOL_IMAGE=quay.io/kubevirt/kubemacpool
 KUBEMACPOOL_IMAGE_TAGGED=${KUBEMACPOOL_IMAGE}:${KUBEMACPOOL_TAG}
-KUBEMACPOOL_IMAGE_DIGEST="$(docker-utils::get_image_digest "${KUBEMACPOOL_IMAGE_TAGGED}" "${KUBEMACPOOL_IMAGE}")"
+KUBEMACPOOL_IMAGE_DIGEST="$(podman-utils::get_image_digest "${KUBEMACPOOL_IMAGE_TAGGED}" "${KUBEMACPOOL_IMAGE}")"
 
 sed -i -r "s#\"${KUBEMACPOOL_IMAGE}(@sha256)?:.*\"#\"${KUBEMACPOOL_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${KUBEMACPOOL_IMAGE}(@sha256)?:.*\"#\"${KUBEMACPOOL_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

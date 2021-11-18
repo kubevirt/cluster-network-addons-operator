@@ -4,7 +4,7 @@ set -xeo pipefail
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
-source hack/components/docker-utils.sh
+source hack/components/podman-utils.sh
 
 #here we do all the object specific parametizing
 function __parametize_by_object() {
@@ -111,7 +111,7 @@ OVS_TAG=$(git-utils::get_component_tag ${OVS_PATH})
 echo 'Get ovs-cni-plugin image name and update it under CNAO'
 OVS_PLUGIN_IMAGE=quay.io/kubevirt/ovs-cni-plugin
 OVS_PLUGIN_IMAGE_TAGGED=${OVS_PLUGIN_IMAGE}:${OVS_TAG}
-OVS_PLUGIN_IMAGE_DIGEST="$(docker-utils::get_image_digest "${OVS_PLUGIN_IMAGE_TAGGED}" "${OVS_PLUGIN_IMAGE}")"
+OVS_PLUGIN_IMAGE_DIGEST="$(podman-utils::get_image_digest "${OVS_PLUGIN_IMAGE_TAGGED}" "${OVS_PLUGIN_IMAGE}")"
 
 sed -i -r "s#\"${OVS_PLUGIN_IMAGE}(@sha256)?:.*\"#\"${OVS_PLUGIN_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${OVS_PLUGIN_IMAGE}(@sha256)?:.*\"#\"${OVS_PLUGIN_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
@@ -119,7 +119,7 @@ sed -i -r "s#\"${OVS_PLUGIN_IMAGE}(@sha256)?:.*\"#\"${OVS_PLUGIN_IMAGE_DIGEST}\"
 echo 'Get ovs-cni-marker image name and update it under CNAO'
 OVS_MARKER_IMAGE=quay.io/kubevirt/ovs-cni-marker
 OVS_MARKER_IMAGE_TAGGED=${OVS_MARKER_IMAGE}:${OVS_TAG}
-OVS_MARKER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${OVS_MARKER_IMAGE_TAGGED}" "${OVS_MARKER_IMAGE}")"
+OVS_MARKER_IMAGE_DIGEST="$(podman-utils::get_image_digest "${OVS_MARKER_IMAGE_TAGGED}" "${OVS_MARKER_IMAGE}")"
 
 sed -i -r "s#\"${OVS_MARKER_IMAGE}(@sha256)?:.*\"#\"${OVS_MARKER_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${OVS_MARKER_IMAGE}(@sha256)?:.*\"#\"${OVS_MARKER_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

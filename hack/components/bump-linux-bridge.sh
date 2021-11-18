@@ -4,7 +4,7 @@ set -xe
 
 source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
-source hack/components/docker-utils.sh
+source hack/components/podman-utils.sh
 
 echo Bumping linux-bridge
 LINUX_BRIDGE_URL=$(yaml-utils::get_component_url linux-bridge)
@@ -56,8 +56,8 @@ echo 'Push the image to KubeVirt repo'
     fi
 )
 
-if [[ -n "$(docker-utils::check_image_exists "${LINUX_BRIDGE_IMAGE}" "${LINUX_BRIDGE_TAG}")" ]]; then
-    LINUX_BRIDGE_IMAGE_DIGEST="$(docker-utils::get_image_digest "${LINUX_BRIDGE_IMAGE_TAGGED}" "${LINUX_BRIDGE_IMAGE}")"
+if [[ -n "$(podman-utils::check_image_exists "${LINUX_BRIDGE_IMAGE}" "${LINUX_BRIDGE_TAG}")" ]]; then
+    LINUX_BRIDGE_IMAGE_DIGEST="$(podman-utils::get_image_digest "${LINUX_BRIDGE_IMAGE_TAGGED}" "${LINUX_BRIDGE_IMAGE}")"
 else
     LINUX_BRIDGE_IMAGE_DIGEST=${LINUX_BRIDGE_IMAGE_TAGGED}
 fi
