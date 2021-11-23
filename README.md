@@ -248,16 +248,16 @@ spec:
 First install the operator itself:
 
 ```shell
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.61.0/namespace.yaml
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.61.0/network-addons-config.crd.yaml
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.61.0/operator.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.62.0/namespace.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.62.0/network-addons-config.crd.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.62.0/operator.yaml
 ```
 
 Then you need to create a configuration for the operator [example
 CR](manifests/cluster-network-addons/0.4.0/network-addons-config-example.cr.yaml):
 
 ```shell
-kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.61.0/network-addons-config-example.cr.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/v0.62.0/network-addons-config-example.cr.yaml
 ```
 
 Finally you can wait for the operator to finish deployment:
