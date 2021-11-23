@@ -1,4 +1,6 @@
-0.53.8
+0.53.9
 
-* bump kubemacpool to v0.26.7 (#1044)
-* bump nmstate to v0.47.7 (#1040)
+Release CNAO 0.53.9
+
+* bump nmstate to v0.47.8 (#1086)
+
