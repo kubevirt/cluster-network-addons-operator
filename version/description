@@ -1,13 +1,4 @@
-0.61.0
+0.62.0
 
-Bumps:
-* nmstate to v0.58.0 (#1072)
-* ovs-cni to v0.26.0 (#1066)
-* macvtap-cni to v0.6.0 (#1054)
-
-Features:
-* Add Networkmanager-ovs to support ovs configuration for nmstate (#1064)
-* knmstate: Use v1 at bump script (#1061)
-* status_manger, Reduce number of status update API calls (#1032)
-* Use non-empty values in labels for Prometheus (#1053)
-* components: Track the formal CNI plugins repo (#1052)
+* bump nmstate to v0.59.0 (#1084)
+* cluster, cluster.sh: add kubeconfig for external (#1077)
