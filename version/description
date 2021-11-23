@@ -1,8 +1,6 @@
-0.58.3
+0.58.4
 
-* bump nmstate to v0.52.7 (#1059)
-* Use non-empty values in labels for Prometheus (#1058)
-* bump kubemacpool to v0.31.2 (#1042)
-* status-manager, Fix bad compare of status (#1034)
-* Pin knmstate to release branch 0.52 (#1030)
-* bump ovs-cni to v0.24.0 (#1028)
+* bump nmstate to v0.52.9 (#1085)
+* components, change ovs-cni update-policy to static (#1071)
+* components, set macvtap as static to v0.5.1 (#1067)
+* (BZ#2006810) status_manger, Reduce number of status update API calls (#1032) (#1063)
