@@ -1,6 +1,5 @@
-0.53.9
+0.53.10
 
-Release CNAO 0.53.9
-
-* bump nmstate to v0.47.8 (#1086)
+Bugs:
+* bump nmstate to v0.47.9 (#1093)
 
