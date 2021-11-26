@@ -1,6 +1,5 @@
-0.58.4
+0.58.5
 
-* bump nmstate to v0.52.9 (#1085)
-* components, change ovs-cni update-policy to static (#1071)
-* components, set macvtap as static to v0.5.1 (#1067)
-* (BZ#2006810) status_manger, Reduce number of status update API calls (#1032) (#1063)
+Bugs:
+* bump nmstate to v0.52.10 (#1090)
+
