@@ -21,6 +21,8 @@ tests:
               runbook_url: "http://kubevirt.io/monitoring/runbooks/CnaoDown"
             exp_labels:
               severity: "warning"
+              kubernetes_operator_part_of: "kubevirt"
+              kubernetes_operator_component: "cluster-network-addons-operator"
 # CnaoDown negative tests
   - interval: 1m
     input_series:
@@ -51,6 +53,8 @@ tests:
               runbook_url: "http://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady"
             exp_labels:
               severity: "warning"
+              kubernetes_operator_part_of: "kubevirt"
+              kubernetes_operator_component: "cluster-network-addons-operator"
 
 # NetworkAddonsConfigNotReady negative tests
   - interval: 1m
@@ -84,6 +88,8 @@ tests:
               runbook_url: "http://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound"
             exp_labels:
               severity: "warning"
+              kubernetes_operator_part_of: "kubevirt"
+              kubernetes_operator_component: "cluster-network-addons-operator"
 
 # KubeMacPoolDuplicateMacsFound negative tests
   - interval: 1m
@@ -115,6 +121,8 @@ tests:
               runbook_url: "http://kubevirt.io/monitoring/runbooks/KubemacpoolDown"
             exp_labels:
               severity: "critical"
+              kubernetes_operator_part_of: "kubevirt"
+              kubernetes_operator_component: "cluster-network-addons-operator"
 
   # KubemacpoolDown negative tests
   - interval: 1m

@@ -19,6 +19,8 @@ spec:
           for: 5m
           labels:
             severity: warning
+            kubernetes_operator_part_of: kubevirt
+            kubernetes_operator_component: cluster-network-addons-operator
         - alert: NetworkAddonsConfigNotReady
           annotations:
             summary: CNAO CR NetworkAddonsConfig is not ready.
@@ -27,6 +29,8 @@ spec:
           for: 5m
           labels:
             severity: warning
+            kubernetes_operator_part_of: kubevirt
+            kubernetes_operator_component: cluster-network-addons-operator
         - expr: sum(kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'} or vector(0))
           record: kubevirt_kubemacpool_duplicate_macs_total
         - alert: KubeMacPoolDuplicateMacsFound
@@ -37,6 +41,8 @@ spec:
           for: 5m
           labels:
             severity: warning
+            kubernetes_operator_part_of: kubevirt
+            kubernetes_operator_component: cluster-network-addons-operator
         - expr: sum(up{namespace='{{ .Namespace }}', pod=~'kubemacpool-mac-controller-manager-.*'} or vector(0))
           record: kubevirt_cnao_kubemacpool_manager_num_up_pods_total
         - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='{{ .Namespace }}'} or vector(0))
@@ -49,3 +55,5 @@ spec:
           for: 5m
           labels:
             severity: critical
+            kubernetes_operator_part_of: kubevirt
+            kubernetes_operator_component: cluster-network-addons-operator
