@@ -27,3 +27,6 @@ export ARTIFACTS=${ARTIFACTS-$tmp_dir/artifacts}
 mkdir -p $ARTIFACTS
 
 rsync -rt --links --filter=':- .gitignore' $(pwd)/ $TMP_PROJECT_PATH
+
+cat ${TMP_PROJECT_PATH}/automation/check-patch.e2e.packages | xargs dnf -y install
+cat ${TMP_PROJECT_PATH}/automation/check-patch.e2e.packages | xargs dnf -y upgrade
