@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"os"
@@ -9,7 +8,6 @@ import (
 
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	"github.com/operator-framework/operator-sdk/pkg/leader"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -47,15 +45,6 @@ func main() {
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Printf("failed to get apiserver config: %v", err)
-		os.Exit(1)
-	}
-
-	ctx := context.TODO()
-
-	// Become the leader before proceeding
-	err = leader.Become(ctx, "cluster-network-addons-operator-lock")
-	if err != nil {
-		log.Printf("failed to become operator leader: %v", err)
 		os.Exit(1)
 	}
 
