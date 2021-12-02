@@ -10,12 +10,12 @@ func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
 	return cnao.PlacementConfiguration{
 		Infra: &cnao.Placement{
 			NodeSelector: map[string]string{
-				"beta.kubernetes.io/arch":        "amd64",
-				"node-role.kubernetes.io/master": "",
+				"beta.kubernetes.io/arch":               "amd64",
+				"node-role.kubernetes.io/control-plane": "",
 			},
 			Tolerations: []corev1.Toleration{
 				corev1.Toleration{
-					Key:      "node-role.kubernetes.io/master",
+					Key:      "node-role.kubernetes.io/control-plane",
 					Operator: corev1.TolerationOpExists,
 					Effect:   corev1.TaintEffectNoSchedule,
 				},

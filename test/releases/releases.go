@@ -89,7 +89,7 @@ func Releases() []Release {
 	return releases
 }
 
-// Iterates registered releases and returns the latest (master) based on semver
+// Iterates registered releases and returns the latest (main) based on semver
 func LatestRelease() Release {
 	r := Releases()
 	return r[len(r)-1]

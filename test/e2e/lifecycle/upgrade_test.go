@@ -81,7 +81,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 		})
 	}
 
-	// Run tests upgrading from each released version to the latest/master
+	// Run tests upgrading from each released version to the latest/main
 	releases := Releases()
 	for _, oldRelease := range releases[:len(releases)-1] {
 		testUpgrade(oldRelease, LatestRelease())

@@ -288,10 +288,20 @@ func newFakeGitCnaoRepo(api *mockGithubApi, repoDir string, componentParams *com
 	return gitComponent
 }
 
+func setBranchAsHead(repo *git.Repository, branchName string) error {
+	h := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.NewBranchReferenceName(branchName))
+	if err := repo.Storer.SetReference(h); err != nil {
+		return err
+	}
+	return nil
+}
+
 func newLocalGitRepo(repoDir string, tagCommitMap map[string]string) *gitRepo {
 	By(fmt.Sprintf("creating new repository on directory: %s", repoDir))
 	repo, err := git.PlainInit(repoDir, false)
 	Expect(err).ToNot(HaveOccurred(), "Should succeed cloning git repo")
+
+	setBranchAsHead(repo, "main")
 
 	initializeRepo(repo, repoDir, tagCommitMap)
 
@@ -305,10 +315,10 @@ func initializeRepo(repo *git.Repository, repoDir string, tagCommitMap map[strin
 	w, err := repo.Worktree()
 	Expect(err).ToNot(HaveOccurred(), "Should succeed getting repo Worktree")
 
-	createCommitWithoutTag(w, tagCommitMap, repoDir, "static", "master", false)
-	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated", "v0.0.1", "master")
-	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight", "v0.0.2", "master")
-	createCommitWithoutTag(w, tagCommitMap, repoDir, "latest_master", "master", true)
+	createCommitWithoutTag(w, tagCommitMap, repoDir, "static", "main", false)
+	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated", "v0.0.1", "main")
+	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight", "v0.0.2", "main")
+	createCommitWithoutTag(w, tagCommitMap, repoDir, "latest_main", "main", true)
 	createBranch(repo, "release-v1.0.0")
 	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch", "v1.0.0", "release-v1.0.0")
 	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight_branch", "v1.0.1", "release-v1.0.0")

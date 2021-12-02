@@ -42,7 +42,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		dummyRepo := "dummyRepo"
 		BeforeEach(func() {
 
-			newPr := getFakePrWithTitle("CNAO test-component to 0.0.2", "master")
+			newPr := getFakePrWithTitle("CNAO test-component to 0.0.2", "main")
 			_, _, err := gitCnaoRepo.githubInterface.createPullRequest(dummyOwner, dummyRepo, newPr)
 			Expect(err).ToNot(HaveOccurred(), "should succeed creating fake PR")
 
@@ -70,7 +70,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			},
 			Entry("should find PR that is first in the list", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 0.0.2",
-				branch:       "master",
+				branch:       "main",
 				expectResult: true,
 			}),
 			Entry("should find PR that is in the middle of the list", isPrAlreadyOpenedParams{
@@ -83,19 +83,19 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 				branch:       "release-v1.0.0",
 				expectResult: true,
 			}),
-			Entry("should not find PR on master branch if it was issued on another branch", isPrAlreadyOpenedParams{
+			Entry("should not find PR on main branch if it was issued on another branch", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 1.0.1",
-				branch:       "master",
+				branch:       "main",
 				expectResult: false,
 			}),
-			Entry("should not find PR on a certain branch if it was issued on master branch", isPrAlreadyOpenedParams{
+			Entry("should not find PR on a certain branch if it was issued on main branch", isPrAlreadyOpenedParams{
 				prTitle:      "CNAO test-component to 0.0.2",
 				branch:       "release-v1.0.0",
 				expectResult: false,
 			}),
 			Entry("should not find PR that has empty title string", isPrAlreadyOpenedParams{
 				prTitle:      "",
-				branch:       "master",
+				branch:       "main",
 				expectResult: false,
 			}),
 			Entry("should not find PR that is not in the list", isPrAlreadyOpenedParams{
