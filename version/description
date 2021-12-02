@@ -1,4 +1,5 @@
-0.62.0
+0.63.0
 
-* bump nmstate to v0.59.0 (#1084)
-* cluster, cluster.sh: add kubeconfig for external (#1077)
+* bump nmstate to v0.61.0 (#1101)
+* manager: Remove leader election (#1099)
+* knmstate: Fix CRs path (#1092)
