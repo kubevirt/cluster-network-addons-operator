@@ -24,7 +24,11 @@ teardown() {
 main() {
     # Setup CNAO and artifacts temp directory
     source automation/check-patch.setup.sh
+
+
     cd ${TMP_PROJECT_PATH}
+
+
 
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
@@ -45,6 +49,9 @@ main() {
 
     echo "Run nmstate functional tests"
     cd ${TMP_COMPONENT_PATH}
+
+    automation/install-go.sh ${TMP_COMPONENT_PATH}
+    export PATH=${TMP_COMPONENT_PATH}/go/bin:$PATH
 
     make test-e2e-handler \
         E2E_TEST_TIMEOUT=$TIMEOUT \
