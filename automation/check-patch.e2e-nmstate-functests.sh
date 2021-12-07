@@ -50,9 +50,6 @@ main() {
     echo "Run nmstate functional tests"
     cd ${TMP_COMPONENT_PATH}
 
-    automation/install-go.sh ${TMP_COMPONENT_PATH}
-    export PATH=${TMP_COMPONENT_PATH}/go/bin:$PATH
-
     make test-e2e-handler \
         E2E_TEST_TIMEOUT=$TIMEOUT \
         e2e_test_args="-noColor" \
