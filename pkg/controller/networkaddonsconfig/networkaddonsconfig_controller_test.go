@@ -65,10 +65,10 @@ var _ = Describe("Networkaddonsconfig", func() {
 	Context("When CR is labeled", func() {
 		var objs []*unstructured.Unstructured
 		var crLabels map[string]string
-		const expectedComponentLabel = "component_unit_tests"
-		const expectedManagedByLabel = "managed_by_unit_tests"
-		const expectedPartOfLabel = "part_of_unit_tests"
-		const expectedVersionLabel = "version_of_unit_tests"
+		const componentCrLabelValue = "component_unit_tests"
+		const managedByCrLabelValue = "managed_by_unit_tests"
+		const partOfCrLabelValue = "part_of_unit_tests"
+		const versionCrLabelValue = "version_of_unit_tests"
 
 		BeforeEach(func() {
 			var err error
@@ -77,39 +77,39 @@ var _ = Describe("Networkaddonsconfig", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			crLabels = map[string]string{}
-			crLabels[names.COMPONENT_LABEL_KEY] = expectedComponentLabel
-			crLabels[names.MANAGED_BY_LABEL_KEY] = expectedManagedByLabel
-			crLabels[names.PART_OF_LABEL_KEY] = expectedPartOfLabel
-			crLabels[names.VERSION_LABEL_KEY] = expectedVersionLabel
+			crLabels[names.COMPONENT_LABEL_KEY] = componentCrLabelValue
+			crLabels[names.MANAGED_BY_LABEL_KEY] = managedByCrLabelValue
+			crLabels[names.PART_OF_LABEL_KEY] = partOfCrLabelValue
+			crLabels[names.VERSION_LABEL_KEY] = versionCrLabelValue
 			err = updateObjectsLabels(crLabels, objs)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("Should find all labels, overridden by CR labels", func() {
-			appLabelKeys := []checkUnit{
+		It("Should find all labels overridden by CR labels except managed-by that should keep original", func() {
+			expectedAppLabelKeys := []checkUnit{
 				{
 					key:           names.COMPONENT_LABEL_KEY,
 					shouldExist:   true,
-					expectedValue: expectedComponentLabel,
+					expectedValue: componentCrLabelValue,
 				},
 				{
 					key:           names.MANAGED_BY_LABEL_KEY,
 					shouldExist:   true,
-					expectedValue: expectedManagedByLabel,
+					expectedValue: names.MANAGED_BY_LABEL_DEFAULT_VALUE,
 				},
 				{
 					key:           names.PART_OF_LABEL_KEY,
 					shouldExist:   true,
-					expectedValue: expectedPartOfLabel,
+					expectedValue: partOfCrLabelValue,
 				},
 				{
 					key:           names.VERSION_LABEL_KEY,
 					shouldExist:   true,
-					expectedValue: expectedVersionLabel,
+					expectedValue: versionCrLabelValue,
 				},
 			}
 
-			checkObjectsRelationshipLabels(objs, appLabelKeys)
+			checkObjectsRelationshipLabels(objs, expectedAppLabelKeys)
 		})
 	})
 })

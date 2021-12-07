@@ -530,20 +530,17 @@ func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstru
 		// Label objects with version of the operator they were created by
 		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
 		labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
-		err = updateObjectTemplateLabels(obj, labels, []string{names.PROMETHEUS_LABEL_KEY})
-		if err != nil {
-			return err
-		}
+		labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 
-		appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY, names.MANAGED_BY_LABEL_KEY}
-
+		appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
 		labels = updateLabelsFromCR(labels, crLables, appLabelKeys)
 		if err != nil {
 			return err
 		}
 		obj.SetLabels(labels)
 
-		err = updateObjectTemplateLabels(obj, labels, appLabelKeys)
+		templateLabelKeys := append(appLabelKeys, names.PROMETHEUS_LABEL_KEY, names.MANAGED_BY_LABEL_KEY)
+		err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)
 		if err != nil {
 			return err
 		}
@@ -554,7 +551,6 @@ func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstru
 
 func updateLabelsFromCR(labels, crLables map[string]string, appLabelKeys []string) map[string]string {
 	labels[names.COMPONENT_LABEL_KEY] = names.COMPONENT_LABEL_DEFAULT_VALUE
-	labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 	for _, key := range appLabelKeys {
 		if value, exist := crLables[key]; exist == true {
 			labels[key] = value
@@ -564,10 +560,10 @@ func updateLabelsFromCR(labels, crLables map[string]string, appLabelKeys []strin
 	return labels
 }
 
-func updateObjectTemplateLabels(obj *unstructured.Unstructured, labels map[string]string, appLabelKeys []string) error {
+func updateObjectTemplateLabels(obj *unstructured.Unstructured, labels map[string]string, templateLabelKeys []string) error {
 	kind := obj.GetKind()
 	if kind == "DaemonSet" || kind == "ReplicaSet" || kind == "Deployment" || kind == "StatefulSet" {
-		for _, key := range appLabelKeys {
+		for _, key := range templateLabelKeys {
 			if value, exist := labels[key]; exist == true {
 				err := unstructured.SetNestedField(obj.Object, value, "spec", "template", "metadata", "labels", key)
 				if err != nil {
