@@ -1,5 +1,5 @@
-0.63.0
+0.64.0
 
-* bump nmstate to v0.61.0 (#1101)
-* manager: Remove leader election (#1099)
-* knmstate: Fix CRs path (#1092)
+* bump nmstate to v0.63.0 (#1113)
+* controller, labels:don't take managed-by from CR (#1102)
+* bump kubemacpool to v0.33.0 (#1106)
