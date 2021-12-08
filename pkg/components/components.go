@@ -776,7 +776,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
 								"infra": extv1.JSONSchemaProps{
-									Description: "Infra defines placement configuration for master nodes",
+									Description: "Infra defines placement configuration for control-plane nodes",
 									Type:        "object",
 									Properties:  placementProps,
 								},

@@ -164,7 +164,7 @@ spec:
 Macvtap-cni must be explicitly configured by the administrator, indicating the
 interfaces on top of which logical networks can be created.
 
-A simple example on how to do so, the user must deploy a `ConfigMap`, such as in [this example](https://github.com/kubevirt/macvtap-cni/blob/master/examples/macvtap-deviceplugin-config.yaml).
+A simple example on how to do so, the user must deploy a `ConfigMap`, such as in [this example](https://github.com/kubevirt/macvtap-cni/blob/main/examples/macvtap-deviceplugin-config-explicit.yaml).
 
 Currently, this configuration is not dynamic.
 
@@ -216,10 +216,10 @@ Administrator can specify placement preferences for deployed infra and workload 
 by defining [affinity, nodeSelector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/)
 and [tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/).
 
-By default, infra components are scheduled on master nodes and workload components are scheduled on all nodes.
+By default, infra components are scheduled on control-plane nodes and workload components are scheduled on all nodes.
 To adjust this behaviour, provide custom `placementConfiguration` to the `NetworkAddonsConfig`.
 
-In the following example, `nodeAffinity` is used to schedule infra components to master nodes and `nodeSelector`
+In the following example, `nodeAffinity` is used to schedule infra components to control-plane nodes and `nodeSelector`
 to schedule workloads on worker nodes.
 Note that worker nodes need to be labeled with `node-role.kubernetes.io/worker` label.
 
@@ -236,7 +236,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: node-role.kubernetes.io/master
+              - key: node-role.kubernetes.io/control-plane
                 operator: Exists
     workloads:
       nodeSelector:

@@ -154,7 +154,7 @@ func initLog() *log.Logger {
 func initFlags(paramArgs *inputParams) {
 	flag.StringVar(&paramArgs.componentsConfigPath, "config-path", "", "relative path to components yaml from CNAO repo")
 	flag.StringVar(&paramArgs.gitToken, "token", "", "git Token")
-	flag.StringVar(&paramArgs.baseBranch, "base-branch", "master", "the branch CNAO is running the bumper script on, and on which the PRs will be opened")
+	flag.StringVar(&paramArgs.baseBranch, "base-branch", "main", "the branch CNAO is running the bumper script on, and on which the PRs will be opened")
 	flag.Parse()
 	if paramArgs.componentsConfigPath == "" {
 		exitWithError(fmt.Errorf("config-path mandatory input paramter not entered. Use --help for usage"))

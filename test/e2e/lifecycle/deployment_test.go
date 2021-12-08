@@ -11,21 +11,21 @@ import (
 )
 
 var _ = Context("Cluster Network Addons Operator", func() {
-	Context("when installed from master release", func() {
-		masterRelease := LatestRelease()
+	Context("when installed from main release", func() {
+		mainRelease := LatestRelease()
 		BeforeEach(func() {
-			InstallRelease(masterRelease)
+			InstallRelease(mainRelease)
 			CheckOperatorIsReady(15 * time.Minute)
 		})
 		Context("and when NodeNetworkConfig with supported spec is created", func() {
 			gvk := GetCnaoV1GroupVersionKind()
 			BeforeEach(func() {
-				CreateConfig(gvk, masterRelease.SupportedSpec)
+				CreateConfig(gvk, mainRelease.SupportedSpec)
 			})
 
 			It("reaches Available condition with all containers using expected images", func() {
 				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-				CheckReleaseUsesExpectedContainerImages(gvk, masterRelease)
+				CheckReleaseUsesExpectedContainerImages(gvk, mainRelease)
 			})
 
 			It("stays in Available condition while the operator is being removed and redeployed", func() {
@@ -37,8 +37,8 @@ var _ = Context("Cluster Network Addons Operator", func() {
 					// Give validator some time to verify original state
 					time.Sleep(3 * time.Second)
 
-					UninstallOperator(masterRelease)
-					InstallOperator(masterRelease)
+					UninstallOperator(mainRelease)
+					InstallOperator(mainRelease)
 					CheckOperatorIsReady(15 * time.Minute)
 
 					// Give validator some time to verify conditions while the new installation is operating

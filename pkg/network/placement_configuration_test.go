@@ -61,7 +61,7 @@ var _ = Describe("Testing PlacementConfiguration", func() {
 					},
 					Infra: &cnao.Placement{
 						NodeSelector: map[string]string{
-							"node-role.kubernetes.io/master": "",
+							"node-role.kubernetes.io/control-plane": "",
 						},
 					},
 				},
@@ -74,7 +74,7 @@ var _ = Describe("Testing PlacementConfiguration", func() {
 				},
 				Infra: &cnao.Placement{
 					NodeSelector: map[string]string{
-						"node-role.kubernetes.io/master": "",
+						"node-role.kubernetes.io/control-plane": "",
 					},
 				},
 			},

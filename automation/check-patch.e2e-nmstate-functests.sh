@@ -32,7 +32,7 @@ main() {
 
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
-    export KUBEVIRT_NUM_NODES=3 # 1 master, 2 workers
+    export KUBEVIRT_NUM_NODES=3 # 1 control-plane, 2 workers
     export KUBEVIRT_NUM_SECONDARY_NICS=2
     COMPONENT="nmstate" source automation/components-functests.setup.sh
     export E2E_LOGS=${TMP_COMPONENT_PATH}/test_logs/e2e

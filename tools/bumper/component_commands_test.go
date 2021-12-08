@@ -46,10 +46,10 @@ var _ = Describe("Testing internal git component", func() {
 			Expect(err).ToNot(HaveOccurred(), "should not fail to run describeHash")
 			Expect(currentReleaseTag).To(Equal(expectedTag), "tag should be same as expected")
 		},
-		Entry("Should succeed getting annotated tag in master branch: v0.0.1", getVirtualTagParams{
+		Entry("Should succeed getting annotated tag in main branch: v0.0.1", getVirtualTagParams{
 			TagKey: "v0.0.1",
 		}),
-		Entry("Should succeed getting lightweight tag in master branch: v0.0.2", getVirtualTagParams{
+		Entry("Should succeed getting lightweight tag in main branch: v0.0.2", getVirtualTagParams{
 			TagKey: "v0.0.2",
 		}),
 		Entry("Should succeed getting annotated tag in release branch: v1.0.0", getVirtualTagParams{
@@ -58,8 +58,8 @@ var _ = Describe("Testing internal git component", func() {
 		Entry("Should succeed getting annotated tag from release branch: v1.0.1", getVirtualTagParams{
 			TagKey: "v1.0.1",
 		}),
-		Entry("Should succeed getting virtual tag from master branch", getVirtualTagParams{
-			TagKey: "dummy_tag_latest_master",
+		Entry("Should succeed getting virtual tag from main branch", getVirtualTagParams{
+			TagKey: "dummy_tag_latest_main",
 		}),
 		Entry("Should succeed getting virtual tag from release branch", getVirtualTagParams{
 			TagKey: "dummy_tag_latest_release-v1.0.0",
@@ -92,16 +92,16 @@ var _ = Describe("Testing internal git component", func() {
 				Expect(currentReleaseTag).To(Equal(vtag), "Should return virtual tag in case tag was not found")
 			}
 		},
-		Entry("Should succeed getting annotated tag from master branch: v0.0.1", currentReleaseParams{
+		Entry("Should succeed getting annotated tag from main branch: v0.0.1", currentReleaseParams{
 			TagKey:          "v0.0.1",
 			shouldReturnErr: false,
 		}),
-		Entry("Should succeed getting lightweight tag from master branch: v0.0.2", currentReleaseParams{
+		Entry("Should succeed getting lightweight tag from main branch: v0.0.2", currentReleaseParams{
 			TagKey:          "v0.0.2",
 			shouldReturnErr: false,
 		}),
-		Entry("Should succeed getting current untagged commit from master branch", currentReleaseParams{
-			TagKey:          "dummy_tag_latest_master",
+		Entry("Should succeed getting current untagged commit from main branch", currentReleaseParams{
+			TagKey:          "dummy_tag_latest_main",
 			shouldReturnErr: false,
 		}),
 		Entry("Should succeed getting annotated tag from release branch: v1.0.0", currentReleaseParams{
@@ -156,25 +156,25 @@ var _ = Describe("Testing internal git component", func() {
 			}
 		},
 		Entry("Update-policy static: should return original tag and commit", updatedReleaseParams{
-			comp:            &component{Updatepolicy: updatePolicyStatic, Branch: "master", Metadata: "v0.0.2"},
+			comp:            &component{Updatepolicy: updatePolicyStatic, Branch: "main", Metadata: "v0.0.2"},
 			currentTagKey:   "v0.0.2",
 			expectedTagKey:  "v0.0.2",
 			shouldReturnErr: false,
 		}),
-		Entry("Update-policy tagged: should return latest tag in master branch. current: v0.0.1", updatedReleaseParams{
-			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "master", Metadata: "v0.0.1"},
+		Entry("Update-policy tagged: should return latest tag in main branch. current: v0.0.1", updatedReleaseParams{
+			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "main", Metadata: "v0.0.1"},
 			currentTagKey:   "v0.0.1",
 			expectedTagKey:  "v0.0.2",
 			shouldReturnErr: false,
 		}),
-		Entry("Update-policy tagged: should return latest tag in master branch. current: v0.0.2", updatedReleaseParams{
-			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "master", Metadata: "v0.0.2"},
+		Entry("Update-policy tagged: should return latest tag in main branch. current: v0.0.2", updatedReleaseParams{
+			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "main", Metadata: "v0.0.2"},
 			currentTagKey:   "v0.0.2",
 			expectedTagKey:  "v0.0.2",
 			shouldReturnErr: false,
 		}),
-		Entry("Update-policy tagged: should return latest tag in master branch. current: v1.0.0", updatedReleaseParams{
-			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "master", Metadata: "v1.0.0"},
+		Entry("Update-policy tagged: should return latest tag in main branch. current: v1.0.0", updatedReleaseParams{
+			comp:            &component{Updatepolicy: updatePolicyTagged, Branch: "main", Metadata: "v1.0.0"},
 			currentTagKey:   "v1.0.0",
 			expectedTagKey:  "v0.0.2",
 			shouldReturnErr: false,
@@ -197,10 +197,10 @@ var _ = Describe("Testing internal git component", func() {
 			expectedTagKey:  "",
 			shouldReturnErr: true,
 		}),
-		Entry("Update-policy latest: should return latest HEAD in master branch. current: v1.0.0", updatedReleaseParams{
-			comp:            &component{Updatepolicy: updatePolicyLatest, Branch: "master", Metadata: "v1.0.0"},
+		Entry("Update-policy latest: should return latest HEAD in main branch. current: v1.0.0", updatedReleaseParams{
+			comp:            &component{Updatepolicy: updatePolicyLatest, Branch: "main", Metadata: "v1.0.0"},
 			currentTagKey:   "v1.0.0",
-			expectedTagKey:  "dummy_tag_latest_master",
+			expectedTagKey:  "dummy_tag_latest_main",
 			shouldReturnErr: false,
 		}),
 		Entry("Update-policy latest: should return latest HEAD in release branch. current: v0.0.1", updatedReleaseParams{

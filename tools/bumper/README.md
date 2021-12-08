@@ -15,4 +15,4 @@ make ARGS="-config-path=<path-to-components.yaml-relative-to-bumping-repo> -toke
 Where:
 * config-path: relative path to components.yaml from the bumping repo. In its current position we'll simply: config-path="components.yaml"
 * token: personal/gitActions github-token.
-* base-branch: the branch on which the bumper script runs, and on which the PRs will be opened. default is master
+* base-branch: the branch on which the bumper script runs, and on which the PRs will be opened. default is main
