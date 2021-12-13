@@ -42,19 +42,19 @@ func init() {
 				ParentName: "nmstate-handler",
 				ParentKind: "DaemonSet",
 				Name:       "nmstate-handler",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:46dc0ecd8915d0412167890b339a841937bdee0b2c9f6319faf336ec001264cd",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:8c2a6b9bede93f8960a5b4bd33194e4cf1cc9d7f8a1cf2e0108016ef9d17d4e1",
 			},
 			{
 				ParentName: "nmstate-webhook",
 				ParentKind: "Deployment",
 				Name:       "nmstate-webhook",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:46dc0ecd8915d0412167890b339a841937bdee0b2c9f6319faf336ec001264cd",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:8c2a6b9bede93f8960a5b4bd33194e4cf1cc9d7f8a1cf2e0108016ef9d17d4e1",
 			},
 			{
 				ParentName: "nmstate-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "nmstate-cert-manager",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:46dc0ecd8915d0412167890b339a841937bdee0b2c9f6319faf336ec001264cd",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:8c2a6b9bede93f8960a5b4bd33194e4cf1cc9d7f8a1cf2e0108016ef9d17d4e1",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
