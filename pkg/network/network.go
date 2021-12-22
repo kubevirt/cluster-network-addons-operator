@@ -57,12 +57,12 @@ func FillDefaults(conf, previous *cnao.NetworkAddonsConfigSpec) error {
 }
 
 // specialCleanUp checks if there are any specific outdated objects or ones that are no longer compatible and deletes them.
-func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client) error {
+func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client, clusterInfo *ClusterInfo) error {
 	errs := []error{}
 	ctx := context.TODO()
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
-	errs = append(errs, cleanUpNMState(conf, ctx, client)...)
+	errs = append(errs, cleanUpNMState(conf, ctx, client, clusterInfo)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%v", errorListToMultiLineString(errs))
