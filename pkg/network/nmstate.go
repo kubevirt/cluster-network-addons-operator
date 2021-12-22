@@ -17,25 +17,31 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
+const (
+	kubernetesOsSelector = "kubernetes.io/os"
+)
+
 // renderNMState generates the manifests of NMState handler
 func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.NMState == nil {
 		return nil, nil
 	}
 
+	confWithDefaults := pupulateNmstateDefaultConfiguration(conf)
+
 	// render the manifests on disk
 	data := render.MakeRenderData()
 	data.Data["HandlerPrefix"] = ""
 	data.Data["HandlerNamespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["HandlerImage"] = os.Getenv("NMSTATE_HANDLER_IMAGE")
-	data.Data["HandlerPullPolicy"] = conf.ImagePullPolicy
+	data.Data["HandlerPullPolicy"] = confWithDefaults.ImagePullPolicy
 	data.Data["HandlerNodeSelector"] = map[string]string{}
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
-	data.Data["CARotateInterval"] = conf.SelfSignConfiguration.CARotateInterval
-	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
-	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
-	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
-	data.Data["PlacementConfiguration"] = conf.PlacementConfiguration
+	data.Data["CARotateInterval"] = confWithDefaults.SelfSignConfiguration.CARotateInterval
+	data.Data["CAOverlapInterval"] = confWithDefaults.SelfSignConfiguration.CAOverlapInterval
+	data.Data["CertRotateInterval"] = confWithDefaults.SelfSignConfiguration.CertRotateInterval
+	data.Data["CertOverlapInterval"] = confWithDefaults.SelfSignConfiguration.CertOverlapInterval
+	data.Data["PlacementConfiguration"] = confWithDefaults.PlacementConfiguration
 	data.Data["WebhookReplicas"] = getNumberOfWebhookReplicas(clusterInfo)
 	data.Data["WebhookMinReplicas"] = getMinNumberOfWebhookReplicas(clusterInfo)
 
@@ -168,4 +174,16 @@ func getMinNumberOfWebhookReplicas(clusterInfo *ClusterInfo) int32 {
 	}
 
 	return highlyAvailableMinWebhookReplicas
+}
+
+func pupulateNmstateDefaultConfiguration(conf *cnao.NetworkAddonsConfigSpec) *cnao.NetworkAddonsConfigSpec {
+	confWithDefaults := conf.DeepCopy()
+	if confWithDefaults.PlacementConfiguration.Workloads.NodeSelector == nil {
+		confWithDefaults.PlacementConfiguration.Workloads.NodeSelector = map[string]string{}
+	}
+	if _, present := confWithDefaults.PlacementConfiguration.Workloads.NodeSelector[kubernetesOsSelector]; !present {
+		confWithDefaults.PlacementConfiguration.Workloads.NodeSelector[kubernetesOsSelector] = "linux"
+	}
+
+	return confWithDefaults
 }
