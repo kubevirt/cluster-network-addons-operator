@@ -1,5 +1,3 @@
-0.53.10
+0.53.11
 
-Bugs:
-* bump nmstate to v0.47.9 (#1093)
-
+* Migrate NMState to use kubernetes-nmstate-operator if available (#1122)
