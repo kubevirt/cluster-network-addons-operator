@@ -16,5 +16,12 @@
 
 set -ex
 
+if ./cluster/kubectl.sh get crd prometheuses.monitoring.coreos.com; then
+  # TODO: temporary hack for testing PR
+   ./cluster/kubectl.sh  -n cluster-network-addons create rolebinding  cluster-network-addons-operator-monitoring-hack --role=cluster-network-addons-operator-monitoring --serviceaccount=monitoring:prometheus-k8s
+  ./cluster/kubectl.sh patch prometheus k8s -n monitoring --type=json -p '[{"op": "replace", "path": "/spec/ruleSelector", "value":{}}, {"op": "replace", "path": "/spec/ruleNamespaceSelector", "value":{"matchLabels": {"prometheus.cnao.io": "true"}}}]'
+  ./cluster/kubectl.sh patch prometheus k8s -n monitoring --type=json -p '[{"op": "replace", "path": "/spec/ruleSelector", "value":{}}, {"op": "replace", "path": "/spec/serviceMonitorNamespaceSelector", "value":{"matchLabels": {"prometheus.cnao.io": "true"}}}]'
+fi
+
 ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/operator.yaml
 ./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster-network-addons-operator --for condition=Available --timeout=600s

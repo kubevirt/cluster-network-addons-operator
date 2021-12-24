@@ -14,7 +14,6 @@ require (
 	github.com/go-logr/logr v0.3.0 // indirect
 	github.com/go-logr/zapr v0.2.0 // indirect
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/imdario/mergo v0.3.10 // indirect
@@ -29,7 +28,8 @@ require (
 	github.com/openshift/origin v4.1.0+incompatible
 	github.com/operator-framework/operator-sdk v0.18.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.7.1
+	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/common v0.26.0
 	github.com/spf13/pflag v1.0.5
 	github.com/thanhpk/randstr v1.0.4
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
