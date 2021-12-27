@@ -1,4 +1,4 @@
-FROM centos:centos7
+FROM quay.io/centos/centos:centos7
 ENV ENTRYPOINT=/entrypoint \
     OPERATOR=/cluster-network-addons-operator \
     MANIFEST_TEMPLATOR=/manifest-templator \
