@@ -1,3 +1,5 @@
-0.65.1
+0.65.2
 
-* bump nmstate to v0.64.2 (#1120)
+* bump nmstate to v0.64.5 (#1134)
+* dockerfile: Use quay.io instead of docker.io (#1128)
+* Add default linux OS nodeSelector to nmstate handlers (#1124)
