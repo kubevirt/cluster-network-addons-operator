@@ -53,7 +53,7 @@ main() {
     make test-e2e-handler \
         E2E_TEST_TIMEOUT=$TIMEOUT \
         e2e_test_args="-noColor" \
-        E2E_TEST_SUITE_ARGS="-ginkgo.skip='parallel' --junit-output=$ARTIFACTS/junit.functest.xml" \
+        E2E_TEST_SUITE_ARGS="-ginkgo.focus='.*nmpolicy.*|.*bonding.*default.*|.*ovs.*|.*Webhook.*' --junit-output=$ARTIFACTS/junit.functest.xml" \
         OPERATOR_NAMESPACE=$NAMESPACE \
         CLUSTER_PATH=$CLUSTER_PATH \
         KUBECONFIG=$KUBECONFIG \
