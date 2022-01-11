@@ -196,6 +196,12 @@ bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
 bump-all: bump-nmstate bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-multus bump-ovs-cni bump-bridge-marker
 
+generate-doc: build-docgen
+	build/_output/bin/metricsdocs > docs/metrics.md
+
+build-docgen: $(GO)
+	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/metricsdocs ./tools/metricsdocs/...
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
