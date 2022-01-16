@@ -54,7 +54,7 @@ func CheckComponentsDeployment(components []Component) {
 
 func CheckCrdExplainable() {
 	By("Checking crd is explainable")
-	explain, err := Kubectl("explain", "networkaddonsconfigs")
+	explain, _, err := Kubectl("explain", "networkaddonsconfigs")
 	Expect(err).NotTo(HaveOccurred(), "explain should not return error")
 
 	Expect(explain).ToNot(BeEmpty(), "explain output should not be empty")
@@ -695,7 +695,7 @@ func getMonitoringEndpoint() (*corev1.Endpoints, error) {
 }
 
 func scrapeEndpointAddress(epAddress corev1.EndpointAddress, epPort int32) (string, error) {
-	stdout, err := Kubectl("exec", "-n", epAddress.TargetRef.Namespace, epAddress.TargetRef.Name, "--", "curl", "-L", "-s", "-k", fmt.Sprintf("http://%s:%d/metrics", epAddress.IP, epPort))
+	stdout, _, err := Kubectl("exec", "-n", epAddress.TargetRef.Namespace, epAddress.TargetRef.Name, "--", "curl", "-L", "-s", "-k", fmt.Sprintf("http://%s:%d/metrics", epAddress.IP, epPort))
 	if err != nil {
 		return "", err
 	}
@@ -767,13 +767,13 @@ func gatherClusterInfo() string {
 }
 
 func cnaoPodsStatus() string {
-	podsStatus, err := Kubectl("-n", components.Namespace, "get", "pods")
-	return fmt.Sprintf("CNAO pods Status:\n%v\nerror:\n%v", podsStatus, err)
+	podsStatus, stderr, err := Kubectl("-n", components.Namespace, "get", "pods")
+	return fmt.Sprintf("CNAO pods Status:\n%v\nerror:\n%v", podsStatus+stderr, err)
 }
 
 func describeAll() string {
-	description, err := Kubectl("-n", components.Namespace, "describe", "all")
-	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description, err)
+	description, stderr, err := Kubectl("-n", components.Namespace, "describe", "all")
+	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description+stderr, err)
 }
 
 func isNotSupportedKind(err error) bool {

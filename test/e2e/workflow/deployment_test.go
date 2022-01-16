@@ -461,8 +461,8 @@ func installNMStateOperator() {
 	componentSource, err := GetComponentSource("nmstate")
 	Expect(err).ToNot(HaveOccurred(), "Error getting the component source")
 
-	result, err := kubectl.Kubectl("apply", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", componentSource.Metadata))
-	Expect(err).ToNot(HaveOccurred(), "Error applying CRD: %s", result)
+	result, stderr, err := kubectl.Kubectl("apply", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", componentSource.Metadata))
+	Expect(err).ToNot(HaveOccurred(), "Error applying CRD: %s", result+stderr)
 
 	// Create temp directory
 	tmpdir, err := ioutil.TempDir("", "operator-test")
@@ -474,8 +474,8 @@ func installNMStateOperator() {
 
 		yamlFile := filepath.Join(tmpdir, fmt.Sprintf("%s.yaml", manifest))
 		ioutil.WriteFile(yamlFile, []byte(yamlString), 0666)
-		result, err = kubectl.Kubectl("apply", "-f", yamlFile)
-		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Error when running kubectl: %s", result))
+		result, stderr, err = kubectl.Kubectl("apply", "-f", yamlFile)
+		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Error when running kubectl: %s", result+stderr))
 	}
 }
 
@@ -494,11 +494,11 @@ func uninstallNMStateOperator() {
 
 		yamlFile := filepath.Join(tmpdir, fmt.Sprintf("%s.yaml", manifest))
 		ioutil.WriteFile(yamlFile, []byte(yamlString), 0666)
-		result, err := kubectl.Kubectl("delete", "-f", yamlFile)
-		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Error when running kubectl: %s", result))
+		result, stderr, err := kubectl.Kubectl("delete", "-f", yamlFile)
+		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Error when running kubectl: %s", result+stderr))
 	}
-	result, err := kubectl.Kubectl("delete", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", componentSource.Metadata))
-	Expect(err).ToNot(HaveOccurred(), "Error deleting CRD: %s", result)
+	result, stderr, err := kubectl.Kubectl("delete", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", componentSource.Metadata))
+	Expect(err).ToNot(HaveOccurred(), "Error deleting CRD: %s", result+stderr)
 }
 
 func parseManifest(url string, tag string) (string, error) {
