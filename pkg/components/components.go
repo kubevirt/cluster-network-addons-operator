@@ -13,7 +13,6 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
@@ -180,13 +179,6 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 									corev1.ResourceMemory: resource.MustParse("30Mi"),
 								},
 							},
-							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
-									Name:          "metrics",
-									Protocol:      "TCP",
-									ContainerPort: monitoring.GetMetricsPort(),
-								},
-							},
 							Env: []corev1.EnvVar{
 								{
 									Name:  "MULTUS_IMAGE",
@@ -269,6 +261,30 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 									Value: "prometheus-k8s",
 								},
 							},
+						},
+						{
+							Name:            "kube-rbac-proxy",
+							Image:           "quay.io/openshift/origin-kube-rbac-proxy:4.10.0",
+							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
+							Ports: []corev1.ContainerPort{
+								corev1.ContainerPort{
+									Name:          "metrics",
+									Protocol:      "TCP",
+									ContainerPort: 8443,
+								},
+							},
+							Args: []string{
+								"--logtostderr",
+								"--secure-listen-address=:8443",
+								"--upstream=http://127.0.0.1:8080",
+							},
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("10m"),
+									corev1.ResourceMemory: resource.MustParse("20Mi"),
+								},
+							},
+							TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 						},
 					},
 				},
