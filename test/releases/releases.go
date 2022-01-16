@@ -99,8 +99,8 @@ func LatestRelease() Release {
 func InstallRelease(release Release) {
 	By(fmt.Sprintf("Installing release %s", release.Version))
 	for _, manifestName := range release.Manifests {
-		out, err := Kubectl("apply", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
-		Expect(err).NotTo(HaveOccurred(), out)
+		out, stderr, err := Kubectl("apply", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
+		Expect(err).NotTo(HaveOccurred(), out+stderr)
 	}
 }
 
@@ -108,13 +108,13 @@ func InstallRelease(release Release) {
 func UninstallRelease(release Release) {
 	By(fmt.Sprintf("Uninstalling release %s", release.Version))
 	for _, manifestName := range release.Manifests {
-		out, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
-		Expect(err).NotTo(HaveOccurred(), out)
+		out, stderr, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
+		Expect(err).NotTo(HaveOccurred(), out+stderr)
 	}
 
 	for _, crdInstance := range release.CrdCleanUp {
-		out, err := Kubectl("delete", "crd", "--ignore-not-found", crdInstance)
-		Expect(err).NotTo(HaveOccurred(), out)
+		out, stderr, err := Kubectl("delete", "crd", "--ignore-not-found", crdInstance)
+		Expect(err).NotTo(HaveOccurred(), out+stderr)
 	}
 
 }
@@ -123,16 +123,16 @@ func UninstallRelease(release Release) {
 func InstallOperator(release Release) {
 	manifestName := "operator.yaml"
 	By(fmt.Sprintf("Installing operator %s", release.Version))
-	out, err := Kubectl("apply", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
-	Expect(err).NotTo(HaveOccurred(), out)
+	out, stderr, err := Kubectl("apply", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
+	Expect(err).NotTo(HaveOccurred(), out+stderr)
 }
 
 // Removes given release from cluster
 func UninstallOperator(release Release) {
 	manifestName := "operator.yaml"
 	By(fmt.Sprintf("Uninstalling operator %s", release.Version))
-	out, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
-	Expect(err).NotTo(HaveOccurred(), out)
+	out, stderr, err := Kubectl("delete", "--ignore-not-found", "-f", "_out/cluster-network-addons/"+release.Version+"/"+manifestName)
+	Expect(err).NotTo(HaveOccurred(), out+stderr)
 }
 
 // Make sure that container images currently used (reported in NetworkAddonsConfig)
