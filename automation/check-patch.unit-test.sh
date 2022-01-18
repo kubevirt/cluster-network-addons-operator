@@ -4,11 +4,17 @@
 # cluster on any environment with basic dependencies listed in
 # check-patch.packages installed and docker running.
 
+verify_metrics_docs_updated() {
+  make generate-doc
+  git difftool -y --trust-exit-code --extcmd=./hack/diff-csv.sh
+}
+
 main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
     make bump-all
     make check
+    verify_metrics_docs_updated
     make docker-build
 }
 
