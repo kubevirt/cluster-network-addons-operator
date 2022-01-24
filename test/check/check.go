@@ -30,6 +30,7 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
@@ -248,6 +249,18 @@ func CheckForLeftoverObjects(currentVersion string) {
 	prometheusRules := monitoringv1.PrometheusRuleList{}
 	Expect(framework.Global.Client.List(context.Background(), &prometheusRules, &listOptions)).To(Succeed())
 	Expect(prometheusRules.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+}
+
+func CheckForLeftoverLabels() {
+	namespace := corev1.Namespace{}
+	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: components.Namespace}, &namespace)
+	Expect(err).NotTo(HaveOccurred())
+
+	labels := namespace.GetLabels()
+	for _, label := range k8s.RemovedLabels() {
+		value, found := labels[label]
+		Expect(found).To(BeFalse(), fmt.Sprintf("unexpected label %s:%s found", label, value))
+	}
 }
 
 func KeepCheckingWhile(check func(), while func()) {

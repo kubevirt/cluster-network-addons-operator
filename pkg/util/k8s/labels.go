@@ -3,6 +3,9 @@ package k8s
 import (
 	"log"
 	"regexp"
+
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
 
 var labelAntiSelector *regexp.Regexp
@@ -28,4 +31,24 @@ func StringToLabel(s string) string {
 	}
 
 	return s
+}
+
+// RelationLabels returns the list of the relationship labels
+func RelationLabels() []string {
+	return []string{
+		names.COMPONENT_LABEL_KEY,
+		names.PART_OF_LABEL_KEY,
+		names.VERSION_LABEL_KEY,
+		names.MANAGED_BY_LABEL_KEY,
+	}
+}
+
+// RemovedLabels returns the list of the labels we remove for backward compatibility
+func RemovedLabels() []string {
+	labels := RelationLabels()
+	labels = append(labels, []string{
+		names.PROMETHEUS_LABEL_KEY,
+		names.KUBEMACPOOL_CONTROL_PLANE_KEY,
+		cnaov1.SchemeGroupVersion.Group + "/version"}...)
+	return labels
 }
