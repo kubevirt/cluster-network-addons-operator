@@ -44,7 +44,7 @@ type metric struct {
 	description string
 }
 
-func metricsOptsToMetricList(mdl map[string]monitoring.MetricsOpts) metricList {
+func metricsOptsToMetricList(mdl map[monitoring.MetricsKey]monitoring.MetricsOpts) metricList {
 	res := make([]metric, 0)
 	for _, element := range mdl {
 		res = append(res, metricDescriptionToMetric(element))

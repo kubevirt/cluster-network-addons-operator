@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Test metricsdocs", func() {
-	var metricsOptsList = map[string]monitoring.MetricsOpts{
+	var metricsOptsList = map[monitoring.MetricsKey]monitoring.MetricsOpts{
 		"metric2": {
 			Name: "kubevirt_metric_2",
 			Help: "Metric 2 Help",
@@ -29,7 +29,7 @@ var _ = Describe("Test metricsdocs", func() {
 
 			BeforeEach(func() {
 				By("transforming metricsOpts to metricList")
-				metricsList = metricsOptsToMetricList(map[string]monitoring.MetricsOpts{})
+				metricsList = metricsOptsToMetricList(map[monitoring.MetricsKey]monitoring.MetricsOpts{})
 			})
 
 			It("should return an empty metricList", func() {
