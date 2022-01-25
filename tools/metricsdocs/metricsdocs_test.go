@@ -82,7 +82,7 @@ var _ = Describe("Test metricsdocs", func() {
 		})
 
 		It("should create a file with the header", func() {
-			Expect(stdout).To(ContainSubstring(title))
+			Expect(stdout).To(ContainSubstring(opening))
 		})
 
 		It("should create a file with the footer", func() {
