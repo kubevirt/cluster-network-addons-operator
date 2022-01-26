@@ -3,7 +3,7 @@ components:
     url: https://github.com/kubevirt/bridge-marker
     commit: 46b2b0f81a807bf140f0e90b377c6cea0ca7eb9b
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: 0.9.1
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
@@ -21,7 +21,7 @@ components:
     url: https://github.com/kubevirt/macvtap-cni
     commit: d8d5974f36fe8263aa870a2af15d5a5b28b59eb6
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.6.0
   multus:
     url: https://github.com/k8snetworkplumbingwg/multus-cni
@@ -39,5 +39,5 @@ components:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: 3973253a2677448d30bbd522540f57ef8ce879f8
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.26.0
