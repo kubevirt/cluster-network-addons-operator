@@ -32,7 +32,7 @@ components:
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
     commit: b40ec5ef37ac4acf61d818514e0b485f1ce10115
-    branch: release-0.64
+    branch: main
     update-policy: tagged
     metadata: v0.64.5
   ovs-cni:
