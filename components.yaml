@@ -15,7 +15,7 @@ components:
     url: https://github.com/containernetworking/plugins
     commit: f1f128e3c9220634d3f26b96950271f87c34e424
     branch: master
-    update-policy: static
+    update-policy: tagged
     metadata: ""
   macvtap-cni:
     url: https://github.com/kubevirt/macvtap-cni
@@ -27,7 +27,7 @@ components:
     url: https://github.com/k8snetworkplumbingwg/multus-cni
     commit: 4eac660359f223d34bcaf0fddbc42fd542f02ba1
     branch: master
-    update-policy: static
+    update-policy: tagged
     metadata: v3.4.2
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
