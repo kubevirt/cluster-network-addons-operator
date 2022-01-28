@@ -22,16 +22,39 @@ const (
 	defaultServiceAccountName  = "prometheus-k8s"
 )
 
+type MetricsOpts struct {
+	Name string
+	Help string
+}
+
+type MetricsKey string
+
+const (
+	ReadyGauge     MetricsKey = "readyGauge"
+	KMPDeployGauge MetricsKey = "kmpDeployedGauge"
+)
+
+var MetricsOptsList = map[MetricsKey]MetricsOpts{
+	ReadyGauge: {
+		Name: "kubevirt_cnao_cr_ready",
+		Help: "CNAO CR Ready",
+	},
+	KMPDeployGauge: {
+		Name: "kubevirt_cnao_cr_kubemacpool_deployed",
+		Help: "KubeMacpool is deployed by CNAO CR",
+	},
+}
+
 var (
 	readyGauge = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "kubevirt_cnao_cr_ready",
-			Help: "Cnao CR Ready",
+			Name: MetricsOptsList[ReadyGauge].Name,
+			Help: MetricsOptsList[ReadyGauge].Help,
 		})
 	kmpDeployedGauge = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "kubevirt_cnao_cr_kubemacpool_deployed",
-			Help: "Kubemacpool is deployed by Cnao CR",
+			Name: MetricsOptsList[KMPDeployGauge].Name,
+			Help: MetricsOptsList[KMPDeployGauge].Help,
 		})
 )
 

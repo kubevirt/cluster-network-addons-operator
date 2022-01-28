@@ -196,6 +196,9 @@ bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
 bump-all: bump-nmstate bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-multus bump-ovs-cni bump-bridge-marker
 
+generate-doc:
+	go run ./tools/metricsdocs > docs/metrics.md
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
