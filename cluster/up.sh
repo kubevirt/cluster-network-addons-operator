@@ -37,10 +37,10 @@ if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
     for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
         ./cluster/cli.sh ssh ${node} -- sudo yum config-manager --set-enabled powertools
         ./cluster/cli.sh ssh ${node} -- sudo yum install -y epel-release centos-release-openstack-wallaby epel-release centos-release-openstack-train https://rdoproject.org/repos/rdo-release.rpm
-        ./cluster/cli.sh ssh ${node} -- sudo yum install -y openvswitch libibverbs NetworkManager-1.34.0 NetworkManager-ovs-1.34.0
+        ./cluster/cli.sh ssh ${node} -- sudo yum install -y libibverbs NetworkManager-1.34.0 NetworkManager-ovs-1.34.0 --disablerepo=centos-ceph-nautilus,centos-rabbitmq-38,centos-openstack-train,ceph-nautilus
         ./cluster/cli.sh ssh ${node} -- sudo systemctl daemon-reload
-        ./cluster/cli.sh ssh ${node} -- sudo systemctl enable --now openvswitch
-        ./cluster/cli.sh ssh ${node} -- sudo systemctl restart openvswitch
+        #./cluster/cli.sh ssh ${node} -- sudo systemctl enable --now openvswitch
+        #./cluster/cli.sh ssh ${node} -- sudo systemctl restart openvswitch
         ./cluster/cli.sh ssh ${node} -- sudo systemctl restart NetworkManager
     done
 fi
