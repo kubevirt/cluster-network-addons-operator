@@ -640,15 +640,15 @@ func IsMonitoringAvailable(c kubernetes.Interface) (bool, error) {
 }
 
 func isRunningKubernetesNMStateOperator(c k8sclient.Client) (bool, error) {
-	deployments := &appsv1.DeploymentList{}
-	err := c.List(context.TODO(), deployments, k8sclient.MatchingLabels{"app": "kubernetes-nmstate-operator"})
+	pods := &v1.PodList{}
+	err := c.List(context.TODO(), pods, k8sclient.MatchingLabels{"app": "kubernetes-nmstate-operator"})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
 		}
 		return false, err
 	}
-	if len(deployments.Items) == 0 {
+	if len(pods.Items) == 0 {
 		return false, nil
 	}
 	return true, nil
