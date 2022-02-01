@@ -27,4 +27,4 @@ jobs:
       run:  git pull --ff-only --rebase origin ${{ env.BASE_BRANCH }}
 
     - name: Run bumper script
-      run: make ARGS="-config-path=components.yaml -token=${{ secrets.GITHUB_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
+      run: make ARGS="-config-path=components.yaml -token=${{ secrets.KUBEVIRT_BOT_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
