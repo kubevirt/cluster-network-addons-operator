@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        branche:
+        branch:
           - main
           - release-0.42
           - release-0.44
