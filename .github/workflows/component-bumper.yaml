@@ -32,4 +32,4 @@ jobs:
       run:  git pull --ff-only --rebase origin ${{ matrix.branch }}
 
     - name: Run bumper script
-      run: make ARGS="-config-path=components.yaml -token=${{ secrets.KUBEVIRT_BOT_TOKEN }} -base-branch=${{ matrix.branch }}" auto-bumper
+      run: make ARGS="-config-path=components.yaml -token=${{ secrets.KUBEVIRT_BOT_TOKEN }} -base-branch=${{ env.BASE_BRANCH }}" auto-bumper
