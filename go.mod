@@ -20,7 +20,6 @@ require (
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1 // indirect
 	github.com/kevinburke/rest v0.0.0-20200429221318-0d2892b400f8 // indirect
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/openshift/api v0.0.0-20210208192252-670ac3fc997c
@@ -86,4 +85,4 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.18.2
 )
 
-go 1.13
+go 1.16
