@@ -15,7 +15,7 @@ components:
     url: https://github.com/containernetworking/plugins
     commit: f1f128e3c9220634d3f26b96950271f87c34e424
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: ""
   macvtap-cni:
     url: https://github.com/kubevirt/macvtap-cni
