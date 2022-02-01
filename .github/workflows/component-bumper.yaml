@@ -1,11 +1,11 @@
-name: Auto-Bump Components' Versions
+name: Auto-Bump Component's Versions
 
 on:
   schedule:
     - cron:  '0 * * * *'
 
 jobs:
-  build:
+  bump:
     name: CNAO Component Bump Job
     if: (github.repository == 'kubevirt/cluster-network-addons-operator')
     runs-on: ubuntu-latest
