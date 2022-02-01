@@ -50,6 +50,14 @@ main() {
     echo "Run nmstate functional tests"
     cd ${TMP_COMPONENT_PATH}
 
+    if gimme --help > /dev/null 2>&1; then
+        export GIMME_GO_VERSION=$(grep '^go' go.mod |sed 's/go //')
+        echo "Installing go $GIMME_GO_VERSION with gimme"
+        eval "$(gimme)"
+    else
+        echo "Gimme not installed using existing golang version $(go --version)"
+    fi
+
     make test-e2e-handler \
         E2E_TEST_TIMEOUT=$TIMEOUT \
         e2e_test_args="-noColor" \
