@@ -37,4 +37,4 @@ jobs:
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
     
     - name: Run make to prepare the PR
-      run: make prepare-{{ github.event.inputs.versionLevel }}
+      run: make prepare-${{ github.event.inputs.versionLevel }}
