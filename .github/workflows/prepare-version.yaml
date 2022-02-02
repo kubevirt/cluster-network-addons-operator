@@ -37,8 +37,10 @@ jobs:
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
 
-    - name: Dump tags
-      run: git tag
+    - name: Set author and email for version PR
+      run: |
+        git config --global user.email "noreplay@github.com" 
+        git config --global user.name "CNAO Version bot"
 
     - name: Run make to prepare the PR
       run: make prepare-${{ github.event.inputs.versionLevel }}
