@@ -104,6 +104,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string) (
 	data := render.MakeRenderData()
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["KubeMacPoolImage"] = os.Getenv("KUBEMACPOOL_IMAGE")
+	data.Data["KubeRbacProxyImage"] = os.Getenv("KUBE_RBAC_PROXY_IMAGE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["RangeStart"] = conf.KubeMacPool.RangeStart
 	data.Data["RangeEnd"] = conf.KubeMacPool.RangeEnd
