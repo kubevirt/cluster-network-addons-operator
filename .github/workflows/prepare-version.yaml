@@ -44,3 +44,6 @@ jobs:
 
     - name: Run make to prepare the PR
       run: make prepare-${{ github.event.inputs.versionLevel }}
+
+    - name: Push version PR
+      run: git push origin release-`./hack/version.sh`
