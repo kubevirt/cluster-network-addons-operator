@@ -60,13 +60,13 @@ func init() {
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:fcf57e6dd61097aa3b1a76d0d7dd862e353fa5a9bcec542cdecd6f8f992e2a32",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:595df9d7f11bf60c022b66d1bb3ee943a256814b4fa47c1d3fa35f2f487d7a34",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:084f94f07d739d469e0e730001d37011c50a2013de4f88060b1a17806a6b0272",
+				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:f989840eee6269abe349a413bdd2b950f206e70650dfe9af56aa7cca26f851ba",
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
