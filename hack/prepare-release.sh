@@ -7,7 +7,7 @@ previous_version=$(hack/version.sh)
 released_version=$(hack/bump-version.sh $version_type)
 prefixed_previous_version="v${previous_version}"
 prefixed_released_version="v${released_version}"
-commits=$(git log --pretty=format:"* %s" $prefixed_previous_version..HEAD)
+commits=$(git log --pretty=format:"* %s" $prefixed_previous_version..$prefixed_released_version)
 
 echo 'Build manifests for the new release'
 VERSION=${released_version} IMAGE_TAG=${prefixed_released_version} make gen-manifests
