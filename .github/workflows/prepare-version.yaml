@@ -27,18 +27,18 @@ jobs:
   prepare-release:
     runs-on: ubuntu-latest
     steps:
-    
+
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.inputs.baseBranch }}
         fetch-depth: 0
-    
+
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
-      
+
     - name: Dump tags
       run: git tag
-      
+
     - name: Run make to prepare the PR
       run: make prepare-${{ github.event.inputs.versionLevel }}
