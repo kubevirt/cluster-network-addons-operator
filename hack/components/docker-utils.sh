@@ -13,7 +13,7 @@ set -xo pipefail
 # The image digest
 #
 function docker-utils::get_image_digest() {
-  echo "${2}@$(docker run --rm quay.io/skopeo/stable:latest inspect "docker://${1}" | jq -r '.Digest')"
+  echo "${2}@$(docker run --rm --security-opt seccomp=unconfined quay.io/skopeo/stable:latest inspect "docker://${1}" | jq -r '.Digest')"
 }
 
 # The check_image_exists function checks if an image already exists in the registry.
@@ -25,5 +25,5 @@ function docker-utils::get_image_digest() {
 # returns the image tag if found; else, returns an empty result
 #
 function docker-utils::check_image_exists() {
-  docker run --rm quay.io/skopeo/stable:latest list-tags "docker://${1}" | grep "\"${2}\""
+  docker run --rm --security-opt seccomp=unconfined quay.io/skopeo/stable:latest list-tags "docker://${1}" | grep "\"${2}\""
 }

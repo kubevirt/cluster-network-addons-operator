@@ -183,6 +183,18 @@ rules:
   - namespaces
   verbs:
   - get
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -357,9 +369,6 @@ spec:
         - containerPort: 8000
           name: webhook-server
           protocol: TCP
-        - containerPort: 8080
-          name: metrics
-          protocol: TCP
         readinessProbe:
           httpGet:
             httpHeaders:
@@ -378,6 +387,22 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs/
           name: tls-key-pair
           readOnly: true
+      - args:
+        - --logtostderr
+        - --secure-listen-address=:8443
+        - --upstream=http://127.0.0.1:8080
+        image: '{{ .KubeRbacProxyImage }}'
+        imagePullPolicy: '{{ .ImagePullPolicy }}'
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 10m
+            memory: 20Mi
+        terminationMessagePolicy: FallbackToLogsOnError
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always

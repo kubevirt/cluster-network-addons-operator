@@ -107,6 +107,9 @@ EOF
 rm -rf data/kubemacpool/*
 (
     cd $KUBEMACPOOL_PATH
+
+    curl -L https://github.com/k8snetworkplumbingwg/kubemacpool/pull/353.patch | git apply
+
     make tools 1>/dev/null
     ./build/_output/bin/go/bin/kustomize build config/cnao | \
         sed 's/kubemacpool-system/{{ .Namespace }}/' | \
