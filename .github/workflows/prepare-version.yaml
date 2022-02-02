@@ -1,0 +1,40 @@
+name: Create Version PR
+
+on:
+  workflow_dispatch:
+     inputs:
+      versionLevel:
+        description: 'The semVer level of the version'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+        - major
+        - minor
+        - patch
+      baseBranch:
+        description: 'Test CNAO branch to release from'
+        required: true
+        type: choice
+        default: 'main'
+        options:
+        - main
+        - release-0.65
+        - release-0.58
+        - release-0.53
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.baseBranch }}
+    
+    - name: Pull latest of latest branch
+      run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
+    
+    - name: Run make to prepare the PR
+      run: make prepare-{{ github.event.inputs.versionLevel }}
