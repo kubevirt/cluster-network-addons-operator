@@ -36,9 +36,9 @@ jobs:
     
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
-
-    - name: Fetch all the tags
-      run:  git fetch origin --tags
-   
+      
+    - name: Dump tags
+      run: git tag
+      
     - name: Run make to prepare the PR
       run: make prepare-${{ github.event.inputs.versionLevel }}
