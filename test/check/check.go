@@ -694,7 +694,7 @@ func getMonitoringEndpoint() (*corev1.Endpoints, error) {
 	return endpoint, nil
 }
 
-func scrapeEndpointAddress(epAddress corev1.EndpointAddress, epPort int32) (string, error) {
+func ScrapeEndpointAddress(epAddress *corev1.EndpointAddress, epPort int32) (string, error) {
 	token, err := getPrometheusToken()
 	if err != nil {
 		return "", err
@@ -709,21 +709,22 @@ func scrapeEndpointAddress(epAddress corev1.EndpointAddress, epPort int32) (stri
 	return stdout, nil
 }
 
-func GetScrapedDataFromMonitoringEndpoint() (string, error) {
+func GetMonitoringEndpoint() (*corev1.EndpointAddress, int32, error) {
 	endpoint, err := getMonitoringEndpoint()
 	if err != nil {
-		return "", err
+		return nil, 0, err
 	}
 
-	By("scraping the metrics endpoint on CNAO pod")
 	epPort := endpoint.Subsets[0].Ports[0].Port
-	for _, epAddress := range endpoint.Subsets[0].Addresses {
-		if !strings.HasPrefix(epAddress.TargetRef.Name, components.Name) {
+	for _, epAddr := range endpoint.Subsets[0].Addresses {
+		if !strings.HasPrefix(epAddr.TargetRef.Name, components.Name) {
 			continue
 		}
-		return scrapeEndpointAddress(epAddress, epPort)
+		epAddress := epAddr
+		return &epAddress, epPort, nil
 	}
-	return "", errors.New("no endpoint target ref name matches CNAO component")
+
+	return nil, 0, errors.New("no endpoint target ref name matches CNAO component")
 }
 
 func FindMetric(metrics string, expectedMetric string) string {

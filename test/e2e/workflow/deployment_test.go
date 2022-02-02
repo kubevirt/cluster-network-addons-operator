@@ -294,7 +294,12 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 				Eventually(func() error {
 					By("scraping the monitoring endpoint")
-					scrapedData, err := GetScrapedDataFromMonitoringEndpoint()
+					epAddress, epPort, err := GetMonitoringEndpoint()
+					if err != nil {
+						return err
+					}
+					
+					scrapedData, err := ScrapeEndpointAddress(epAddress, epPort)
 					Expect(err).ToNot(HaveOccurred())
 
 					By("comparing the scraped Data to the expected metrics' values")
