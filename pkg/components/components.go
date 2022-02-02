@@ -35,6 +35,7 @@ const (
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:fd766d39f74528f94978b116908e9b86cbdfea30a53493043405c08d9d1e6527"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@sha256:6d506c66a779827659709d1c7253f96f3ad493e5fff23b549942a537f6304be4"
 	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:961f1d1079840fa657f2e115835afdf5d0c7520623bbc302e46f2b67e36f8349"
+	KubeRbacProxyImageDefault     = "quay.io/openshift/origin-kube-rbac-proxy:4.10.0"
 )
 
 type AddonsImages struct {
@@ -46,6 +47,7 @@ type AddonsImages struct {
 	OvsCni            string
 	OvsMarker         string
 	MacvtapCni        string
+	KubeRbacProxy     string
 }
 
 type RelatedImage struct {
@@ -94,6 +96,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.MacvtapCni == "" {
 		ai.MacvtapCni = MacvtapCniImageDefault
 	}
+	if ai.KubeRbacProxy == "" {
+		ai.KubeRbacProxy = KubeRbacProxyImageDefault
+	}
 	return ai
 }
 
@@ -107,6 +112,7 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.OvsCni,
 		ai.OvsMarker,
 		ai.MacvtapCni,
+		ai.KubeRbacProxy,
 	)
 }
 
@@ -213,6 +219,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 									Value: addonsImages.MacvtapCni,
 								},
 								{
+									Name:  "KUBE_RBAC_PROXY_IMAGE",
+									Value: addonsImages.KubeRbacProxy,
+								},
+								{
 									Name:  "OPERATOR_IMAGE",
 									Value: image,
 								},
@@ -264,7 +274,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 						},
 						{
 							Name:            "kube-rbac-proxy",
-							Image:           "quay.io/openshift/origin-kube-rbac-proxy:4.10.0",
+							Image:           addonsImages.KubeRbacProxy,
 							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 							Ports: []corev1.ContainerPort{
 								corev1.ContainerPort{

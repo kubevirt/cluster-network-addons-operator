@@ -2,6 +2,7 @@ package releases
 
 import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 )
 
 func init() {
@@ -67,6 +68,12 @@ func init() {
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
 				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:6d506c66a779827659709d1c7253f96f3ad493e5fff23b549942a537f6304be4",
+			},
+			{
+				ParentName: "kubemacpool-mac-controller-manager",
+				ParentKind: "Deployment",
+				Name:       "kube-rbac-proxy",
+				Image:      components.KubeRbacProxyImageDefault,
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{

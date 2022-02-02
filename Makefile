@@ -156,6 +156,7 @@ gen-manifests: manifest-templator
 	LINUX_BRIDGE_CNI_IMAGE=$(LINUX_BRIDGE_CNI_IMAGE) \
 	KUBEMACPOOL_IMAGE=$(KUBEMACPOOL_IMAGE) \
 	MACVTAP_CNI_IMAGE=$(MACVTAP_CNI_IMAGE) \
+	KUBE_RBAC_PROXY_IMAGE=$(KUBE_RBAC_PROXY_IMAGE) \
 		./hack/generate-manifests.sh
 
 gen-k8s: $(OPERATOR_SDK) $(apis_sources)
