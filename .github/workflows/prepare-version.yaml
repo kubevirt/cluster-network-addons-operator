@@ -32,6 +32,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.inputs.baseBranch }}
+        fetch-depth: 0
     
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
