@@ -29,23 +29,9 @@ echo 'Prepare release notes'
 cat << EOF > version/description
 $released_version
 
-TODO: Add description here
-
-
-TODO: keep at every category the
-      commits that make sense
-
-Features:
 $commits
 
-Bugs:
-$commits
-
-Docs:
-$commits
 EOF
-
-${EDITOR:-vi} version/description
 
 echo 'Commit updates'
 git checkout -b release-$released_version
