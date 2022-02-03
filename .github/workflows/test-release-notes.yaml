@@ -40,24 +40,22 @@ jobs:
     - name: Store last version and current SHA
       run: |
         echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
-        echo "LAST_VERSION_SHA=$(git rev-list -n 1 $LAST_VERSION)" >> $GITHUB_ENV
-        echo "CURRENT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+        echo "START_SHA=$(git rev-list -n 1 $(./hack/version.sh))" >> $GITHUB_ENV
+        echo "END_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - uses: actions/setup-go@v2
       with:
         go-version: '1.16'
 
     - name: Dump release-notes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         go get k8s.io/release/cmd/release-notes
-        export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
         release-notes \
           --list-v2 \
           --required-author "" \
           --org kubevirt \
           --dependencies=false \
-          --repo cluster-network-addons-operator \
-          --start-sha ${{ env.LAST_VERSION_SHA }} \
-          --end-sha ${{ env.CURRENT_SHA }}
-
+          --repo cluster-network-addons-operator
 
