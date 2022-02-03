@@ -36,7 +36,7 @@ jobs:
 
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
-      
+
     - name: Store last version and current SHA
       run: |
         echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
