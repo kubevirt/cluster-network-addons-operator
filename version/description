@@ -1,4 +1,11 @@
-0.58.6
+0.58.7
 
-* bump nmstate to v0.52.11 (#1112)
+* Update prepare-release.sh
+* release: Make relase non interactive
+* Revert "release: Use prefixed_released_version"
+* Merge pull request #1190 from kubevirt-bot/cherry-pick-1189-to-release-0.58
+* release: Use prefixed_released_version
+* [0.58] cluster: Enable just ovs repo (#1163) (#1167)
+* bump nmstate to v0.52.13 (#1157)
+* bump nmstate to v0.52.12 (#1143)
 
