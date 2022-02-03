@@ -57,6 +57,7 @@ jobs:
           --dependencies=false \
           --repo cluster-network-addons-operator \
           --start-rev ${{ env.LAST_VERSION }} \
-          --end-sha ${{ env.CURRENT_SHA }}
+          --end-sha ${{ env.CURRENT_SHA }} \
+          --repo-path .
 
 
