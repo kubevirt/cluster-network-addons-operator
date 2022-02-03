@@ -55,9 +55,11 @@ jobs:
          branch: v${{ env.RELEASE_VERSION }}
          token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
          committer: GitHub <noreply@github.com>
-         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
          signoff: true
-         commit-message: "[ ${{ github.event.inputs.baseBranch }} ] Release v${{ env.RELEASE_VERSION }}"
+         commit-message: |
+            [${{ github.event.inputs.baseBranch }}] Release v${{ env.RELEASE_VERSION }}
+            
+            Signed-off-by: GitHub <noreply@github.com>
          title: "[ ${{ github.event.inputs.baseBranch }} ]Release v${{ env.RELEASE_VERSION }}"
          body: |
            **What this PR does / why we need it**:                                         
