@@ -55,8 +55,9 @@ jobs:
 
     - name: Dump release-notes
       run: |
+        go get k8s.io/release/cmd/release-notes
         export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-        go run k8s.io/release/cmd/release-notes \
+        release-notes \
           --list-v2 \
           --required-author "" \
           --org kubevirt \
