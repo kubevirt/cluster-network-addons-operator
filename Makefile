@@ -177,8 +177,10 @@ prepare-minor:
 prepare-major:
 	./hack/prepare-release.sh major
 
+release-notes:
+	hack/render-release-notes.sh $(WHAT)
+
 release: $(GITHUB_RELEASE)
-	DESCRIPTION=version/description \
 	GITHUB_RELEASE=$(GITHUB_RELEASE) \
 	TAG=v$(shell hack/version.sh) \
 	  hack/release.sh \
@@ -198,6 +200,7 @@ bump-all: bump-nmstate bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-
 
 generate-doc:
 	go run ./tools/metricsdocs > docs/metrics.md
+
 
 .PHONY: \
 	$(E2E_SUITES) \
