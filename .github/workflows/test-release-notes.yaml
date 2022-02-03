@@ -57,5 +57,6 @@ jobs:
           --required-author "" \
           --org kubevirt \
           --dependencies=false \
+          --branch ${{ github.event.inputs.baseBranch }} \
           --repo cluster-network-addons-operator
 
