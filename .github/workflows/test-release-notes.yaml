@@ -49,22 +49,20 @@ jobs:
       run: |
         echo "RELEASE_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
 
-    - name: Create version PR
-      uses: peter-evans/create-pull-request@v3
+    - uses: actions/setup-go@v2
       with:
-         branch: v${{ env.RELEASE_VERSION }}
-         token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
-         committer: GitHub <noreply@github.com>
-         signoff: true
-         commit-message: |
-            [${{ github.event.inputs.baseBranch }}] Release v${{ env.RELEASE_VERSION }}
+        go-version: '1.16'
 
-            Signed-off-by: GitHub <noreply@github.com>
-         title: "[${{ github.event.inputs.baseBranch }}] Release v${{ env.RELEASE_VERSION }}"
-         body: |
-           **What this PR does / why we need it**:
-           Release v${{ env.RELEASE_VERSION }}
+    - name: Dump release-notes
+      run: |
+        export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        go run k8s.io/release/cmd/release-notes \
+          --list-v2 \
+          --required-author "" \
+          --org kubevirt \
+          --dependencies=false \
+          --repo cluster-network-addons-operator \
+          --start-rev ${{ env.RELEASE_VERSION }} \
+          --end-rev HEAD
 
-           ```release-note
-           NONE
-           ```
+
