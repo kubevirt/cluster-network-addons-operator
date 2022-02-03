@@ -1,4 +1,4 @@
-name: Create Version PR
+name: Test release notes
 
 on:
   workflow_dispatch:
