@@ -54,6 +54,7 @@ jobs:
       run: |
         go install k8s.io/release/cmd/release-notes@latest
         release-notes \
+          -list-v2 \
           --required-author "" \
           --org kubevirt \
           --dependencies=false \
