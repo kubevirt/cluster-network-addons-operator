@@ -47,7 +47,7 @@ jobs:
 
     - name: Store release version
       run: |
-        echo "RELEASE_VERSION=$(./hack/version.sh)"
+        echo "RELEASE_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
 
     - name: Create version PR
       uses: peter-evans/create-pull-request@v3
