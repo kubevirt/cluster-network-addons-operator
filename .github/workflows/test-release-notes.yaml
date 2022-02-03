@@ -37,21 +37,10 @@ jobs:
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
       
-    - name: Store previous version
+    - name: Store last version and current SHA
       run: |
-        echo "PREVIOUS_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
-
-    - name: Set author and email for version PR
-      run: |
-        git config --global user.email "noreplay@github.com"
-        git config --global user.name "CNAO Version bot"
-
-    - name: Run make to prepare the PR
-      run: make prepare-${{ github.event.inputs.versionLevel }}
-
-    - name: Store release version
-      run: |
-        echo "RELEASE_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
+        echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
+        echo "CURRENT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - uses: actions/setup-go@v2
       with:
@@ -67,7 +56,7 @@ jobs:
           --org kubevirt \
           --dependencies=false \
           --repo cluster-network-addons-operator \
-          --start-rev ${{ env.PREVIOUS_VERSION }} \
-          --end-rev HEAD
+          --start-rev ${{ env.LAST_VERSION }} \
+          --end-sha ${{ env.CURRENT_SHA }}
 
 
