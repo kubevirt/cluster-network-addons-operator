@@ -45,12 +45,22 @@ jobs:
     - name: Run make to prepare the PR
       run: make prepare-${{ github.event.inputs.versionLevel }}
 
-    - name: Set PR branch name
+    - name: Store release version
       run: |
-        echo "PR_BRANCH=v$(./hack/version.sh)" >> $GITHUB_ENV
+        echo "RELEASE_VERSION=$(./hack/version.sh)"
 
     - name: Create version PR
       uses: peter-evans/create-pull-request@v3
       with:
-         branch: ${{ env.PR_BRANCH }}
+         branch: v${{ env.RELEASE_VERSION }}
          token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
+         signoff: true
+         commit-message: Release v${{ env.RELEASE_VERSION }}
+         title: Release v${{ env.RELEASE_VERSION }}
+         body: |
+           **What this PR does / why we need it**:                                         
+           Release v${{ env.RELEASE_VERSION }}                                                                     
+                                                                               
+           ```release-note                                                                 
+           NONE                                                                     
+           ```
