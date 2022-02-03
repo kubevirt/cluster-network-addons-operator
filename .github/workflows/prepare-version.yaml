@@ -45,5 +45,11 @@ jobs:
     - name: Run make to prepare the PR
       run: make prepare-${{ github.event.inputs.versionLevel }}
 
-    - name: Push version PR
-      run: git push origin release-`./hack/version.sh`
+    - name: Set PR branch name
+      run: |
+        echo "PR_BRANCH=release-$(./hack/version.sh)" >> $GITHUB_ENV
+
+    - name: Create version PR
+      uses: peter-evans/create-pull-request@v3
+      with:
+         branch: ${{ env.PR_BRANCH }}
