@@ -57,6 +57,5 @@ jobs:
           --required-author "" \
           --org kubevirt \
           --dependencies=false \
-          --repo cluster-network-addons-operator
-
-
+          --repo cluster-network-addons-operator \
+          --debug true
