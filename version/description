@@ -1,5 +1,14 @@
-0.65.2
+0.65.3
 
-* bump nmstate to v0.64.5 (#1134)
-* dockerfile: Use quay.io instead of docker.io (#1128)
-* Add default linux OS nodeSelector to nmstate handlers (#1124)
+* prepare-release.sh: Don't create commit/branch
+* release: Make relase non interactive
+* Revert "release: Use prefixed_released_version"
+* Merge pull request #1192 from kubevirt-bot/cherry-pick-1189-to-release-0.65
+* release: Use prefixed_released_version
+* knmstate: Reduce the number of e2e tests (#1185)
+* bump nmstate to v0.64.6 (#1183)
+* [release-0.65] cluster: Enable just ovs repo (#1163) (#1165)
+* 0.65, components: Follow knmstate release branch (#1150)
+* 0.65: Mark as static components with main (#1152)
+* 0.65, components: Follow KMP release branch (#1151)
+
