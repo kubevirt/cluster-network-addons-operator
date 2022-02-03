@@ -47,7 +47,7 @@ jobs:
 
     - name: Set PR branch name
       run: |
-        echo "PR_BRANCH=release-$(./hack/version.sh)" >> $GITHUB_ENV
+        echo "PR_BRANCH=release-v$(./hack/version.sh)" >> $GITHUB_ENV
 
     - name: Create version PR
       uses: peter-evans/create-pull-request@v3
