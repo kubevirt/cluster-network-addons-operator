@@ -40,7 +40,7 @@ jobs:
     - name: Store last version and current SHA
       run: |
         echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
-        echo "START_SHA=$(git rev-list -n 1 $(./hack/version.sh))" >> $GITHUB_ENV
+        echo "START_SHA=$(git rev-list -n 1 v$(./hack/version.sh))" >> $GITHUB_ENV
         echo "END_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - uses: actions/setup-go@v2
