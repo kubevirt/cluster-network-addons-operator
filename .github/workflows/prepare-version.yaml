@@ -60,7 +60,7 @@ jobs:
             [${{ github.event.inputs.baseBranch }}] Release v${{ env.RELEASE_VERSION }}
             
             Signed-off-by: GitHub <noreply@github.com>
-         title: "[ ${{ github.event.inputs.baseBranch }} ]Release v${{ env.RELEASE_VERSION }}"
+         title: "[${{ github.event.inputs.baseBranch }}] Release v${{ env.RELEASE_VERSION }}"
          body: |
            **What this PR does / why we need it**:                                         
            Release v${{ env.RELEASE_VERSION }}                                                                     
