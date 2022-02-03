@@ -50,6 +50,7 @@ jobs:
     - name: Dump release-notes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      working-directory: /tmp
       run: |
         go install k8s.io/release/cmd/release-notes@latest
         release-notes \
