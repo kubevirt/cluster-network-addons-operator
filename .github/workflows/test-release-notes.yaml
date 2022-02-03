@@ -40,6 +40,7 @@ jobs:
     - name: Store last version and current SHA
       run: |
         echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
+        echo "LAST_VERSION_SHA=$(git rev-list -n 1 $LAST_VERSION)" >> $GITHUB_ENV
         echo "CURRENT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
     - uses: actions/setup-go@v2
@@ -56,8 +57,7 @@ jobs:
           --org kubevirt \
           --dependencies=false \
           --repo cluster-network-addons-operator \
-          --start-rev ${{ env.LAST_VERSION }} \
-          --end-sha ${{ env.CURRENT_SHA }} \
-          --repo-path .
+          --start-sha ${{ env.LAST_VERSION_SHA }} \
+          --end-sha ${{ env.CURRENT_SHA }}
 
 
