@@ -36,6 +36,10 @@ jobs:
 
     - name: Pull latest of latest branch
       run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
+      
+    - name: Store previous version
+      run: |
+        echo "PREVIOUS_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
 
     - name: Set author and email for version PR
       run: |
@@ -63,7 +67,7 @@ jobs:
           --org kubevirt \
           --dependencies=false \
           --repo cluster-network-addons-operator \
-          --start-rev ${{ env.RELEASE_VERSION }} \
+          --start-rev ${{ env.PREVIOUS_VERSION }} \
           --end-rev HEAD
 
 
