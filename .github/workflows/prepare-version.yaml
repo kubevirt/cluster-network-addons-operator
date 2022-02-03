@@ -53,3 +53,4 @@ jobs:
       uses: peter-evans/create-pull-request@v3
       with:
          branch: ${{ env.PR_BRANCH }}
+         token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
