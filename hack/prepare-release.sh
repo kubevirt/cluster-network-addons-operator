@@ -32,7 +32,3 @@ $released_version
 $commits
 
 EOF
-
-echo 'Commit updates'
-git checkout -b release-$released_version
-git commit -a -s -m "Release $released_version"
