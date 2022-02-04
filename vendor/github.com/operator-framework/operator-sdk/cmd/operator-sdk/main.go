@@ -15,32 +15,17 @@
 package main
 
 import (
-	"os"
-
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that `exec-entrypoint` and `run` can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/operator-framework/operator-sdk/cmd/operator-sdk/cli"
-	kbutil "github.com/operator-framework/operator-sdk/internal/util/kubebuilder"
-
 	log "github.com/sirupsen/logrus"
+
+	"github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/cli"
 )
 
 func main() {
-	// Use the new KB CLI only when running inside an existing Kubebuilder project with a PROJECT file.
-	// The default legacy CLI provides the init cmd to initialize
-	// a Kubebuilder project as a way to opt into the new KB CLI.
-	// TODO: Make the new KB CLI the default, once the integration is complete
-	// and deprecate "operator-sdk new" from the old CLI.
-	if kbutil.HasProjectFile() {
-		if err := cli.Run(); err != nil {
-			log.Fatal(err)
-		}
-		return
-	}
-
-	if err := cli.RunLegacy(); err != nil {
-		os.Exit(1)
+	if err := cli.Run(); err != nil {
+		log.Fatal(err)
 	}
 }

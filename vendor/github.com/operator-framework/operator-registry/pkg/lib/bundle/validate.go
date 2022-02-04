@@ -1,18 +1,15 @@
 package bundle
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 
-	v1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
-	v "github.com/operator-framework/api/pkg/validation"
-	"github.com/operator-framework/operator-registry/pkg/containertools"
-	validation "github.com/operator-framework/operator-registry/pkg/lib/validation"
-	"github.com/operator-framework/operator-registry/pkg/registry"
-
+	y "github.com/ghodss/yaml"
+	log "github.com/sirupsen/logrus"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiValidation "k8s.io/apimachinery/pkg/api/validation"
@@ -22,13 +19,19 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 
-	y "github.com/ghodss/yaml"
-	log "github.com/sirupsen/logrus"
+	"github.com/operator-framework/api/pkg/manifests"
+	v1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
+	v "github.com/operator-framework/api/pkg/validation"
+	"github.com/operator-framework/operator-registry/pkg/image"
+	validation "github.com/operator-framework/operator-registry/pkg/lib/validation"
+	"github.com/operator-framework/operator-registry/pkg/registry"
 )
 
 const (
-	v1CRDapiVersion      = "apiextensions.k8s.io/v1"
-	v1beta1CRDapiVersion = "apiextensions.k8s.io/v1beta1"
+	v1CRDapiVersion          = "apiextensions.k8s.io/v1"
+	v1beta1CRDapiVersion     = "apiextensions.k8s.io/v1beta1"
+	validateOperatorHubKey   = "operatorhub"
+	validateBundleObjectsKey = "bundle-objects"
 )
 
 type Meta struct {
@@ -38,8 +41,9 @@ type Meta struct {
 
 // imageValidator is a struct implementation of the Indexer interface
 type imageValidator struct {
-	imageReader containertools.ImageReader
-	logger      *log.Entry
+	registry image.Registry
+	logger   *log.Entry
+	optional []string
 }
 
 // PullBundleImage shells out to a container tool and pulls a given image tag
@@ -48,7 +52,15 @@ type imageValidator struct {
 func (i imageValidator) PullBundleImage(imageTag, directory string) error {
 	i.logger.Debug("Pulling and unpacking container image")
 
-	return i.imageReader.GetImageData(imageTag, directory)
+	var (
+		ctx = context.TODO()
+		ref = image.SimpleReference(imageTag)
+	)
+	if err := i.registry.Pull(ctx, ref); err != nil {
+		return err
+	}
+
+	return i.registry.Unpack(ctx, ref, directory)
 }
 
 // ValidateBundle takes a directory containing the contents of a bundle and validates
@@ -124,7 +136,7 @@ func (i imageValidator) ValidateBundleFormat(directory string) error {
 		}
 
 		if !dependenciesFound {
-			err = parseDependenciesFile(filepath.Join(metadataDir, f.Name()), dependenciesFile)
+			err = registry.DecodeFile(filepath.Join(metadataDir, f.Name()), &dependenciesFile)
 			if err == nil && len(dependenciesFile.Dependencies) > 0 {
 				dependenciesFound = true
 			}
@@ -134,7 +146,7 @@ func (i imageValidator) ValidateBundleFormat(directory string) error {
 	if !annotationsFound {
 		validationErrors = append(validationErrors, fmt.Errorf("Could not find annotations file"))
 	} else {
-		i.logger.Info("Found annotations file")
+		i.logger.Debug("Found annotations file")
 		errs := validateAnnotations(mediaType, fileAnnotations)
 		if errs != nil {
 			validationErrors = append(validationErrors, errs...)
@@ -142,9 +154,9 @@ func (i imageValidator) ValidateBundleFormat(directory string) error {
 	}
 
 	if !dependenciesFound {
-		i.logger.Info("Could not find optional dependencies file")
+		i.logger.Debug("Could not find optional dependencies file")
 	} else {
-		i.logger.Info("Found dependencies file")
+		i.logger.Debug("Found dependencies file")
 		errs := validateDependencies(dependenciesFile)
 		if errs != nil {
 			validationErrors = append(validationErrors, errs...)
@@ -172,7 +184,7 @@ func validateAnnotations(mediaType string, fileAnnotations *AnnotationMetadata) 
 
 	for label, item := range annotations {
 		val, ok := fileAnnotations.Annotations[label]
-		if !ok {
+		if !ok && label != ChannelDefaultLabel {
 			aErr := fmt.Errorf("Missing annotation %q", label)
 			validationErrors = append(validationErrors, aErr)
 		}
@@ -193,20 +205,19 @@ func validateAnnotations(mediaType string, fileAnnotations *AnnotationMetadata) 
 				aErr := fmt.Errorf("Expecting annotation %q to have value %q instead of %q", label, MetadataDir, val)
 				validationErrors = append(validationErrors, aErr)
 			}
-		case ChannelsLabel, ChannelDefaultLabel:
+		case ChannelsLabel:
 			if val == "" {
 				aErr := fmt.Errorf("Expecting annotation %q to have non-empty value", label)
 				validationErrors = append(validationErrors, aErr)
-			} else {
-				annotations[label] = val
+			}
+		case ChannelDefaultLabel:
+			if ok && val == "" {
+				aErr := fmt.Errorf("Expecting annotation %q to have non-empty value", label)
+				validationErrors = append(validationErrors, aErr)
 			}
 		}
 	}
 
-	_, err := ValidateChannelDefault(annotations[ChannelsLabel], annotations[ChannelDefaultLabel])
-	if err != nil {
-		validationErrors = append(validationErrors, err)
-	}
 	return validationErrors
 }
 
@@ -224,11 +235,13 @@ func validateDependencies(dependenciesFile *registry.DependenciesFile) []error {
 				errs = dp.Validate()
 			case registry.PackageDependency:
 				errs = dp.Validate()
+			case registry.LabelDependency:
+				errs = dp.Validate()
 			default:
-				errs = append(errs, fmt.Errorf("Unsupported dependency type %s", d.GetType()))
+				errs = append(errs, fmt.Errorf("unsupported dependency type %s", d.GetType()))
 			}
 		} else {
-			errs = append(errs, fmt.Errorf("Unsupported dependency type %s", d.GetType()))
+			errs = append(errs, fmt.Errorf("couldn't parse dependency of type %s", d.GetType()))
 		}
 		validationErrors = append(validationErrors, errs...)
 	}
@@ -261,6 +274,7 @@ func (i imageValidator) ValidateBundleContent(manifestDir string) error {
 	}
 
 	var csvName string
+	csv := &v1.ClusterServiceVersion{}
 	unstObjs := []*unstructured.Unstructured{}
 	csvValidator := v.ClusterServiceVersionValidator
 	crdValidator := v.CustomResourceDefinitionValidator
@@ -298,7 +312,6 @@ func (i imageValidator) ValidateBundleContent(manifestDir string) error {
 		}
 
 		if gvk.Kind == CSVKind {
-			csv := &v1.ClusterServiceVersion{}
 			err := runtime.DefaultUnstructuredConverter.FromUnstructured(k8sFile.Object, csv)
 			if err != nil {
 				validationErrors = append(validationErrors, err)
@@ -356,9 +369,35 @@ func (i imageValidator) ValidateBundleContent(manifestDir string) error {
 
 	// Validate the bundle object
 	if len(unstObjs) > 0 {
-		bundle := registry.NewBundle(csvName, "", nil, unstObjs...)
+		bundle := registry.NewBundle(csvName, &registry.Annotations{}, unstObjs...)
 		bundleValidator := validation.BundleValidator
 		results := bundleValidator.Validate(bundle)
+		if len(results) > 0 {
+			for _, err := range results[0].Errors {
+				validationErrors = append(validationErrors, err)
+			}
+		}
+	}
+
+	// Determine if optional validations are enabled
+	optionalValidators := parseOptions(i.optional)
+
+	// Run the operatorhub validation if specified
+	if _, ok := optionalValidators[validateOperatorHubKey]; ok {
+		i.logger.Debug("Performing operatorhub validation")
+		bundle := &manifests.Bundle{Name: csvName, CSV: csv}
+		results := v.OperatorHubValidator.Validate(bundle)
+		if len(results) > 0 {
+			for _, err := range results[0].Errors {
+				validationErrors = append(validationErrors, err)
+			}
+		}
+	}
+
+	// Run the bundle object validation if specified
+	if _, ok := optionalValidators[validateBundleObjectsKey]; ok {
+		i.logger.Debug("Performing bundle objects validation")
+		results := v.ObjectValidator.Validate(unstObjs)
 		if len(results) > 0 {
 			for _, err := range results[0].Errors {
 				validationErrors = append(validationErrors, err)
@@ -369,32 +408,6 @@ func (i imageValidator) ValidateBundleContent(manifestDir string) error {
 	if len(validationErrors) > 0 {
 		return NewValidationError(validationErrors)
 	}
-
-	return nil
-}
-
-func parseDependenciesFile(path string, depFile *registry.DependenciesFile) error {
-	deps := registry.Dependencies{}
-	err := registry.DecodeFile(path, &deps)
-
-	if err != nil || len(deps.RawMessage) == 0 {
-		return fmt.Errorf("Unable to decode the dependencies file %s", path)
-	}
-
-	depList := []registry.Dependency{}
-	for _, v := range deps.RawMessage {
-		jsonStr, _ := json.Marshal(v)
-		dep := registry.Dependency{}
-		err := json.Unmarshal(jsonStr, &dep)
-		if err != nil {
-			return err
-		}
-
-		dep.Value = string(jsonStr)
-		depList = append(depList, dep)
-	}
-
-	depFile.Dependencies = depList
 
 	return nil
 }
@@ -426,4 +439,19 @@ func validateKubectlable(fileBytes []byte) error {
 	}
 
 	return nil
+}
+
+// parseOptions looks at the provided optional validators provided via a command line flag and returns an map
+// example input: ["operatorhub,bundle-objects"]
+// example output: {"operatorhub": {}, "bundle-objects": {}}
+func parseOptions(args []string) map[string]struct{} {
+	validators := make(map[string]struct{})
+	for _, arg := range args {
+		arr := strings.Split(arg, ",")
+		for _, key := range arr {
+			key = strings.TrimSpace(key)
+			validators[key] = struct{}{}
+		}
+	}
+	return validators
 }

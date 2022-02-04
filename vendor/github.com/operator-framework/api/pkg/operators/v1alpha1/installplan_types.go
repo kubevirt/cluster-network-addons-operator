@@ -14,6 +14,7 @@ const (
 )
 
 // Approval is the user approval policy for an InstallPlan.
+// It must be one of "Automatic" or "Manual".
 type Approval string
 
 const (
@@ -93,6 +94,17 @@ type InstallPlanStatus struct {
 	// AttenuatedServiceAccountRef references the service account that is used
 	// to do scoped operator install.
 	AttenuatedServiceAccountRef *corev1.ObjectReference `json:"attenuatedServiceAccountRef,omitempty"`
+
+	// StartTime is the time when the controller began applying
+	// the resources listed in the plan to the cluster.
+	// +optional
+	StartTime *metav1.Time `json:"startTime,omitempty"`
+
+	// Message is a human-readable message containing detailed
+	// information that may be important to understanding why the
+	// plan has its current status.
+	// +optional
+	Message string `json:"message,omitempty"`
 }
 
 // InstallPlanCondition represents the overall status of the execution of
@@ -261,6 +273,9 @@ type BundleLookup struct {
 	// Conditions represents the overall state of a BundleLookup.
 	// +optional
 	Conditions []BundleLookupCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	// The effective properties of the unpacked bundle.
+	// +optional
+	Properties string `json:"properties,omitempty"`
 }
 
 // GetCondition returns the BundleLookupCondition of the given type if it exists in the BundleLookup's Conditions.

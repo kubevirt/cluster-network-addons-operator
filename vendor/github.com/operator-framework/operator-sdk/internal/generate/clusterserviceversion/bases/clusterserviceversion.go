@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 
+	"github.com/operator-framework/operator-sdk/internal/generate/clusterserviceversion/bases/definitions"
 	"github.com/operator-framework/operator-sdk/internal/util/k8sutil"
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
 )
@@ -65,9 +66,14 @@ func (b ClusterServiceVersion) GetBase() (base *v1alpha1.ClusterServiceVersion, 
 		if base, err = readClusterServiceVersionBase(b.BasePath); err != nil {
 			return nil, fmt.Errorf("error reading existing ClusterServiceVersion base %s: %v", b.BasePath, err)
 		}
+		// Auto-migrate bases with names matching "<operator name>.vX.Y.Z", which
+		// may cause problems with the CSV validator.
+		if base.GetName() == b.OperatorName+".vX.Y.Z" {
+			base.SetName(fmt.Sprintf("%s.v%s", b.OperatorName, base.Spec.Version.Version.String()))
+		}
 	} else {
 		b.setDefaults()
-		base = b.makeNewBase()
+		base = b.newBase()
 	}
 
 	// Interactively fill in UI metadata.
@@ -80,13 +86,22 @@ func (b ClusterServiceVersion) GetBase() (base *v1alpha1.ClusterServiceVersion, 
 	if b.APIsDir != "" {
 		switch b.OperatorType {
 		case projutil.OperatorTypeGo:
-			if err := updateDescriptionsForGVKs(base, b.APIsDir, b.GVKs); err != nil {
-				return nil, fmt.Errorf("error generating ClusterServiceVersion base metadata: %w", err)
-			}
+			// Update descriptions from the APIs dir.
+			err = definitions.ApplyDefinitionsForKeysGo(base, b.APIsDir, b.GVKs)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error generating ClusterServiceVersion definitions metadata: %w", err)
 		}
 	}
 
 	return base, nil
+}
+
+// New returns a base with default data with name opertorName.
+func New(operatorName string) *v1alpha1.ClusterServiceVersion {
+	b := ClusterServiceVersion{OperatorName: operatorName}
+	b.setDefaults()
+	return b.newBase()
 }
 
 // setDefaults sets default values in b using b's existing values.
@@ -133,15 +148,15 @@ func (b *ClusterServiceVersion) setDefaults() {
 	}
 }
 
-// makeNewBase returns a base v1alpha1.ClusterServiceVersion to modify.
-func (b ClusterServiceVersion) makeNewBase() *v1alpha1.ClusterServiceVersion {
+// newBase returns a base v1alpha1.ClusterServiceVersion to modify.
+func (b ClusterServiceVersion) newBase() *v1alpha1.ClusterServiceVersion {
 	return &v1alpha1.ClusterServiceVersion{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: v1alpha1.ClusterServiceVersionAPIVersion,
 			Kind:       v1alpha1.ClusterServiceVersionKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      b.OperatorName + ".vX.Y.Z",
+			Name:      b.OperatorName + ".v0.0.0",
 			Namespace: "placeholder",
 			Annotations: map[string]string{
 				"capabilities": b.Capabilities,
@@ -158,8 +173,8 @@ func (b ClusterServiceVersion) makeNewBase() *v1alpha1.ClusterServiceVersion {
 			Keywords:    b.Keywords,
 			Icon:        b.Icon,
 			InstallModes: []v1alpha1.InstallMode{
-				{Type: v1alpha1.InstallModeTypeOwnNamespace, Supported: true},
-				{Type: v1alpha1.InstallModeTypeSingleNamespace, Supported: true},
+				{Type: v1alpha1.InstallModeTypeOwnNamespace, Supported: false},
+				{Type: v1alpha1.InstallModeTypeSingleNamespace, Supported: false},
 				{Type: v1alpha1.InstallModeTypeMultiNamespace, Supported: false},
 				{Type: v1alpha1.InstallModeTypeAllNamespaces, Supported: true},
 			},
@@ -186,7 +201,7 @@ func readClusterServiceVersionBase(path string) (*v1alpha1.ClusterServiceVersion
 		if typeMeta.Kind == v1alpha1.ClusterServiceVersionKind {
 			csv := &v1alpha1.ClusterServiceVersion{}
 			if err := yaml.Unmarshal(manifest, csv); err != nil {
-				return nil, fmt.Errorf("error unmarshalling ClusterServiceVersion from manifest %s: %v", path, err)
+				return nil, fmt.Errorf("error unmarshaling ClusterServiceVersion from manifest %s: %v", path, err)
 			}
 			return csv, nil
 		}

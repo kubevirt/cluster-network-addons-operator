@@ -2,11 +2,15 @@ package internal
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/operator-framework/api/pkg/manifests"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/api/pkg/validation/errors"
 	interfaces "github.com/operator-framework/api/pkg/validation/interfaces"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var BundleValidator interfaces.Validator = interfaces.ValidatorFunc(validateBundles)
@@ -24,43 +28,104 @@ func validateBundles(objs ...interface{}) (results []errors.ManifestResult) {
 func validateBundle(bundle *manifests.Bundle) (result errors.ManifestResult) {
 	result = validateOwnedCRDs(bundle, bundle.CSV)
 	result.Name = bundle.CSV.Spec.Version.String()
+	saErrors := validateServiceAccounts(bundle)
+	if saErrors != nil {
+		result.Add(saErrors...)
+	}
 	return result
+}
+
+func validateServiceAccounts(bundle *manifests.Bundle) []errors.Error {
+	// get service account names defined in the csv
+	saNamesFromCSV := make(map[string]struct{}, 0)
+	for _, deployment := range bundle.CSV.Spec.InstallStrategy.StrategySpec.DeploymentSpecs {
+		saName := deployment.Spec.Template.Spec.ServiceAccountName
+		saNamesFromCSV[saName] = struct{}{}
+	}
+
+	// find any hardcoded service account objects are in the bundle, then check if they match any sa definition in the csv
+	var errs []errors.Error
+	for _, obj := range bundle.Objects {
+		sa := v1.ServiceAccount{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, &sa); err == nil {
+			if _, ok := saNamesFromCSV[sa.Name]; ok {
+				errs = append(errs, errors.ErrInvalidBundle("invalid service account found in bundle. sa name cannot match service account defined for deployment spec in CSV", sa.Name))
+			}
+		}
+	}
+
+	return errs
 }
 
 func validateOwnedCRDs(bundle *manifests.Bundle, csv *operatorsv1alpha1.ClusterServiceVersion) (result errors.ManifestResult) {
-	ownedCrdNames := getOwnedCustomResourceDefintionNames(csv)
-	crdNames, err := getBundleCRDNames(bundle)
-	if err != (errors.Error{}) {
-		result.Add(err)
-		return result
+	ownedKeys := getOwnedCustomResourceDefintionKeys(csv)
+
+	// Check for duplicate keys in the bundle, which may occur if a v1 and v1beta1 CRD of the same GVK appear.
+	keySet := make(map[schema.GroupVersionKind]struct{})
+	for _, key := range getBundleCRDKeys(bundle) {
+		if _, hasKey := keySet[key]; hasKey {
+			result.Add(errors.ErrInvalidBundle(fmt.Sprintf("duplicate CRD %q in bundle %q", key, bundle.Name), key))
+		}
+		// Always add key to keySet so the below validations run correctly.
+		keySet[key] = struct{}{}
 	}
 
-	// validating names
-	for _, crdName := range ownedCrdNames {
-		if _, ok := crdNames[crdName]; !ok {
-			result.Add(errors.ErrInvalidBundle(fmt.Sprintf("owned CRD %q not found in bundle %q", crdName, bundle.Name), crdName))
+	// All owned keys must match a CRD in bundle.
+	ownedGVSet := make(map[schema.GroupKind]struct{})
+	for _, ownedKey := range ownedKeys {
+		if _, ok := keySet[ownedKey]; !ok {
+			result.Add(errors.ErrInvalidBundle(fmt.Sprintf("owned CRD %q not found in bundle %q", ownedKey, bundle.Name), ownedKey))
 		} else {
-			delete(crdNames, crdName)
+			delete(keySet, ownedKey)
+			gvKey := schema.GroupKind{Group: ownedKey.Group, Kind: ownedKey.Kind}
+			ownedGVSet[gvKey] = struct{}{}
 		}
 	}
-	// CRDs not defined in the CSV present in the bundle
-	for crdName := range crdNames {
-		result.Add(errors.WarnInvalidBundle(fmt.Sprintf("owned CRD %q is present in bundle %q but not defined in CSV", crdName, bundle.Name), crdName))
+
+	// Filter out unused versions of the same CRD
+	for key := range keySet {
+		gvKey := schema.GroupKind{Group: key.Group, Kind: key.Kind}
+		if _, ok := ownedGVSet[gvKey]; ok {
+			delete(keySet, key)
+		}
 	}
+
+	// All CRDs present in a CSV must be present in the bundle.
+	for key := range keySet {
+		result.Add(errors.WarnInvalidBundle(fmt.Sprintf("CRD %q is present in bundle %q but not defined in CSV", key, bundle.Name), key))
+	}
+
 	return result
 }
 
-func getOwnedCustomResourceDefintionNames(csv *operatorsv1alpha1.ClusterServiceVersion) (names []string) {
-	for _, ownedCrd := range csv.Spec.CustomResourceDefinitions.Owned {
-		names = append(names, ownedCrd.Name)
+// getBundleCRDKeys returns a list of definition keys for all owned CRDs in csv.
+func getOwnedCustomResourceDefintionKeys(csv *operatorsv1alpha1.ClusterServiceVersion) (keys []schema.GroupVersionKind) {
+	for _, owned := range csv.Spec.CustomResourceDefinitions.Owned {
+		group := owned.Name
+		if split := strings.SplitN(group, ".", 2); len(split) == 2 {
+			group = split[1]
+		}
+		keys = append(keys, schema.GroupVersionKind{Group: group, Version: owned.Version, Kind: owned.Kind})
 	}
-	return names
+	return keys
 }
 
-func getBundleCRDNames(bundle *manifests.Bundle) (map[string]struct{}, errors.Error) {
-	crdNames := map[string]struct{}{}
-	for _, crd := range bundle.V1beta1CRDs {
-		crdNames[crd.GetName()] = struct{}{}
+// getBundleCRDKeys returns a set of definition keys for all CRDs in bundle.
+func getBundleCRDKeys(bundle *manifests.Bundle) (keys []schema.GroupVersionKind) {
+	// Collect all v1 and v1beta1 CRD keys, skipping group which CSVs do not support.
+	for _, crd := range bundle.V1CRDs {
+		for _, version := range crd.Spec.Versions {
+			keys = append(keys, schema.GroupVersionKind{Group: crd.Spec.Group, Version: version.Name, Kind: crd.Spec.Names.Kind})
+		}
 	}
-	return crdNames, errors.Error{}
+	for _, crd := range bundle.V1beta1CRDs {
+		if len(crd.Spec.Versions) == 0 {
+			keys = append(keys, schema.GroupVersionKind{Group: crd.Spec.Group, Version: crd.Spec.Version, Kind: crd.Spec.Names.Kind})
+		} else {
+			for _, version := range crd.Spec.Versions {
+				keys = append(keys, schema.GroupVersionKind{Group: crd.Spec.Group, Version: version.Name, Kind: crd.Spec.Names.Kind})
+			}
+		}
+	}
+	return keys
 }
