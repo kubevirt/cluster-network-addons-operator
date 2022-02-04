@@ -24,11 +24,3 @@ sed -i "s/Version: \"99.0.0\",/Version: \"${released_version}\",/" test/releases
 
 echo 'Bump versions in Makefile'
 sed -i "s/VERSION_REPLACES ?= .*/VERSION_REPLACES ?= ${released_version}/" Makefile
-
-echo 'Prepare release notes'
-cat << EOF > version/description
-$released_version
-
-$commits
-
-EOF
