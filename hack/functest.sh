@@ -19,11 +19,8 @@
 set -ex
 
 source ./cluster/cluster.sh
+export OPERATOR_NAMESPACE=cluster-network-addons
+export KUBECONFIG=$(cluster::kubeconfig)
+export KUBECTL=$CLUSTER_PATH/cluster-up/kubectl.sh
 
-${OPERATOR_SDK} test \
-    local \
-    ./${TEST_SUITE} \
-    --operator-namespace cluster-network-addons \
-    --no-setup \
-    --kubeconfig $(cluster::kubeconfig) \
-    --go-test-flags "${TEST_ARGS}"
+${GINKGO} ./${TEST_SUITE} ../ -- ${TEST_ARGS}

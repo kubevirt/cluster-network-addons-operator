@@ -1,6 +1,7 @@
 package test
 
 import (
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -8,22 +9,13 @@ import (
 
 	ginkgoreporters "kubevirt.io/qe-tools/pkg/ginkgo-reporters"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	f "github.com/operator-framework/operator-sdk/pkg/test"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
-
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
-	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
 	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
-
-func TestMain(m *testing.M) {
-	f.MainEntry(m)
-}
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -37,12 +29,11 @@ func TestE2E(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	By("Adding custom resource scheme to framework")
-	err := framework.AddToFrameworkScheme(apis.AddToScheme, &cnaov1.NetworkAddonsConfigList{})
-	Expect(err).ToNot(HaveOccurred())
 
-	Expect(framework.AddToFrameworkScheme(monitoringv1.AddToScheme, &monitoringv1.ServiceMonitorList{})).To(Succeed())
-	Expect(framework.AddToFrameworkScheme(monitoringv1.AddToScheme, &monitoringv1.PrometheusRuleList{})).To(Succeed())
+	// Change to root directory some test expect that
+	os.Chdir("../../../")
+
+	testenv.Start()
 })
 
 var _ = AfterEach(func() {
