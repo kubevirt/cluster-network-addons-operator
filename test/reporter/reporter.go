@@ -117,7 +117,7 @@ func (r *KubernetesCNAOReporter) logPods(testName string, sinceTime time.Time) e
 }
 
 func (r *KubernetesCNAOReporter) OpenTestLogFile(logType string, testName string, cb func(f io.Writer), extraWriters ...io.Writer) {
-	err := os.MkdirAll(r.artifactsDir, 0644)
+	err := os.MkdirAll(r.artifactsDir, 0755)
 	if err != nil {
 		fmt.Println(err)
 		return

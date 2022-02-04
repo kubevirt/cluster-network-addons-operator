@@ -10,11 +10,9 @@ import (
 	"text/template"
 	"time"
 
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
@@ -27,6 +25,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
@@ -378,11 +377,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				By("Setting a new Annotation to the macvtap daemonSet")
 				err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 					macvtapDaemonSet := &v1.DaemonSet{}
-					err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
+					err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
 					Expect(err).ToNot(HaveOccurred(), "should succeed getting the macvtap daemonSet")
 
 					macvtapDaemonSet.Spec.Template.SetAnnotations(map[string]string{annotationKey: ""})
-					return framework.Global.Client.Update(context.TODO(), macvtapDaemonSet)
+					return testenv.Client.Update(context.TODO(), macvtapDaemonSet)
 				})
 				Expect(err).ToNot(HaveOccurred(), "should succeed setting a new Annotation to the macvtap daemonSet")
 			})
@@ -391,7 +390,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				By("checking that the Annotation eventually removed reconciled out by the CNAO operator")
 				Eventually(func() bool {
 					macvtapDaemonSet := &v1.DaemonSet{}
-					err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
+					err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
 					Expect(err).ToNot(HaveOccurred(), "should succeed getting the macvtap daemonSet")
 
 					deamonSetAnnotations := macvtapDaemonSet.Spec.Template.GetAnnotations()
@@ -430,7 +429,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					By("checking for NMState in nmstate namespace")
 					Eventually(func() error {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
-						return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
+						return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
 					}, 5*time.Minute, time.Second).Should(BeNil(), fmt.Sprintf("Timed out waiting for nmstate-operator daemonset"))
 				})
 			})
@@ -447,7 +446,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					By("checking for NMState in nmstate namespace")
 					Eventually(func() error {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
-						return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
+						return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
 					}, 5*time.Minute, time.Second).Should(BeNil(), "Timed out waiting for nmstate-operator daemonset")
 				})
 			})
@@ -473,7 +472,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					By("checking for NMState in CNAO namespace")
 					cnaoNmstateHandlerNotFound := func() bool {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
-						err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
+						err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
 						return apierrors.IsNotFound(err)
 					}
 					Eventually(func() bool {
@@ -483,7 +482,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					By("checking for NMState in nmstate namespace")
 					nmstateOperatorHandlersReady := func() bool {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
-						err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
+						err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
 						if err != nil {
 							return false
 						}

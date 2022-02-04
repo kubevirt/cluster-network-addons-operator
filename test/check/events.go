@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"time"
 
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	corev1 "k8s.io/api/core/v1"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -17,6 +16,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 )
 
 type EventType string
@@ -119,7 +120,7 @@ func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessF
 		Expect(err).ToNot(HaveOccurred())
 	}
 
-	cli := framework.Global.KubeClient
+	cli := testenv.KubeClient
 
 	f := processFunc
 
@@ -162,7 +163,11 @@ func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessF
 	go func() {
 		defer GinkgoRecover()
 		for obj := range eventWatcher.ResultChan() {
-			if f(obj.Object.(*corev1.Event)) {
+			event, ok := obj.Object.(*corev1.Event)
+			if !ok {
+				continue
+			}
+			if f(event) {
 				close(done)
 				break
 			}
