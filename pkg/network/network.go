@@ -7,14 +7,16 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
 // Canonicalize converts configuration to a canonical form.
@@ -65,6 +67,7 @@ func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client,
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
 	errs = append(errs, cleanUpNMState(conf, ctx, client, clusterInfo)...)
+	errs = append(errs, cleanUpNamespaceLabels(ctx, client)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%v", errorListToMultiLineString(errs))
@@ -245,4 +248,41 @@ func errorListToMultiLineString(errs []error) string {
 		}
 	}
 	return strings.Join(stringErrs, "\n")
+}
+
+// cleanUpNamespaceLabels removes relation labels from the operator namespace
+// It is done in order to support upgrading from versions where the labels were added to
+// to operator namespace
+func cleanUpNamespaceLabels(ctx context.Context, client k8sclient.Client) []error {
+	namespace := &v1.Namespace{}
+	err := client.Get(context.Background(), types.NamespacedName{Name: os.Getenv("OPERATOR_NAMESPACE")}, namespace)
+	if err != nil {
+		return []error{err}
+	}
+
+	labels := namespace.GetLabels()
+	if len(labels) == 0 {
+		return []error{}
+	}
+
+	patch := k8sclient.MergeFrom(namespace.DeepCopy())
+	labelFound := false
+	for _, key := range k8s.RemovedLabels() {
+		if _, exist := labels[key]; exist {
+			delete(labels, key)
+			labelFound = true
+		}
+	}
+
+	if !labelFound {
+		return []error{}
+	}
+
+	namespace.SetLabels(labels)
+	err = client.Patch(ctx, namespace, patch)
+	if err != nil {
+		return []error{err}
+	}
+
+	return []error{}
 }
