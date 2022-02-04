@@ -8,7 +8,7 @@ git push https://github.com/kubevirt/cluster-network-addons-operator $TAG
 $GITHUB_RELEASE release -u kubevirt -r cluster-network-addons-operator \
     --tag $TAG \
     --name $TAG \
-    --description "$(cat $DESCRIPTION)"
+    --description "$(./hack/render-release-notes.sh $(./hack/versions.sh -2) $TAG)"
 
 for resource in "$@" ;do
     $GITHUB_RELEASE upload -u kubevirt -r cluster-network-addons-operator \
