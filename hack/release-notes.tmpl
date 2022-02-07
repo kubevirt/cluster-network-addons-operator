@@ -1,0 +1,39 @@
+{{with .NotesWithActionRequired -}}
+# Urgent Upgrade Notes
+
+{{range .}} {{println "-" .}} {{end}}
+{{end}}
+
+{{- with .Notes -}}
+# Changes
+{{ range .}}
+## {{.Kind | prettyKind}}
+{{range $note := .NoteEntries}}
+ - {{$note}}
+{{- end}}
+{{end}}
+{{- end}}
+
+# Installation
+
+First install the operator itself:
+
+```bash
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/{{ .CurrentRevision }}/namespace.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/{{ .CurrentRevision }}/network-addons-config.crd.yaml
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/{{ .CurrentRevision }}/operator.yaml
+```
+
+Then you need to create a configuration for the operator example CR:
+
+```bash
+kubectl apply -f https://github.com/kubevirt/cluster-network-addons-operator/releases/download/{{ .CurrentRevision }}/network-addons-config-example.cr.yaml
+```
+
+Finally you can wait for the operator to finish deployment:
+
+```bash
+kubectl wait networkaddonsconfig cluster --for condition=Available
+```
+
+{{- /* This removes any extra line at the end. */ -}}

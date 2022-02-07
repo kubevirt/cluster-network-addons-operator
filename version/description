@@ -1,3 +1,0 @@
-0.53.11
-
-* Migrate NMState to use kubernetes-nmstate-operator if available (#1122)
