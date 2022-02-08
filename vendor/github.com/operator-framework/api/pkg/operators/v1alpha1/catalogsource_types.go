@@ -42,6 +42,15 @@ type CatalogSourceSpec struct {
 	// SourceType is the type of source
 	SourceType SourceType `json:"sourceType"`
 
+	// Priority field assigns a weight to the catalog source to prioritize them so that it can be consumed by the dependency resolver.
+	// Usage:
+	// Higher weight indicates that this catalog source is preferred over lower weighted catalog sources during dependency resolution.
+	// The range of the priority value can go from positive to negative in the range of int32.
+	// The default value to a catalog source with unassigned priority would be 0.
+	// The catalog source with the same priority values will be ranked lexicographically based on its name.
+	// +Optional
+	Priority int `json:"priority,omitempty"`
+
 	// ConfigMap is the name of the ConfigMap to be used to back a configmap-server registry.
 	// Only used when SourceType = SourceTypeConfigmap or SourceTypeInternal.
 	// +Optional
@@ -122,6 +131,16 @@ type CatalogSourceStatus struct {
 	ConfigMapResource     *ConfigMapResourceReference `json:"configMapReference,omitempty"`
 	RegistryServiceStatus *RegistryServiceStatus      `json:"registryService,omitempty"`
 	GRPCConnectionState   *GRPCConnectionState        `json:"connectionState,omitempty"`
+
+	// Represents the state of a CatalogSource. Note that Message and Reason represent the original
+	// status information, which may be migrated to be conditions based in the future. Any new features
+	// introduced will use conditions.
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
 }
 
 type ConfigMapResourceReference struct {

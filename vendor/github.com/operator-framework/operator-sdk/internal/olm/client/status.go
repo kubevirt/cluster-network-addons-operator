@@ -15,7 +15,7 @@
 // Package olm provides an API to install, uninstall, and check the
 // status of an Operator Lifecycle Manager installation.
 // TODO: move to OLM repository?
-package olm
+package client
 
 import (
 	"bytes"
@@ -25,7 +25,6 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	log "github.com/sirupsen/logrus"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -33,7 +32,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	apiutilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Status struct {
@@ -49,17 +50,13 @@ type ResourceStatus struct {
 	requestObject runtime.Object // Needed for context on errors from requests on an object.
 }
 
-func (c Client) GetObjectsStatus(ctx context.Context, objs ...runtime.Object) Status {
+func (c Client) GetObjectsStatus(ctx context.Context, objs ...client.Object) Status {
 	var rss []ResourceStatus
 	for _, obj := range objs {
 		gvk := obj.GetObjectKind().GroupVersionKind()
-		a, aerr := meta.Accessor(obj)
-		if aerr != nil {
-			log.Fatalf("Object %s: %v", gvk, aerr)
-		}
 		nn := types.NamespacedName{
-			Namespace: a.GetNamespace(),
-			Name:      a.GetName(),
+			Namespace: obj.GetNamespace(),
+			Name:      obj.GetName(),
 		}
 		rs := ResourceStatus{
 			NamespacedName: nn,
@@ -84,6 +81,7 @@ func (c Client) GetObjectsStatus(ctx context.Context, objs ...runtime.Object) St
 // for Custom Resources, will result in HasInstalledResources returning
 // false and the error.
 func (s Status) HasInstalledResources() (bool, error) {
+	errs := []error{}
 	crdKindSet, err := s.getCRDKindSet()
 	if err != nil {
 		return false, fmt.Errorf("error getting set of CRD kinds in resources: %v", err)
@@ -105,11 +103,11 @@ func (s Status) HasInstalledResources() (bool, error) {
 			// crdKindSet for existence of a resource's kind.
 			nkmerr := &meta.NoKindMatchError{}
 			if !errors.As(r.Error, &nkmerr) || !crdKindSet.Has(r.GVK.Kind) {
-				return false, r.Error
+				errs = append(errs, r.Error)
 			}
 		}
 	}
-	return false, nil
+	return false, apiutilerrors.NewAggregate(errs)
 }
 
 // getCRDKindSet returns the set of all kinds specified by all CRDs in s.

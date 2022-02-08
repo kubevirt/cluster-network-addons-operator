@@ -1,6 +1,7 @@
 package gitignore
 
 import (
+	"bufio"
 	"bytes"
 	"io/ioutil"
 	"os"
@@ -15,7 +16,6 @@ import (
 const (
 	commentPrefix = "#"
 	coreSection   = "core"
-	eol           = "\n"
 	excludesfile  = "excludesfile"
 	gitDir        = ".git"
 	gitignoreFile = ".gitignore"
@@ -29,11 +29,11 @@ func readIgnoreFile(fs billy.Filesystem, path []string, ignoreFile string) (ps [
 	if err == nil {
 		defer f.Close()
 
-		if data, err := ioutil.ReadAll(f); err == nil {
-			for _, s := range strings.Split(string(data), eol) {
-				if !strings.HasPrefix(s, commentPrefix) && len(strings.TrimSpace(s)) > 0 {
-					ps = append(ps, ParsePattern(s, path))
-				}
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			s := scanner.Text()
+			if !strings.HasPrefix(s, commentPrefix) && len(strings.TrimSpace(s)) > 0 {
+				ps = append(ps, ParsePattern(s, path))
 			}
 		}
 	} else if !os.IsNotExist(err) {
@@ -125,7 +125,7 @@ func LoadGlobalPatterns(fs billy.Filesystem) (ps []Pattern, err error) {
 }
 
 // LoadSystemPatterns loads gitignore patterns from from the gitignore file
-// declared in a system's /etc/gitconfig file.  If the ~/.gitconfig file does
+// declared in a system's /etc/gitconfig file.  If the /etc/gitconfig file does
 // not exist the function will return nil.  If the core.excludesfile property
 // is not declared, the function will return nil.  If the file pointed to by
 // the core.excludesfile property does not exist, the function will return nil.

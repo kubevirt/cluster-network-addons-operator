@@ -2,8 +2,6 @@ package bundle
 
 import (
 	"context"
-	"github.com/operator-framework/operator-registry/pkg/image"
-	"github.com/operator-framework/operator-registry/pkg/image/execregistry"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -12,7 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/operator-framework/operator-registry/pkg/containertools"
+	"github.com/operator-framework/operator-registry/pkg/image"
 	"github.com/operator-framework/operator-registry/pkg/image/containerdregistry"
+	"github.com/operator-framework/operator-registry/pkg/image/execregistry"
 )
 
 // BundleExporter exports the manifests of a bundle image into a directory
@@ -22,7 +22,7 @@ type BundleExporter struct {
 	containerTool containertools.ContainerTool
 }
 
-func NewSQLExporterForBundle(image, directory string, containerTool containertools.ContainerTool) *BundleExporter {
+func NewExporterForBundle(image, directory string, containerTool containertools.ContainerTool) *BundleExporter {
 	return &BundleExporter{
 		image:         image,
 		directory:     directory,
@@ -30,7 +30,7 @@ func NewSQLExporterForBundle(image, directory string, containerTool containertoo
 	}
 }
 
-func (i *BundleExporter) Export() error {
+func (i *BundleExporter) Export(skipTLS bool) error {
 
 	log := logrus.WithField("img", i.image)
 
@@ -44,11 +44,11 @@ func (i *BundleExporter) Export() error {
 	var rerr error
 	switch i.containerTool {
 	case containertools.NoneTool:
-		reg, rerr = containerdregistry.NewRegistry(containerdregistry.WithLog(log))
+		reg, rerr = containerdregistry.NewRegistry(containerdregistry.SkipTLS(skipTLS), containerdregistry.WithLog(log), containerdregistry.WithCacheDir(filepath.Join(tmpDir, "cacheDir")))
 	case containertools.PodmanTool:
 		fallthrough
 	case containertools.DockerTool:
-		reg, rerr = execregistry.NewRegistry(i.containerTool, log)
+		reg, rerr = execregistry.NewRegistry(i.containerTool, log, containertools.SkipTLS(skipTLS))
 	}
 	if rerr != nil {
 		return rerr

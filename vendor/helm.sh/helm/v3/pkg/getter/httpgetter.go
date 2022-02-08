@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 
@@ -56,8 +57,24 @@ func (g *HTTPGetter) get(href string) (*bytes.Buffer, error) {
 		req.Header.Set("User-Agent", g.opts.userAgent)
 	}
 
-	if g.opts.username != "" && g.opts.password != "" {
-		req.SetBasicAuth(g.opts.username, g.opts.password)
+	// Before setting the basic auth credentials, make sure the URL associated
+	// with the basic auth is the one being fetched.
+	u1, err := url.Parse(g.opts.url)
+	if err != nil {
+		return buf, errors.Wrap(err, "Unable to parse getter URL")
+	}
+	u2, err := url.Parse(href)
+	if err != nil {
+		return buf, errors.Wrap(err, "Unable to parse URL getting from")
+	}
+
+	// Host on URL (returned from url.Parse) contains the port if present.
+	// This check ensures credentials are not passed between different
+	// services on different ports.
+	if g.opts.passCredentialsAll || (u1.Scheme == u2.Scheme && u1.Host == u2.Host) {
+		if g.opts.username != "" && g.opts.password != "" {
+			req.SetBasicAuth(g.opts.username, g.opts.password)
+		}
 	}
 
 	client, err := g.httpClient()
@@ -90,6 +107,10 @@ func NewHTTPGetter(options ...Option) (Getter, error) {
 }
 
 func (g *HTTPGetter) httpClient() (*http.Client, error) {
+	transport := &http.Transport{
+		DisableCompression: true,
+		Proxy:              http.ProxyFromEnvironment,
+	}
 	if (g.opts.certFile != "" && g.opts.keyFile != "") || g.opts.caFile != "" {
 		tlsConf, err := tlsutil.NewClientTLS(g.opts.certFile, g.opts.keyFile, g.opts.caFile)
 		if err != nil {
@@ -103,28 +124,23 @@ func (g *HTTPGetter) httpClient() (*http.Client, error) {
 		}
 		tlsConf.ServerName = sni
 
-		client := &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: tlsConf,
-				Proxy:           http.ProxyFromEnvironment,
-			},
-		}
-
-		return client, nil
+		transport.TLSClientConfig = tlsConf
 	}
 
 	if g.opts.insecureSkipVerifyTLS {
-		client := &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-				Proxy: http.ProxyFromEnvironment,
-			},
+		if transport.TLSClientConfig == nil {
+			transport.TLSClientConfig = &tls.Config{
+				InsecureSkipVerify: true,
+			}
+		} else {
+			transport.TLSClientConfig.InsecureSkipVerify = true
 		}
-
-		return client, nil
 	}
 
-	return http.DefaultClient, nil
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   g.opts.timeout,
+	}
+
+	return client, nil
 }

@@ -13,9 +13,9 @@ import (
 	. "github.com/onsi/gomega"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -96,7 +96,7 @@ func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement
 	placementList := []cnao.Placement{}
 	for _, daemonSetName := range component.DaemonSets {
 		daemonSet := appsv1.DaemonSet{}
-		err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: daemonSetName, Namespace: components.Namespace}, &daemonSet)
+		err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: daemonSetName, Namespace: components.Namespace}, &daemonSet)
 		if err != nil {
 			return placementList, err
 		}
@@ -114,7 +114,7 @@ func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement
 
 func GetEnvVarsFromDeployment(deploymentName string) ([]corev1.EnvVar, error) {
 	deployment := appsv1.Deployment{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -188,72 +188,72 @@ func CheckNMStateOperatorIsReady(timeout time.Duration) {
 
 func CheckForLeftoverObjects(currentVersion string) {
 	listOptions := client.ListOptions{}
-	key := cnaov1.SchemeGroupVersion.Group + "/version"
+	key := cnaov1.GroupVersion.Group + "/version"
 	labelSelector, err := k8slabels.Parse(fmt.Sprintf("%s,%s != %s", key, key, currentVersion))
 	Expect(err).NotTo(HaveOccurred())
 	listOptions.LabelSelector = labelSelector
 
 	deployments := appsv1.DeploymentList{}
-	err = framework.Global.Client.List(context.Background(), &deployments, &listOptions)
+	err = testenv.Client.List(context.Background(), &deployments, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(deployments.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	daemonSets := appsv1.DaemonSetList{}
-	err = framework.Global.Client.List(context.Background(), &daemonSets, &listOptions)
+	err = testenv.Client.List(context.Background(), &daemonSets, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(daemonSets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	configMaps := corev1.ConfigMapList{}
-	err = framework.Global.Client.List(context.Background(), &configMaps, &listOptions)
+	err = testenv.Client.List(context.Background(), &configMaps, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(configMaps.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	namespaces := corev1.NamespaceList{}
-	err = framework.Global.Client.List(context.Background(), &namespaces, &listOptions)
+	err = testenv.Client.List(context.Background(), &namespaces, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(namespaces.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	clusterRoles := rbacv1.ClusterRoleList{}
-	err = framework.Global.Client.List(context.Background(), &clusterRoles, &listOptions)
+	err = testenv.Client.List(context.Background(), &clusterRoles, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(clusterRoles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	clusterRoleBindings := rbacv1.ClusterRoleList{}
-	err = framework.Global.Client.List(context.Background(), &clusterRoleBindings, &listOptions)
+	err = testenv.Client.List(context.Background(), &clusterRoleBindings, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(clusterRoleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	roles := rbacv1.RoleList{}
-	err = framework.Global.Client.List(context.Background(), &roles, &listOptions)
+	err = testenv.Client.List(context.Background(), &roles, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(roles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	roleBindings := rbacv1.RoleBindingList{}
-	err = framework.Global.Client.List(context.Background(), &roleBindings, &listOptions)
+	err = testenv.Client.List(context.Background(), &roleBindings, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(roleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	serviceAccounts := corev1.ServiceAccountList{}
-	err = framework.Global.Client.List(context.Background(), &serviceAccounts, &listOptions)
+	err = testenv.Client.List(context.Background(), &serviceAccounts, &listOptions)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(serviceAccounts.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	services := corev1.ServiceList{}
-	Expect(framework.Global.Client.List(context.Background(), &services, &listOptions)).To(Succeed())
+	Expect(testenv.Client.List(context.Background(), &services, &listOptions)).To(Succeed())
 	Expect(services.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	serviceMonitors := monitoringv1.ServiceMonitorList{}
-	Expect(framework.Global.Client.List(context.Background(), &serviceMonitors, &listOptions)).To(Succeed())
+	Expect(testenv.Client.List(context.Background(), &serviceMonitors, &listOptions)).To(Succeed())
 	Expect(serviceMonitors.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 	prometheusRules := monitoringv1.PrometheusRuleList{}
-	Expect(framework.Global.Client.List(context.Background(), &prometheusRules, &listOptions)).To(Succeed())
+	Expect(testenv.Client.List(context.Background(), &prometheusRules, &listOptions)).To(Succeed())
 	Expect(prometheusRules.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 }
 
 func CheckForLeftoverLabels() {
 	namespace := corev1.Namespace{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: components.Namespace}, &namespace)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: components.Namespace}, &namespace)
 	Expect(err).NotTo(HaveOccurred())
 
 	labels := namespace.GetLabels()
@@ -394,7 +394,7 @@ func errsToErr(errs []error) error {
 
 func checkForClusterRole(name string) error {
 	clusterRole := rbacv1.ClusterRole{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &clusterRole)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &clusterRole)
 	if err != nil {
 		return err
 	}
@@ -409,7 +409,7 @@ func checkForClusterRole(name string) error {
 
 func checkForClusterRoleBinding(name string) error {
 	clusterRoleBinding := rbacv1.ClusterRoleBinding{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &clusterRoleBinding)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &clusterRoleBinding)
 	if err != nil {
 		return err
 	}
@@ -424,7 +424,7 @@ func checkForClusterRoleBinding(name string) error {
 
 func checkForSecurityContextConstraints(name string) error {
 	scc := securityapi.SecurityContextConstraints{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &scc)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &scc)
 	if isNotSupportedKind(err) {
 		return nil
 	}
@@ -447,7 +447,7 @@ func checkForDeployment(name string, checkVersionLabels, checkRelationshipLabels
 func checkForGenericDeployment(name, namespace string, checkVersionLabels, checkRelationshipLabels bool) error {
 	deployment := appsv1.Deployment{}
 
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &deployment)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &deployment)
 	if err != nil {
 		return err
 	}
@@ -455,7 +455,7 @@ func checkForGenericDeployment(name, namespace string, checkVersionLabels, check
 	if checkVersionLabels {
 		labels := deployment.GetLabels()
 		if labels != nil {
-			if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+			if _, operatorLabelSet := labels[cnaov1.GroupVersion.Group+"/version"]; !operatorLabelSet {
 				return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
 			}
 		} else {
@@ -517,7 +517,7 @@ func CalculateOperatorPodStability() error {
 		client.InNamespace(components.Namespace),
 	}
 
-	err := framework.Global.Client.List(context.Background(), &pods, listOptions...)
+	err := testenv.Client.List(context.Background(), &pods, listOptions...)
 	Expect(err).NotTo(HaveOccurred(), "should succeed getting the cnao pod")
 
 	if len(pods.Items) != 1 {
@@ -535,14 +535,14 @@ func CalculateOperatorPodStability() error {
 func checkForDaemonSet(name string) error {
 	daemonSet := appsv1.DaemonSet{}
 
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &daemonSet)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &daemonSet)
 	if err != nil {
 		return err
 	}
 
 	labels := daemonSet.GetLabels()
 	if labels != nil {
-		if _, operatorLabelSet := labels[cnaov1.SchemeGroupVersion.Group+"/version"]; !operatorLabelSet {
+		if _, operatorLabelSet := labels[cnaov1.GroupVersion.Group+"/version"]; !operatorLabelSet {
 			return fmt.Errorf("DaemonSet %s/%s is missing operator label", components.Namespace, name)
 		}
 	}
@@ -565,7 +565,7 @@ func checkForDaemonSet(name string) error {
 
 func checkForSecret(name string) error {
 	secret := corev1.Secret{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &secret)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &secret)
 	if err != nil {
 		return err
 	}
@@ -580,7 +580,7 @@ func checkForSecret(name string) error {
 
 func checkForMutatingWebhookConfiguration(name string) error {
 	mutatingWebhookConfig := admissionregistrationv1.MutatingWebhookConfiguration{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &mutatingWebhookConfig)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &mutatingWebhookConfig)
 	if err != nil {
 		return err
 	}
@@ -595,7 +595,7 @@ func checkForMutatingWebhookConfiguration(name string) error {
 
 func checkForService(name string) error {
 	service := corev1.Service{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &service)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &service)
 	if err != nil {
 		return err
 	}
@@ -610,7 +610,7 @@ func checkForService(name string) error {
 
 func checkForServiceMonitor(name string) error {
 	serviceMonitor := monitoringv1.ServiceMonitor{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &serviceMonitor)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &serviceMonitor)
 	if err != nil {
 		return err
 	}
@@ -625,7 +625,7 @@ func checkForServiceMonitor(name string) error {
 
 func checkForPrometheusRule(name string) error {
 	prometheusRule := monitoringv1.PrometheusRule{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &prometheusRule)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &prometheusRule)
 	if err != nil {
 		return err
 	}
@@ -655,17 +655,17 @@ func checkRelationshipLabels(labels map[string]string, kind, name string) error 
 }
 
 func checkForClusterRoleRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRole{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRole{})
 	return isNotFound("ClusterRole", name, err)
 }
 
 func checkForClusterRoleBindingRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRoleBinding{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &rbacv1.ClusterRoleBinding{})
 	return isNotFound("ClusterRoleBinding", name, err)
 }
 
 func checkForSecurityContextConstraintsRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &securityapi.SecurityContextConstraints{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &securityapi.SecurityContextConstraints{})
 	if isNotSupportedKind(err) {
 		return nil
 	}
@@ -673,34 +673,34 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 }
 
 func checkForSecretRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
 	return isNotFound("Secret", name, err)
 }
 
 func checkForMutatingWebhookConfigurationRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
 	return isNotFound("MutatingWebhookConfiguration", name, err)
 }
 
 func checkForServiceRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Service{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Service{})
 	return isNotFound("Service", name, err)
 }
 
 func checkForServiceMonitorRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.ServiceMonitor{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.ServiceMonitor{})
 	return isNotFound("ServiceMonitor", name, err)
 }
 
 func checkForPrometheusRuleRemoval(name string) error {
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.PrometheusRule{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.PrometheusRule{})
 	return isNotFound("PrometheusRule", name, err)
 }
 
 func getMonitoringEndpoint() (*corev1.Endpoints, error) {
 	By("Finding CNAO prometheus endpoint")
 	endpoint := &corev1.Endpoints{}
-	err := framework.Global.Client.Get(context.Background(), types.NamespacedName{Name: MonitoringComponent.Service, Namespace: components.Namespace}, endpoint)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: MonitoringComponent.Service, Namespace: components.Namespace}, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -826,7 +826,7 @@ func retrieveRange() (string, string) {
 	configMap := &corev1.ConfigMap{}
 	Eventually(func() error {
 
-		return framework.Global.Client.Get(context.TODO(),
+		return testenv.Client.Get(context.TODO(),
 			types.NamespacedName{Namespace: components.Namespace, Name: names.APPLIED_PREFIX + names.OPERATOR_CONFIG}, configMap)
 
 	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())

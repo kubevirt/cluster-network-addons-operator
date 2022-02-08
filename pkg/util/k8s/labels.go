@@ -49,6 +49,6 @@ func RemovedLabels() []string {
 	labels = append(labels, []string{
 		names.PROMETHEUS_LABEL_KEY,
 		names.KUBEMACPOOL_CONTROL_PLANE_KEY,
-		cnaov1.SchemeGroupVersion.Group + "/version"}...)
+		cnaov1.GroupVersion.Group + "/version"}...)
 	return labels
 }

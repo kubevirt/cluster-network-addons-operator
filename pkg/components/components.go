@@ -137,7 +137,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 			Name:      Name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				cnaov1.SchemeGroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
+				cnaov1.GroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
 			Labels: map[string]string{
 				names.PROMETHEUS_LABEL_KEY: names.PROMETHEUS_LABEL_VALUE,

@@ -1,6 +1,7 @@
 package networkaddonsconfig
 
 import (
+	"context"
 	"log"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -35,7 +36,7 @@ func (r *ReconcilePods) SetResources(resources []types.NamespacedName) {
 
 // Reconcile updates the NetworkAddonsConfig.Status to match the current state of the
 // watched Deployments/DaemonSets
-func (r *ReconcilePods) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcilePods) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	for _, name := range r.resources {
 		if name.Namespace == request.Namespace && name.Name == request.Name {
 			log.Printf("Reconciling update to %s/%s\n", request.Namespace, request.Name)
