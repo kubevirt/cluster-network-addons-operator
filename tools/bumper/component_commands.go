@@ -202,7 +202,7 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 		return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
 	}
 
-	branchCommits, _, err := componentOps.githubInterface.listCommits(owner, repo, &github.CommitsListOptions{SHA: branch})
+	branchCommits, _, err := componentOps.githubInterface.listCommits(owner, repo, &github.CommitsListOptions{ListOptions: github.ListOptions{PerPage: 100}, SHA: branch})
 	if err != nil {
 		return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
 	}
