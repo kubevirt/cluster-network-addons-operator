@@ -25,10 +25,10 @@ components:
     metadata: v0.6.1
   multus:
     url: https://github.com/k8snetworkplumbingwg/multus-cni
-    commit: 4eac660359f223d34bcaf0fddbc42fd542f02ba1
+    commit: efdc0a5c7d1ea4bb236d638403420448b48782b3
     branch: master
     update-policy: tagged
-    metadata: v3.4.2
+    metadata: v3.8
   nmstate:
     url: https://github.com/nmstate/kubernetes-nmstate
     commit: 09067b48a7814f384b2c20fa7a62ada3f5cd3ccf

@@ -64,12 +64,6 @@ spec:
 EOF
 }
 
-function __remove-test-manifests() {
-    echo "Remove test manifests"
-    $KUBECTL delete -f ${TEST_YAML}
-    $KUBECTL delete -f ${CNI_PLUGIN_YAML}
-}
-
 main() {
     # Setup CNAO and artifacts temp directory
     source automation/check-patch.setup.sh
@@ -91,8 +85,6 @@ main() {
 
         echo "Run multus macvlan test"
         ./test-simple-macvlan1.sh
-
-        __remove-test-manifests
     )
 }
 
