@@ -85,6 +85,9 @@ main() {
 
         echo "Run multus macvlan test"
         ./test-simple-macvlan1.sh
+
+        echo "Run multus default route override test"
+        ./test-default-route1.sh
     )
 }
 
