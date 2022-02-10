@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus@sha256:32867c73cda4d605651b898dc85fea67d93191c47f27e1ad9e9f2b9041c518de"
+	MultusImageDefault            = "quay.io/kubevirt/cluster-network-addon-multus@sha256:f7350c519d18b2f0fe3ec7acef556b7c42ccdb482ac929a13eb6e66615911da4"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:a90902cf3e5154424148bf3ba3c1bf90316cc77a54042cf6584fe8aedbe6daec"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:b6e1537149dbfed3969b23ffc5714b148f8bde86fa5f8c28a5cca7f0f2c28b80"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:c193b76bcd4bbff21ae418b5bef5ca19576fd022ee5fc38c3c0b33c5367dd9ec"
