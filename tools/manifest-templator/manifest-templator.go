@@ -244,7 +244,6 @@ func main() {
 	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", components.LinuxBridgeCniImageDefault, "The linux bridge cni image managed by CNA")
 	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
 	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
-	nmStateHandlerImage := flag.String("nm-state-handler-image", components.NMStateHandlerImageDefault, "The nmstate handler image managed by CNA")
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
 	ovsMarkerImage := flag.String("ovs-marker-image", components.OvsMarkerImageDefault, "The ovs marker image managed by CNA")
 	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
@@ -269,7 +268,6 @@ func main() {
 			LinuxBridgeCni:    *linuxBridgeCniImage,
 			LinuxBridgeMarker: *linuxBridgeMarkerImage,
 			KubeMacPool:       *kubeMacPoolImage,
-			NMStateHandler:    *nmStateHandlerImage,
 			OvsCni:            *ovsCniImage,
 			OvsMarker:         *ovsMarkerImage,
 			MacvtapCni:        *macvtapCniImage,

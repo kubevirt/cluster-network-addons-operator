@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -9,9 +10,16 @@ import (
 
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/kubectl/pkg/scheme"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -66,7 +74,6 @@ func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client,
 	ctx := context.TODO()
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
-	errs = append(errs, cleanUpNMState(conf, ctx, client, clusterInfo)...)
 	errs = append(errs, cleanUpNamespaceLabels(ctx, client)...)
 
 	if len(errs) > 0 {
@@ -120,13 +127,6 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 
 	// render kubeMacPool
 	o, err = renderKubeMacPool(conf, manifestDir)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render NMState
-	o, err = renderNMState(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -190,14 +190,6 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 		objsToRemove = append(objsToRemove, o...)
 	}
 
-	if conf.NMState == nil {
-		o, err := renderNMState(prev, manifestDir, clusterInfo)
-		if err != nil {
-			return nil, err
-		}
-		objsToRemove = append(objsToRemove, o...)
-	}
-
 	if conf.Ovs == nil {
 		o, err := renderOvs(prev, manifestDir, clusterInfo)
 		if err != nil {
@@ -235,6 +227,13 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 		}
 	}
 	objsToRemove = objsToRemoveWithoutCRDs
+
+	// Remove old CNAO managed kubernetes-nmstate
+	oldKNMStateObjects, err := cnaoKNMStateObjects(operandNamespace)
+	if err != nil {
+		return nil, err
+	}
+	objsToRemove = append(objsToRemove, oldKNMStateObjects...)
 
 	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemove))
 	return objsToRemove, nil
@@ -285,4 +284,78 @@ func cleanUpNamespaceLabels(ctx context.Context, client k8sclient.Client) []erro
 	}
 
 	return []error{}
+}
+
+func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured, error) {
+	objects := []runtime.Object{
+		&v1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&v1.Service{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
+		},
+		&appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
+		},
+		&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-cert-manager"},
+		},
+		&rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&rbacv1.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{Name: "nmstate-handler"},
+		},
+		&rbacv1.ClusterRoleBinding{
+			ObjectMeta: metav1.ObjectMeta{Name: "nmstate-handler"},
+		},
+		&policyv1.PodDisruptionBudget{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
+		},
+		&admissionregistrationv1.MutatingWebhookConfiguration{
+			ObjectMeta: metav1.ObjectMeta{Name: "nmstate"},
+		},
+	}
+
+	convertedObjects := []*unstructured.Unstructured{}
+	for _, object := range objects {
+		err := addTypeInformationToObject(object)
+		if err != nil {
+			return nil, err
+		}
+		convertedObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(object)
+		if err != nil {
+			return nil, err
+		}
+		convertedObjects = append(convertedObjects, &unstructured.Unstructured{Object: convertedObject})
+	}
+	return convertedObjects, nil
+}
+
+// addTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
+// Related to issue https://github.com/kubernetes/kubernetes/issues/3030
+func addTypeInformationToObject(obj runtime.Object) error {
+	gvks, _, err := scheme.Scheme.ObjectKinds(obj)
+	if err != nil {
+		return fmt.Errorf("missing apiVersion or kind and cannot assign it; %w", err)
+	}
+
+	for _, gvk := range gvks {
+		if len(gvk.Kind) == 0 {
+			continue
+		}
+		if len(gvk.Version) == 0 || gvk.Version == runtime.APIVersionInternal {
+			continue
+		}
+		obj.GetObjectKind().SetGroupVersionKind(gvk)
+		break
+	}
+
+	return nil
 }

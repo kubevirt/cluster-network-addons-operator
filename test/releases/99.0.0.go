@@ -46,24 +46,6 @@ func init() {
 				Image:      "quay.io/kubevirt/kubemacpool@sha256:f940cd3203d2508167401cca6040b075952faa158a09e9b454f1df5ec6b485e1",
 			},
 			{
-				ParentName: "nmstate-handler",
-				ParentKind: "DaemonSet",
-				Name:       "nmstate-handler",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:82a795539b52feb947b1dd17ac035efe47bb6096c1527072f1ae6b1fbf5fa1d2",
-			},
-			{
-				ParentName: "nmstate-webhook",
-				ParentKind: "Deployment",
-				Name:       "nmstate-webhook",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:82a795539b52feb947b1dd17ac035efe47bb6096c1527072f1ae6b1fbf5fa1d2",
-			},
-			{
-				ParentName: "nmstate-cert-manager",
-				ParentKind: "Deployment",
-				Name:       "nmstate-cert-manager",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:82a795539b52feb947b1dd17ac035efe47bb6096c1527072f1ae6b1fbf5fa1d2",
-			},
-			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
@@ -80,7 +62,6 @@ func init() {
 			KubeMacPool: &cnao.KubeMacPool{},
 			LinuxBridge: &cnao.LinuxBridge{},
 			Multus:      &cnao.Multus{},
-			NMState:     &cnao.NMState{},
 			Ovs:         &cnao.Ovs{},
 		},
 		Manifests: []string{
@@ -90,9 +71,6 @@ func init() {
 		CrdCleanUp: []string{
 			"network-attachment-definitions.k8s.cni.cncf.io",
 			"networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io",
-			"nodenetworkconfigurationenactments.nmstate.io",
-			"nodenetworkconfigurationpolicies.nmstate.io",
-			"nodenetworkstates.nmstate.io",
 		},
 	}
 	releases = append(releases, release)

@@ -37,29 +37,6 @@ data:
   RANGE_START: 00:00:00:00:00:04
   RANGE_END: 00:00:00:00:00:05
 ---
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    component: kubernetes-nmstate-handler
-    networkaddonsoperator.network.kubevirt.io/version: 99.0.0
-  name: nmstate-handler
-  namespace: cluster-network-addons
-spec:
-  selector:
-    matchLabels:
-      name: nmstate-handler
-  template:
-    metadata:
-      labels:
-        app: kubernetes-nmstate
-        component: kubernetes-nmstate-handler
-        name: nmstate-handler
-    spec:
-        image: dummy
-        imagePullPolicy: IfNotPresent
-        name: nmstate-handler
----
 apiVersion: v1
 kind: Secret
 metadata:
