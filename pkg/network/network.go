@@ -9,8 +9,12 @@ import (
 
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -66,7 +70,6 @@ func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client,
 	ctx := context.TODO()
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
-	errs = append(errs, cleanUpNMState(conf, ctx, client, clusterInfo)...)
 	errs = append(errs, cleanUpNamespaceLabels(ctx, client)...)
 
 	if len(errs) > 0 {
@@ -120,13 +123,6 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 
 	// render kubeMacPool
 	o, err = renderKubeMacPool(conf, manifestDir)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render NMState
-	o, err = renderNMState(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -190,14 +186,6 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 		objsToRemove = append(objsToRemove, o...)
 	}
 
-	if conf.NMState == nil {
-		o, err := renderNMState(prev, manifestDir, clusterInfo)
-		if err != nil {
-			return nil, err
-		}
-		objsToRemove = append(objsToRemove, o...)
-	}
-
 	if conf.Ovs == nil {
 		o, err := renderOvs(prev, manifestDir, clusterInfo)
 		if err != nil {
@@ -235,6 +223,13 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 		}
 	}
 	objsToRemove = objsToRemoveWithoutCRDs
+
+	// Remove old CNAO managed kubernetes-nmstate
+	oldKNMStateObjects, err := cnaoKNMStateObjects(operandNamespace)
+	if err != nil {
+		return nil, err
+	}
+	objsToRemove = append(objsToRemove, oldKNMStateObjects...)
 
 	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemove))
 	return objsToRemove, nil
@@ -285,4 +280,51 @@ func cleanUpNamespaceLabels(ctx context.Context, client k8sclient.Client) []erro
 	}
 
 	return []error{}
+}
+
+func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured, error) {
+	objects := []runtime.Object{
+		&v1.ServiceAccount{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "ServiceAccount"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&appsv1.DaemonSet{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "apps/v1", Kind: "DaemonSet"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&appsv1.Deployment{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
+		},
+		&appsv1.Deployment{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-cert-manager"},
+		},
+		&rbacv1.Role{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "Role"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&rbacv1.RoleBinding{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "RoleBinding"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
+		},
+		&rbacv1.ClusterRole{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRole"},
+			ObjectMeta: metav1.ObjectMeta{Name: "nmstate-handler"},
+		},
+		&rbacv1.ClusterRoleBinding{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "rbac.authorization.k8s.io/v1", Kind: "ClusterRoleBinding"},
+			ObjectMeta: metav1.ObjectMeta{Name: "nmstate-handler"},
+		},
+	}
+
+	convertedObjects := []*unstructured.Unstructured{}
+	for _, object := range objects {
+		convertedObject, err := runtime.DefaultUnstructuredConverter.ToUnstructured(object)
+		if err != nil {
+			return nil, err
+		}
+		convertedObjects = append(convertedObjects, &unstructured.Unstructured{Object: convertedObject})
+	}
+	return convertedObjects, nil
 }

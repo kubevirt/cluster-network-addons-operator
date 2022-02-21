@@ -50,10 +50,6 @@ var _ = Describe("Testing internal parser", func() {
 				Url:      "https://github.com/k8snetworkplumbingwg/kubemacpool",
 				Commit:   "7728339b6c8dcfc9d53cc18ce8e06a910094ed47",
 				Metadata: "v0.16.0"},
-			"nmstate": {
-				Url:      "https://github.com/nmstate/kubernetes-nmstate",
-				Commit:   "6f41747788235c3363a314dfae46a4ed90e1846a",
-				Metadata: "v0.25.0"},
 			"ovs-cni": {
 				Url:      "https://github.com/k8snetworkplumbingwg/ovs-cni",
 				Commit:   "edb4754d08f49be54c399c938895fe82aab6aa5a",
@@ -83,10 +79,6 @@ components:
     url: "https://github.com/k8snetworkplumbingwg/kubemacpool"
     commit: "7728339b6c8dcfc9d53cc18ce8e06a910094ed47"
     metadata: "v0.16.0"
-  nmstate:
-    url: "https://github.com/nmstate/kubernetes-nmstate"
-    commit: "6f41747788235c3363a314dfae46a4ed90e1846a"
-    metadata: "v0.25.0"
   ovs-cni:
     url: "https://github.com/k8snetworkplumbingwg/ovs-cni"
     commit: "edb4754d08f49be54c399c938895fe82aab6aa5a"

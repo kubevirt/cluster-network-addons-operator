@@ -87,7 +87,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 }
 
 // DeleteObject deletes an object in the apiserver
-func DeleteObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstructured) error {
+func DeleteOwnedObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstructured) error {
 	name := obj.GetName()
 	namespace := obj.GetNamespace()
 	if name == "" {
@@ -110,11 +110,25 @@ func DeleteObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruc
 		return nil
 	}
 
+	if !cnaoOwns(existing) {
+		return nil
+	}
+
 	if err := client.Delete(ctx, existing); err != nil {
 		return errors.Wrapf(err, "could not delete %s", objDesc)
 	}
 
 	return nil
+}
+
+func cnaoOwns(obj *uns.Unstructured) bool {
+	owners := obj.GetOwnerReferences()
+	for _, owner := range owners {
+		if owner.Kind == "NetworkAddonsConfig" {
+			return true
+		}
+	}
+	return false
 }
 
 func isTLSSecret(obj *uns.Unstructured) bool {

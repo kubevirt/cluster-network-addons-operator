@@ -45,7 +45,6 @@ spec:
   kubeMacPool:
    rangeStart: "02:00:00:00:00:00"
    rangeEnd: "02:00:00:00:00:0F"
-  nmstate: {}
   ovs: {}
   macvtap: {}
   imagePullPolicy: Always

@@ -175,17 +175,6 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	}
 }
 
-func CheckNMStateOperatorIsReady(timeout time.Duration) {
-	By("Checking that the operator is up and running")
-	if timeout != CheckImmediately {
-		Eventually(func() error {
-			return checkForGenericDeployment("nmstate-operator", "nmstate", false, false)
-		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
-	} else {
-		Expect(checkForGenericDeployment("nmstate-operator", "nmstate", false, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
-	}
-}
-
 func CheckForLeftoverObjects(currentVersion string) {
 	listOptions := client.ListOptions{}
 	key := cnaov1.GroupVersion.Group + "/version"
@@ -193,62 +182,64 @@ func CheckForLeftoverObjects(currentVersion string) {
 	Expect(err).NotTo(HaveOccurred())
 	listOptions.LabelSelector = labelSelector
 
-	deployments := appsv1.DeploymentList{}
-	err = testenv.Client.List(context.Background(), &deployments, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(deployments.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+	Eventually(func(g Gomega) {
+		deployments := appsv1.DeploymentList{}
+		err = testenv.Client.List(context.Background(), &deployments, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(deployments.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	daemonSets := appsv1.DaemonSetList{}
-	err = testenv.Client.List(context.Background(), &daemonSets, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(daemonSets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		daemonSets := appsv1.DaemonSetList{}
+		err = testenv.Client.List(context.Background(), &daemonSets, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(daemonSets.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	configMaps := corev1.ConfigMapList{}
-	err = testenv.Client.List(context.Background(), &configMaps, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(configMaps.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		configMaps := corev1.ConfigMapList{}
+		err = testenv.Client.List(context.Background(), &configMaps, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(configMaps.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	namespaces := corev1.NamespaceList{}
-	err = testenv.Client.List(context.Background(), &namespaces, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(namespaces.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		namespaces := corev1.NamespaceList{}
+		err = testenv.Client.List(context.Background(), &namespaces, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(namespaces.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	clusterRoles := rbacv1.ClusterRoleList{}
-	err = testenv.Client.List(context.Background(), &clusterRoles, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(clusterRoles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		clusterRoles := rbacv1.ClusterRoleList{}
+		err = testenv.Client.List(context.Background(), &clusterRoles, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(clusterRoles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	clusterRoleBindings := rbacv1.ClusterRoleList{}
-	err = testenv.Client.List(context.Background(), &clusterRoleBindings, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(clusterRoleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		clusterRoleBindings := rbacv1.ClusterRoleList{}
+		err = testenv.Client.List(context.Background(), &clusterRoleBindings, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(clusterRoleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	roles := rbacv1.RoleList{}
-	err = testenv.Client.List(context.Background(), &roles, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(roles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		roles := rbacv1.RoleList{}
+		err = testenv.Client.List(context.Background(), &roles, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(roles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	roleBindings := rbacv1.RoleBindingList{}
-	err = testenv.Client.List(context.Background(), &roleBindings, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(roleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		roleBindings := rbacv1.RoleBindingList{}
+		err = testenv.Client.List(context.Background(), &roleBindings, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(roleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	serviceAccounts := corev1.ServiceAccountList{}
-	err = testenv.Client.List(context.Background(), &serviceAccounts, &listOptions)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(serviceAccounts.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		serviceAccounts := corev1.ServiceAccountList{}
+		err = testenv.Client.List(context.Background(), &serviceAccounts, &listOptions)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(serviceAccounts.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	services := corev1.ServiceList{}
-	Expect(testenv.Client.List(context.Background(), &services, &listOptions)).To(Succeed())
-	Expect(services.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		services := corev1.ServiceList{}
+		Expect(testenv.Client.List(context.Background(), &services, &listOptions)).To(Succeed())
+		Expect(services.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	serviceMonitors := monitoringv1.ServiceMonitorList{}
-	Expect(testenv.Client.List(context.Background(), &serviceMonitors, &listOptions)).To(Succeed())
-	Expect(serviceMonitors.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		serviceMonitors := monitoringv1.ServiceMonitorList{}
+		Expect(testenv.Client.List(context.Background(), &serviceMonitors, &listOptions)).To(Succeed())
+		Expect(serviceMonitors.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-	prometheusRules := monitoringv1.PrometheusRuleList{}
-	Expect(testenv.Client.List(context.Background(), &prometheusRules, &listOptions)).To(Succeed())
-	Expect(prometheusRules.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+		prometheusRules := monitoringv1.PrometheusRuleList{}
+		Expect(testenv.Client.List(context.Background(), &prometheusRules, &listOptions)).To(Succeed())
+		Expect(prometheusRules.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+	}, time.Minute, time.Second).Should(Succeed())
 }
 
 func CheckForLeftoverLabels() {
@@ -441,10 +432,10 @@ func checkForSecurityContextConstraints(name string) error {
 }
 
 func checkForDeployment(name string, checkVersionLabels, checkRelationshipLabels bool) error {
-	return checkForGenericDeployment(name, components.Namespace, checkVersionLabels, checkRelationshipLabels)
+	return CheckForGenericDeployment(name, components.Namespace, checkVersionLabels, checkRelationshipLabels)
 }
 
-func checkForGenericDeployment(name, namespace string, checkVersionLabels, checkRelationshipLabels bool) error {
+func CheckForGenericDeployment(name, namespace string, checkVersionLabels, checkRelationshipLabels bool) error {
 	deployment := appsv1.Deployment{}
 
 	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: namespace}, &deployment)
