@@ -45,6 +45,26 @@ function __prepare-test-environment() {
     sed -i 's/kind-worker$/node01/g' ${TEST_YAML}
     sed -i 's/kind-worker2$/node02/g' ${TEST_YAML}
 
+    echo "Deplopy kubernetes-nmstate"
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/nmstate.io_nmstates.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/namespace.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/service_account.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/role.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/role_binding.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/operator.yaml
+
+    cat <<EOF | $KUBECTL apply -f -
+apiVersion: nmstate.io/v1
+kind: NMState
+metadata:
+  name: nmstate
+EOF
+
+    sleep 30
+
+    $KUBECTL rollout status -w -n nmstate ds nmstate-handler
+    $KUBECTL rollout status -w -n nmstate deployment nmstate-webhook
+
     echo "Set eth1 NIC to up using NodeNetworkConfigurationPolicy"
     cat <<EOF | $KUBECTL apply -f -
 apiVersion: nmstate.io/v1beta1
