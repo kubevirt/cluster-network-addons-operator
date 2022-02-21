@@ -202,16 +202,6 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 		return reconcile.Result{}, nil
 	}
 
-	// Check for NMState Operator
-	nmstateOperator, err := isRunningKubernetesNMStateOperator(r.client)
-	if err != nil {
-		return reconcile.Result{}, errors.Wrap(err, "failed to check whether running Kubernetes NMState Operator")
-	}
-	if nmstateOperator {
-		log.Printf("Kubernetes NMState Operator is running")
-	}
-	r.clusterInfo.NmstateOperator = nmstateOperator
-
 	if r.clusterInfo.OpenShift4 {
 		isSingleReplica, err := isOpenshiftSingleReplica(r.client)
 		if err != nil {
@@ -222,7 +212,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 
 	// Fetch the NetworkAddonsConfig instance
 	networkAddonsConfigStorageVersion := &cnaov1.NetworkAddonsConfig{}
-	err = r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
+	err := r.client.Get(context.TODO(), request.NamespacedName, networkAddonsConfigStorageVersion)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -304,7 +294,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	r.trackDeployedObjects(objs, networkAddonsConfig.GetGeneration())
 
 	// Delete generated objsToRemove on Kubernetes API server
-	err = r.deleteObjects(objsToRemove)
+	err = r.deleteOwnedObjects(objsToRemove)
 	if err != nil {
 		// If failed, set NetworkAddonsConfig to failing and requeue
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToDeleteObjects", err.Error())
@@ -453,9 +443,9 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 }
 
 // Delete removed objects
-func (r *ReconcileNetworkAddonsConfig) deleteObjects(objs []*unstructured.Unstructured) error {
+func (r *ReconcileNetworkAddonsConfig) deleteOwnedObjects(objs []*unstructured.Unstructured) error {
 	for _, obj := range objs {
-		if err := apply.DeleteObject(context.TODO(), r.client, obj); err != nil {
+		if err := apply.DeleteOwnedObject(context.TODO(), r.client, obj); err != nil {
 			log.Printf("could not delete (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 			err = errors.Wrapf(err, "could not delete (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 			return err
@@ -641,21 +631,6 @@ func IsMonitoringAvailable(c kubernetes.Interface) (bool, error) {
 
 	log.Printf("will not deploy monitoring manifests: not all monitoring resources are available: %s: %v, %s, %v", monitoringv1.PrometheusRuleKind, prometheusRuleResourceAvailable, monitoringv1.ServiceMonitorsKind, serviceMonitorResourceAvailable)
 	return false, nil
-}
-
-func isRunningKubernetesNMStateOperator(c k8sclient.Client) (bool, error) {
-	deployments := &appsv1.DeploymentList{}
-	err := c.List(context.TODO(), deployments, k8sclient.MatchingLabels{"app": "kubernetes-nmstate-operator"})
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	if len(deployments.Items) == 0 {
-		return false, nil
-	}
-	return true, nil
 }
 
 func isResourceAvailable(kubeClient kubernetes.Interface, name string, group string, version string) (bool, error) {

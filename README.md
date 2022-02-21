@@ -16,7 +16,6 @@ spec:
   multus: {}
   linuxBridge: {}
   kubeMacPool: {}
-  nmstate: {}
   ovs: {}
   macvtap: {}
   imagePullPolicy: Always
@@ -92,40 +91,6 @@ spec:
   kubeMacPool:
    rangeStart: "02:00:00:00:00:00"
    rangeEnd: "FD:FF:FF:FF:FF:FF"
-```
-
-## NMState
-
-**Note:** This feature is **experimental**. NMState is unstable and its API
-may change.
-
-The operator allows the administrator to deploy the [NMState State
-Controller](https://github.com/nmstate/nmstate) as a daemonset across all of
-one's nodes. This project manages host networking settings in a declarative
-manner. The networking state is described by a pre-defined schema. Reporting of
-current state and changes to it (desired state) both conform to the schema.
-NMState is aimed to satisfy enterprise needs to manage host networking through a
-northbound declarative API and multi provider support on the southbound.
-NetworkManager acts as the main (and currently the only) provider supported.
-
-This component can be enabled by adding `nmstate` section to the
-`NetworkAddonsConfig`.
-
-```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1
-kind: NetworkAddonsConfig
-metadata:
-  name: cluster
-spec:
-  nmstate: {}
-```
-
-It communicate with a NetworkManager instance running on the node using D-Bus.
-Make sure that NetworkManager is installed and running on each node.
-
-```shell
-yum install NetworkManager
-systemctl start NetworkManager
 ```
 
 ## Open vSwitch
@@ -204,7 +169,7 @@ them fails at validation. They have to conform to golang time.Duration
 string format. Additionally the following checks are done at validation:
 - caRotateInterval >= caOverlapInterval && caRotateInterval >= certRotateInterval && certRotateInterval >= certOverlapInterval
 
-This parameters are consumed by Kubemacpool and Kubernetes-nmstate components.
+This parameters are consumed by Kubemacpool component.
 
 ## Placement Configuration
 
