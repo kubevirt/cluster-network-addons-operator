@@ -50,7 +50,7 @@ spec:
         - alert: KubemacpoolDown
           annotations:
             summary: KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down.
-            runbook_url: http://kubevirt.io/monitoring/runbooks/KubemacpoolDown
+            runbook_url: http://kubevirt.io/monitoring/runbooks/KubeMacPoolDown
           expr: kubevirt_cnao_cr_kubemacpool_deployed_total == 1 and kubevirt_cnao_kubemacpool_manager_num_up_pods_total == 0
           for: 5m
           labels:

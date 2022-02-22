@@ -118,7 +118,7 @@ tests:
         exp_alerts:
           - exp_annotations:
               summary: "KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down."
-              runbook_url: "http://kubevirt.io/monitoring/runbooks/KubemacpoolDown"
+              runbook_url: "http://kubevirt.io/monitoring/runbooks/KubeMacPoolDown"
             exp_labels:
               severity: "critical"
               kubernetes_operator_part_of: "kubevirt"
