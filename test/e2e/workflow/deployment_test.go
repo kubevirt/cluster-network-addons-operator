@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
@@ -412,19 +413,19 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				NMState: &cnao.NMState{},
 			}
 		})
-		JustBeforeEach(func() {
-			// Install nmstate-operator here
-			installNMStateOperator()
-			CheckNMStateOperatorIsReady(5 * time.Minute)
+		Context("with nmstate-operator installed", func() {
+			JustBeforeEach(func() {
+				// Install nmstate-operator here
+				installNMStateOperator()
+				CheckNMStateOperatorIsReady(5 * time.Minute)
 
-			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-		})
-		JustAfterEach(func() {
-			uninstallNMStateOperator()
-		})
-		Context("when it is already deployed", func() {
-			Context("and the nmstate-operator is installed", func() {
+				CreateConfig(gvk, configSpec)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			})
+			JustAfterEach(func() {
+				uninstallNMStateOperator()
+			})
+			Context("when it is already deployed", func() {
 				It("should run nmstate from the operator", func() {
 					By("checking for NMState in nmstate namespace")
 					Eventually(func() error {
@@ -433,12 +434,10 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					}, 5*time.Minute, time.Second).Should(BeNil(), fmt.Sprintf("Timed out waiting for nmstate-operator daemonset"))
 				})
 			})
-		})
-		Context("when it is not already deployed", func() {
-			BeforeEach(func() {
-				configSpec = cnao.NetworkAddonsConfigSpec{}
-			})
-			Context("and the nmstate-operator is installed", func() {
+			Context("when it is not already deployed", func() {
+				BeforeEach(func() {
+					configSpec = cnao.NetworkAddonsConfigSpec{}
+				})
 				It("should run nmstate from the operator", func() {
 					configSpec = cnao.NetworkAddonsConfigSpec{
 						NMState: &cnao.NMState{},
@@ -449,7 +448,51 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					Eventually(func() error {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
 						return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
-					}, 5*time.Minute, time.Second).Should(BeNil(), fmt.Sprintf("Timed out waiting for nmstate-operator daemonset"))
+					}, 5*time.Minute, time.Second).Should(BeNil(), "Timed out waiting for nmstate-operator daemonset")
+				})
+			})
+		})
+		Context("without nmstate-operator pre-installed", func() {
+			BeforeEach(func() {
+				By("Deploying Nmstate")
+				config := cnao.NetworkAddonsConfigSpec{NMState: &cnao.NMState{}}
+				CreateConfig(gvk, config)
+			})
+			It("should deploy nmstate via CNAO", func() {
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			})
+			Context("when nmstate-operator is then installed", func() {
+				BeforeEach(func() {
+					installNMStateOperator()
+					CheckNMStateOperatorIsReady(5 * time.Minute)
+				})
+				AfterEach(func() {
+					uninstallNMStateOperator()
+				})
+				It("should switch nmstate from CNAO deployment to nmstate-operator deployment", func() {
+					By("checking for NMState in CNAO namespace")
+					cnaoNmstateHandlerNotFound := func() bool {
+						nmstateHandlerDaemonSet := &v1.DaemonSet{}
+						err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
+						return apierrors.IsNotFound(err)
+					}
+					Eventually(func() bool {
+						return cnaoNmstateHandlerNotFound()
+					}, 5*time.Minute, time.Second).Should(BeTrue(), "Timed out waiting for CNAO nmstate deployment to be removed")
+
+					By("checking for NMState in nmstate namespace")
+					nmstateOperatorHandlersReady := func() bool {
+						nmstateHandlerDaemonSet := &v1.DaemonSet{}
+						err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
+						if err != nil {
+							return false
+						}
+						return nmstateHandlerDaemonSet.Status.DesiredNumberScheduled == nmstateHandlerDaemonSet.Status.NumberReady
+					}
+					Eventually(func() bool {
+						return nmstateOperatorHandlersReady()
+					}, 5*time.Minute, time.Second).Should(BeTrue(), "Timed out waiting for nmstate-operator daemonset")
+					CheckNMStateOperatorIsReady(5 * time.Minute)
 				})
 			})
 		})
