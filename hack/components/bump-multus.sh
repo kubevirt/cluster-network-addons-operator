@@ -34,6 +34,7 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.cpu '"10m"'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.memory '"15Mi"'
 				yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].lifecycle.preStop.exec.command '["/bin/sh", "-c", "rm -f /host/etc/cni/net.d/00-multus.conf"]'
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
 				yaml-utils::remove_single_quotes_from_yaml ${f}

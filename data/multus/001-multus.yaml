@@ -135,6 +135,10 @@ spec:
             - name: cnibin
               mountPath: /host/opt/cni/bin
           imagePullPolicy: {{ .ImagePullPolicy }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -f /host/etc/cni/net.d/00-multus.conf"]
       terminationGracePeriodSeconds: 10
       volumes:
         - name: cni
