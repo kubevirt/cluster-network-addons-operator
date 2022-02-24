@@ -2,6 +2,7 @@ package releases
 
 import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "kube-rbac-proxy",
-				Image:      "quay.io/openshift/origin-kube-rbac-proxy:4.10.0",
+				Image:      components.KubeRbacProxyImageDefault,
 			},
 			{
 				ParentName: "kubemacpool-cert-manager",

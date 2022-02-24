@@ -248,6 +248,7 @@ func main() {
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
 	ovsMarkerImage := flag.String("ovs-marker-image", components.OvsMarkerImageDefault, "The ovs marker image managed by CNA")
 	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
+	kubeRbacProxyImage := flag.String("kube-rbac-proxy-image", components.KubeRbacProxyImageDefault, "The kube rbac proxy used by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -272,6 +273,7 @@ func main() {
 			OvsCni:            *ovsCniImage,
 			OvsMarker:         *ovsMarkerImage,
 			MacvtapCni:        *macvtapCniImage,
+			KubeRbacProxy:     *kubeRbacProxyImage,
 		}).FillDefaults(),
 	}
 

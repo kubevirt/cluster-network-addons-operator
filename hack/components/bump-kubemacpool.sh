@@ -50,6 +50,9 @@ spec:
       - image: "{{ .KubeMacPoolImage }}"
         imagePullPolicy: "{{ .ImagePullPolicy }}"
         name: manager
+      - image: "{{ .KubeRbacProxyImage }}"
+        imagePullPolicy: "{{ .ImagePullPolicy }}"
+        name: kube-rbac-proxy
 EOF
 
     cat <<EOF > config/cnao/cnao_cert-manager_patch.yaml

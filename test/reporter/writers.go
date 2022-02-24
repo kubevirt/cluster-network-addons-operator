@@ -27,20 +27,23 @@ func writePodsLogs(writer io.Writer, namespace string, sinceTime time.Time) {
 	podsClientset := testenv.KubeClient.CoreV1().Pods(namespace)
 
 	for _, pod := range podList.Items {
-		req := podsClientset.GetLogs(pod.Name, &podLogOpts)
-		podLogs, err := req.Stream(context.TODO())
-		if err != nil {
-			io.WriteString(GinkgoWriter, fmt.Sprintf("error in opening stream: %v\n", err))
-			continue
+		for _, container := range pod.Spec.Containers {
+			podLogOpts.Container = container.Name
+			req := podsClientset.GetLogs(pod.Name, &podLogOpts)
+			podLogs, err := req.Stream(context.TODO())
+			if err != nil {
+				io.WriteString(GinkgoWriter, fmt.Sprintf("error in opening stream: %v\n", err))
+				continue
+			}
+			defer podLogs.Close()
+			rawLogs, err := ioutil.ReadAll(podLogs)
+			if err != nil {
+				io.WriteString(GinkgoWriter, fmt.Sprintf("error reading CNAO logs: %v\n", err))
+				continue
+			}
+			formattedLogs := strings.Replace(string(rawLogs), "\\n", "\n", -1)
+			io.WriteString(writer, formattedLogs)
 		}
-		defer podLogs.Close()
-		rawLogs, err := ioutil.ReadAll(podLogs)
-		if err != nil {
-			io.WriteString(GinkgoWriter, fmt.Sprintf("error reading CNAO logs: %v\n", err))
-			continue
-		}
-		formattedLogs := strings.Replace(string(rawLogs), "\\n", "\n", -1)
-		io.WriteString(writer, formattedLogs)
 	}
 }
 

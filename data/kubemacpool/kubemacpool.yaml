@@ -391,8 +391,8 @@ spec:
         - --logtostderr
         - --secure-listen-address=:8443
         - --upstream=http://127.0.0.1:8080
-        image: quay.io/openshift/origin-kube-rbac-proxy:4.10.0
-        imagePullPolicy: IfNotPresent
+        image: '{{ .KubeRbacProxyImage }}'
+        imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
