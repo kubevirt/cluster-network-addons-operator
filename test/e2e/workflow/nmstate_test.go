@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo"
@@ -22,7 +23,10 @@ import (
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
+	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
 )
+
+const podsDeploymentTimeout = 20 * time.Minute
 
 var _ = Describe("NMState", func() {
 	nmstateVersion := "v0.67.0"
@@ -50,6 +54,55 @@ var _ = Describe("NMState", func() {
 		})
 		AfterEach(func() {
 			uninstallStandaloneNMState(nmstateVersion)
+		})
+	})
+
+	// old CNAO refers to a version that supports nmstate deployment without the knmstate operator, which is 0.67.0
+	Context("When old CNAO is installed with nmstate deployed", func() {
+		latestCnaoReleaseWithNmstateSupport := func() Release {
+			releases := Releases()
+			for _, release := range releases {
+				if release.Version == "0.67.0" {
+					return release
+				}
+			}
+			return Release{}
+		}
+		BeforeEach(func() {
+			newRelease := LatestRelease()
+			oldRelease := latestCnaoReleaseWithNmstateSupport()
+			Expect(oldRelease).NotTo(Equal(Release{}))
+
+			UninstallRelease(newRelease)
+			oldReleaseGvk := GetCnaoV1alpha1GroupVersionKind()
+			InstallRelease(oldRelease)
+			CheckOperatorIsReady(podsDeploymentTimeout)
+			CreateConfig(oldReleaseGvk, oldRelease.SupportedSpec)
+			CheckConfigCondition(oldReleaseGvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckReleaseUsesExpectedContainerImages(oldReleaseGvk, oldRelease)
+			expectedOperatorVersion := oldRelease.Version
+			expectedObservedVersion := oldRelease.Version
+			expectedTargetVersion := oldRelease.Version
+			CheckConfigVersions(oldReleaseGvk, expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, CheckImmediately, CheckDoNotRepeat)
+		})
+		Context("and then upgraded to a new version, that doesn't support nmstate deployment without knmstate operator", func() {
+			BeforeEach(func() {
+				newRelease := LatestRelease()
+				InstallRelease(newRelease)
+			})
+			It("should remove nmstate deployment", func() {
+				By("checking NMState is remobved in CNAO namespace")
+				Eventually(func(g Gomega) {
+					nmstateHandlerDaemonSet := &v1.DaemonSet{}
+					err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "nmstate-handler", Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
+					g.Expect(apierrors.IsNotFound(err)).To(BeTrue())
+				}, 5*time.Minute, time.Second).Should(Succeed(), "Timed out waiting for CNAO nmstate deployment to be removed")
+				Consistently(func(g Gomega) {
+					nmstateHandlerDaemonSet := &v1.DaemonSet{}
+					err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "nmstate-handler", Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
+					g.Expect(apierrors.IsNotFound(err)).To(BeTrue())
+				}, 10*time.Second, time.Second)
+			})
 		})
 	})
 })
