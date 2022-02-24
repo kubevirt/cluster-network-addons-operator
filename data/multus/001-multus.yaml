@@ -23,6 +23,19 @@ spec:
             networks. More information available at: https://github.com/k8snetworkplumbingwg/multi-net-spec'
           type: object
           properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this represen
+                tation of an object. Servers should convert recognized schemas to the
+                latest internal value, and may reject unrecognized values. More info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+                object represents. Servers may infer this from the endpoint the client
+                submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
             spec:
               description: 'NetworkAttachmentDefinition spec defines the desired state of a network attachment'
               type: object
@@ -101,7 +114,6 @@ spec:
         name: kube-multus-ds-amd64
     spec:
       hostNetwork: true
-      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       serviceAccountName: multus
       containers:
@@ -123,6 +135,11 @@ spec:
             - name: cnibin
               mountPath: /host/opt/cni/bin
           imagePullPolicy: {{ .ImagePullPolicy }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -f /host/etc/cni/net.d/00-multus.conf"]
+      terminationGracePeriodSeconds: 10
       volumes:
         - name: cni
           hostPath:
@@ -131,6 +148,7 @@ spec:
           hostPath:
             path: {{ .CNIBinDir }}
       priorityClassName: system-cluster-critical
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 {{ if .EnableSCC }}
 ---

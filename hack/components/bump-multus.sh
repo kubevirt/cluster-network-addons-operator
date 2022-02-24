@@ -18,7 +18,7 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
-			./DaemonSet_kube-multus-ds-amd64.yaml)
+			./DaemonSet_kube-multus-ds.yaml)
 				yaml-utils::update_param ${f} metadata.name 'multus'
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
 				yaml-utils::update_param ${f} spec.selector.matchLabels.name 'kube-multus-ds-amd64'
@@ -33,7 +33,8 @@ function __parametize_by_object() {
 				yaml-utils::delete_param ${f} spec.template.spec.containers[0].resources.limits
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.cpu '"10m"'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.memory '"15Mi"'
-				yaml-utils::update_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].lifecycle.preStop.exec.command '["/bin/sh", "-c", "rm -f /host/etc/cni/net.d/00-multus.conf"]'
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
 				yaml-utils::remove_single_quotes_from_yaml ${f}
@@ -101,7 +102,7 @@ EOF
 		cat ClusterRole_multus.yaml >> ${YAML_FILE} &&
 		cat ClusterRoleBinding_multus.yaml >> ${YAML_FILE} &&
 		cat ServiceAccount_multus.yaml >> ${YAML_FILE} &&
-		cat DaemonSet_kube-multus-ds-amd64.yaml >> ${YAML_FILE} &&
+		cat DaemonSet_kube-multus-ds.yaml >> ${YAML_FILE} &&
 		cat SecurityContextConstraints_multus.yaml >> ${YAML_FILE}
 )
 
@@ -110,43 +111,15 @@ rm -rf data/multus/*
 cp ${MULTUS_PATH}/config/cnao/000-ns.yaml data/multus/
 cp ${MULTUS_PATH}/config/cnao/001-multus.yaml data/multus/
 
-echo 'Build multus image, push it to quay.io and update it under CNAO'
+echo 'Get multus image name'
 MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
-MULTUS_IMAGE=quay.io/kubevirt/cluster-network-addon-multus
+MULTUS_IMAGE=ghcr.io/k8snetworkplumbingwg/multus-cni
 MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}
-(
-    cd ${MULTUS_PATH}
-    cat <<EOF > Dockerfile
-
-FROM openshift/origin-release:golang-1.15 as builder
-
-ADD . /usr/src/multus-cni
-
-WORKDIR /usr/src/multus-cni
-RUN ./build
-
-FROM registry.access.redhat.com/ubi8/ubi-minimal
-RUN mkdir -p /usr/src/multus-cni/images && mkdir -p /usr/src/multus-cni/bin
-COPY --from=builder /usr/src/multus-cni/bin/multus /usr/src/multus-cni/bin
-ADD ./images/entrypoint.sh /
-
-ENTRYPOINT ["/entrypoint.sh"]
-EOF
-    docker build -t ${MULTUS_IMAGE_TAGGED} .
-)
-
-if [ ! -z ${PUSH_IMAGES} ]; then
-    echo 'Push the image to KubeVirt repo'
-    docker push "${MULTUS_IMAGE_TAGGED}"
-fi
-
 if [[ -n "$(docker-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
     MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
 else
     MULTUS_IMAGE_DIGEST=${MULTUS_IMAGE_TAGGED}
 fi
-
-
 
 echo 'Update multus references under CNAO'
 sed -i -r "s#\"${MULTUS_IMAGE}(@sha256)?:.*\"#\"${MULTUS_IMAGE_DIGEST}\"#" pkg/components/components.go
