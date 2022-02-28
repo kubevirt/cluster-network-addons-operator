@@ -296,6 +296,10 @@ func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured,
 			TypeMeta:   metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
 			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
 		},
+		&v1.Service{
+			TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
+		},
 		&appsv1.Deployment{
 			TypeMeta:   metav1.TypeMeta{APIVersion: "apps/v1", Kind: "Deployment"},
 			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-cert-manager"},
