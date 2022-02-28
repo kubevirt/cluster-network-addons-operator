@@ -36,7 +36,8 @@ E2E_TEST_EXTRA_ARGS ?=
 E2E_TEST_ARGS ?= $(strip -test.v -test.timeout $(E2E_TEST_TIMEOUT) -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
 E2E_SUITES = \
 	test/e2e/lifecycle \
-	test/e2e/workflow
+	test/e2e/workflow \
+	test/e2e/monitoring
 
 BIN_DIR = $(CURDIR)/build/_output/bin/
 export GOROOT=$(BIN_DIR)/go/

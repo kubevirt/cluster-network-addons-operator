@@ -20,6 +20,8 @@ SCRIPTS_PATH="$(dirname "$(realpath "$0")")"
 source ${SCRIPTS_PATH}/cluster.sh
 
 export KUBEVIRT_DEPLOY_PROMETHEUS=true
+export KUBEVIRT_DEPLOY_PROMETHEUS_ALERTMANAGER=true
+export KUBEVIRT_DEPLOY_GRAFANA=true
 
 cluster::install
 
