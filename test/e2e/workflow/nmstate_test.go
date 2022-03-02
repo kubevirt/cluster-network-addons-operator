@@ -12,6 +12,9 @@ import (
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo"
@@ -52,15 +55,61 @@ var _ = Describe("NMState", func() {
 			uninstallStandaloneNMState(nmstateVersion)
 		})
 	})
+	Context("with nmstate-operator installed", func() {
+		configSpec := cnao.NetworkAddonsConfigSpec{}
+		JustBeforeEach(func() {
+			// Install nmstate-operator here
+			installNMStateOperator(nmstateVersion)
+			checkNmstateOperatorIsReady(5 * time.Minute)
+
+			CreateConfig(gvk, configSpec)
+			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+		})
+		JustAfterEach(func() {
+			uninstallStandaloneNMState(nmstateVersion)
+		})
+		Context("when knmstate is not already deployed", func() {
+			getNmstateGroupVersionResource := func() schema.GroupVersionResource {
+				return schema.GroupVersionResource{
+					Group:    "nmstate.io",
+					Version:  "v1",
+					Resource: "nmstates",
+				}
+			}
+			BeforeEach(func() {
+				configSpec = cnao.NetworkAddonsConfigSpec{}
+			})
+			It("should deploy nmstate by creating nmstate custom resource", func() {
+				configSpec = cnao.NetworkAddonsConfigSpec{
+					NMState: &cnao.NMState{},
+				}
+				UpdateConfig(gvk, configSpec)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+				By("checking for NMState in nmstate namespace")
+				Eventually(func() error {
+					nmstateHandlerDaemonSet := &v1.DaemonSet{}
+					return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "nmstate-handler", Namespace: "nmstate"}, nmstateHandlerDaemonSet)
+				}, 5*time.Minute, time.Second).Should(BeNil(), "Timed out waiting for nmstate-operator daemonset")
+
+				By("Checking Nmstate CR is present and not owned by CNAO")
+				nmstateCR, err := nmstateCustomResource(getNmstateGroupVersionResource())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(nmstateCR.GetOwnerReferences()).To(BeEmpty())
+			})
+		})
+	})
 })
 
 func installStandaloneNMState(version string) {
-	By("Installing standalone kubernetes-nmstate")
+	installNMStateOperator(version)
+	result, stderr, err := kubectl.Kubectl("apply", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/examples/nmstate.io_v1_nmstate_cr.yaml", version))
+	Expect(err).ToNot(HaveOccurred(), "Error applying CR: %s", result+stderr)
+}
 
+func installNMStateOperator(version string) {
+	By("Installing standalone kubernetes-nmstate")
 	result, stderr, err := kubectl.Kubectl("apply", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", version))
 	Expect(err).ToNot(HaveOccurred(), "Error applying CRD: %s", result+stderr)
-	result, stderr, err = kubectl.Kubectl("apply", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/examples/nmstate.io_v1_nmstate_cr.yaml", version))
-	Expect(err).ToNot(HaveOccurred(), "Error applying CR: %s", result+stderr)
 
 	// Create temp directory
 	tmpdir, err := ioutil.TempDir("", "operator-test")
@@ -95,6 +144,10 @@ func uninstallStandaloneNMState(version string) {
 	}
 	result, stderr, err := kubectl.Kubectl("delete", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", version))
 	Expect(err).ToNot(HaveOccurred(), "Error deleting CRD: %s", result+stderr)
+}
+
+func nmstateCustomResource(gvr schema.GroupVersionResource) (*unstructured.Unstructured, error) {
+	return testenv.DynamicClient.Resource(gvr).Get(context.TODO(), "nmstate", metav1.GetOptions{})
 }
 
 func parseManifest(url string, tag string) (string, error) {
@@ -134,8 +187,19 @@ func parseManifest(url string, tag string) (string, error) {
 	return out.String(), nil
 }
 
+func checkNmstateOperatorIsReady(timeout time.Duration) {
+	By("Checking that the Nmstate operator is up and running")
+	if timeout != CheckImmediately {
+		Eventually(func() error {
+			return CheckForGenericDeployment("nmstate-operator", "nmstate", false, false)
+		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the nmstate-operator to become ready"))
+	} else {
+		Expect(CheckForGenericDeployment("nmstate-operator", "nmstate", false, false)).ShouldNot(HaveOccurred(), "nmstate-operator is not ready")
+	}
+}
+
 func checkStandaloneNMStateIsReady(timeout time.Duration) {
-	By("Checking that the operator is up and running")
+	By("Checking that standalone Nmstate is up and running")
 	if timeout != CheckImmediately {
 		Eventually(func() error {
 			return CheckForGenericDeployment("nmstate-webhook", "nmstate", false, false)

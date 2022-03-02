@@ -5,6 +5,7 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -16,10 +17,11 @@ import (
 )
 
 var (
-	cfg        *rest.Config
-	Client     client.Client         // You'll be using this client in your tests.
-	KubeClient *kubernetes.Clientset // You'll be using this client in your tests.
-	testEnv    *envtest.Environment
+	cfg           *rest.Config
+	Client        client.Client         // You'll be using this client in your tests.
+	KubeClient    *kubernetes.Clientset // You'll be using this client in your tests.
+	testEnv       *envtest.Environment
+	DynamicClient dynamic.Interface
 )
 
 func Start() {
@@ -47,5 +49,8 @@ func Start() {
 	ExpectWithOffset(1, Client).ToNot(BeNil())
 
 	KubeClient, err = kubernetes.NewForConfig(cfg)
+	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+
+	DynamicClient, err = dynamic.NewForConfig(cfg)
 	ExpectWithOffset(1, err).ToNot(HaveOccurred())
 }
