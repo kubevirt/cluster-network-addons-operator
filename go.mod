@@ -45,6 +45,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/component-base v0.21.9 // indirect
 	k8s.io/helm v2.16.10+incompatible
+	k8s.io/kubectl v0.21.9
 	k8s.io/utils v0.0.0-20210802155522-efc7438f0176 // indirect
 	kubevirt.io/qe-tools v0.1.6
 	sigs.k8s.io/controller-runtime v0.9.7
@@ -216,7 +217,6 @@ require (
 	k8s.io/cli-runtime v0.21.9 // indirect
 	k8s.io/klog/v2 v2.9.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211110012726-3cc51fd1e909 // indirect
-	k8s.io/kubectl v0.21.9 // indirect
 	k8s.io/kubernetes v1.13.0 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27 // indirect

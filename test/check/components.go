@@ -48,20 +48,6 @@ var (
 		SecurityContextConstraints: "multus",
 		DaemonSets:                 []string{"multus"},
 	}
-	NMStateComponent = Component{
-		ComponentName:              "NMState",
-		ClusterRoleBinding:         "nmstate-handler",
-		ClusterRole:                "nmstate-handler",
-		SecurityContextConstraints: "nmstate",
-		DaemonSets: []string{
-			"nmstate-handler",
-		},
-		Deployments: []string{
-			"nmstate-webhook",
-			"nmstate-cert-manager",
-		},
-		MutatingWebhookConfiguration: "nmstate",
-	}
 	OvsComponent = Component{
 		ComponentName:              "Ovs",
 		ClusterRole:                "ovs-cni-marker-cr",
@@ -90,7 +76,6 @@ var (
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
 		MultusComponent,
-		NMStateComponent,
 		OvsComponent,
 		MacvtapComponent,
 		MonitoringComponent,

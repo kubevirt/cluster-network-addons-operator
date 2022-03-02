@@ -26,7 +26,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					LinuxBridge: &cnao.LinuxBridge{},
 					Multus:      &cnao.Multus{},
 					Ovs:         &cnao.Ovs{},
-					NMState:     &cnao.NMState{},
 					MacvtapCni:  &cnao.MacvtapCni{},
 				}
 				CreateConfig(gvk, configSpec)
@@ -43,7 +42,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		BeforeEach(func() {
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				LinuxBridge: &cnao.LinuxBridge{},
-				NMState:     &cnao.NMState{},
 			}
 			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 2*time.Minute, CheckDoNotRepeat)

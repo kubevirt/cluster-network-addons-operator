@@ -31,7 +31,6 @@ const (
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:5d9442c26f8750d44f97175f36dbd74bef503f782b9adefcfd08215d065c437a"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:9d90a5bd051d71429b6d9fc34112081fe64c6d3fb02221e18ebe72d428d58092"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:f940cd3203d2508167401cca6040b075952faa158a09e9b454f1df5ec6b485e1"
-	NMStateHandlerImageDefault    = "quay.io/nmstate/kubernetes-nmstate-handler@sha256:82a795539b52feb947b1dd17ac035efe47bb6096c1527072f1ae6b1fbf5fa1d2"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:cf669ca4967cd26c6629efa93b7426c8e1c65fa17d5ce59deaab1237a854d81b"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@sha256:c09f882c64ee6449e13ff8b0a249d1dc4653d7d94a97f5ebee61de2d3ce9d5e8"
 	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:bfaf7b1c4840e27cce20887ba3e8c24f94ff1c36f09acaa8fa195ea431b9bfd1"
@@ -43,7 +42,6 @@ type AddonsImages struct {
 	LinuxBridgeCni    string
 	LinuxBridgeMarker string
 	KubeMacPool       string
-	NMStateHandler    string
 	OvsCni            string
 	OvsMarker         string
 	MacvtapCni        string
@@ -84,9 +82,6 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.KubeMacPool == "" {
 		ai.KubeMacPool = KubeMacPoolImageDefault
 	}
-	if ai.NMStateHandler == "" {
-		ai.NMStateHandler = NMStateHandlerImageDefault
-	}
 	if ai.OvsCni == "" {
 		ai.OvsCni = OvsCniImageDefault
 	}
@@ -108,7 +103,6 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.LinuxBridgeCni,
 		ai.LinuxBridgeMarker,
 		ai.KubeMacPool,
-		ai.NMStateHandler,
 		ai.OvsCni,
 		ai.OvsMarker,
 		ai.MacvtapCni,
@@ -197,10 +191,6 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "LINUX_BRIDGE_MARKER_IMAGE",
 									Value: addonsImages.LinuxBridgeMarker,
-								},
-								{
-									Name:  "NMSTATE_HANDLER_IMAGE",
-									Value: addonsImages.NMStateHandler,
 								},
 								{
 									Name:  "OVS_CNI_IMAGE",
@@ -767,10 +757,6 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes",
 							Type:        "object",
 						},
-						"nmstate": extv1.JSONSchemaProps{
-							Description: "NMState is a declarative node network configuration driven through Kubernetes API",
-							Type:        "object",
-						},
 						"ovs": extv1.JSONSchemaProps{
 							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
 							Type:        "object",
@@ -952,7 +938,6 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 			Multus:          &cnao.Multus{},
 			LinuxBridge:     &cnao.LinuxBridge{},
 			KubeMacPool:     &cnao.KubeMacPool{},
-			NMState:         &cnao.NMState{},
 			Ovs:             &cnao.Ovs{},
 			MacvtapCni:      &cnao.MacvtapCni{},
 			ImagePullPolicy: corev1.PullIfNotPresent,
