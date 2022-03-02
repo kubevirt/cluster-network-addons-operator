@@ -57,3 +57,4 @@ cp $NMSTATE_PATH/deploy/examples/nmstate.io_*_nmstate_cr.yaml data/nmstate/opera
 
 echo 'Apply custom CNAO patches on kubernetes-nmstate manifests'
 sed -i -z 's#kind: Secret\nmetadata:#kind: Secret\nmetadata:\n  annotations:\n    networkaddonsoperator.network.kubevirt.io\/rejectOwner: ""#' data/nmstate/operand/operator.yaml
+sed -i -z 's#metadata:\n#metadata:\n  annotations:\n    networkaddonsoperator.network.kubevirt.io\/rejectOwner: ""\n#' data/nmstate/operator/nmstate.io_*_nmstate_cr.yaml
