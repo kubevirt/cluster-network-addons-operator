@@ -294,6 +294,9 @@ func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured,
 		&v1.Service{
 			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-webhook"},
 		},
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-config"},
+		},
 		&appsv1.DaemonSet{
 			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
 		},
