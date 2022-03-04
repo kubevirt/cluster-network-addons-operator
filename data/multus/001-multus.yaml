@@ -134,11 +134,13 @@ spec:
               mountPath: /host/etc/cni/net.d
             - name: cnibin
               mountPath: /host/opt/cni/bin
+            - name: cnicache
+              mountPath: /host/var/lib/cni
           imagePullPolicy: {{ .ImagePullPolicy }}
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "-c", "rm -f /host/etc/cni/net.d/00-multus.conf"]
+                command: ["/bin/sh", "-c", "rm -rf /host/etc/cni/net.d/00-multus.conf /host/var/lib/cni/*"]
       terminationGracePeriodSeconds: 10
       volumes:
         - name: cni
@@ -147,6 +149,9 @@ spec:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
+        - name: cnicache
+          hostPath:
+            path: /var/lib/cni
       priorityClassName: system-cluster-critical
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
