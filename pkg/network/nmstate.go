@@ -35,7 +35,6 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["HandlerNamespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["HandlerImage"] = os.Getenv("NMSTATE_HANDLER_IMAGE")
 	data.Data["HandlerPullPolicy"] = confWithDefaults.ImagePullPolicy
-	data.Data["HandlerNodeSelector"] = map[string]string{}
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 	data.Data["CARotateInterval"] = confWithDefaults.SelfSignConfiguration.CARotateInterval
 	data.Data["CAOverlapInterval"] = confWithDefaults.SelfSignConfiguration.CAOverlapInterval
@@ -44,6 +43,12 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["PlacementConfiguration"] = confWithDefaults.PlacementConfiguration
 	data.Data["WebhookReplicas"] = getNumberOfWebhookReplicas(clusterInfo)
 	data.Data["WebhookMinReplicas"] = getMinNumberOfWebhookReplicas(clusterInfo)
+	data.Data["HandlerNodeSelector"] = confWithDefaults.PlacementConfiguration.Workloads.NodeSelector
+	data.Data["HandlerTolerations"] = confWithDefaults.PlacementConfiguration.Workloads.Tolerations
+	data.Data["HandlerAffinity"] = confWithDefaults.PlacementConfiguration.Workloads.Affinity
+	data.Data["InfraNodeSelector"] = confWithDefaults.PlacementConfiguration.Infra.NodeSelector
+	data.Data["InfraTolerations"] = confWithDefaults.PlacementConfiguration.Infra.Tolerations
+	data.Data["InfraAffinity"] = confWithDefaults.PlacementConfiguration.Infra.Affinity
 
 	_, enableOVS := os.LookupEnv("NMSTATE_ENABLE_OVS")
 	data.Data["EnableOVS"] = enableOVS
