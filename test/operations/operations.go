@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"gopkg.in/yaml.v2"
+	appsv1 "k8s.io/api/apps/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -153,4 +154,18 @@ func configSpecToYaml(configSpec cnao.NetworkAddonsConfigSpec) string {
 
 	// Note that it is empty otherwise
 	return "Empty Spec"
+}
+
+func ScaleDeployment(deploymentName, deploymentNamespace string, replicas int32) {
+	Eventually(func() error {
+		var deployment appsv1.Deployment
+		var err error
+		err = testenv.Client.Get(context.TODO(), types.NamespacedName{Name: deploymentName, Namespace: deploymentNamespace}, &deployment)
+		if err != nil {
+			return err
+		}
+
+		deployment.Spec.Replicas = &replicas
+		return testenv.Client.Update(context.TODO(), &deployment)
+	}, 60*time.Second, 1*time.Second).Should(BeNil())
 }
