@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -262,7 +263,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								},
 								{
 									Name:  "MONITORING_NAMESPACE",
-									Value: "openshift-monitoring",
+									Value: getMonitoringNamespace(),
 								},
 								{
 									Name:  "MONITORING_SERVICE_ACCOUNT",
@@ -932,6 +933,14 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 			ImagePullPolicy: corev1.PullIfNotPresent,
 		},
 	}
+}
+
+func getMonitoringNamespace() string {
+	namespace := os.Getenv("MONITORING_NAMESPACE")
+	if namespace == "" {
+		return "openshift-monitoring"
+	}
+	return namespace
 }
 
 func int32Ptr(i int32) *int32 {
