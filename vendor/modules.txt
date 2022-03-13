@@ -689,7 +689,7 @@ github.com/opencontainers/go-digest
 ## explicit
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v0.1.1 => github.com/opencontainers/runc v1.0.0-rc95
+# github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb => github.com/opencontainers/runc v1.0.0-rc95
 ## explicit; go 1.13
 github.com/opencontainers/runc/libcontainer/user
 # github.com/openshift/api v0.0.0-20210208192252-670ac3fc997c
@@ -1661,8 +1661,8 @@ k8s.io/kubectl/pkg/util/slice
 k8s.io/kubectl/pkg/util/templates
 k8s.io/kubectl/pkg/util/term
 k8s.io/kubectl/pkg/validation
-# k8s.io/kubernetes v1.13.0
-## explicit
+# k8s.io/kubernetes v1.13.0 => k8s.io/kubernetes v1.19.15
+## explicit; go 1.15
 k8s.io/kubernetes/pkg/apis/core
 # k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b
 ## explicit; go 1.12
@@ -1917,6 +1917,7 @@ sigs.k8s.io/yaml
 # k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.23.1
 # k8s.io/kubectl => k8s.io/kubectl v0.23.1
 # k8s.io/kubelet => k8s.io/kubelet v0.23.1
+# k8s.io/kubernetes => k8s.io/kubernetes v1.19.15
 # k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.23.1
 # k8s.io/metrics => k8s.io/metrics v0.23.1
 # k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.23.1

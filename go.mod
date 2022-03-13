@@ -167,7 +167,7 @@ require (
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
-	github.com/opencontainers/runc v0.1.1 // indirect
+	github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb // indirect
 	github.com/operator-framework/api v0.10.5 // indirect
 	github.com/operator-framework/java-operator-plugins v0.0.0-20210708174638-463fb91f3d5e // indirect
 	github.com/operator-framework/operator-registry v1.17.4 // indirect
@@ -264,6 +264,7 @@ replace (
 	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.23.1
 	k8s.io/kubectl => k8s.io/kubectl v0.23.1
 	k8s.io/kubelet => k8s.io/kubelet v0.23.1
+	k8s.io/kubernetes => k8s.io/kubernetes v1.19.15
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.23.1
 	k8s.io/metrics => k8s.io/metrics v0.23.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.23.1
