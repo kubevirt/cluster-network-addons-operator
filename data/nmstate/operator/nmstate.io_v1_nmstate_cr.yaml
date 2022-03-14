@@ -4,3 +4,10 @@ metadata:
   annotations:
     networkaddonsoperator.network.kubevirt.io/rejectOwner: ""
   name: nmstate
+spec:
+  nodeSelector: {{ toYaml .HandlerNodeSelector | nindent 4 }}
+  handlerTolerations: {{ toYaml .HandlerTolerations | nindent 4 }}
+  affinity: {{ toYaml .HandlerAffinity | nindent 4 }}
+  infraNodeSelector: {{ toYaml .InfraNodeSelector | nindent 4 }}
+  infraTolerations: {{ toYaml .InfraTolerations | nindent 4 }}
+  infraAffinity: {{ toYaml .InfraAffinity | nindent 4 }}
