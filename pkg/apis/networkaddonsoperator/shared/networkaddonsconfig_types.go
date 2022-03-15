@@ -17,6 +17,7 @@ type NetworkAddonsConfigSpec struct {
 	MacvtapCni             *MacvtapCni             `json:"macvtap,omitempty"`
 	SelfSignConfiguration  *SelfSignConfiguration  `json:"selfSignConfiguration,omitempty"`
 	PlacementConfiguration *PlacementConfiguration `json:"placementConfiguration,omitempty"`
+	Test                   *string                 `json:"test,omitempty"`
 }
 
 // SelfSignConfiguration defines self sign configuration
