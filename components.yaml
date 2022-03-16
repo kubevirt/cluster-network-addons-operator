@@ -14,7 +14,7 @@ components:
   linux-bridge:
     url: https://github.com/containernetworking/plugins
     commit: 74a6b28a2c2796a2638ba61a85bb620640bfeb31
-    branch: master
+    branch: main
     update-policy: static
     metadata: ""
   macvtap-cni:
