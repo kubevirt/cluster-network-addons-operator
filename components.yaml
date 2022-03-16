@@ -8,7 +8,7 @@ components:
   linux-bridge:
     url: "https://github.com/containernetworking/plugins"
     commit: "9b8de6a613657df14a3a5958642872fa9855d570"
-    branch: "master"
+    branch: "main"
     update-policy: "static"
     metadata: "v0.8.7"
   bridge-marker:
