@@ -97,7 +97,6 @@ func DeleteOwnedObject(ctx context.Context, client k8sclient.Client, obj *uns.Un
 	gvk := obj.GroupVersionKind()
 	// used for logging and errors
 	objDesc := fmt.Sprintf("(%s) %s/%s", gvk.String(), namespace, name)
-	log.Printf("Handling deletion of %s", objDesc)
 
 	// Get existing
 	existing := &uns.Unstructured{}
@@ -113,7 +112,7 @@ func DeleteOwnedObject(ctx context.Context, client k8sclient.Client, obj *uns.Un
 	if !cnaoOwns(existing) {
 		return nil
 	}
-
+	log.Printf("Handling deletion of %s", objDesc)
 	if err := client.Delete(ctx, existing); err != nil {
 		return errors.Wrapf(err, "could not delete %s", objDesc)
 	}
