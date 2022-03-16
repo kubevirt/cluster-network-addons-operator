@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 
+	ocpv1 "github.com/openshift/api/config/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -585,6 +586,39 @@ func GetCrd() *extv1.CustomResourceDefinition {
 		}
 	}
 
+	cipherSuites := func() []extv1.JSON {
+		suites := []extv1.JSON{}
+		for _, p := range ocpv1.TLSProfiles {
+			for _, c := range p.Ciphers {
+				suites = append(suites, extv1.JSON{Raw: []byte(fmt.Sprintf("\"%s\"", c))})
+			}
+		}
+		return suites
+	}
+
+	customSecurityProfileProps := map[string]extv1.JSONSchemaProps{
+		"ciphers": extv1.JSONSchemaProps{
+			Description: "ciphers is used to specify the cipher algorithms that are negotiated during the TLS handshake.  Operators may remove entries their operands do not support.  For example, to use DES-CBC3-SHA  (yaml): \n   ciphers:     - DES-CBC3-SHA",
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Type: "string",
+					Enum: cipherSuites(),
+				},
+			},
+			Type: "array",
+		},
+		"minTLSVersion": extv1.JSONSchemaProps{
+			Description: "minTLSVersion is used to specify the minimal version of the TLS protocol that is negotiated during the TLS handshake. For example, to use TLS versions 1.1, 1.2 and 1.3 (yaml): \n   minTLSVersion: TLSv1.1 \n NOTE: currently the highest minTLSVersion allowed is VersionTLS12",
+			Type:        "string",
+			Enum: []extv1.JSON{
+				{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.VersionTLS10))},
+				{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.VersionTLS11))},
+				{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.VersionTLS12))},
+				{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.VersionTLS13))},
+			},
+		},
+	}
+
 	placementProps := map[string]extv1.JSONSchemaProps{
 		"nodeSelector": extv1.JSONSchemaProps{
 			AdditionalProperties: &extv1.JSONSchemaPropsOrBool{
@@ -796,6 +830,44 @@ func GetCrd() *extv1.CustomResourceDefinition {
 								"workloads": extv1.JSONSchemaProps{
 									Type:       "object",
 									Properties: placementProps,
+								},
+							},
+						},
+						"tlsSecurityProfile": extv1.JSONSchemaProps{
+							Description: "TLSSecurityProfile defines the schema for a TLS security profile. This object is used by operators to apply TLS security settings to operands.",
+							Type:        "object",
+							Nullable:    true,
+							Properties: map[string]extv1.JSONSchemaProps{
+								"custom": extv1.JSONSchemaProps{
+									Description: "custom is a user-defined TLS security profile. Be extremely careful using a custom profile as invalid configurations can be catastrophic. An example custom profile looks like this: ciphers: ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE-RSA-CHACHA20-POLY1305,ECDHE-RSA-AES128-GCM-SHA256,ECDHE-ECDSA-AES128-GCM-SHA256 minTLSVersion: TLSv1.1",
+									Nullable:    true,
+									Properties:  customSecurityProfileProps,
+									Type:        "object",
+								},
+								"intermediate": extv1.JSONSchemaProps{
+									Description: "intermediate is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29 and looks like this (yaml): \n   ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,ECDHE-ECDSA-AES128-GCM-SHA256     - ECDHE-RSA-AE,SHA256,ECDHE-ECDSA-AES256-GCM-SHA384,ECDHE-RSA-AE,SHA384,ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE,POLY1305,DHE-RSA-AES128-GCM-SHA256,DHE-RSA-AES256-GCM-SHA384 minTLSVersion: TLSv1.2",
+									Nullable:    true,
+									Type:        "object",
+								},
+								"modern": extv1.JSONSchemaProps{
+									Description: "modern is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility and looks like this (yaml): ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256 minTLSVersion: TLSv1.3 NOTE: Currently unsupported.",
+									Nullable:    true,
+									Type:        "object",
+								},
+								"old": extv1.JSONSchemaProps{
+									Description: "old is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Old_backward_compatibility and looks like this (yaml): ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,ECDHE-ECDSA-AES128-GCM-SHA256,ECDHE-RSA-AES128-GCM-SHA256,ECDHE-ECDSA-AES256-GCM-SHA384,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE-RSA-CHACHA20-POLY1305,DHE-RSA-AES128-GCM-SHA256,DHE-RSA-AES256-GCM-SHA384,DHE-RSA-CHACHA20-POLY1305,ECDHE-ECDSA-AES128-SHA256,ECDHE-RSA-AES128-SHA256,ECDHE-ECDSA-AES128-SHA,ECDHE-RSA-AES128-SHA,ECDHE-ECDSA-AES256-SHA384,ECDHE-RSA-AES256-SHA384,ECDHE-ECDSA-AES256-SHA,ECDHE-RSA-AES256-SHA,DHE-RSA-AES128-SHA256,DHE-RSA-AES256-SHA256,AES128-GCM-SHA256,AES256-GCM-SHA384,AES128-SHA256,AES256-SHA256,AES128-SHA,AES256-SHA,DES-CBC3-SHA minTLSVersion: TLSv1.0",
+									Nullable:    true,
+									Type:        "object",
+								},
+								"type": extv1.JSONSchemaProps{
+									Description: "type is one of Old, Intermediate, Modern or Custom. Custom provides the ability to specify individual TLS security profile parameters. Old, Intermediate and Modern are TLS security profiles based on: \n https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations The profiles are intent based, so they may change over time as new ciphers are developed and existing ciphers are found to be insecure.  Depending on precisely which ciphers are available to a process, the list may be reduced. \n Note that the Modern profile is currently not supported because it is not yet well adopted by common software libraries.",
+									Enum: []extv1.JSON{
+										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileOldType))},
+										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileIntermediateType))},
+										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileModernType))},
+										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileCustomType))},
+									},
+									Type: "string",
 								},
 							},
 						},

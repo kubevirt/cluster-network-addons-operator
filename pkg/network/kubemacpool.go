@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 	"github.com/pkg/errors"
@@ -113,6 +114,10 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string) (
 	data.Data["CAOverlapInterval"] = conf.SelfSignConfiguration.CAOverlapInterval
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
 	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
+
+	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
+	data.Data["TLSSecurityProfileCiphers"] = strings.Join(ciphers, ",")
+	data.Data["TLSMinVersion"] = TLSVersionToHumanReadable(tlsMinVersion)
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
 	if err != nil {
