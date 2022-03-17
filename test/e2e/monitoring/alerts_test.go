@@ -9,8 +9,8 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
-	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
+	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
