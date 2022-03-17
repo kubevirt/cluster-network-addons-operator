@@ -300,10 +300,6 @@ spec:
           value: '{{ .CertRotateInterval | default "4380h0m0s" }}'
         - name: CERT_OVERLAP_INTERVAL
           value: '{{ .CertOverlapInterval | default "24h0m0s" }}'
-        - name: TLS_MIN_VERSION
-          value: '{{ .TLSMinVersion }}'
-        - name: TLS_CIPHERS
-          value: '{{ .TLSSecurityProfileCiphers }}'
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
         name: manager
@@ -348,6 +344,10 @@ spec:
         command:
         - /manager
         env:
+        - name: TLS_MIN_VERSION
+          value: '{{ .TLSMinVersion }}'
+        - name: TLS_CIPHERS
+          value: '{{ .TLSSecurityProfileCiphers }}'
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
