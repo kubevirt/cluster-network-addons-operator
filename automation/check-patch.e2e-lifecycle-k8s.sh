@@ -18,7 +18,7 @@ versionChanged() {
 }
 
 main() {
-    export KUBEVIRT_PROVIDER='k8s-1.21'
+    export KUBEVIRT_PROVIDER='k8s-1.23'
 
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
