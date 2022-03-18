@@ -50,6 +50,11 @@ spec:
       - image: "{{ .KubeMacPoolImage }}"
         imagePullPolicy: "{{ .ImagePullPolicy }}"
         name: manager
+        env:
+          - name: TLS_MIN_VERSION
+            value: "{{ .TLSMinVersion }}"
+          - name: TLS_CIPHERS
+            value: "{{ .TLSSecurityProfileCiphers }}"
       - image: "{{ .KubeRbacProxyImage }}"
         imagePullPolicy: "{{ .ImagePullPolicy }}"
         name: kube-rbac-proxy
@@ -77,10 +82,6 @@ spec:
             value: "{{ .CertRotateInterval | default \"4380h0m0s\" }}"
           - name: CERT_OVERLAP_INTERVAL
             value: "{{ .CertOverlapInterval | default \"24h0m0s\" }}"
-          - name: TLS_MIN_VERSION
-            value: "{{ .TLSMinVersion }}"
-          - name: TLS_CIPHERS
-            value: "{{ .TLSSecurityProfileCiphers }}"
 EOF
 
     cat <<EOF > config/cnao/cnao_placement_patch.yaml
