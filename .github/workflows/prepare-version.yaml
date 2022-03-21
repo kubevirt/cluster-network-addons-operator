@@ -52,7 +52,7 @@ jobs:
     - name: Create version PR
       uses: peter-evans/create-pull-request@v3
       with:
-         branch: v${{ env.RELEASE_VERSION }}
+         branch: release-${{ env.RELEASE_VERSION }}
          token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
          committer: GitHub <noreply@github.com>
          signoff: true
