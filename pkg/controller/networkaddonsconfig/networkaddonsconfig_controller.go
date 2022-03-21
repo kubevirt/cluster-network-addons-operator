@@ -431,10 +431,9 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 		// Don't set owner reference on namespaces if they are used by the operator itself
 		// Don't set owner reference on CRDs, they should survive removal of the operator
 		// Don't set owner reference on objects that explicitly rejected an owner
-		isOperatorNamespace := obj.GetKind() == "Namespace" && obj.GetName() == operatorNamespace
 		isCRD := obj.GetKind() == "CustomResourceDefinition"
 		_, isRejectingOwner := obj.GetAnnotations()[names.REJECT_OWNER_ANNOTATION]
-		if !isCRD && !isOperatorNamespace && !isRejectingOwner {
+		if !isCRD && !isOperatorNamespace(obj) && !isRejectingOwner {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
 				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
 				err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
@@ -520,39 +519,44 @@ func (r *ReconcileNetworkAddonsConfig) stopTrackingObjects() {
 	r.statusManager.SetFromPods()
 }
 
-func updateObjectsLabels(crLables map[string]string, objs []*unstructured.Unstructured) error {
+func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstructured) error {
 	var err error
 	for _, obj := range objs {
 		labels := obj.GetLabels()
 		if labels == nil {
 			labels = map[string]string{}
 		}
-		// Label objects with version of the operator they were created by
-		labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
-		labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
-		labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
+		if !isOperatorNamespace(obj) {
+			// Label objects with version of the operator they were created by
+			labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
+			labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
+			labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 
-		appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
-		labels = updateLabelsFromCR(labels, crLables, appLabelKeys)
-		if err != nil {
-			return err
+			appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
+			labels = updateLabelsFromCR(labels, crLabels, appLabelKeys)
+			if err != nil {
+				return err
+			}
+
+			templateLabelKeys := append(appLabelKeys, names.PROMETHEUS_LABEL_KEY, names.MANAGED_BY_LABEL_KEY)
+			err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)
+			if err != nil {
+				return err
+			}
+		} else {
+			delete(labels, names.KUBEMACPOOL_CONTROL_PLANE_KEY)
 		}
+
 		obj.SetLabels(labels)
-
-		templateLabelKeys := append(appLabelKeys, names.PROMETHEUS_LABEL_KEY, names.MANAGED_BY_LABEL_KEY)
-		err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
-func updateLabelsFromCR(labels, crLables map[string]string, appLabelKeys []string) map[string]string {
+func updateLabelsFromCR(labels, crLabels map[string]string, appLabelKeys []string) map[string]string {
 	labels[names.COMPONENT_LABEL_KEY] = names.COMPONENT_LABEL_DEFAULT_VALUE
 	for _, key := range appLabelKeys {
-		if value, exist := crLables[key]; exist == true {
+		if value, exist := crLabels[key]; exist == true {
 			labels[key] = value
 		}
 	}
@@ -705,4 +709,9 @@ func isOpenshiftSingleReplica(c k8sclient.Client) (bool, error) {
 	}
 
 	return infraConfig.Status.InfrastructureTopology == osconfv1.SingleReplicaTopologyMode, nil
+}
+
+func isOperatorNamespace(obj *unstructured.Unstructured) bool {
+	const namespaceKind = "Namespace"
+	return obj.GetKind() == namespaceKind && obj.GetName() == operatorNamespace
 }

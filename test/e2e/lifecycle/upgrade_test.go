@@ -54,6 +54,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 
 					By("Checking for leftover objects from the previous version")
 					CheckForLeftoverObjects(newRelease.Version)
+					CheckForLeftoverLabels()
 				})
 			})
 
