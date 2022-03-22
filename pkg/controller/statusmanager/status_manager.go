@@ -75,7 +75,6 @@ func New(mgr manager.Manager, name string) *StatusManager {
 // Set updates the NetworkAddonsConfig.Status with the provided conditions.
 // Since Update call can fail due to a collision with someone else writing into
 // the status, calling set is tried several times.
-// TODO: Calling of Patch instead may save some problems. We can reiterate later,
 // current collision problem is detected by functional tests
 func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) {
 	for i := 0; i < conditionsUpdateRetries; i++ {
@@ -98,22 +97,24 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		return nil
 	}
 
+	patch := client.MergeFrom(config.DeepCopy())
 	oldStatus := config.Status.DeepCopy()
 
 	// Update Status field with given conditions
 	for _, condition := range conditions {
-		conditionsv1.SetStatusCondition(&config.Status.Conditions, condition)
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions, condition)
 	}
 
 	// Glue condition logic together
-	if status.failing[OperatorConfig] != nil {
+	if status.failing[OperatorConfig] != nil &&
+		!conditionsv1.IsStatusConditionPresentAndEqual(config.Status.Conditions, conditionsv1.ConditionAvailable, corev1.ConditionFalse) {
 		// In case the operator is failing, we should not report it as being ready. This has
 		// to be done even when the operator is running fine based on the previous configuration
 		// and the only failing thing is validation of new config.
 		reason := "Failing"
 		message := "Unable to apply desired configuration"
 		status.eventEmitter.EmitFailingForConfig(reason, message)
-		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionAvailable,
 				Status:  corev1.ConditionFalse,
@@ -123,7 +124,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		)
 
 		// Implicitly mark as not Progressing, that indicates that human interaction is needed
-		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionProgressing,
 				Status:  corev1.ConditionFalse,
@@ -131,12 +132,13 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 				Message: "Human interaction is needed, please fix the desired configuration",
 			},
 		)
-	} else if status.failing[PodDeployment] != nil {
+	} else if status.failing[PodDeployment] != nil &&
+		!conditionsv1.IsStatusConditionPresentAndEqual(config.Status.Conditions, conditionsv1.ConditionAvailable, corev1.ConditionFalse) {
 		// In case pod deployment is in progress, implicitly mark as not Available
 		reason := "Failing"
 		message := "Some problems occurred while deploying components' pods"
 		status.eventEmitter.EmitFailingForConfig(reason, message)
-		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionAvailable,
 				Status:  corev1.ConditionFalse,
@@ -144,10 +146,10 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 				Message: message,
 			},
 		)
-	} else if conditionsv1.IsStatusConditionTrue(config.Status.Conditions, conditionsv1.ConditionProgressing) {
+	} else if conditionsv1.IsStatusConditionPresentAndEqual(config.Status.Conditions, conditionsv1.ConditionProgressing, corev1.ConditionTrue) {
 		// In case that the status field has been updated with "Progressing" condition, make sure that
 		// "Ready" condition is set to False, even when not explicitly set.
-		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:    conditionsv1.ConditionAvailable,
 				Status:  corev1.ConditionFalse,
@@ -158,7 +160,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	} else if reachedAvailableLevel {
 		// If successfully deployed all components and is not failing on anything, mark as Available
 		status.eventEmitter.EmitAvailableForConfig()
-		conditionsv1.SetStatusCondition(&config.Status.Conditions,
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:   conditionsv1.ConditionAvailable,
 				Status: corev1.ConditionTrue,
@@ -181,10 +183,10 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		return nil
 	}
 
-	// Update NetworkAddonsConfig with updated Status field
-	err = status.client.Status().Update(context.TODO(), config)
+	// Patch NetworkAddonsConfig's status
+	err = status.client.Status().Patch(context.TODO(), config, patch)
 	if err != nil {
-		return fmt.Errorf("Failed to update NetworkAddonsConfig %q Status: %v", config.Name, err)
+		return fmt.Errorf("Failed to patch NetworkAddonsConfig %q Status: %v", config.Name, err)
 	}
 	return nil
 }
