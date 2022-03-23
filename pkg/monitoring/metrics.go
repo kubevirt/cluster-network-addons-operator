@@ -25,6 +25,7 @@ const (
 type MetricsOpts struct {
 	Name string
 	Help string
+	Type string
 }
 
 type MetricsKey string
@@ -38,10 +39,12 @@ var MetricsOptsList = map[MetricsKey]MetricsOpts{
 	ReadyGauge: {
 		Name: "kubevirt_cnao_cr_ready",
 		Help: "CNAO CR Ready",
+		Type: "Gauge",
 	},
 	KMPDeployGauge: {
 		Name: "kubevirt_cnao_cr_kubemacpool_deployed",
 		Help: "KubeMacpool is deployed by CNAO CR",
+		Type: "Gauge",
 	},
 }
 
