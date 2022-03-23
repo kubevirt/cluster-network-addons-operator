@@ -28,6 +28,13 @@ spec:
       nodeSelector: {{ toYaml .PlacementConfiguration.Infra.NodeSelector | nindent 8 }}
       tolerations: {{ toYaml .PlacementConfiguration.Infra.Tolerations | nindent 8 }}
       affinity: {{ toYaml .PlacementConfiguration.Infra.Affinity | nindent 8 }}
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            component: kubernetes-nmstate-webhook
       priorityClassName: system-cluster-critical
       containers:
         - name: nmstate-webhook
