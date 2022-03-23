@@ -50,14 +50,14 @@ main() {
     echo "Run nmstate functional tests"
     cd ${TMP_COMPONENT_PATH}
 
-    make test-e2e-handler \
+    make  \
         E2E_TEST_TIMEOUT=$TIMEOUT \
-        e2e_test_args="-noColor" \
-        E2E_TEST_SUITE_ARGS="-ginkgo.focus='.*nmpolicy.*|.*bonding.*default.*|.*ovs.*|.*Webhook.*' --junit-output=$ARTIFACTS/junit.functest.xml" \
+        E2E_TEST_ARGS="--no-color --focus='.*nmpolicy.*|.*bonding.*default.*|.*ovs.*|.*Webhook.*' --output-dir=$ARTIFACTS --junit-report=junit.functest.xml" \
         OPERATOR_NAMESPACE=$NAMESPACE \
         CLUSTER_PATH=$CLUSTER_PATH \
         KUBECONFIG=$KUBECONFIG \
-        KUBECTL=$KUBECTL
+        KUBECTL=$KUBECTL \
+        test-e2e-handler
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
