@@ -11,14 +11,13 @@ import (
 
 	. "github.com/onsi/gomega"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	promApi "github.com/prometheus/client_golang/api"
 	promApiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promConfig "github.com/prometheus/common/config"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
-
 )
 
 var portForwardCmd *exec.Cmd

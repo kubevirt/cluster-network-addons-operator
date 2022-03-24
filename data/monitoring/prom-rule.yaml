@@ -11,6 +11,20 @@ spec:
       rules:
         - expr: sum(up{namespace='{{ .Namespace }}', pod=~'cluster-network-addons-operator-.*'} or vector(0))
           record: kubevirt_cnao_num_up_operators
+        - expr: sum(kube_deployment_labels{deployment=~'kubernetes-nmstate-operator'} or vector(0))
+          record: kubevirt_nmstate_operator_deployments
+        - expr: sum(kube_daemonset_labels{namespace='{{ .Namespace }}', daemonset=~'nmstate-handler'} or vector(0))
+          record: kubevirt_cnao_nmstate_deployed
+        - alert: CnaoNmstateMigration
+          annotations:
+            summary: Nmstate will be removed from CNAO.
+            runbook_url: http://kubevirt.io/monitoring/runbooks/CnaoNmstateMigration
+          expr: sum(kubevirt_cnao_nmstate_deployed or vector(0)) > 0 and sum(kubevirt_nmstate_operator_deployments or vector(0)) == 0
+          for: 5m
+          labels:
+            severity: warning
+            kubernetes_operator_part_of: kubevirt
+            kubernetes_operator_component: cluster-network-addons-operator
         - alert: CnaoDown
           annotations:
             summary: CNAO pod is down.

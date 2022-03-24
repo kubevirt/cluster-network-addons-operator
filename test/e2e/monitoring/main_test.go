@@ -10,8 +10,8 @@ import (
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
-	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
+	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 var _ = BeforeSuite(func() {
@@ -31,7 +31,7 @@ func TestE2E(t *testing.T) {
 }
 
 func filterCnaoPromRules() error {
-	_, _, err := kubectl.Kubectl("patch", "prometheus", "k8s", "-n", prometheusMonitoringNamespace, "--type=json", "-p",
+	_, err := kubectl.Kubectl("patch", "prometheus", "k8s", "-n", prometheusMonitoringNamespace, "--type=json", "-p",
 		"[{'op': 'replace', 'path': '/spec/ruleSelector', 'value':{'matchLabels': {'prometheus.cnao.io': 'true'}}}]")
 	return err
 }

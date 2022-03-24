@@ -38,6 +38,37 @@ tests:
         alertname: CnaoDown
         exp_alerts:
 
+# NmstateCnaoMigration positive tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_nmstate_operator_deployments"
+        values: "0 0 0 0 0 0"
+      - series: "kubevirt_cnao_nmstate_deployed"
+        values: "1 1 1 1 1 1"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: CnaoNmstateMigration
+        exp_alerts:
+          - exp_annotations:
+              summary: "Nmstate will be removed from CNAO."
+              runbook_url: "http://kubevirt.io/monitoring/runbooks/CnaoNmstateMigration"
+            exp_labels:
+              severity: "warning"
+              kubernetes_operator_part_of: "kubevirt"
+              kubernetes_operator_component: "cluster-network-addons-operator"
+# NmstateCnaoMigration negative tests
+  - interval: 1m
+    input_series:
+      - series: "kubevirt_nmstate_operator_deployments"
+        values: "0 0 0 1 1 1"
+      - series: "kubevirt_cnao_nmstate_deployed"
+        values: "1 1 1 1 1 1"
+
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: CnaoNmstateMigration
+        exp_alerts:
+
 # NetworkAddonsConfigNotReady positive tests
   - interval: 1m
     input_series:
