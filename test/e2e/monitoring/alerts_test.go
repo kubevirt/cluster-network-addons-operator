@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -15,28 +16,42 @@ import (
 )
 
 var _ = Context("Prometheus Alerts", func() {
+	var prometheusClient *promClient
 
-	Context("when networkaddonsconfig CR is deployed", func() {
-		var prometheusClient *promClient
-		configSpec := cnao.NetworkAddonsConfigSpec{
-			MacvtapCni: &cnao.MacvtapCni{},
+	BeforeEach(func() {
+		var err error
+		sourcePort := 4321 + rand.Intn(6000)
+		targetPort := 9090
+		By(fmt.Sprintf("issuing a port forwarding command to access prometheus API on port %d", sourcePort))
+
+		prometheusClient = newPromClient(sourcePort, prometheusMonitoringNamespace)
+		portForwardCmd, err = kubectl.StartPortForwardCommand(prometheusClient.namespace, "prometheus-k8s", prometheusClient.sourcePort, targetPort)
+		Expect(err).ToNot(HaveOccurred())
+	})
+	AfterEach(func() {
+		By("removing the port-forwarding command")
+		Expect(kubectl.KillPortForwardCommand(portForwardCmd)).To(Succeed())
+	})
 		}
-
 		BeforeEach(func() {
-			By("issuing a port forwarding command to access prometheus API")
-			var err error
-			sourcePort := 4321 + rand.Intn(6000)
-			targetPort := 9090
 
-			prometheusClient = newPromClient(sourcePort, prometheusMonitoringNamespace)
-			portForwardCmd, err = kubectl.StartPortForwardCommand(prometheusClient.namespace, "prometheus-k8s", prometheusClient.sourcePort, targetPort)
-			Expect(err).ToNot(HaveOccurred())
 		})
+	Context("when networkaddonsconfig CR is deployed with one component", func() {
 		BeforeEach(func() {
 			By("delpoying CNAO CR with at least one component")
 			gvk := GetCnaoV1GroupVersionKind()
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				MacvtapCni: &cnao.MacvtapCni{},
+			}
 			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+		})
+		AfterEach(func() {
+			By("removing CNAO CR")
+			gvk := GetCnaoV1GroupVersionKind()
+			if GetConfig(gvk) != nil {
+				DeleteConfig(gvk)
+			}
 		})
 
 		Context("and cluster-network-addons-operator deployment has no ready replicas", func() {
@@ -56,19 +71,6 @@ var _ = Context("Prometheus Alerts", func() {
 				By("restoring CNAO operator deployment replicas to 1")
 				ScaleDeployment(components.Name, components.Namespace, 1)
 			})
-		})
-
-		AfterEach(func() {
-			By("removing CNAO CR")
-			gvk := GetCnaoV1GroupVersionKind()
-			if GetConfig(gvk) != nil {
-				DeleteConfig(gvk)
-			}
-		})
-
-		AfterEach(func() {
-			By("removing the port-forwarding command")
-			Expect(kubectl.KillPortForwardCommand(portForwardCmd)).To(Succeed())
 		})
 
 	})
