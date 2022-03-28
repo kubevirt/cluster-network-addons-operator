@@ -10,8 +10,8 @@ import (
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
-	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
+	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 var _ = BeforeSuite(func() {

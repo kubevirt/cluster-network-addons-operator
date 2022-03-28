@@ -11,14 +11,14 @@ import (
 
 	. "github.com/onsi/gomega"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	promApi "github.com/prometheus/client_golang/api"
 	promApiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promConfig "github.com/prometheus/common/config"
+	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
-
 )
 
 var portForwardCmd *exec.Cmd
@@ -47,6 +47,14 @@ func (p *promClient) checkForAlert(alertName string) {
 		alert := p.getAlertByName(alertName)
 		return alert
 	}, 2*time.Minute, 1*time.Second).ShouldNot(BeNil(), fmt.Sprintf("alert %s not fired", alertName))
+}
+
+func (p *promClient) checkNoAlertsFired() {
+	Consistently(func() (alerts []promApiv1.Alert) {
+		alertsResult, err := p.client.Alerts(context.TODO())
+		Expect(err).ShouldNot(HaveOccurred())
+		return alertsResult.Alerts
+	}, 2*time.Minute, 10*time.Second).Should(BeEmpty(), "unexpected alerts fired")
 }
 
 func (p *promClient) getPrometheusUrl() string {
@@ -104,4 +112,22 @@ func initializePromClient(prometheusUrl string, token string) promApiv1.API {
 
 	PromClient := promApiv1.NewAPI(c)
 	return PromClient
+}
+
+func checkMonitoringRoleBindingConfig(roleBindingName, namespace string) error {
+	monitoringRoleBinding := rbacv1.RoleBinding{}
+	err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: roleBindingName, Namespace: namespace}, &monitoringRoleBinding)
+	if err != nil {
+		return err
+	}
+
+	for _, subject := range monitoringRoleBinding.Subjects {
+		var svcAccnt v1.ServiceAccount
+		err = testenv.Client.Get(context.TODO(), types.NamespacedName{Name: subject.Name, Namespace: subject.Namespace}, &svcAccnt)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
