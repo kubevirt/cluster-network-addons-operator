@@ -28,8 +28,8 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		},
 		Entry("when TLSSecurityProfile is nil", loadSecurityProfileCase{
 			config:                &cnao.NetworkAddonsConfigSpec{},
-			expectedCiphers:       []string{},
-			expectedMinTLSVersion: "",
+			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Ciphers,
+			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].MinTLSVersion,
 		}),
 		Entry("when Old Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{

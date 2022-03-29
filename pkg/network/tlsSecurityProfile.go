@@ -6,7 +6,10 @@ import (
 
 func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]string, ocpv1.TLSProtocolVersion) {
 	if profile == nil {
-		return []string{}, ""
+		profile = &ocpv1.TLSSecurityProfile{
+			Type:         ocpv1.TLSProfileIntermediateType,
+			Intermediate: &ocpv1.IntermediateTLSProfile{},
+		}
 	}
 	if profile.Custom != nil {
 		return profile.Custom.TLSProfileSpec.Ciphers, profile.Custom.TLSProfileSpec.MinTLSVersion
