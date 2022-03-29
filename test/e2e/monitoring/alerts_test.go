@@ -9,8 +9,8 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
-	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
+	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
@@ -55,6 +55,26 @@ var _ = Context("Prometheus Alerts", func() {
 			AfterEach(func() {
 				By("restoring CNAO operator deployment replicas to 1")
 				ScaleDeployment(components.Name, components.Namespace, 1)
+			})
+		})
+
+		Context("when nmstate is deployed with CNAO", func() {
+			BeforeEach(func() {
+				configSpec = cnao.NetworkAddonsConfigSpec{
+					NMState: &cnao.NMState{},
+				}
+
+				By("delpoying CNAO CR with nmstate")
+				gvk := GetCnaoV1GroupVersionKind()
+				UpdateConfig(gvk, configSpec)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			})
+
+			It("should issue CnaoNmstateMigration alert", func() {
+				By("waiting for the amount of time it takes the alert to fire")
+				time.Sleep(5 * time.Minute)
+				By("checking existence of alert")
+				prometheusClient.checkForAlert("CnaoNmstateMigration")
 			})
 		})
 
