@@ -20,16 +20,16 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/go-openapi/strfmt"
-	goopenapivalidate "github.com/go-openapi/validate"
-
 	structuralschema "k8s.io/apiextensions-apiserver/pkg/apiserver/schema"
+	"k8s.io/apiextensions-apiserver/pkg/apiserver/schema/cel"
 	schemaobjectmeta "k8s.io/apiextensions-apiserver/pkg/apiserver/schema/objectmeta"
 	"k8s.io/apiextensions-apiserver/pkg/apiserver/schema/pruning"
 	apiservervalidation "k8s.io/apiextensions-apiserver/pkg/apiserver/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/kube-openapi/pkg/validation/strfmt"
+	kubeopenapivalidate "k8s.io/kube-openapi/pkg/validation/validate"
 )
 
 // ValidateDefaults checks that default values validate and are properly pruned.
@@ -67,7 +67,7 @@ func validate(pth *field.Path, s *structuralschema.Structural, rootSchema *struc
 	allErrs := field.ErrorList{}
 
 	if s.Default.Object != nil {
-		validator := goopenapivalidate.NewSchemaValidator(s.ToGoOpenAPI(), nil, "", strfmt.Default)
+		validator := kubeopenapivalidate.NewSchemaValidator(s.ToKubeOpenAPI(), nil, "", strfmt.Default)
 
 		if insideMeta {
 			obj, _, err := f(runtime.DeepCopyJSONValue(s.Default.Object))
@@ -85,6 +85,8 @@ func validate(pth *field.Path, s *structuralschema.Structural, rootSchema *struc
 				allErrs = append(allErrs, field.Invalid(pth.Child("default"), s.Default.Object, fmt.Sprintf("must result in valid metadata: %v", errs.ToAggregate())))
 			} else if errs := apiservervalidation.ValidateCustomResource(pth.Child("default"), s.Default.Object, validator); len(errs) > 0 {
 				allErrs = append(allErrs, errs...)
+			} else if celValidator := cel.NewValidator(s); celValidator != nil {
+				allErrs = append(allErrs, celValidator.Validate(pth.Child("default"), s, s.Default.Object)...)
 			}
 		} else {
 			// check whether default is pruned
@@ -103,6 +105,8 @@ func validate(pth *field.Path, s *structuralschema.Structural, rootSchema *struc
 				allErrs = append(allErrs, errs...)
 			} else if errs := apiservervalidation.ValidateCustomResource(pth.Child("default"), s.Default.Object, validator); len(errs) > 0 {
 				allErrs = append(allErrs, errs...)
+			} else if celValidator := cel.NewValidator(s); celValidator != nil {
+				allErrs = append(allErrs, celValidator.Validate(pth.Child("default"), s, s.Default.Object)...)
 			}
 		}
 	}
