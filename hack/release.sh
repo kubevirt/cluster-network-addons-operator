@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -xe
 
 make IMAGE_TAG=$TAG docker-build docker-push
 

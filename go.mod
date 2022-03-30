@@ -9,15 +9,14 @@ require (
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
-	github.com/github-release/github-release v0.8.1
+	github.com/github-release/github-release v0.10.0
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/inconshreveable/log15 v0.0.0-20200109203555-b30bc20e4fd1 // indirect
-	github.com/kevinburke/rest v0.0.0-20200429221318-0d2892b400f8 // indirect
+	github.com/kevinburke/rest v0.0.0-20210506044642-5611499aa33c // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v0.0.0-20210208192252-670ac3fc997c
@@ -106,7 +105,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.3 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gobuffalo/envy v1.7.1 // indirect
 	github.com/gobuffalo/flect v0.2.2 // indirect
