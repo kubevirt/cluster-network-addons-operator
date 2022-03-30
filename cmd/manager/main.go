@@ -7,24 +7,37 @@ import (
 	"runtime"
 
 	osv1 "github.com/openshift/api/operator/v1"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
+	apiruntime "k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
+	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
+var (
+	scheme = apiruntime.NewScheme()
+)
+
+func init() {
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+
+	utilruntime.Must(cnaov1.AddToScheme(scheme))
+	utilruntime.Must(cnaov1alpha1.AddToScheme(scheme))
+	// +kubebuilder:scaffold:scheme
+}
+
 func printVersion() {
 	log.Printf("Go Version: %s", runtime.Version())
 	log.Printf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
-	log.Printf("version of operator-sdk: %v", sdkVersion.Version)
 	log.Printf("version of cluster-network-addons-operator: %v", os.Getenv("OPERATOR_VERSION"))
 }
 
@@ -35,7 +48,7 @@ func main() {
 
 	printVersion()
 
-	namespace, err := k8sutil.GetWatchNamespace()
+	namespace, err := k8s.GetWatchNamespace()
 	if err != nil {
 		log.Printf("failed to get watch namespace: %v", err)
 		os.Exit(1)
@@ -50,6 +63,7 @@ func main() {
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
+		Scheme:             scheme,
 		Namespace:          namespace,
 		MetricsBindAddress: monitoring.GetMetricsAddress(),
 		MapperProvider:     k8s.NewDynamicRESTMapper,
@@ -61,11 +75,6 @@ func main() {
 
 	log.Print("registering Components")
 
-	// Setup Scheme for all resources
-	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Printf("failed adding network addons scheme to the client: %v", err)
-		os.Exit(1)
-	}
 	if err := osv1.Install(mgr.GetScheme()); err != nil {
 		log.Printf("failed adding openshift scheme to the client: %v", err)
 		os.Exit(1)

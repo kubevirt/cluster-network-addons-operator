@@ -47,6 +47,8 @@ OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
 
 GITHUB_RELEASE ?= $(BIN_DIR)/github-release
 
+CONTROLLER_GEN ?= $(BIN_DIR)/controller-gen
+
 GO := $(GOBIN)/go
 
 $(GO):
@@ -60,6 +62,9 @@ $(OPERATOR_SDK): $(GO) go.mod
 
 $(GITHUB_RELEASE): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
+
+$(CONTROLLER_GEN): $(GO) go.mod
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -140,8 +145,8 @@ cluster-operator-push:
 cluster-operator-install:
 	./cluster/operator-install.sh
 
-$(E2E_SUITES): $(OPERATOR_SDK)
-	unset GOFLAGS && OPERATOR_SDK=$(OPERATOR_SDK) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
+$(E2E_SUITES): $(GINKGO)
+	GINKGO=$(GINKGO) GO=$(GO) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
 
 cluster-clean:
 	./cluster/clean.sh
@@ -158,8 +163,8 @@ gen-manifests: manifest-templator
 	MACVTAP_CNI_IMAGE=$(MACVTAP_CNI_IMAGE) \
 		./hack/generate-manifests.sh
 
-gen-k8s: $(OPERATOR_SDK) $(apis_sources)
-	$(OPERATOR_SDK) generate k8s
+gen-k8s: $(CONTROLLER_GEN) $(apis_sources)
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	touch $@
 
 gen-k8s-check: $(apis_sources)

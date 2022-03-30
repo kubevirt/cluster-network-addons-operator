@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	framework "github.com/operator-framework/operator-sdk/pkg/test"
 	"gopkg.in/yaml.v2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -21,12 +20,13 @@ import (
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 )
 
 func GetConfig(gvk schema.GroupVersionKind) *unstructured.Unstructured {
 	config := &unstructured.Unstructured{}
 	config.SetGroupVersionKind(gvk)
-	err := framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+	err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
 	if apierrors.IsNotFound(err) {
 		return nil
 	}
@@ -45,7 +45,7 @@ func CreateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConf
 	Expect(err).NotTo(HaveOccurred(), "Failed to convert config spec to unstructured")
 	config.Object["spec"] = unstructuredConfigSpec
 
-	err = framework.Global.Client.Create(context.TODO(), config, &framework.CleanupOptions{})
+	err = testenv.Client.Create(context.TODO(), config)
 	Expect(err).NotTo(HaveOccurred(), "Failed to create the Config")
 }
 
@@ -57,7 +57,7 @@ func UpdateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConf
 
 	// Update the Config with the desired Spec
 	config.Object["spec"] = configSpec
-	err := framework.Global.Client.Update(context.TODO(), config)
+	err := testenv.Client.Update(context.TODO(), config)
 	Expect(err).NotTo(HaveOccurred(), "Failed to update the Config")
 }
 
@@ -68,12 +68,12 @@ func DeleteConfig(gvk schema.GroupVersionKind) {
 	config.SetGroupVersionKind(gvk)
 	config.SetName(names.OPERATOR_CONFIG)
 
-	err := framework.Global.Client.Delete(context.TODO(), config)
+	err := testenv.Client.Delete(context.TODO(), config)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to remove the Config")
 
 	// Wait until the config is deleted
 	EventuallyWithOffset(1, func() error {
-		return framework.Global.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+		return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
 	}, 60*time.Second, 1*time.Second).Should(SatisfyAll(HaveOccurred(), WithTransform(apierrors.IsNotFound, BeTrue())), fmt.Sprintf("should successfuly delete config '%s'", config.GetName()))
 
 }

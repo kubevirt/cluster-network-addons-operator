@@ -193,7 +193,7 @@ type ReconcileNetworkAddonsConfig struct {
 
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
 // and what is in the NetworkAddonsConfig.Spec
-func (r *ReconcileNetworkAddonsConfig) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	log.Print("reconciling NetworkAddonsConfig")
 
 	// We won't create more than one network addons instance
@@ -528,7 +528,7 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 		}
 		if !isOperatorNamespace(obj) {
 			// Label objects with version of the operator they were created by
-			labels[cnaov1.SchemeGroupVersion.Group+"/version"] = operatorVersionLabel
+			labels[cnaov1.GroupVersion.Group+"/version"] = operatorVersionLabel
 			labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
 			labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 
