@@ -87,7 +87,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace vet goimports-check gen-k8s-check test/unit prom-rules-verify
+check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify
 	./hack/check.sh
 
 whitespace-check: $(all_sources)
