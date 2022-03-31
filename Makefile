@@ -184,6 +184,11 @@ prepare-minor:
 prepare-major:
 	./hack/prepare-release.sh major
 
+update-workflows-branches:
+	./hack/update-workflows-branches.sh ${git_base_tag} ${branch_name}
+statify-components:
+	sed -i 's|update-policy: .*|update-policy: static|g' components.yaml
+
 release-notes:
 	hack/render-release-notes.sh $(WHAT)
 
@@ -240,4 +245,7 @@ generate-doc:
 	bump-all \
 	gen-k8s \
 	prom-rules-verify \
-	release
+	release \
+	update-workflows-branches \
+	statify-components
+

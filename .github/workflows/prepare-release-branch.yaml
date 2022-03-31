@@ -1,0 +1,104 @@
+name: Create a new release-branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseTag:
+        description: 'Create CNAO release branch from tag'
+        required: true
+        type: string
+      branchName:
+        description: 'The new CNAO release branch name'
+        required: true
+        type: string
+      pushBranch:
+        description: 'Push new branch to repository'
+        required: true
+        type: boolean
+        default: true
+jobs:
+  create-release-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.baseTag }}
+          fetch-depth: 0
+
+      - name: Push the branch to CNAO repo
+        if: ${{ github.event.inputs.pushBranch == 'true' }}
+        run: |
+          git push origin HEAD:refs/heads/${{ github.event.inputs.branchName }}
+
+  update-workflows:
+    runs-on: ubuntu-latest
+    needs: create-release-branch
+    steps:
+      - name: Set author and email for version PR
+        run: |
+          git config --global user.email "noreplay@github.com"
+          git config --global user.name "CNAO Version bot"
+
+      - name: Run make update-release-branch-workflows
+        run: make update-workflows-branches git_base_tag=${{ github.event.inputs.baseTag }} branch_name=${{ github.event.inputs.branchName }}
+
+      - name: Create new release branch PR
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: main
+          token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
+          committer: GitHub <noreply@github.com>
+          signoff: true
+          commit-message: |
+            Update release branch ${{ github.event.inputs.branchName }} on workflows
+
+            Adding release branch to gitActions workflows's inputs.
+
+            Signed-off-by: GitHub <noreply@github.com>
+          title: "workflows, Update release branch ${{ github.event.inputs.branchName }}"
+          body: |
+            **What this PR does / why we need it**:
+            This PR updates release branch ${{ github.event.inputs.branchName }} on workflows.inputs.
+
+            ```release-note
+            NONE
+            ```
+
+  update-components:
+    runs-on: ubuntu-latest
+    needs: create-release-branch
+    steps:
+      - name: Set author and email for version PR
+        run: |
+          git config --global user.email "noreplay@github.com"
+          git config --global user.name "CNAO Version bot"
+
+      - name: Check out main branch code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.branchName }}
+          fetch-depth: 0
+
+      - name: Set components to static on new release branch
+        run: make statify-components
+
+      - name: Create components update PR on release branch
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: ${{ github.event.inputs.branchName }}
+          token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
+          committer: GitHub <noreply@github.com>
+          signoff: true
+          commit-message: |
+            components, Update all components' update-policy to static
+
+            Signed-off-by: GitHub <noreply@github.com>
+          title: "[${{ github.event.inputs.branchName }}] components, Update all components' update-policy to static"
+          body: |
+            **What this PR does / why we need it**:
+            This PR updates components.yaml on the release branch ${{ github.event.inputs.branchName }}.
+
+            ```release-note
+            NONE
+            ```
