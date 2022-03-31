@@ -17,4 +17,9 @@
 set -ex
 
 ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/operator.yaml
-./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster-network-addons-operator --for condition=Available --timeout=600s
+if [[ ! $(./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster-network-addons-operator --for condition=Available --timeout=600s) ]]; then
+	echo "Failed to wait for CNAO deployment to be ready"
+	./cluster/kubectl.sh get pods -n cluster-network-addons
+	./cluster/kubectl.sh describe deployment cluster-network-addons-operator -n cluster-network-addons
+	exit 1
+fi
