@@ -17,11 +17,12 @@ require (
 	github.com/google/go-github/v32 v32.1.0
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/kevinburke/rest v0.0.0-20210506044642-5611499aa33c // indirect
+	github.com/kubevirt/cluster-network-addons-operator/pkg/apis v0.0.0-00010101000000-000000000000
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v0.0.0-20210208192252-670ac3fc997c
 	github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
-	github.com/openshift/custom-resource-status v0.0.0-20190822192428-e62f2f3b79f3
+	github.com/openshift/custom-resource-status v1.1.2
 	github.com/openshift/origin v4.1.0+incompatible
 	github.com/operator-framework/operator-sdk v1.12.0
 	github.com/pkg/errors v0.9.1
@@ -38,16 +39,16 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.23.3
-	k8s.io/apiextensions-apiserver v0.23.0
-	k8s.io/apimachinery v0.23.3
+	k8s.io/api v0.23.5
+	k8s.io/apiextensions-apiserver v0.23.5
+	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/component-base v0.23.1 // indirect
+	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubectl v0.23.1
-	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
 	kubevirt.io/qe-tools v0.1.6
-	sigs.k8s.io/controller-runtime v0.11.1
+	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/controller-tools v0.6.0
 )
 
@@ -271,6 +272,7 @@ replace (
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.4.13
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+	github.com/kubevirt/cluster-network-addons-operator/pkg/apis => ./pkg/apis
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2

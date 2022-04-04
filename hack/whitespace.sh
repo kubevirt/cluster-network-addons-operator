@@ -3,11 +3,11 @@
 set -e
 
 function fix() {
-    git ls-files -- ':!vendor/' | xargs sed --follow-symlinks -i 's/[[:space:]]*$//'
+    git ls-files -- ':!vendor/' ':!pkg/apis/vendor/' | xargs sed --follow-symlinks -i 's/[[:space:]]*$//'
 }
 
 function check() {
-    invalid_files=$(git ls-files -- ':!vendor/' | xargs egrep -Hn " +$" || true)
+    invalid_files=$(git ls-files -- ':!vendor/' ':!pkg/apis/vendor/' | xargs egrep -Hn " +$" || true)
     if [[ $invalid_files ]]; then
         echo 'Found trailing whitespaces. Please remove trailing whitespaces using `make fmt`:'
         echo "$invalid_files"

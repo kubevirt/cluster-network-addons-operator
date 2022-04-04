@@ -67,92 +67,110 @@ $(GITHUB_RELEASE): $(GO) go.mod
 $(CONTROLLER_GEN): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
 
-# Make does not offer a recursive wildcard function, so here's one:
-rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
-
-# Gather needed source files and directories to create target dependencies
-directories := $(filter-out ./ ./vendor/ ,$(sort $(dir $(wildcard ./*/))))
-all_sources=$(call rwildcard,$(directories),*) $(filter-out $(TARGETS), $(wildcard *))
-cmd_sources=$(call rwildcard,cmd/,*.go)
-pkg_sources=$(call rwildcard,pkg/,*.go)
-apis_sources=$(call rwildcard,pkg/apis,*.go)
-
 fmt: whitespace goimports
 
-goimports: $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
-	touch $@
+.PHONY: goimport
+goimports:
+	$(GO) run golang.org/x/tools/cmd/goimports -w $(shell go list -f {{.Dir}} ./...)
+	cd ./pkg/apis && $(GO) run golang.org/x/tools/cmd/goimports -w $(shell go list -f {{.Dir}} ./...)
 
-whitespace: $(all_sources)
+.PHONY: whitespace
+whitespace:
 	./hack/whitespace.sh --fix
-	touch $@
 
+.PHONY: .check
 check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify
 	./hack/check.sh
 
-whitespace-check: $(all_sources)
+.PHONY: whitespace-check
+whitespace-check:
 	./hack/whitespace.sh
-	touch $@
 
-vet: $(GO) $(cmd_sources) $(pkg_sources)
+.PHONY: vet
+vet: $(GO)
 	$(GO) vet ./pkg/... ./cmd/... ./test/... ./tools/...
-	touch $@
 
-goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
+.PHONY: goimports-check
+goimports-check: $(GO)
 	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
-	touch $@
 
+.PHONY: test/unit
 test/unit: $(GINKGO)
 	$(GINKGO) $(GINKGO_ARGS) $(WHAT)
 
+.PHONY: manager
 manager: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./cmd/...
 
+.PHONY: manifests-templator
 manifest-templator: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./tools/manifest-templator/...
 
+.PHONY: docker-build
 docker-build: docker-build-operator docker-build-registry
 
+.PHONY: docker-build-operator
 docker-build-operator: manager manifest-templator
 	docker build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
 
+.PHONY: docker-build-registry
 docker-build-registry:
 	docker build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
 
+.PHONY: docker-push
 docker-push: docker-push-operator docker-push-registry
 
+.PHONY: docker-push-operator
 docker-push-operator:
 	docker push $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
 
+.PHONY: docker-push-registry
 docker-push-registry:
 	docker push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
+.PHONY: prom-rules-verify
 prom-rules-verify:
 	hack/prom-rule-ci/verify-rules.sh \
 	data/monitoring/prom-rule.yaml \
 	hack/prom-rule-ci/prom-rules-tests.yaml
 
+.PHONY: cluster-up
 cluster-up:
 	./cluster/up.sh
 
+.PHONY: cluster-down
 cluster-down:
 	./cluster/down.sh
 
+.PHONY: cluster-sync
 cluster-sync: cluster-operator-push cluster-operator-install
 
+.PHONY: cluster-operator-push
 cluster-operator-push:
 	./cluster/operator-push.sh
 
+.PHONY: cluster-operator-install
 cluster-operator-install:
 	./cluster/operator-install.sh
 
-$(E2E_SUITES): $(GINKGO)
-	GINKGO=$(GINKGO) GO=$(GO) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
+.PHONY: test/e2e/lifecycle
+test/e2e/lifecycle: $(GINKGO)
+	GINKGO=$(GINKGO) GO=$(GO) TEST_SUITE=test/e2e/lifecycle TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
 
+.PHONY: test/e2e/workflow
+test/e2e/workflow: $(GINKGO)
+	GINKGO=$(GINKGO) GO=$(GO) TEST_SUITE=test/e2e/workflow TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
+
+.PHONY: test/e2e/monitoring
+test/e2e/monitoring: $(GINKGO)
+	GINKGO=$(GINKGO) GO=$(GO) TEST_SUITE=test/e2e/monitoring TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
+
+.PHONY: cluster-clean
 cluster-clean:
 	./cluster/clean.sh
 
 # Default images can be found in pkg/components/components.go
+.PHONY: gen-manifest
 gen-manifests: manifest-templator
 	VERSION_REPLACES=$(VERSION_REPLACES) \
 	DEPLOY_DIR=$(DEPLOY_DIR) \
@@ -165,28 +183,34 @@ gen-manifests: manifest-templator
 	KUBE_RBAC_PROXY_IMAGE=$(KUBE_RBAC_PROXY_IMAGE) \
 		./hack/generate-manifests.sh
 
-gen-k8s: $(CONTROLLER_GEN) $(apis_sources)
+.PHONY: gen-k8s
+gen-k8s: $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
-	touch $@
 
-gen-k8s-check: $(apis_sources)
+.PHONY: gen-k8s-check
+gen-k8s-check:
 	./hack/verify-codegen.sh
-	touch $@
 
+.PHONY: bump-kubevirtci
 bump-kubevirtci:
 	rm -rf _kubevirtci
 	./hack/bump-kubevirtci.sh
 
+.PHONY: prepare-patch
 prepare-patch:
 	./hack/prepare-release.sh patch
+.PHONY: prepare-minor
 prepare-minor:
 	./hack/prepare-release.sh minor
+.PHONY: prepare-major
 prepare-major:
 	./hack/prepare-release.sh major
 
+.PHONY: release-notes
 release-notes:
 	hack/render-release-notes.sh $(WHAT)
 
+.PHONY: release
 release: $(GITHUB_RELEASE)
 	GITHUB_RELEASE=$(GITHUB_RELEASE) \
 	TAG=v$(shell hack/version.sh) \
@@ -194,50 +218,25 @@ release: $(GITHUB_RELEASE)
 	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
 	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
+.PHONY: vendor
 vendor: $(GO)
+	cd pkg/apis && \
+		$(GO) mod tidy && \
+		$(GO) mod vendor
 	$(GO) mod tidy
 	$(GO) mod vendor
 
+.PHONY: auto-bumper
 auto-bumper: $(GO)
 	PUSH_IMAGES=true $(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
 
+.PHONY: bump-%
 bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
+
+.PHONY: bump-all
 bump-all: bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-multus bump-ovs-cni bump-bridge-marker
 
+.PHONY: generate-doc
 generate-doc:
 	go run ./tools/metricsdocs > docs/metrics.md
-
-
-.PHONY: \
-	$(E2E_SUITES) \
-	all \
-	check \
-	cluster-clean \
-	cluster-down \
-	cluster-operator-install \
-	cluster-operator-push \
-	cluster-sync \
-	cluster-up \
-	manager \
-	manifests-templator \
-	docker-build \
-	docker-build-operator \
-	docker-build-registry \
-	docker-push \
-	docker-push-operator \
-	docker-push-registry \
-	gen-manifests \
-	bump-all \
-	test/unit \
-	bump-kubevirtci \
-	prepare-patch \
-	prepare-minor \
-	prepare-major \
-	vendor \
-	auto-bumper \
-	bump-% \
-	bump-all \
-	gen-k8s \
-	prom-rules-verify \
-	release
