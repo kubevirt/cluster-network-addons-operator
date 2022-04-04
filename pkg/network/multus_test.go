@@ -1,7 +1,7 @@
 package network
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	osv1 "github.com/openshift/api/operator/v1"

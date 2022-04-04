@@ -17,7 +17,6 @@ require (
 	github.com/google/go-github/v32 v32.1.0
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/kevinburke/rest v0.0.0-20210506044642-5611499aa33c // indirect
-	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v0.0.0-20210208192252-670ac3fc997c
 	github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
@@ -37,7 +36,6 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.23.3
 	k8s.io/apiextensions-apiserver v0.23.0
 	k8s.io/apimachinery v0.23.3
@@ -46,7 +44,6 @@ require (
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubectl v0.23.1
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
-	kubevirt.io/qe-tools v0.1.6
 	sigs.k8s.io/controller-runtime v0.11.1
 	sigs.k8s.io/controller-tools v0.6.0
 )
@@ -105,7 +102,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.3 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
-	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gobuffalo/envy v1.7.1 // indirect
 	github.com/gobuffalo/flect v0.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -162,7 +158,7 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/onsi/ginkgo/v2 v2.0.0
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
 	github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb // indirect
@@ -225,8 +221,8 @@ require (
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
-	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	helm.sh/helm/v3 v3.6.2 // indirect
 	k8s.io/apiserver v0.23.1 // indirect
 	k8s.io/cli-runtime v0.23.1 // indirect
@@ -272,9 +268,9 @@ replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.4.13
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
+	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
-	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.11.1
 	golang.org/x/text => golang.org/x/text v0.3.3
 	k8s.io/client-go => k8s.io/client-go v0.23.1
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20210113233702-8566a335510f

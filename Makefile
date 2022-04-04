@@ -23,17 +23,14 @@ TARGETS = \
 
 export GOFLAGS=-mod=vendor
 export GO111MODULE=on
+GO_VERSION = $(shell hack/go-version.sh)
 
-WHAT ?= ./pkg ./cmd ./tools/
-
-GINKGO_EXTRA_ARGS ?=
-GINKGO_ARGS ?= --v -r --progress $(GINKGO_EXTRA_ARGS)
-GINKGO ?= build/_output/bin/ginkgo
+WHAT ?= ./pkg/... ./cmd/... ./tools/...
 
 export E2E_TEST_TIMEOUT ?= 3h
 
 E2E_TEST_EXTRA_ARGS ?=
-E2E_TEST_ARGS ?= $(strip -test.v -test.timeout $(E2E_TEST_TIMEOUT) -ginkgo.v $(E2E_TEST_EXTRA_ARGS))
+E2E_TEST_ARGS ?= $(strip -test.v --test.timeout $(E2E_TEST_TIMEOUT) $(E2E_TEST_EXTRA_ARGS))
 E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow \
@@ -54,9 +51,6 @@ GO := $(GOBIN)/go
 
 $(GO):
 	hack/install-go.sh $(BIN_DIR)
-
-$(GINKGO): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/onsi/ginkgo/ginkgo
 
 $(OPERATOR_SDK): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
@@ -102,8 +96,8 @@ goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
 	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 	touch $@
 
-test/unit: $(GINKGO)
-	$(GINKGO) $(GINKGO_ARGS) $(WHAT)
+test/unit: $(GO)
+	$(GO) test $(WHAT)
 
 manager: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./cmd/...
@@ -146,8 +140,8 @@ cluster-operator-push:
 cluster-operator-install:
 	./cluster/operator-install.sh
 
-$(E2E_SUITES): $(GINKGO)
-	GINKGO=$(GINKGO) GO=$(GO) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
+$(E2E_SUITES): $(GO)
+	GO=$(GO) TEST_SUITE=$@ TEST_ARGS="$(E2E_TEST_ARGS)" ./hack/functest.sh
 
 cluster-clean:
 	./cluster/clean.sh
@@ -195,7 +189,7 @@ release: $(GITHUB_RELEASE)
 	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
 vendor: $(GO)
-	$(GO) mod tidy
+	$(GO) mod tidy -compat=$(GO_VERSION)
 	$(GO) mod vendor
 
 auto-bumper: $(GO)
