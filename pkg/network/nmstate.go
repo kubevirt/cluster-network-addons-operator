@@ -28,7 +28,15 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	}
 
 	confWithDefaults := pupulateNmstateDefaultConfiguration(conf)
-
+	selfSignConfiguration := conf.SelfSignConfiguration
+	if selfSignConfiguration == nil {
+		selfSignConfiguration = &cnao.SelfSignConfiguration{
+			CARotateInterval:    "8760h0m0s",
+			CAOverlapInterval:   "24h0m0s",
+			CertRotateInterval:  "4380h0m0s",
+			CertOverlapInterval: "24h0m0s",
+		}
+	}
 	// render the manifests on disk
 	data := render.MakeRenderData()
 	data.Data["HandlerPrefix"] = ""
@@ -49,6 +57,7 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["InfraNodeSelector"] = confWithDefaults.PlacementConfiguration.Infra.NodeSelector
 	data.Data["InfraTolerations"] = confWithDefaults.PlacementConfiguration.Infra.Tolerations
 	data.Data["InfraAffinity"] = confWithDefaults.PlacementConfiguration.Infra.Affinity
+	data.Data["SelfSignConfiguration"] = selfSignConfiguration
 
 	_, enableOVS := os.LookupEnv("NMSTATE_ENABLE_OVS")
 	data.Data["EnableOVS"] = enableOVS
