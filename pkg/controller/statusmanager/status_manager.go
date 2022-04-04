@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	osconfv1 "github.com/openshift/api/config/v1"
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -158,15 +159,30 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 			},
 		)
 	} else if reachedAvailableLevel {
-		// If successfully deployed all components and is not failing on anything, mark as Available
-		status.eventEmitter.EmitAvailableForConfig()
-		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
-			conditionsv1.Condition{
-				Type:   conditionsv1.ConditionAvailable,
-				Status: corev1.ConditionTrue,
-			},
-		)
-		config.Status.ObservedVersion = operatorVersion
+		if status.isRunningOnOpenshift411OrLater() && config.Spec.NMState != nil {
+			// CNAO doesn't support nmstate deployment anymore, set Degraded state is nmstate is requested in NetworkAddonsConfig
+			reason := "InvalidConfiguration"
+			message := "NMState deployment is not supported by CNAO anymore, please install Kubernetes NMState Operator"
+			status.eventEmitter.EmitFailingForConfig(reason, message)
+			conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
+				conditionsv1.Condition{
+					Type:    conditionsv1.ConditionDegraded,
+					Status:  corev1.ConditionTrue,
+					Reason:  reason,
+					Message: message,
+				},
+			)
+		} else {
+			// If successfully deployed all components and is not failing on anything, mark as Available
+			status.eventEmitter.EmitAvailableForConfig()
+			conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
+				conditionsv1.Condition{
+					Type:   conditionsv1.ConditionAvailable,
+					Status: corev1.ConditionTrue,
+				},
+			)
+			config.Status.ObservedVersion = operatorVersion
+		}
 	}
 
 	// Make sure to expose deployed containers
@@ -253,6 +269,28 @@ func (status *StatusManager) MarkStatusLevelNotFailing(level StatusLevel) {
 	if status.failing[level] != nil {
 		status.failing[level] = nil
 	}
+}
+
+func (status *StatusManager) isRunningOnOpenshift411OrLater() bool {
+	version, err := status.getOpenshiftDesiredVersion()
+	if err != nil {
+		return false
+	}
+	var major, minor int
+	_, err = fmt.Sscanf(version, "%d.%d", &major, &minor)
+	if err != nil {
+		return false
+	}
+	return major >= 4 && minor >= 11
+}
+
+func (status *StatusManager) getOpenshiftDesiredVersion() (string, error) {
+	clusterVersion := &osconfv1.ClusterVersion{}
+	err := status.client.Get(context.TODO(), types.NamespacedName{Name: "version"}, clusterVersion)
+	if err != nil {
+		return "", err
+	}
+	return clusterVersion.Status.Desired.Version, nil
 }
 
 func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []cnao.Container, generation int64) {
