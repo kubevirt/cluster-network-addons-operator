@@ -66,4 +66,5 @@ spec:
   infraNodeSelector: {{ toYaml .InfraNodeSelector | nindent 4 }}
   infraTolerations: {{ toYaml .InfraTolerations | nindent 4 }}
   infraAffinity: {{ toYaml .InfraAffinity | nindent 4 }}
+  selfSignConfiguration : {{ toYaml .SelfSignConfiguration | nindent 4 }}
 EOF
