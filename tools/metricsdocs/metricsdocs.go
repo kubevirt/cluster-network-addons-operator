@@ -36,6 +36,7 @@ func writeToFile(metricsList metricList) {
 type metric struct {
 	name        string
 	description string
+	mType       string
 }
 
 func metricsOptsToMetricList(mdl map[monitoring.MetricsKey]monitoring.MetricsOpts) metricList {
@@ -51,12 +52,13 @@ func metricDescriptionToMetric(rrd monitoring.MetricsOpts) metric {
 	return metric{
 		name:        rrd.Name,
 		description: rrd.Help,
+		mType:       rrd.Type,
 	}
 }
 
 func (m metric) writeOut() {
 	fmt.Println("###", m.name)
-	fmt.Println(m.description)
+	fmt.Println(m.description + ". Type: " + m.mType + ".")
 }
 
 type metricList []metric
