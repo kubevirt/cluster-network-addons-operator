@@ -269,7 +269,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 							Image:           addonsImages.KubeRbacProxy,
 							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									Name:          "metrics",
 									Protocol:      "TCP",
 									ContainerPort: 8443,
@@ -425,15 +425,15 @@ func GetClusterRole() *rbacv1.ClusterRole {
 func GetCrd() *extv1.CustomResourceDefinition {
 	subResouceSchema := &extv1.CustomResourceSubresources{Status: &extv1.CustomResourceSubresourceStatus{}}
 	labelSelectorRequirement := map[string]extv1.JSONSchemaProps{
-		"key": extv1.JSONSchemaProps{
+		"key": {
 			Description: "key is the label key that the selector applies to.",
 			Type:        "string",
 		},
-		"operator": extv1.JSONSchemaProps{
+		"operator": {
 			Description: "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
 			Type:        "string",
 		},
-		"values": extv1.JSONSchemaProps{
+		"values": {
 			Description: "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.",
 			Type:        "array",
 			Items: &extv1.JSONSchemaPropsOrArray{
@@ -447,7 +447,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 		Description: "A label query over a set of resources, in this case pods.",
 		Type:        "object",
 		Properties: map[string]extv1.JSONSchemaProps{
-			"matchExpressions": extv1.JSONSchemaProps{
+			"matchExpressions": {
 				Description: "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
 				Type:        "array",
 				Items: &extv1.JSONSchemaPropsOrArray{
@@ -462,7 +462,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					},
 				},
 			},
-			"matchLabels": extv1.JSONSchemaProps{
+			"matchLabels": {
 				Description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
 				Type:        "object",
 				AdditionalProperties: &extv1.JSONSchemaPropsOrBool{
@@ -482,7 +482,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					Description: "The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
-						"podAffinityTerm": extv1.JSONSchemaProps{
+						"podAffinityTerm": {
 							Description: "Required. A pod affinity term, associated with the corresponding weight.",
 							Type:        "object",
 							Required: []string{
@@ -490,7 +490,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							},
 							Properties: map[string]extv1.JSONSchemaProps{
 								"labelSelector": podLabelSelector,
-								"namespaces": extv1.JSONSchemaProps{
+								"namespaces": {
 									Description: "namespaces specifies which namespaces the labelSelector applies to (matches against); null or empty list means \"this pod's namespace\"",
 									Type:        "array",
 									Items: &extv1.JSONSchemaPropsOrArray{
@@ -499,13 +499,13 @@ func GetCrd() *extv1.CustomResourceDefinition {
 										},
 									},
 								},
-								"topologyKey": extv1.JSONSchemaProps{
+								"topologyKey": {
 									Description: "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed.",
 									Type:        "string",
 								},
 							},
 						},
-						"weight": extv1.JSONSchemaProps{
+						"weight": {
 							Description: "weight associated with matching the corresponding podAffinityTerm, in the range 1-100.",
 							Type:        "integer",
 							Format:      "int32",
@@ -532,7 +532,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 					},
 					Properties: map[string]extv1.JSONSchemaProps{
 						"labelSelector": podLabelSelector,
-						"namespaces": extv1.JSONSchemaProps{
+						"namespaces": {
 							Description: "namespaces specifies which namespaces the labelSelector applies to (matches against); null or empty list means \"this pod's namespace\"",
 							Type:        "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
@@ -541,7 +541,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 								},
 							},
 						},
-						"topologyKey": extv1.JSONSchemaProps{
+						"topologyKey": {
 							Description: "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed.",
 							Type:        "string",
 						},
@@ -563,15 +563,15 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"operator",
 					},
 					Properties: map[string]extv1.JSONSchemaProps{
-						"key": extv1.JSONSchemaProps{
+						"key": {
 							Description: "The label key that the selector applies to.",
 							Type:        "string",
 						},
-						"operator": extv1.JSONSchemaProps{
+						"operator": {
 							Description: "Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt.",
 							Type:        "string",
 						},
-						"values": extv1.JSONSchemaProps{
+						"values": {
 							Description: "An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch.",
 							Type:        "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
@@ -597,7 +597,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 	}
 
 	customSecurityProfileProps := map[string]extv1.JSONSchemaProps{
-		"ciphers": extv1.JSONSchemaProps{
+		"ciphers": {
 			Description: "ciphers is used to specify the cipher algorithms that are negotiated during the TLS handshake.  Operators may remove entries their operands do not support.  For example, to use DES-CBC3-SHA  (yaml): \n   ciphers:     - DES-CBC3-SHA",
 			Items: &extv1.JSONSchemaPropsOrArray{
 				Schema: &extv1.JSONSchemaProps{
@@ -607,7 +607,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 			},
 			Type: "array",
 		},
-		"minTLSVersion": extv1.JSONSchemaProps{
+		"minTLSVersion": {
 			Description: "minTLSVersion is used to specify the minimal version of the TLS protocol that is negotiated during the TLS handshake. For example, to use TLS versions 1.1, 1.2 and 1.3 (yaml): \n   minTLSVersion: TLSv1.1 \n NOTE: currently the highest minTLSVersion allowed is VersionTLS12",
 			Type:        "string",
 			Enum: []extv1.JSON{
@@ -620,7 +620,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 	}
 
 	placementProps := map[string]extv1.JSONSchemaProps{
-		"nodeSelector": extv1.JSONSchemaProps{
+		"nodeSelector": {
 			AdditionalProperties: &extv1.JSONSchemaPropsOrBool{
 				Schema: &extv1.JSONSchemaProps{
 					Type: "string",
@@ -628,15 +628,15 @@ func GetCrd() *extv1.CustomResourceDefinition {
 			},
 			Type: "object",
 		},
-		"affinity": extv1.JSONSchemaProps{
+		"affinity": {
 			Description: "Affinity is a group of affinity scheduling rules.",
 			Type:        "object",
 			Properties: map[string]extv1.JSONSchemaProps{
-				"nodeAffinity": extv1.JSONSchemaProps{
+				"nodeAffinity": {
 					Description: "Describes node affinity scheduling rules for the pod.",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
-						"preferredDuringSchedulingIgnoredDuringExecution": extv1.JSONSchemaProps{
+						"preferredDuringSchedulingIgnoredDuringExecution": {
 							Description: "The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding \"weight\" to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred.",
 							Type:        "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
@@ -644,7 +644,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 									Description: "An empty preferred scheduling term matches all objects with implicit weight 0 (i.e. it's a no-op). A null preferred scheduling term matches no objects (i.e. is also a no-op).",
 									Type:        "object",
 									Properties: map[string]extv1.JSONSchemaProps{
-										"preference": extv1.JSONSchemaProps{
+										"preference": {
 											Description: "A node selector term, associated with the corresponding weight.",
 											Type:        "object",
 											Properties: map[string]extv1.JSONSchemaProps{
@@ -652,7 +652,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 												"matchFields":      getNodeSelectorRequirement("A list of node selector requirements by node's fields."),
 											},
 										},
-										"weight": extv1.JSONSchemaProps{
+										"weight": {
 											Description: "Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100.",
 											Type:        "integer",
 											Format:      "int32",
@@ -665,14 +665,14 @@ func GetCrd() *extv1.CustomResourceDefinition {
 								},
 							},
 						},
-						"requiredDuringSchedulingIgnoredDuringExecution": extv1.JSONSchemaProps{
+						"requiredDuringSchedulingIgnoredDuringExecution": {
 							Description: "If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to an update), the system may or may not try to eventually evict the pod from its node.",
 							Type:        "object",
 							Required: []string{
 								"nodeSelectorTerms",
 							},
 							Properties: map[string]extv1.JSONSchemaProps{
-								"nodeSelectorTerms": extv1.JSONSchemaProps{
+								"nodeSelectorTerms": {
 									Description: "Required. A list of node selector terms. The terms are ORed.",
 									Type:        "array",
 									Items: &extv1.JSONSchemaPropsOrArray{
@@ -690,7 +690,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 					},
 				},
-				"podAffinity": extv1.JSONSchemaProps{
+				"podAffinity": {
 					Description: "Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
@@ -698,7 +698,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"requiredDuringSchedulingIgnoredDuringExecution":  getPodRequiredDuringSchedulingIgnoredDuringExecution("affinity"),
 					},
 				},
-				"podAntiAffinity": extv1.JSONSchemaProps{
+				"podAntiAffinity": {
 					Description: "Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
@@ -708,31 +708,31 @@ func GetCrd() *extv1.CustomResourceDefinition {
 				},
 			},
 		},
-		"tolerations": extv1.JSONSchemaProps{
+		"tolerations": {
 			Type: "array",
 			Items: &extv1.JSONSchemaPropsOrArray{
 				Schema: &extv1.JSONSchemaProps{
 					Description: "The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
-						"effect": extv1.JSONSchemaProps{
+						"effect": {
 							Description: "Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.",
 							Type:        "string",
 						},
-						"key": extv1.JSONSchemaProps{
+						"key": {
 							Description: "Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.",
 							Type:        "string",
 						},
-						"operator": extv1.JSONSchemaProps{
+						"operator": {
 							Description: "Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category.",
 							Type:        "string",
 						},
-						"tolerationSeconds": extv1.JSONSchemaProps{
+						"tolerationSeconds": {
 							Description: "TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.",
 							Type:        "integer",
 							Format:      "int64",
 						},
-						"value": extv1.JSONSchemaProps{
+						"value": {
 							Description: "Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.",
 							Type:        "string",
 						},
@@ -747,119 +747,119 @@ func GetCrd() *extv1.CustomResourceDefinition {
 			Description: "NetworkAddonsConfig is the Schema for the networkaddonsconfigs API",
 			Type:        "object",
 			Properties: map[string]extv1.JSONSchemaProps{
-				"apiVersion": extv1.JSONSchemaProps{
+				"apiVersion": {
 					Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
 					Type:        "string",
 				},
-				"kind": extv1.JSONSchemaProps{
+				"kind": {
 					Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
 					Type:        "string",
 				},
-				"metadata": extv1.JSONSchemaProps{
+				"metadata": {
 					Type: "object",
 				},
-				"spec": extv1.JSONSchemaProps{
+				"spec": {
 					Description: "NetworkAddonsConfigSpec defines the desired state of NetworkAddonsConfig",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
-						"imagePullPolicy": extv1.JSONSchemaProps{
+						"imagePullPolicy": {
 							Description: "PullPolicy describes a policy for if/when to pull a container image",
 							Type:        "string",
 						},
-						"kubeMacPool": extv1.JSONSchemaProps{
+						"kubeMacPool": {
 							Description: "KubeMacPool plugin manages MAC allocation to Pods and VMs in Kubernetes",
 							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
-								"rangeEnd": extv1.JSONSchemaProps{
+								"rangeEnd": {
 									Description: "RangeEnd defines the first mac in range",
 									Type:        "string",
 								},
-								"rangeStart": extv1.JSONSchemaProps{
+								"rangeStart": {
 									Description: "RangeStart defines the first mac in range",
 									Type:        "string",
 								},
 							},
 						},
-						"linuxBridge": extv1.JSONSchemaProps{
+						"linuxBridge": {
 							Description: "LinuxBridge plugin allows users to create a bridge and add the host and the container to it",
 							Type:        "object",
 						},
-						"macvtap": extv1.JSONSchemaProps{
+						"macvtap": {
 							Description: "MacvtapCni plugin allows users to define Kubernetes networks on top of existing host interfaces",
 							Type:        "object",
 						},
-						"multus": extv1.JSONSchemaProps{
+						"multus": {
 							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes",
 							Type:        "object",
 						},
-						"ovs": extv1.JSONSchemaProps{
+						"ovs": {
 							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
 							Type:        "object",
 						},
-						"selfSignConfiguration": extv1.JSONSchemaProps{
+						"selfSignConfiguration": {
 							Description: "SelfSignConfiguration defines self sign configuration",
 							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
-								"caRotateInterval": extv1.JSONSchemaProps{
+								"caRotateInterval": {
 									Description: "CARotateInterval defines duration for CA expiration",
 									Type:        "string",
 								},
-								"certRotateInterval": extv1.JSONSchemaProps{
+								"certRotateInterval": {
 									Description: "CertRotateInterval defines duration for of service certificate expiration",
 									Type:        "string",
 								},
-								"caOverlapInterval": extv1.JSONSchemaProps{
+								"caOverlapInterval": {
 									Description: "CAOverlapInterval defines the duration where expired CA certificate can overlap with new one, in order to allow fluent CA rotation transitioning",
 									Type:        "string",
 								},
-								"certOverlapInterval": extv1.JSONSchemaProps{
+								"certOverlapInterval": {
 									Description: "CertOverlapInterval defines the duration where expired service certificate can overlap with new one, in order to allow fluent service rotation transitioning",
 									Type:        "string",
 								},
 							},
 						},
-						"placementConfiguration": extv1.JSONSchemaProps{
+						"placementConfiguration": {
 							Description: "PlacementConfiguration defines node placement configuration",
 							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
-								"infra": extv1.JSONSchemaProps{
+								"infra": {
 									Description: "Infra defines placement configuration for control-plane nodes",
 									Type:        "object",
 									Properties:  placementProps,
 								},
-								"workloads": extv1.JSONSchemaProps{
+								"workloads": {
 									Type:       "object",
 									Properties: placementProps,
 								},
 							},
 						},
-						"tlsSecurityProfile": extv1.JSONSchemaProps{
+						"tlsSecurityProfile": {
 							Description: "TLSSecurityProfile defines the schema for a TLS security profile. This object is used by operators to apply TLS security settings to operands.",
 							Type:        "object",
 							Nullable:    true,
 							Properties: map[string]extv1.JSONSchemaProps{
-								"custom": extv1.JSONSchemaProps{
+								"custom": {
 									Description: "custom is a user-defined TLS security profile. Be extremely careful using a custom profile as invalid configurations can be catastrophic. An example custom profile looks like this: ciphers: ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE-RSA-CHACHA20-POLY1305,ECDHE-RSA-AES128-GCM-SHA256,ECDHE-ECDSA-AES128-GCM-SHA256 minTLSVersion: TLSv1.1",
 									Nullable:    true,
 									Properties:  customSecurityProfileProps,
 									Type:        "object",
 								},
-								"intermediate": extv1.JSONSchemaProps{
+								"intermediate": {
 									Description: "intermediate is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29 and looks like this (yaml): \n   ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,ECDHE-ECDSA-AES128-GCM-SHA256     - ECDHE-RSA-AE,SHA256,ECDHE-ECDSA-AES256-GCM-SHA384,ECDHE-RSA-AE,SHA384,ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE,POLY1305,DHE-RSA-AES128-GCM-SHA256,DHE-RSA-AES256-GCM-SHA384 minTLSVersion: TLSv1.2",
 									Nullable:    true,
 									Type:        "object",
 								},
-								"modern": extv1.JSONSchemaProps{
+								"modern": {
 									Description: "modern is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility and looks like this (yaml): ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256 minTLSVersion: TLSv1.3 NOTE: Currently unsupported.",
 									Nullable:    true,
 									Type:        "object",
 								},
-								"old": extv1.JSONSchemaProps{
+								"old": {
 									Description: "old is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Old_backward_compatibility and looks like this (yaml): ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,ECDHE-ECDSA-AES128-GCM-SHA256,ECDHE-RSA-AES128-GCM-SHA256,ECDHE-ECDSA-AES256-GCM-SHA384,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE-RSA-CHACHA20-POLY1305,DHE-RSA-AES128-GCM-SHA256,DHE-RSA-AES256-GCM-SHA384,DHE-RSA-CHACHA20-POLY1305,ECDHE-ECDSA-AES128-SHA256,ECDHE-RSA-AES128-SHA256,ECDHE-ECDSA-AES128-SHA,ECDHE-RSA-AES128-SHA,ECDHE-ECDSA-AES256-SHA384,ECDHE-RSA-AES256-SHA384,ECDHE-ECDSA-AES256-SHA,ECDHE-RSA-AES256-SHA,DHE-RSA-AES128-SHA256,DHE-RSA-AES256-SHA256,AES128-GCM-SHA256,AES256-GCM-SHA384,AES128-SHA256,AES256-SHA256,AES128-SHA,AES256-SHA,DES-CBC3-SHA minTLSVersion: TLSv1.0",
 									Nullable:    true,
 									Type:        "object",
 								},
-								"type": extv1.JSONSchemaProps{
+								"type": {
 									Description: "type is one of Old, Intermediate, Modern or Custom. Custom provides the ability to specify individual TLS security profile parameters. Old, Intermediate and Modern are TLS security profiles based on: \n https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations The profiles are intent based, so they may change over time as new ciphers are developed and existing ciphers are found to be insecure.  Depending on precisely which ciphers are available to a process, the list may be reduced. \n Note that the Modern profile is currently not supported because it is not yet well adopted by common software libraries.",
 									Enum: []extv1.JSON{
 										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileOldType))},
@@ -873,37 +873,37 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 					},
 				},
-				"status": extv1.JSONSchemaProps{
+				"status": {
 					Description: "NetworkAddonsConfigStatus defines the observed state of NetworkAddonsConfig",
 					Type:        "object",
 					Properties: map[string]extv1.JSONSchemaProps{
-						"conditions": extv1.JSONSchemaProps{
+						"conditions": {
 							Type: "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
 								Schema: &extv1.JSONSchemaProps{
 									Description: "Condition represents the state of the operator's reconciliation functionality.",
 									Type:        "object",
 									Properties: map[string]extv1.JSONSchemaProps{
-										"lastHeartbeatTime": extv1.JSONSchemaProps{
+										"lastHeartbeatTime": {
 											Format:   "date-time",
 											Type:     "string",
 											Nullable: true,
 										},
-										"lastTransitionTime": extv1.JSONSchemaProps{
+										"lastTransitionTime": {
 											Format:   "date-time",
 											Type:     "string",
 											Nullable: true,
 										},
-										"message": extv1.JSONSchemaProps{
+										"message": {
 											Type: "string",
 										},
-										"reason": extv1.JSONSchemaProps{
+										"reason": {
 											Type: "string",
 										},
-										"status": extv1.JSONSchemaProps{
+										"status": {
 											Type: "string",
 										},
-										"type": extv1.JSONSchemaProps{
+										"type": {
 											Description: "ConditionType is the state of the operator's reconciliation functionality.",
 											Type:        "string",
 										},
@@ -915,21 +915,21 @@ func GetCrd() *extv1.CustomResourceDefinition {
 								},
 							},
 						},
-						"containers": extv1.JSONSchemaProps{
+						"containers": {
 							Type: "array",
 							Items: &extv1.JSONSchemaPropsOrArray{
 								Schema: &extv1.JSONSchemaProps{
 									Properties: map[string]extv1.JSONSchemaProps{
-										"image": extv1.JSONSchemaProps{
+										"image": {
 											Type: "string",
 										},
-										"name": extv1.JSONSchemaProps{
+										"name": {
 											Type: "string",
 										},
-										"parentKind": extv1.JSONSchemaProps{
+										"parentKind": {
 											Type: "string",
 										},
-										"parentName": extv1.JSONSchemaProps{
+										"parentName": {
 											Type: "string",
 										},
 									},
@@ -943,13 +943,13 @@ func GetCrd() *extv1.CustomResourceDefinition {
 								},
 							},
 						},
-						"observedVersion": extv1.JSONSchemaProps{
+						"observedVersion": {
 							Type: "string",
 						},
-						"operatorVersion": extv1.JSONSchemaProps{
+						"operatorVersion": {
 							Type: "string",
 						},
-						"targetVersion": extv1.JSONSchemaProps{
+						"targetVersion": {
 							Type: "string",
 						},
 					},

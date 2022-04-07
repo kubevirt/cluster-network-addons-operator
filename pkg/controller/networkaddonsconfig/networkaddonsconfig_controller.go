@@ -33,6 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	osconfv1 "github.com/openshift/api/config/v1"
+
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
@@ -43,7 +45,6 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
-	osconfv1 "github.com/openshift/api/config/v1"
 )
 
 // ManifestPath is the path to the manifest templates
@@ -135,12 +136,14 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 	// Spec fields differ.
 	pred := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
+			var oldConfig *cnao.NetworkAddonsConfig
+			oldConfig, err = runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
 			if err != nil {
 				log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
 				return false
 			}
-			newConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
+			var newConfig *cnao.NetworkAddonsConfig
+			newConfig, err = runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
 			if err != nil {
 				log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
 				return false
@@ -150,10 +153,10 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 	}
 
 	// Watch for changes to primary resource NetworkAddonsConfig
-	if err := c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+	if err = c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
 		return err
 	}
-	if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+	if err = c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
 		return err
 	}
 
@@ -254,7 +257,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	}
 
 	// Validate the configuration
-	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
+	if err = network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
 		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
 		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToValidate", err.Error())
@@ -344,7 +347,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 
 	// Perform any special object changes that are impossible to do with regular Apply. e.g. Remove outdated objects
 	// and objects that cannot be modified by Apply method due to incompatible changes.
-	if err := network.SpecialCleanUp(&networkAddonsConfig.Spec, r.client, r.clusterInfo); err != nil {
+	if err = network.SpecialCleanUp(&networkAddonsConfig.Spec, r.client, r.clusterInfo); err != nil {
 		log.Printf("failed to Clean Up outdated objects: %v", err)
 		return objs, err
 	}
@@ -379,7 +382,7 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 	}
 
 	// Fill all defaults explicitly
-	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
+	if err = network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
 		log.Printf("failed to fill defaults: %v", err)
 		err = errors.Wrapf(err, "failed to fill defaults")
 		return nil, err

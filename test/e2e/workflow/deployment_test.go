@@ -345,7 +345,6 @@ func testConfigUpdate(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddons
 // available on operator-sdk test framework:
 // https://github.com/operator-framework/operator-sdk/issues/2655
 func checkConfigChange(gvk schema.GroupVersionKind, components []Component, while func()) {
-
 	// Start the function with a little delay to give the Progressing check a better chance
 	// of catching the event
 	go func() {

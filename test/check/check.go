@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
 	"gopkg.in/yaml.v2"
@@ -26,6 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
@@ -77,7 +78,6 @@ func CheckComponentsRemoval(components []Component) {
 func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
-
 		return checkConfigCondition(gvk, conditionType, conditionStatus)
 	}
 
@@ -824,10 +824,8 @@ func checkUnicast(mac net.HardwareAddr) {
 func retrieveRange() (string, string) {
 	configMap := &corev1.ConfigMap{}
 	Eventually(func() error {
-
 		return testenv.Client.Get(context.TODO(),
 			types.NamespacedName{Namespace: components.Namespace, Name: names.APPLIED_PREFIX + names.OPERATOR_CONFIG}, configMap)
-
 	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())
 
 	appliedData, exist := configMap.Data["applied"]

@@ -146,9 +146,9 @@ func handleBump(cnaoRepo *gitCnaoRepo, component component, componentName, compo
 
 func initLog() *log.Logger {
 	var buf bytes.Buffer
-	logger := log.New(&buf, "INFO: ", log.LstdFlags)
-	logger.SetOutput(os.Stdout)
-	return logger
+	l := log.New(&buf, "INFO: ", log.LstdFlags)
+	l.SetOutput(os.Stdout)
+	return l
 }
 
 func initFlags(paramArgs *inputParams) {

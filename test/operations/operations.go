@@ -76,7 +76,6 @@ func DeleteConfig(gvk schema.GroupVersionKind) {
 	EventuallyWithOffset(1, func() error {
 		return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
 	}, 60*time.Second, 1*time.Second).Should(SatisfyAll(HaveOccurred(), WithTransform(apierrors.IsNotFound, BeTrue())), fmt.Sprintf("should successfuly delete config '%s'", config.GetName()))
-
 }
 
 func GetConfigStatus(gvk schema.GroupVersionKind) *cnao.NetworkAddonsConfigStatus {

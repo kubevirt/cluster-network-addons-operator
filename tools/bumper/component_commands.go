@@ -321,7 +321,8 @@ func (componentOps *gitComponent) getTagMap() (map[plumbing.Hash]plumbing.Refere
 	}
 
 	err = tags.ForEach(func(t *plumbing.Reference) error {
-		commitSha, err := componentOps.getTagCommitSha(t.Name().Short())
+		var commitSha string
+		commitSha, err = componentOps.getTagCommitSha(t.Name().Short())
 		if err != nil {
 			return errors.Wrapf(err, "Failed to get commit sha from tag %v", t)
 		}

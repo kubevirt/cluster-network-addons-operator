@@ -307,7 +307,6 @@ func (status *StatusManager) SetFromPods() {
 	// Iterate all owned DaemonSets and check whether they are progressing smoothly or have been
 	// already deployed.
 	for _, dsName := range daemonSets {
-
 		// First check whether DaemonSet namespace exists
 		ns := &corev1.Namespace{}
 		if err := status.client.Get(context.TODO(), types.NamespacedName{Name: dsName.Namespace}, ns); err != nil {
@@ -401,7 +400,6 @@ func (status *StatusManager) SetFromPods() {
 			Reason:  "Deploying",
 			Message: strings.Join(progressing, "\n"),
 		})
-
 	} else {
 		conditions = append(conditions, conditionsv1.Condition{
 			Type:   conditionsv1.ConditionProgressing,

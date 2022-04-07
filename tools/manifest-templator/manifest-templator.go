@@ -33,8 +33,9 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	components "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	components "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 )
 
 type operatorData struct {
@@ -97,7 +98,7 @@ func marshallObject(obj interface{}, writer io.Writer) error {
 	check(err)
 
 	var r unstructured.Unstructured
-	if err := json.Unmarshal(jsonBytes, &r.Object); err != nil {
+	if err = json.Unmarshal(jsonBytes, &r.Object); err != nil {
 		return err
 	}
 

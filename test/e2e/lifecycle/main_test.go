@@ -25,7 +25,6 @@ func TestE2E(t *testing.T) {
 		reporters = append(reporters, ginkgoreporters.NewJunitReporter())
 	}
 	RunSpecsWithDefaultAndCustomReporters(t, "Lifecycle E2E Test Suite", reporters)
-
 }
 
 var _ = BeforeSuite(func() {

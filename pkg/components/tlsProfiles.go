@@ -16,7 +16,7 @@ type tlsProfiles map[ocpv1.TLSProfileType]*ocpv1.TLSProfileSpec
 
 func (p tlsProfiles) sortedKeys() []ocpv1.TLSProfileType {
 	tlsProfiles := []ocpv1.TLSProfileType{}
-	for k, _ := range p {
+	for k := range p {
 		tlsProfiles = append(tlsProfiles, k)
 	}
 	sort.Sort(byTLSProfileName(tlsProfiles))

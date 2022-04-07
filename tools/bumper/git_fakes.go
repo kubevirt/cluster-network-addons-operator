@@ -110,7 +110,6 @@ var GITFORMAT = `--pretty=format:{
  },`
 
 func gitCommand(args []string) (string, error) {
-
 	cmd := exec.Command("git", args...)
 	out, err := cmd.Output()
 	if err != nil {

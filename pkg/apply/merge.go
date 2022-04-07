@@ -59,7 +59,6 @@ const (
 func MergeDeploymentForUpdate(current, updated *unstructured.Unstructured) error {
 	gvk := updated.GroupVersionKind()
 	if gvk.Group == "apps" && gvk.Kind == "Deployment" {
-
 		// Copy over the revision annotation from current up to updated
 		// otherwise, updated would win, and this annotation is "special" and
 		// needs to be preserved
@@ -165,7 +164,9 @@ func mergeWebhookConfiguration(current, updated *unstructured.Unstructured) erro
 	// Merge values we want to preserve from the current webhooks into the new ones
 	mergedWebhooks := []interface{}{}
 	for _, updatedWebhook := range updatedWebhooks {
-		updatedWebhookName, found, err := unstructured.NestedString(updatedWebhook.(map[string]interface{}), "name")
+		var updatedWebhookName string
+		var found bool
+		updatedWebhookName, found, err = unstructured.NestedString(updatedWebhook.(map[string]interface{}), "name")
 		if err != nil {
 			return errors.Wrapf(err, "failed reading 'name' in webhook config")
 		}
@@ -178,12 +179,15 @@ func mergeWebhookConfiguration(current, updated *unstructured.Unstructured) erro
 			continue
 		}
 
-		currentCABundle, currentCABundleFound, err := unstructured.NestedString(currentWebhook, "clientConfig", "caBundle")
+		var currentCABundle string
+		var currentCABundleFound bool
+		currentCABundle, currentCABundleFound, err = unstructured.NestedString(currentWebhook, "clientConfig", "caBundle")
 		if err != nil {
 			return errors.Wrapf(err, "failed searching current caBundle 'field' at webhook %s", updatedWebhookName)
 		}
 
-		_, updatedCABundleFound, err := unstructured.NestedString(updatedWebhook.(map[string]interface{}), "clientConfig", "caBundle")
+		var updatedCABundleFound bool
+		_, updatedCABundleFound, err = unstructured.NestedString(updatedWebhook.(map[string]interface{}), "clientConfig", "caBundle")
 		if err != nil {
 			return errors.Wrapf(err, "failed searching updated caBundle 'field' at webhook %s", updatedWebhookName)
 		}

@@ -85,15 +85,18 @@ func uninstallStandaloneNMState(version string) {
 	Expect(err).ToNot(HaveOccurred(), "Error creating temporary dir")
 	manifests := []string{"operator", "role_binding", "role", "service_account", "namespace"}
 	for _, manifest := range manifests {
-		yamlString, err := parseManifest(fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/operator/%s.yaml", version, manifest), version)
+		var yamlString string
+		yamlString, err = parseManifest(fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/operator/%s.yaml", version, manifest), version)
 		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Error parsing manifest file to string: %s", manifest))
 
 		yamlFile := filepath.Join(tmpdir, fmt.Sprintf("%s.yaml", manifest))
 		ioutil.WriteFile(yamlFile, []byte(yamlString), 0666)
-		result, stderr, err := kubectl.Kubectl("delete", "-f", yamlFile)
+		var result, stderr string
+		result, stderr, err = kubectl.Kubectl("delete", "-f", yamlFile)
 		Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Error when running kubectl: %s", result+stderr))
 	}
-	result, stderr, err := kubectl.Kubectl("delete", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", version))
+	var result, stderr string
+	result, stderr, err = kubectl.Kubectl("delete", "-f", fmt.Sprintf("https://raw.githubusercontent.com/nmstate/kubernetes-nmstate/%s/deploy/crds/nmstate.io_nmstates.yaml", version))
 	Expect(err).ToNot(HaveOccurred(), "Error deleting CRD: %s", result+stderr)
 }
 

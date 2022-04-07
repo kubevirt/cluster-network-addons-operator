@@ -116,7 +116,6 @@ func UninstallRelease(release Release) {
 		out, stderr, err := Kubectl("delete", "crd", "--ignore-not-found", crdInstance)
 		Expect(err).NotTo(HaveOccurred(), out+stderr)
 	}
-
 }
 
 // Installs given release (RBAC and Deployment)

@@ -12,19 +12,20 @@ import (
 )
 
 var _ = Describe("Testing internal parser", func() {
-	var tmpfile *os.File
+	var (
+		tmpfile                   *os.File
+		createTempFileWithContent = func(content []byte) {
+			var err error
+			tmpfile, err = ioutil.TempFile("", "test")
+			Expect(err).ToNot(HaveOccurred(), "Should successfully create temp file")
 
-	createTempFileWithContent := func(content []byte) {
-		var err error
-		tmpfile, err = ioutil.TempFile("", "test")
-		Expect(err).ToNot(HaveOccurred(), "Should successfully create temp file")
+			defer tmpfile.Close()
 
-		defer tmpfile.Close()
-
-		By("Writing and closing the temporary file")
-		_, err = tmpfile.Write(content)
-		Expect(err).ToNot(HaveOccurred(), "Should successfully write content to the temp file")
-	}
+			By("Writing and closing the temporary file")
+			_, err = tmpfile.Write(content)
+			Expect(err).ToNot(HaveOccurred(), "Should successfully write content to the temp file")
+		}
+	)
 
 	AfterEach(func() {
 		By("Removing the temporary file")
@@ -126,13 +127,13 @@ components:
 			})
 			It("should correctly parse params of all components", func() {
 				By(fmt.Sprintf("Parsing content of temporary file %s", tmpfile.Name()))
-				componentsConfig, err := parseComponentsYaml(tmpfile.Name())
+				obtainedComponentsConfig, err := parseComponentsYaml(tmpfile.Name())
 				Expect(err).ToNot(HaveOccurred(), "Should Succeed to parse file")
 
 				By("Checking map is not empty")
-				Expect(componentsConfig.Components).ToNot(BeEmpty(), "Components map Should not be empty")
+				Expect(obtainedComponentsConfig.Components).ToNot(BeEmpty(), "Components map Should not be empty")
 				By("Checking map output is as expected")
-				Expect(componentsConfig).To(Equal(expectedValidComponentsConfig), "componentsConfig should be identical to expected")
+				Expect(obtainedComponentsConfig).To(Equal(expectedValidComponentsConfig), "componentsConfig should be identical to expected")
 			})
 		})
 	})

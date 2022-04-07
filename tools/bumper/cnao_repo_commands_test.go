@@ -321,7 +321,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			status, err = worktree.Status()
 			Expect(err).ToNot(HaveOccurred(), "should succeed to get repo status after resetting repo")
 			remainingFilesList := []string{}
-			for file, _ := range status {
+			for file := range status {
 				remainingFilesList = append(remainingFilesList, file)
 			}
 			Expect(remainingFilesList).To(ConsistOf(r.expectedRemainingFiles))
@@ -437,7 +437,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			deleted:     []string{},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
-				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
+				{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
 			},
 		}),
 		Entry("Should add file to tree list when a new file is created, allowedList allows all files", collectModifiedToTreeListParams{
@@ -445,7 +445,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			deleted:     []string{},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
-				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
+				{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
 			},
 		}),
 		Entry("Should add deleted file to tree list when files are deleted, allowedList allows all files", collectModifiedToTreeListParams{
@@ -453,7 +453,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			deleted:     []string{"static"},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
-				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Mode: github.String("100644")},
+				{Path: github.String("static"), Type: github.String("blob"), Mode: github.String("100644")},
 			},
 		}),
 		Entry("Should add files to tree list when files are modified and created, allowedList allows all files", collectModifiedToTreeListParams{
@@ -461,10 +461,10 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			deleted:     []string{"tagged_lightweight"},
 			allowedList: []string{"*"},
 			expectedTreeEntryList: []*github.TreeEntry{
-				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
-				&github.TreeEntry{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
-				&github.TreeEntry{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
-				&github.TreeEntry{Path: github.String("tagged_lightweight"), Type: github.String("blob"), Mode: github.String("100644")},
+				{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
+				{Path: github.String("static"), Type: github.String("blob"), Content: github.String("static"), Mode: github.String("100644")},
+				{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
+				{Path: github.String("tagged_lightweight"), Type: github.String("blob"), Mode: github.String("100644")},
 			},
 		}),
 		Entry("Should return empty list when files were modified but allowedList is empty", collectModifiedToTreeListParams{
@@ -481,9 +481,9 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			files:       []string{"static", "tagged_annotated", "newFile", "tagged_lightweight"},
 			allowedList: []string{"newFile", "tagged_*"},
 			expectedTreeEntryList: []*github.TreeEntry{
-				&github.TreeEntry{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
-				&github.TreeEntry{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
-				&github.TreeEntry{Path: github.String("tagged_lightweight"), Type: github.String("blob"), Content: github.String("tagged_lightweight"), Mode: github.String("100644")},
+				{Path: github.String("newFile"), Type: github.String("blob"), Content: github.String("newFile"), Mode: github.String("100644")},
+				{Path: github.String("tagged_annotated"), Type: github.String("blob"), Content: github.String("tagged_annotated"), Mode: github.String("100644")},
+				{Path: github.String("tagged_lightweight"), Type: github.String("blob"), Content: github.String("tagged_lightweight"), Mode: github.String("100644")},
 			},
 		}),
 	)

@@ -38,7 +38,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 
 	if err != nil && apierrors.IsNotFound(err) {
 		log.Printf("does not exist, creating %s", objDesc)
-		err := client.Create(ctx, obj)
+		err = client.Create(ctx, obj)
 		if err != nil {
 			return errors.Wrapf(err, "could not create %s", objDesc)
 		}
@@ -55,7 +55,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	}
 
 	// Merge the desired object with what actually exists
-	if err := MergeObjectForUpdate(existing, obj); err != nil {
+	if err = MergeObjectForUpdate(existing, obj); err != nil {
 		return errors.Wrapf(err, "could not merge object %s with existing", objDesc)
 	}
 	if !equality.Semantic.DeepEqual(existing, obj) {
@@ -69,10 +69,10 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 			bridgeMarkerDaemonSetUpdateError := "DaemonSet.apps \"bridge-marker\" is invalid: spec.selector: Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"name\":\"bridge-marker\"}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable"
 			if strings.Contains(err.Error(), bridgeMarkerDaemonSetUpdateError) {
 				log.Print("update failed due to change in DaemonSet API group; removing original object and recreating")
-				if err := client.Delete(ctx, existing); err != nil {
+				if err = client.Delete(ctx, existing); err != nil {
 					return errors.Wrapf(err, "could not delete %s", objDesc)
 				}
-				if err := client.Create(ctx, obj); err != nil {
+				if err = client.Create(ctx, obj); err != nil {
 					return errors.Wrapf(err, "could not create %s", objDesc)
 				}
 				log.Print("update of conflicting DaemonSet was successful")

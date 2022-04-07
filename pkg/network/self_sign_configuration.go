@@ -110,7 +110,6 @@ func fillDefaultsSelfSignConfiguration(conf, previous *cnao.NetworkAddonsConfigS
 	if isMissingSelfSignConfiguration(conf) {
 		if previous != nil && !isMissingSelfSignConfiguration(previous) {
 			conf.SelfSignConfiguration = previous.SelfSignConfiguration
-
 		} else {
 			conf.SelfSignConfiguration = DefaultSelfSignConfiguration()
 		}
@@ -131,7 +130,6 @@ func validateNotEmpty(name, value string) error {
 		return errors.Errorf("failed to validate selfSignConfiguration: %s is missing", name)
 	}
 	return nil
-
 }
 
 func validateGreaterThanZero(name string, d time.Duration) error {
@@ -139,7 +137,6 @@ func validateGreaterThanZero(name string, d time.Duration) error {
 		return errors.Errorf("failed to validate selfSignConfiguration: %s duration has to be > 0", name)
 	}
 	return nil
-
 }
 
 func validateGreaterThan(lhsName string, lhsValue time.Duration, rhsNamed string, rhsValue time.Duration) error {
