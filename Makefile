@@ -67,32 +67,12 @@ $(GITHUB_RELEASE): $(GO) go.mod
 $(CONTROLLER_GEN): $(GO) go.mod
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
 
-.PHONY: fmt
-fmt: whitespace goimports
-
-.PHONY: goimport
-goimports:
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
-
-.PHONY: whitespace
-whitespace:
-	./hack/whitespace.sh --fix
+lint: $(GO) 
+	GOFLAGS=-mod=mod $(GO) run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2 run --fix
 
 .PHONY: check
-check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify
+check: lint gen-k8s-check test/unit prom-rules-verify
 	./hack/check.sh
-
-.PHONY: whitespace-check
-whitespace-check:
-	./hack/whitespace.sh
-
-.PHONY: vet
-vet: $(GO)
-	$(GO) vet ./pkg/... ./cmd/... ./test/... ./tools/...
-
-.PHONY: goimports-checks
-goimports-check: $(GO)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 
 .PHONY: test/unit
 test/unit: $(GINKGO)
