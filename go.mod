@@ -274,6 +274,7 @@ replace (
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.11.1
 	golang.org/x/text => golang.org/x/text v0.3.3
 	k8s.io/client-go => k8s.io/client-go v0.23.1
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20210113233702-8566a335510f
