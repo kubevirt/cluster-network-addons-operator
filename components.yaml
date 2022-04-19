@@ -19,10 +19,10 @@ components:
     metadata: ""
   macvtap-cni:
     url: https://github.com/kubevirt/macvtap-cni
-    commit: 9b9eaf8427bc6c9e9a48a9393847e28f02ea7a97
+    commit: 50c4042a422aee6df0f54af43ba4cd63e518e044
     branch: main
     update-policy: tagged
-    metadata: v0.6.1
+    metadata: v0.7.0
   multus:
     url: https://github.com/k8snetworkplumbingwg/multus-cni
     commit: efdc0a5c7d1ea4bb236d638403420448b48782b3

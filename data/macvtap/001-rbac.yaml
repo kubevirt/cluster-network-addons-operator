@@ -7,6 +7,10 @@ metadata:
 allowHostNetwork: true
 allowPrivilegedContainer: true
 allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostPID: false
+allowHostPorts: false
+readOnlyRootFilesystem: false
 runAsUser:
   type: RunAsAny
 seLinuxContext:

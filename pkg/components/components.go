@@ -35,7 +35,7 @@ const (
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:7df2177401406874ff0f2b3b296624eba4a291b9485829c52a9b3491fefc2753"
 	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:cf669ca4967cd26c6629efa93b7426c8e1c65fa17d5ce59deaab1237a854d81b"
 	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@sha256:c09f882c64ee6449e13ff8b0a249d1dc4653d7d94a97f5ebee61de2d3ce9d5e8"
-	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:bfaf7b1c4840e27cce20887ba3e8c24f94ff1c36f09acaa8fa195ea431b9bfd1"
+	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:1dee52c8e6bdb39da18a6893ff00f7c4cf003ce53306db0d9a73d877fe83143c"
 	KubeRbacProxyImageDefault     = "quay.io/openshift/origin-kube-rbac-proxy@sha256:baedb268ac66456018fb30af395bb3d69af5fff3252ff5d549f0231b1ebb6901"
 )
 
