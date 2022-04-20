@@ -166,23 +166,25 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 			status.eventEmitter.EmitFailingForConfig(reason, message)
 			conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 				conditionsv1.Condition{
-					Type:    conditionsv1.ConditionDegraded,
-					Status:  corev1.ConditionTrue,
+					Type:    conditionsv1.ConditionUpgradeable,
+					Status:  corev1.ConditionFalse,
 					Reason:  reason,
 					Message: message,
 				},
 			)
 		} else {
-			// If successfully deployed all components and is not failing on anything, mark as Available
-			status.eventEmitter.EmitAvailableForConfig()
-			conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
-				conditionsv1.Condition{
-					Type:   conditionsv1.ConditionAvailable,
-					Status: corev1.ConditionTrue,
-				},
-			)
-			config.Status.ObservedVersion = operatorVersion
+			conditionsv1.RemoveStatusCondition(&config.Status.Conditions, conditionsv1.ConditionUpgradeable)
 		}
+
+		// If successfully deployed all components and is not failing on anything, mark as Available
+		status.eventEmitter.EmitAvailableForConfig()
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:   conditionsv1.ConditionAvailable,
+				Status: corev1.ConditionTrue,
+			},
+		)
+		config.Status.ObservedVersion = operatorVersion
 	}
 
 	// Make sure to expose deployed containers
