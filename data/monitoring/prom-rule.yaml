@@ -23,6 +23,7 @@ spec:
           for: 5m
           labels:
             severity: warning
+            priority: high
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
         - alert: CnaoDown
