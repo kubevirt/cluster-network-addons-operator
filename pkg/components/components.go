@@ -598,7 +598,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 
 	customSecurityProfileProps := map[string]extv1.JSONSchemaProps{
 		"ciphers": extv1.JSONSchemaProps{
-			Description: "ciphers is used to specify the cipher algorithms that are negotiated during the TLS handshake.  Operators may remove entries their operands do not support.  For example, to use DES-CBC3-SHA  (yaml): \n   ciphers:     - DES-CBC3-SHA",
+			Description: "ciphers is used to specify the cipher algorithms that are negotiated during the TLS handshake.  Operators may remove entries their operands do not support.  For example, to use DES-CBC3-SHA  (yaml):\n   ciphers:     - DES-CBC3-SHA",
 			Items: &extv1.JSONSchemaPropsOrArray{
 				Schema: &extv1.JSONSchemaProps{
 					Type: "string",
@@ -608,7 +608,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 			Type: "array",
 		},
 		"minTLSVersion": extv1.JSONSchemaProps{
-			Description: "minTLSVersion is used to specify the minimal version of the TLS protocol that is negotiated during the TLS handshake. For example, to use TLS versions 1.1, 1.2 and 1.3 (yaml): \n   minTLSVersion: TLSv1.1 \n NOTE: currently the highest minTLSVersion allowed is VersionTLS12",
+			Description: "minTLSVersion is used to specify the minimal version of the TLS protocol that is negotiated during the TLS handshake. For example, to use TLS versions 1.1, 1.2 and 1.3 (yaml):\n   minTLSVersion: TLSv1.1\n NOTE: currently the highest minTLSVersion allowed is VersionTLS12",
 			Type:        "string",
 			Enum: []extv1.JSON{
 				{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.VersionTLS10))},
@@ -845,7 +845,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 									Type:        "object",
 								},
 								"intermediate": extv1.JSONSchemaProps{
-									Description: "intermediate is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29 and looks like this (yaml): \n   ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,ECDHE-ECDSA-AES128-GCM-SHA256     - ECDHE-RSA-AE,SHA256,ECDHE-ECDSA-AES256-GCM-SHA384,ECDHE-RSA-AE,SHA384,ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE,POLY1305,DHE-RSA-AES128-GCM-SHA256,DHE-RSA-AES256-GCM-SHA384 minTLSVersion: TLSv1.2",
+									Description: "intermediate is a TLS security profile based on: https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29 and looks like this (yaml):\n   ciphers: TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,ECDHE-ECDSA-AES128-GCM-SHA256     - ECDHE-RSA-AE,SHA256,ECDHE-ECDSA-AES256-GCM-SHA384,ECDHE-RSA-AE,SHA384,ECDHE-ECDSA-CHACHA20-POLY1305,ECDHE,POLY1305,DHE-RSA-AES128-GCM-SHA256,DHE-RSA-AES256-GCM-SHA384 minTLSVersion: TLSv1.2",
 									Nullable:    true,
 									Type:        "object",
 								},
@@ -860,7 +860,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 									Type:        "object",
 								},
 								"type": extv1.JSONSchemaProps{
-									Description: "type is one of Old, Intermediate, Modern or Custom. Custom provides the ability to specify individual TLS security profile parameters. Old, Intermediate and Modern are TLS security profiles based on: \n https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations The profiles are intent based, so they may change over time as new ciphers are developed and existing ciphers are found to be insecure.  Depending on precisely which ciphers are available to a process, the list may be reduced. \n Note that the Modern profile is currently not supported because it is not yet well adopted by common software libraries.",
+									Description: "type is one of Old, Intermediate, Modern or Custom. Custom provides the ability to specify individual TLS security profile parameters. Old, Intermediate and Modern are TLS security profiles based on:\n https://wiki.mozilla.org/Security/Server_Side_TLS#Recommended_configurations The profiles are intent based, so they may change over time as new ciphers are developed and existing ciphers are found to be insecure.  Depending on precisely which ciphers are available to a process, the list may be reduced.\n Note that the Modern profile is currently not supported because it is not yet well adopted by common software libraries.",
 									Enum: []extv1.JSON{
 										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileOldType))},
 										{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSProfileIntermediateType))},
