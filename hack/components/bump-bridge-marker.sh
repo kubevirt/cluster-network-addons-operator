@@ -79,6 +79,8 @@ seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:bridge-marker
+volumes:
+- "*"
 {{ end }}
 ---
 EOF

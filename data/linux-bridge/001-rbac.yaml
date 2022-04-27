@@ -23,4 +23,6 @@ seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:linux-bridge
+volumes:
+- "*"
 {{ end }}

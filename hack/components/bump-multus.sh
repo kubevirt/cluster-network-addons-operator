@@ -100,6 +100,8 @@ seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:multus
+volumes:
+- "*"
 {{ end }}
 ---
 EOF
