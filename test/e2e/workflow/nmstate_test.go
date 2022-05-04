@@ -25,7 +25,7 @@ import (
 )
 
 var _ = Describe("NMState", func() {
-	nmstateVersion := "v0.67.0"
+	nmstateVersion := "v0.70.1"
 	gvk := GetCnaoV1GroupVersionKind()
 	Context("installed as standalone", func() {
 		BeforeEach(func() {
