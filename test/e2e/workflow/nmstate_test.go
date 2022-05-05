@@ -22,10 +22,11 @@ import (
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
+	"github.com/kubevirt/cluster-network-addons-operator/test/release"
 )
 
 var _ = Describe("NMState", func() {
-	nmstateVersion := "v0.70.1"
+	nmstateVersion := latestNmstateTag()
 	gvk := GetCnaoV1GroupVersionKind()
 	Context("installed as standalone", func() {
 		BeforeEach(func() {
@@ -143,4 +144,15 @@ func checkStandaloneNMStateIsReady(timeout time.Duration) {
 	} else {
 		Expect(CheckForGenericDeployment("nmstate-webook", "nmstate", false, false)).ShouldNot(HaveOccurred(), "nmstate-webhook is not ready")
 	}
+}
+
+func latestNmstateTag() string {
+	data, err := release.GetUrlData(release.KnmstateReleasesUrl)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	releases, err := release.ParseReleases(data)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	semverTags := release.SortReleasesBySemver(releases)
+	return fmt.Sprintf("v%s", semverTags[len(semverTags)-1])
 }

@@ -1,7 +1,7 @@
 module github.com/kubevirt/cluster-network-addons-operator
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/coreos/go-semver v0.3.0
