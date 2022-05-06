@@ -31,7 +31,7 @@ if [[ "$KUBEVIRT_PROVIDER" =~ (ocp|okd)- ]]; then
 fi
 
 if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
-    echo 'Installing Open vSwitch and NetworkManager 1.34 on nodes'
+    echo 'Enabling and starting up openvswitch'
     for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
         ./cluster/cli.sh ssh ${node} -- sudo dnf install -y centos-release-nfv-openvswitch
         ./cluster/cli.sh ssh ${node} -- sudo dnf install -y openvswitch2.16 libibverbs NetworkManager-1.34.0 NetworkManager-ovs-1.34.0
