@@ -29,7 +29,7 @@ var _ = Describe("Test metricsdocs", func() {
 
 			BeforeEach(func() {
 				By("transforming metricsOpts to metricList")
-				metricsList = metricsOptsToMetricList(map[monitoring.MetricsKey]monitoring.MetricsOpts{})
+				metricsList = metricsOptsToMetricList(map[monitoring.MetricsKey]monitoring.MetricsOpts{}, metricsList)
 			})
 
 			It("should return an empty metricList", func() {
@@ -42,7 +42,7 @@ var _ = Describe("Test metricsdocs", func() {
 
 			BeforeEach(func() {
 				By("transforming metricsOpts to metricList")
-				metricsList = metricsOptsToMetricList(metricsOptsList)
+				metricsList = metricsOptsToMetricList(metricsOptsList, metricsList)
 				sort.Sort(metricsList)
 			})
 
@@ -72,8 +72,10 @@ var _ = Describe("Test metricsdocs", func() {
 			}()
 			os.Stdout = w
 			go func() {
-				metricsList = metricsOptsToMetricList(metricsOptsList)
-				sort.Sort(metricsList)
+				metricsList = metricsOptsToMetricList(metricsOptsList, metricsList)
+				sort.Slice(metricsList, func(i, j int) bool {
+					return metricsList[i].name < metricsList[j].name
+				})
 				writeToFile(metricsList)
 				w.Close()
 			}()

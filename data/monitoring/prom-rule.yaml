@@ -9,6 +9,7 @@ spec:
   groups:
     - name: kubevirt.cnao.rules
       rules:
+        # +help:summary="Total count of running CNAO operators",type=Gauge
         - expr: sum(up{namespace='{{ .Namespace }}', pod=~'cluster-network-addons-operator-.*'} or vector(0))
           record: kubevirt_cnao_num_up_operators
         - alert: CnaoDown
@@ -31,6 +32,7 @@ spec:
             severity: warning
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
+        # +help:summary="Total count of duplicate KubeMacPool MAC addresses",type=Gauge
         - expr: sum(kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'} or vector(0))
           record: kubevirt_kubemacpool_duplicate_macs_total
         - alert: KubeMacPoolDuplicateMacsFound
@@ -43,8 +45,10 @@ spec:
             severity: warning
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
+        # +help:summary="Total count of running KubeMacPool manager pods",type=Gauge
         - expr: sum(up{namespace='{{ .Namespace }}', pod=~'kubemacpool-mac-controller-manager-.*'} or vector(0))
           record: kubevirt_cnao_kubemacpool_manager_num_up_pods_total
+        # +help:summary="Total count of KubeMacPool manager pods deployed by CNAO CR",type=Gauge
         - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='{{ .Namespace }}'} or vector(0))
           record: kubevirt_cnao_cr_kubemacpool_deployed_total
         - alert: KubemacpoolDown

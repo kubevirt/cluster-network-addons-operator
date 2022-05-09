@@ -1,11 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"log"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
+
+	"sigs.k8s.io/controller-tools/pkg/markers"
 )
 
 const (
@@ -22,9 +28,113 @@ After developing new metrics or changing old ones, please run 'make generate-doc
 )
 
 func main() {
-	metricsList := metricsOptsToMetricList(monitoring.MetricsOptsList)
-	sort.Sort(metricsList)
+	metricsList := getMetrics()
 	writeToFile(metricsList)
+}
+
+func getMetrics() metricList {
+	metricsList := readFromPrometheusCR()
+	metricsList = metricsOptsToMetricList(monitoring.MetricsOptsList, metricsList)
+
+	sort.Slice(metricsList, func(i, j int) bool {
+		return metricsList[i].name < metricsList[j].name
+	})
+
+	return metricsList
+}
+
+func metricsOptsToMetricList(metrics map[monitoring.MetricsKey]monitoring.MetricsOpts, result metricList) metricList {
+	for _, opts := range metrics {
+		result = append(result, metricDescriptionToMetric(opts))
+	}
+	return result
+}
+
+type PrometheusCR struct {
+	Spec struct {
+		Groups []struct {
+			Name  string      `yaml:"name"`
+			Rules []yaml.Node `yaml:"rules"`
+		} `yaml:"groups"`
+	} `yaml:"spec"`
+}
+
+type Rule struct {
+	Record string `yaml:"record,omitempty"`
+}
+
+type Comment struct {
+	Summary string
+	Type    string
+}
+
+func readFromPrometheusCR() metricList {
+	var cr PrometheusCR
+	err := yaml.Unmarshal(parseTemplateFile(), &cr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	reg := &markers.Registry{}
+	reg.Define("+help", markers.DescribesPackage, Comment{})
+	reg.Define(" +help", markers.DescribesPackage, Comment{})
+
+	ml := make([]metric, 0)
+
+	for _, group := range cr.Spec.Groups {
+		for _, ruleNode := range group.Rules {
+			rule := &Rule{}
+			_ = ruleNode.Decode(rule)
+
+			if rule.Record != "" {
+				s, t := getComments(reg, &ruleNode)
+
+				ml = append(ml, metric{
+					name:        rule.Record,
+					description: s,
+					mType:       t,
+				})
+			}
+		}
+	}
+
+	return ml
+}
+
+func getComments(reg *markers.Registry, ruleNode *yaml.Node) (string, string) {
+	if ruleNode.HeadComment == "" {
+		return "", ""
+	}
+
+	defn := reg.Lookup(ruleNode.HeadComment, markers.DescribesPackage)
+	rawComment, _ := defn.Parse(ruleNode.HeadComment)
+	comment, ok := rawComment.(Comment)
+	if !ok {
+		return "", ""
+	}
+
+	return comment.Summary, comment.Type
+}
+
+func parseTemplateFile() []byte {
+	t, err := template.ParseFiles("data/monitoring/prom-rule.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var doc bytes.Buffer
+	test := struct {
+		Namespace string
+	}{
+		Namespace: "test",
+	}
+
+	err = t.Execute(&doc, test)
+	if err != nil {
+		return nil
+	}
+
+	return doc.Bytes()
 }
 
 func writeToFile(metricsList metricList) {
@@ -39,15 +149,6 @@ type metric struct {
 	mType       string
 }
 
-func metricsOptsToMetricList(mdl map[monitoring.MetricsKey]monitoring.MetricsOpts) metricList {
-	res := make([]metric, 0)
-	for _, element := range mdl {
-		res = append(res, metricDescriptionToMetric(element))
-	}
-
-	return res
-}
-
 func metricDescriptionToMetric(rrd monitoring.MetricsOpts) metric {
 	return metric{
 		name:        rrd.Name,
@@ -58,7 +159,22 @@ func metricDescriptionToMetric(rrd monitoring.MetricsOpts) metric {
 
 func (m metric) writeOut() {
 	fmt.Println("###", m.name)
-	fmt.Println(m.description + ". Type: " + m.mType + ".")
+
+	writeNewLine := false
+
+	if m.description != "" {
+		fmt.Print(m.description + ". ")
+		writeNewLine = true
+	}
+
+	if m.mType != "" {
+		fmt.Print("Type: " + m.mType + ".")
+		writeNewLine = true
+	}
+
+	if writeNewLine {
+		fmt.Println()
+	}
 }
 
 type metricList []metric
