@@ -1,10 +1,10 @@
 components:
   bridge-marker:
     url: https://github.com/kubevirt/bridge-marker
-    commit: 46b2b0f81a807bf140f0e90b377c6cea0ca7eb9b
+    commit: 128c5ae6ad196e67d432d6afdfc73afa01c64b85
     branch: main
     update-policy: tagged
-    metadata: 0.9.1
+    metadata: 0.9.2
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: 6c156d1a14b618b6e06b382d919c73489139bb4b
