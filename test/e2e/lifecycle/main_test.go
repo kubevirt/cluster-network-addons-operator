@@ -4,28 +4,18 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	ginkgoreporters "kubevirt.io/qe-tools/pkg/ginkgo-reporters"
-
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
-	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	reporters := make([]Reporter, 0)
-	reporters = append(reporters, cnaoreporter.New("test_logs/e2e/lifecycle", components.Namespace))
-	if ginkgoreporters.JunitOutput != "" {
-		reporters = append(reporters, ginkgoreporters.NewJunitReporter())
-	}
-	RunSpecsWithDefaultAndCustomReporters(t, "Lifecycle E2E Test Suite", reporters)
-
+	RunSpecs(t, "lifecycle Test Suite")
 }
 
 var _ = BeforeSuite(func() {

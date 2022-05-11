@@ -5,7 +5,7 @@ import (
 	"os"
 	"sort"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"

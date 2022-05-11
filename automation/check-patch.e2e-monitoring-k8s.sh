@@ -25,7 +25,7 @@ main() {
     trap teardown EXIT SIGINT SIGTERM
     make cluster-operator-push
     make cluster-operator-install
-    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" test/e2e/monitoring
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/monitoring
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"

@@ -23,4 +23,4 @@ export OPERATOR_NAMESPACE=cluster-network-addons
 export KUBECONFIG=$(cluster::kubeconfig)
 export KUBECTL=$CLUSTER_PATH/cluster-up/kubectl.sh
 
-${GINKGO} ./${TEST_SUITE} ../ -- ${TEST_ARGS}
+${GO} test ./${TEST_SUITE} ${TEST_ARGS}

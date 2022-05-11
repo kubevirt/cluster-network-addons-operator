@@ -6,10 +6,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	ginkgoreporters "kubevirt.io/qe-tools/pkg/ginkgo-reporters"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -18,20 +16,13 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
-	cnaoreporter "github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 var operatorVersion string
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	reporters := make([]Reporter, 0)
-	reporters = append(reporters, cnaoreporter.New("test_logs/e2e/workflow", components.Namespace))
-	if ginkgoreporters.JunitOutput != "" {
-		reporters = append(reporters, ginkgoreporters.NewJunitReporter())
-	}
-	RunSpecsWithDefaultAndCustomReporters(t, "Workflow E2E Test Suite", reporters)
-
+	RunSpecs(t, "workflow Test Suite")
 }
 
 var _ = BeforeSuite(func() {
