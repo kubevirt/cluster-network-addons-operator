@@ -3,7 +3,7 @@ all: fmt check
 VERSION ?= 99.0.0
 export VERSION := $(VERSION)
 # Always keep the last released version here
-VERSION_REPLACES ?= 0.75.0
+VERSION_REPLACES ?= 0.76.0
 
 DEPLOY_DIR ?= manifests
 
@@ -30,7 +30,7 @@ WHAT ?= ./pkg/... ./cmd/... ./tools/...
 export E2E_TEST_TIMEOUT ?= 3h
 
 E2E_TEST_EXTRA_ARGS ?=
-E2E_TEST_ARGS ?= $(strip -test.v --test.timeout $(E2E_TEST_TIMEOUT) $(E2E_TEST_EXTRA_ARGS))
+E2E_TEST_ARGS ?= $(strip -test.v -test.timeout=$(E2E_TEST_TIMEOUT) -ginkgo.timeout=$(E2E_TEST_TIMEOUT) $(E2E_TEST_EXTRA_ARGS))
 E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow \
