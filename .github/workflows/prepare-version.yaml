@@ -19,6 +19,7 @@ on:
         default: 'main'
         options:
         - main
+        - release-0.76
         - release-0.65
         - release-0.58
         - release-0.53
