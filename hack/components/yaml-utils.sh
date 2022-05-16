@@ -2,8 +2,12 @@
 
 set -xeo pipefail
 
+source hack/components/docker-utils.sh
+
+export OCI_BIN=${OCI_BIN:-$(docker-utils::determine_cri_bin)}
+
 function __yq() {
-  docker run --rm -i -v ${PWD}:/workdir:Z mikefarah/yq:3.3.4 yq "$@"
+  ${OCI_BIN} run --rm -v ${PWD}:/workdir:Z docker.io/mikefarah/yq:3.3.4 yq "$@"
 }
 
 function yaml-utils::get_param() {
