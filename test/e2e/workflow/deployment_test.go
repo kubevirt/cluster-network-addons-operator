@@ -431,8 +431,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					Eventually(func() error {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
 						return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "nmstate"}, nmstateHandlerDaemonSet)
-					}, 5*time.Minute, time.Second).Should(BeNil(), fmt.Sprintf("Timed out waiting for nmstate-operator daemonset"))
+					}, 5*time.Minute, time.Second).Should(BeNil(), "Timed out waiting for nmstate-operator daemonset")
 				})
+
 			})
 			Context("when it is not already deployed", func() {
 				BeforeEach(func() {
