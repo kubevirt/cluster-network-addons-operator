@@ -63,27 +63,29 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/Masterminds/squirrel v1.5.0 // indirect
-	github.com/Microsoft/go-winio v0.4.16 // indirect
-	github.com/Microsoft/hcsshim v0.8.14 // indirect
+	github.com/Microsoft/go-winio v0.4.17 // indirect
+	github.com/Microsoft/hcsshim v0.8.22 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20210826220005-b48c857c3a0e // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/bshuster-repo/logrus-logstash-hook v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/cloudflare/cfssl v1.5.0 // indirect
-	github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59 // indirect
-	github.com/containerd/containerd v1.4.4 // indirect
-	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7 // indirect
-	github.com/containerd/ttrpc v1.0.1 // indirect
+	github.com/containerd/cgroups v1.0.1 // indirect
+	github.com/containerd/containerd v1.4.11 // indirect
+	github.com/containerd/continuity v0.1.0 // indirect
+	github.com/containerd/ttrpc v1.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deislabs/oras v0.11.1 // indirect
 	github.com/docker/cli v20.10.5+incompatible // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible // indirect
+	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.6.3 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
@@ -115,7 +117,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
-	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
@@ -161,7 +163,6 @@ require (
 	github.com/onsi/ginkgo/v2 v2.0.0
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
-	github.com/opencontainers/runc v1.0.0-rc91.0.20200707015106-819fcc687efb // indirect
 	github.com/operator-framework/api v0.10.5 // indirect
 	github.com/operator-framework/java-operator-plugins v0.0.0-20210708174638-463fb91f3d5e // indirect
 	github.com/operator-framework/operator-registry v1.17.4 // indirect
@@ -250,6 +251,8 @@ replace (
 	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.23.1
 	k8s.io/code-generator => k8s.io/code-generator v0.23.1
 	k8s.io/component-base => k8s.io/component-base v0.23.1
+	k8s.io/component-helpers => k8s.io/component-helpers v0.23.1
+	k8s.io/controller-manager => k8s.io/controller-manager v0.23.1
 	k8s.io/cri-api => k8s.io/cri-api v0.23.1
 	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.23.1
 	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.23.1
@@ -258,18 +261,22 @@ replace (
 	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.23.1
 	k8s.io/kubectl => k8s.io/kubectl v0.23.1
 	k8s.io/kubelet => k8s.io/kubelet v0.23.1
-	k8s.io/kubernetes => k8s.io/kubernetes v1.19.15
+	k8s.io/kubernetes => k8s.io/kubernetes v1.23.1
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.23.1
 	k8s.io/metrics => k8s.io/metrics v0.23.1
+	k8s.io/mount-utils => k8s.io/mount-utils v0.23.1
+	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.23.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.23.1
 )
 
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.4.13
+	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
-	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
+	github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.2
+	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.3
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
 	golang.org/x/text => golang.org/x/text v0.3.3
 	k8s.io/client-go => k8s.io/client-go v0.23.1
