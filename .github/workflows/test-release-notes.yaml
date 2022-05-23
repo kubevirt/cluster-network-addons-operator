@@ -1,63 +1,58 @@
+---
 name: Test release notes
-
 on:
   workflow_dispatch:
-     inputs:
+    inputs:
       versionLevel:
         description: 'The semVer level of the version'
         required: true
         default: 'minor'
         type: choice
         options:
-        - major
-        - minor
-        - patch
+          - major
+          - minor
+          - patch
       baseBranch:
         description: 'Test CNAO branch to release from'
         required: true
         type: choice
         default: 'main'
         options:
-        - main
-        - release-0.76
-        - release-0.65
-        - release-0.58
-        - release-0.53
-
+          - main
+          - release-0.76
+          - release-0.65
+          - release-0.58
+          - release-0.53
+          - testing-new-branch-4
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
     steps:
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.inputs.baseBranch }}
-        fetch-depth: 0
-
-    - name: Pull latest of latest branch
-      run:  git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
-
-    - name: Store last version and current SHA
-      run: |
-        echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
-        echo "START_SHA=$(git rev-list -n 1 v$(./hack/version.sh))" >> $GITHUB_ENV
-        echo "END_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
-
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '1.16'
-
-    - name: Dump release-notes
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      working-directory: /tmp
-      run: |
-        go install k8s.io/release/cmd/release-notes@latest
-        release-notes \
-          -list-v2 \
-          --required-author "" \
-          --org kubevirt \
-          --dependencies=false \
-          --repo cluster-network-addons-operator \
-          --debug true
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.baseBranch }}
+          fetch-depth: 0
+      - name: Pull latest of latest branch
+        run: git pull --ff-only --rebase origin ${{ github.event.inputs.baseBranch }}
+      - name: Store last version and current SHA
+        run: |
+          echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
+          echo "START_SHA=$(git rev-list -n 1 v$(./hack/version.sh))" >> $GITHUB_ENV
+          echo "END_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Dump release-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: /tmp
+        run: |
+          go install k8s.io/release/cmd/release-notes@latest
+          release-notes \
+            -list-v2 \
+            --required-author "" \
+            --org kubevirt \
+            --dependencies=false \
+            --repo cluster-network-addons-operator \
+            --debug true

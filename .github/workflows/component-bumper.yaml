@@ -1,10 +1,9 @@
+---
 name: Auto-Bump Component's Versions
-
 on:
   schedule:
-    - cron:  '0 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
-
 jobs:
   bump:
     name: CNAO Component Bump Job
@@ -19,18 +18,15 @@ jobs:
           - release-0.58
           - release-0.65
           - release-0.76
+          - testing-new-branch-4
     steps:
-
-    - name: Login to Quay
-      run: docker login -u="kubevirt+network" -p="${{ secrets.QUAY_ROBOT_TOKEN }}" quay.io
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ matrix.branch }}
-
-    - name: Pull latest of latest branch
-      run:  git pull --ff-only --rebase origin ${{ matrix.branch }}
-
-    - name: Run bumper script
-      run: make ARGS="-config-path=components.yaml -token=${{ secrets.KUBEVIRT_BOT_TOKEN }} -base-branch=${{ matrix.branch }}" auto-bumper
+      - name: Login to Quay
+        run: docker login -u="kubevirt+network" -p="${{ secrets.QUAY_ROBOT_TOKEN }}" quay.io
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Pull latest of latest branch
+        run: git pull --ff-only --rebase origin ${{ matrix.branch }}
+      - name: Run bumper script
+        run: make ARGS="-config-path=components.yaml -token=${{ secrets.KUBEVIRT_BOT_TOKEN }} -base-branch=${{ matrix.branch }}" auto-bumper
