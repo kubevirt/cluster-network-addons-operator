@@ -60,6 +60,8 @@ type StatusManager struct {
 	daemonSets  []types.NamespacedName
 	deployments []types.NamespacedName
 
+	NmstateOperator bool
+
 	containers   []cnao.Container
 	mux          sync.Mutex
 	eventEmitter eventemitter.EventEmitter
@@ -159,7 +161,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 			},
 		)
 	} else if reachedAvailableLevel {
-		if status.isRunningOnOpenshift411OrLater() && config.Spec.NMState != nil {
+		if status.isRunningOnOpenshift411OrLater() && config.Spec.NMState != nil && !status.NmstateOperator {
 			// CNAO doesn't support nmstate deployment anymore, set Degraded state is nmstate is requested in NetworkAddonsConfig
 			reason := "InvalidConfiguration"
 			message := "NMState deployment is not supported by CNAO anymore, please install Kubernetes NMState Operator"

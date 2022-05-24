@@ -211,6 +211,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 		log.Printf("Kubernetes NMState Operator is running")
 	}
 	r.clusterInfo.NmstateOperator = nmstateOperator
+	r.statusManager.NmstateOperator = nmstateOperator
 
 	if r.clusterInfo.OpenShift4 {
 		isSingleReplica, err := isOpenshiftSingleReplica(r.client)
