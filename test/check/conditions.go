@@ -13,6 +13,7 @@ const (
 	ConditionAvailable   = ConditionType(conditionsv1.ConditionAvailable)
 	ConditionProgressing = ConditionType(conditionsv1.ConditionProgressing)
 	ConditionDegraded    = ConditionType(conditionsv1.ConditionDegraded)
+	ConditionUpgradeable = ConditionType(conditionsv1.ConditionUpgradeable)
 
 	ConditionTrue  = ConditionStatus(corev1.ConditionTrue)
 	ConditionFalse = ConditionStatus(corev1.ConditionFalse)

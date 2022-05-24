@@ -22,6 +22,8 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
+	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
+
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
@@ -461,8 +463,17 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			})
 			It("should deploy nmstate via CNAO", func() {
 				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+				CheckConfigCondition(gvk, ConditionUpgradeable, ConditionFalse, 15*time.Minute, CheckDoNotRepeat)
 			})
 			Context("when nmstate-operator is then installed", func() {
+				checkUpgradeableConditionNotSet := func() {
+					By("Checking that Upgradeable condition is not set")
+					confStatus := GetConfigStatus(gvk)
+					Expect(confStatus).NotTo(BeNil())
+					for _, condition := range confStatus.Conditions {
+						Expect(condition.Type).NotTo(Equal(conditionsv1.ConditionType(ConditionUpgradeable)))
+					}
+				}
 				BeforeEach(func() {
 					installNMStateOperator()
 					CheckNMStateOperatorIsReady(5 * time.Minute)
@@ -498,6 +509,8 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					nmstate, err := kubectl.Kubectl("get", "nmstate", "nmstate", "-n", "nmstate", "-o", "yaml")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(nmstate).NotTo(ContainSubstring("ownerReferences"))
+
+					checkUpgradeableConditionNotSet()
 				})
 			})
 		})
