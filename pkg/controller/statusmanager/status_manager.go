@@ -158,30 +158,15 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 			},
 		)
 	} else if reachedAvailableLevel {
-		if config.Spec.NMState != nil {
-			// CNAO doesn't support nmstate deployment anymore, set Degraded state is nmstate is requested in NetworkAddonsConfig
-			reason := "InvalidConfiguration"
-			message := "NMState deployment is not supported by CNAO anymore, please install Kubernetes NMState Operator"
-			status.eventEmitter.EmitFailingForConfig(reason, message)
-			conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
-				conditionsv1.Condition{
-					Type:    conditionsv1.ConditionDegraded,
-					Status:  corev1.ConditionTrue,
-					Reason:  reason,
-					Message: message,
-				},
-			)
-		} else {
-			// If successfully deployed all components and is not failing on anything, mark as Available
-			status.eventEmitter.EmitAvailableForConfig()
-			conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
-				conditionsv1.Condition{
-					Type:   conditionsv1.ConditionAvailable,
-					Status: corev1.ConditionTrue,
-				},
-			)
-			config.Status.ObservedVersion = operatorVersion
-		}
+		// If successfully deployed all components and is not failing on anything, mark as Available
+		status.eventEmitter.EmitAvailableForConfig()
+		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
+			conditionsv1.Condition{
+				Type:   conditionsv1.ConditionAvailable,
+				Status: corev1.ConditionTrue,
+			},
+		)
+		config.Status.ObservedVersion = operatorVersion
 	}
 
 	// Make sure to expose deployed containers
