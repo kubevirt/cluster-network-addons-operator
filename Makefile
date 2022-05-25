@@ -11,6 +11,8 @@ IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
 OPERATOR_IMAGE ?= cluster-network-addons-operator
 REGISTRY_IMAGE ?= cluster-network-addons-registry
+export OCI_BIN ?= $(shell if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
+TLS_SETTING := $(if $(filter $(OCI_BIN),podman),--tls-verify=false,)
 
 TARGETS = \
 	gen-k8s \
@@ -108,18 +110,18 @@ manifest-templator: $(GO)
 docker-build: docker-build-operator docker-build-registry
 
 docker-build-operator: manager manifest-templator
-	docker build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
+	$(OCI_BIN) build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
 
 docker-build-registry:
-	docker build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
+	$(OCI_BIN) build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
 
 docker-push: docker-push-operator docker-push-registry
 
 docker-push-operator:
-	docker push $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
+	$(OCI_BIN) push ${TLS_SETTING} $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
 
 docker-push-registry:
-	docker push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
+	$(OCI_BIN) push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
 prom-rules-verify:
 	hack/prom-rule-ci/verify-rules.sh \

@@ -34,7 +34,7 @@ test_setup() {
 verify_prom_spec() {
   local tmp_prom_spec=$1
 
-  docker run --rm --entrypoint=/bin/promtool \
+  ${OCI_BIN} run --rm --entrypoint=/bin/promtool \
   -v ${tmp_prom_spec}:/tmp/rules.verify.yaml:ro \
   ${PROMETHERUS_IMAGE} \
   check rules /tmp/rules.verify.yaml
@@ -44,7 +44,7 @@ check_rules() {
   local tmp_prom_spec=$1
   local tmp_tests_file=$2
 
-  docker run --rm --entrypoint=/bin/promtool \
+  ${OCI_BIN} run --rm --entrypoint=/bin/promtool \
   -v ${tmp_prom_spec}:/tmp/rules.verify.yaml:ro \
   -v ${tmp_tests_file}:/tmp/rules.test.yaml:ro \
   ${PROMETHERUS_IMAGE} \

@@ -6,6 +6,8 @@ source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 source hack/components/docker-utils.sh
 
+export OCI_BIN=${OCI_BIN:-$(docker-utils::determine_cri_bin)}
+
 echo Bumping linux-bridge
 LINUX_BRIDGE_URL=$(yaml-utils::get_component_url linux-bridge)
 LINUX_BRIDGE_COMMIT=$(yaml-utils::get_component_commit linux-bridge)
@@ -46,13 +48,13 @@ COPY --from=builder ${LINUX_BRIDGE_PATH}/bin/tuning ${LINUX_BRIDGE_TAR_CONTAINER
 RUN sha256sum ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/bridge >${LINUX_BRIDGE_TAR_CONTAINER_DIR}/bridge.checksum
 RUN sha256sum ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning >${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning.checksum
 EOF
-    docker build -t ${LINUX_BRIDGE_IMAGE_TAGGED} .
+    ${OCI_BIN} build -t ${LINUX_BRIDGE_IMAGE_TAGGED} .
 )
 
 echo 'Push the image to KubeVirt repo'
 (
     if [ ! -z ${PUSH_IMAGES} ]; then
-        docker push "${LINUX_BRIDGE_IMAGE_TAGGED}"
+        ${OCI_BIN} push "${LINUX_BRIDGE_IMAGE_TAGGED}"
     fi
 )
 

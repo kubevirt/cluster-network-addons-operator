@@ -267,7 +267,7 @@ install new, operands will remain available during the operator's downtime.
 
 # Development
 
-Make sure you have Docker >= 17.05 installed.
+Make sure you have either Docker >= 17.05 / podman >= 3.1 installed.
 
 ```shell
 # run code validation and unit tests
@@ -279,7 +279,7 @@ make fmt
 # generate source code for API
 make gen-k8s
 
-# build images (uses multi-stage builds and therefore requires Docker >= 17.05)
+# build images (uses multi-stage builds and therefore requires Docker >= 17.05 / podman >= 3.1)
 make docker-build
 
 # or build only a specific image
