@@ -68,3 +68,25 @@ spec:
   infraAffinity: {{ toYaml .InfraAffinity | nindent 4 }}
   selfSignConfiguration : {{ toYaml .SelfSignConfiguration | nindent 4 }}
 EOF
+
+cat <<EOF >> data/nmstate/operand/cluster_role.yaml
+{{if .ClusterReaderExists}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nmstate-cluster-reader
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
+rules:
+- apiGroups:
+  - nmstate.io
+  resources:
+  - nodenetworkstates
+  - nodenetworkconfigurationpolicies
+  - nodenetworkconfigurationenactments
+  verbs:
+  - get
+  - list
+  - watch
+{{end}}
+EOF

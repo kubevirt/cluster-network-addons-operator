@@ -58,6 +58,7 @@ func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clust
 	data.Data["InfraTolerations"] = confWithDefaults.PlacementConfiguration.Infra.Tolerations
 	data.Data["InfraAffinity"] = confWithDefaults.PlacementConfiguration.Infra.Affinity
 	data.Data["SelfSignConfiguration"] = selfSignConfiguration
+	data.Data["ClusterReaderExists"] = clusterInfo.ClusterReaderAvailable
 
 	_, enableOVS := os.LookupEnv("NMSTATE_ENABLE_OVS")
 	data.Data["EnableOVS"] = enableOVS
