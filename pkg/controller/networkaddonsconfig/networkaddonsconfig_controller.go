@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -212,6 +213,10 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	}
 	r.clusterInfo.NmstateOperator = nmstateOperator
 	r.statusManager.NmstateOperator = nmstateOperator
+	r.clusterInfo.ClusterReaderAvailable, err = isClusterReaderAvailable(r.client)
+	if err != nil {
+		return reconcile.Result{}, errors.Wrap(err, "failed to check whether cluster-reader cluster role exists")
+	}
 
 	if r.clusterInfo.OpenShift4 {
 		isSingleReplica, err := isOpenshiftSingleReplica(r.client)
@@ -715,4 +720,20 @@ func isOpenshiftSingleReplica(c k8sclient.Client) (bool, error) {
 func isOperatorNamespace(obj *unstructured.Unstructured) bool {
 	const namespaceKind = "Namespace"
 	return obj.GetKind() == namespaceKind && obj.GetName() == operatorNamespace
+}
+
+func isClusterReaderAvailable(c k8sclient.Client) (bool, error) {
+	var clusterReader rbac.ClusterRole
+	key := types.NamespacedName{Name: "cluster-reader"}
+	err := c.Get(context.TODO(), key, &clusterReader)
+
+	if apierrors.IsNotFound(err) {
+		return false, nil
+	}
+
+	if err == nil {
+		return true, nil
+	}
+
+	return false, err
 }
