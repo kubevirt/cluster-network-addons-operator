@@ -89,12 +89,19 @@ metadata:
   name: multus
 allowPrivilegedContainer: true
 allowHostDirVolumePlugin: true
+readOnlyRootFilesystem: false
+allowHostIPC: false
+allowHostNetwork: true
+allowHostPID: false
+allowHostPorts: false
 runAsUser:
   type: RunAsAny
 seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:multus
+volumes:
+- "*"
 {{ end }}
 ---
 EOF

@@ -67,12 +67,20 @@ kind: SecurityContextConstraints
 metadata:
   name: bridge-marker
 allowHostNetwork: true
+allowHostDirVolumePlugin: true
+allowPrivilegedContainer: false
+readOnlyRootFilesystem: false
+allowHostIPC: false
+allowHostPID: false
+allowHostPorts: false
 runAsUser:
   type: RunAsAny
 seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:bridge-marker
+volumes:
+- "*"
 {{ end }}
 ---
 EOF

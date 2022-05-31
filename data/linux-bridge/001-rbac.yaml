@@ -12,10 +12,17 @@ metadata:
   name: linux-bridge
 allowPrivilegedContainer: true
 allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+readOnlyRootFilesystem: false
 runAsUser:
   type: RunAsAny
 seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:linux-bridge
+volumes:
+- "*"
 {{ end }}
