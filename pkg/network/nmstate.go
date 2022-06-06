@@ -23,7 +23,7 @@ const (
 
 // renderNMState generates the manifests of NMState handler
 func renderNMState(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
-	if conf.NMState == nil {
+	if conf.NMState == nil || managedByKubernetesNmstateOperator(clusterInfo) {
 		return nil, nil
 	}
 
@@ -201,4 +201,8 @@ func pupulateNmstateDefaultConfiguration(conf *cnao.NetworkAddonsConfigSpec) *cn
 	}
 
 	return confWithDefaults
+}
+
+func managedByKubernetesNmstateOperator(clusterInfo *ClusterInfo) bool {
+	return clusterInfo.NmstateOperator && clusterInfo.NmstateCRExists
 }
