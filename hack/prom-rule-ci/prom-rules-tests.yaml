@@ -23,6 +23,7 @@ tests:
               severity: "warning"
               kubernetes_operator_part_of: "kubevirt"
               kubernetes_operator_component: "cluster-network-addons-operator"
+              infra_alert: "true"
 # CnaoDown negative tests
   - interval: 1m
     input_series:
@@ -55,6 +56,7 @@ tests:
               severity: "warning"
               kubernetes_operator_part_of: "kubevirt"
               kubernetes_operator_component: "cluster-network-addons-operator"
+              infra_alert: "true"
 
 # NetworkAddonsConfigNotReady negative tests
   - interval: 1m
@@ -90,6 +92,7 @@ tests:
               severity: "warning"
               kubernetes_operator_part_of: "kubevirt"
               kubernetes_operator_component: "cluster-network-addons-operator"
+              infra_alert: "true"
 
 # KubeMacPoolDuplicateMacsFound negative tests
   - interval: 1m
@@ -123,6 +126,7 @@ tests:
               severity: "critical"
               kubernetes_operator_part_of: "kubevirt"
               kubernetes_operator_component: "cluster-network-addons-operator"
+              infra_alert: "true"
 
   # KubemacpoolDown negative tests
   - interval: 1m
