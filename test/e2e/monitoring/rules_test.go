@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -32,20 +33,34 @@ var _ = Context("Prometheus Rules", func() {
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
 
-		Context("CNAO rules", func() {
-			It("should have available runbook URLs", func() {
-				prometheusRule := monitoringv1.PrometheusRule{}
+		Context("CNAO alert rules", func() {
+			var prometheusRule monitoringv1.PrometheusRule
+
+			BeforeEach(func() {
 				err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: "prometheus-rules-cluster-network-addons-operator", Namespace: components.Namespace}, &prometheusRule)
 				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should have all the requried annotations", func() {
 				for _, group := range prometheusRule.Spec.Groups {
 					for _, rule := range group.Rules {
 						if len(rule.Alert) > 0 {
 							Expect(rule.Annotations).ToNot(BeNil())
-							url, ok := rule.Annotations["runbook_url"]
-							Expect(ok).To(BeTrue())
-							resp, err := http.Head(url)
-							Expect(err).ToNot(HaveOccurred())
-							Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+							checkForRunbookURL(rule)
+							checkForSummary(rule)
+						}
+					}
+				}
+			})
+
+			It("should have all the requried labels", func() {
+				for _, group := range prometheusRule.Spec.Groups {
+					for _, rule := range group.Rules {
+						if len(rule.Alert) > 0 {
+							Expect(rule.Labels).ToNot(BeNil())
+							checkForSeverityLabel(rule)
+							checkForPartOfLabel(rule)
+							checkForComponentLabel(rule)
 						}
 					}
 				}
@@ -61,3 +76,35 @@ var _ = Context("Prometheus Rules", func() {
 		})
 	})
 })
+
+func checkForRunbookURL(rule monitoringv1.Rule) {
+	url, ok := rule.Annotations["runbook_url"]
+	ExpectWithOffset(1, ok).To(BeTrue(), fmt.Sprintf("%s does not have runbook_url annotation", rule.Alert))
+	resp, err := http.Head(url)
+	ExpectWithOffset(1, err).ToNot(HaveOccurred(), fmt.Sprintf("%s runbook is not available", rule.Alert))
+	ExpectWithOffset(1, resp.StatusCode).Should(Equal(http.StatusOK), fmt.Sprintf("%s runbook is not available", rule.Alert))
+}
+
+func checkForSummary(rule monitoringv1.Rule) {
+	summary, ok := rule.Annotations["summary"]
+	ExpectWithOffset(1, ok).To(BeTrue(), fmt.Sprintf("%s does not have summary annotation", rule.Alert))
+	ExpectWithOffset(1, summary).ToNot(BeEmpty(), fmt.Sprintf("%s has an empty summary", rule.Alert))
+}
+
+func checkForSeverityLabel(rule monitoringv1.Rule) {
+	severity, ok := rule.Labels["severity"]
+	ExpectWithOffset(1, ok).To(BeTrue(), fmt.Sprintf("%s does not have severity label", rule.Alert))
+	ExpectWithOffset(1, severity).To(BeElementOf("info", "warning", "critical"), fmt.Sprintf("%s severity label is not valid", rule.Alert))
+}
+
+func checkForPartOfLabel(rule monitoringv1.Rule) {
+	kubernetesOperatorPartOf, ok := rule.Labels["kubernetes_operator_part_of"]
+	ExpectWithOffset(1, ok).To(BeTrue(), fmt.Sprintf("%s does not have kubernetes_operator_part_of label", rule.Alert))
+	ExpectWithOffset(1, kubernetesOperatorPartOf).To(Equal("kubevirt"), fmt.Sprintf("%s kubernetes_operator_part_of label is not valid", rule.Alert))
+}
+
+func checkForComponentLabel(rule monitoringv1.Rule) {
+	kubernetesOperatorComponent, ok := rule.Labels["kubernetes_operator_component"]
+	ExpectWithOffset(1, ok).To(BeTrue(), fmt.Sprintf("%s does not have kubernetes_operator_component label", rule.Alert))
+	ExpectWithOffset(1, kubernetesOperatorComponent).To(Equal("cluster-network-addons-operator"), fmt.Sprintf("%s kubernetes_operator_component label is not valid", rule.Alert))
+}
