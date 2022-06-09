@@ -19,7 +19,6 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
-    make cluster-down
     make cluster-up
     trap teardown EXIT SIGINT SIGTERM SIGSTOP
     make cluster-operator-push
