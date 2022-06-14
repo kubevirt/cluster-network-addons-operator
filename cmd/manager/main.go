@@ -16,6 +16,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
+	nmstatev1 "github.com/nmstate/kubernetes-nmstate/api/v1"
+
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
@@ -30,6 +32,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
+	utilruntime.Must(nmstatev1.AddToScheme(scheme))
 	utilruntime.Must(cnaov1.AddToScheme(scheme))
 	utilruntime.Must(cnaov1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme

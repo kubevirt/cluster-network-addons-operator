@@ -34,6 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	nmstatev1 "github.com/nmstate/kubernetes-nmstate/api/v1"
+
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
@@ -213,6 +215,13 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	}
 	r.clusterInfo.NmstateOperator = nmstateOperator
 	r.statusManager.NmstateOperator = nmstateOperator
+
+	nmstateCRExists, err := nmStateCustomResourceExists(r.client)
+	if err != nil {
+		log.Printf("failed to check whether NMState CR exists: %v", err)
+		return reconcile.Result{}, errors.Wrap(err, "failed to check whether NMState CR exists")
+	}
+	r.clusterInfo.NmstateCRExists = nmstateCRExists
 	r.clusterInfo.ClusterReaderAvailable, err = isClusterReaderAvailable(r.client)
 	if err != nil {
 		return reconcile.Result{}, errors.Wrap(err, "failed to check whether cluster-reader cluster role exists")
@@ -662,6 +671,18 @@ func isRunningKubernetesNMStateOperator(c k8sclient.Client) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func nmStateCustomResourceExists(c k8sclient.Client) (bool, error) {
+	nmstates := &nmstatev1.NMStateList{}
+	err := c.List(context.TODO(), nmstates, &k8sclient.ListOptions{})
+	if err != nil {
+		if strings.Contains(err.Error(), "no matches for kind \"NMState\"") {
+			return false, nil
+		}
+		return false, err
+	}
+	return len(nmstates.Items) > 0, nil
 }
 
 func isResourceAvailable(kubeClient kubernetes.Interface, name string, group string, version string) (bool, error) {

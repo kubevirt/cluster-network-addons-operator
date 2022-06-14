@@ -438,6 +438,52 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					}, 5*time.Minute, time.Second).Should(BeNil(), "Timed out waiting for nmstate-operator daemonset")
 				})
 
+				Context("when NetworkAddonsConfig is then updated", func() {
+					BeforeEach(func() {
+						configSpec = cnao.NetworkAddonsConfigSpec{
+							NMState: &cnao.NMState{},
+							SelfSignConfiguration: &cnao.SelfSignConfiguration{
+								CARotateInterval:    "42h0m0s",
+								CAOverlapInterval:   "42h0m0s",
+								CertRotateInterval:  "42h0m0s",
+								CertOverlapInterval: "42h0m0s",
+							},
+						}
+					})
+					It("shouldn't update NMState CR", func() {
+						By("checking for NMState in nmstate namespace")
+						CheckNMStateOperatorIsReady(5 * time.Minute)
+
+						By("checking Nmstate is created with SelfSignConfiguration from NetworkAddonsConfig")
+						nmstate, err := kubectl.Kubectl("get", "nmstate", "nmstate", "-n", "nmstate", "-o", "yaml")
+						Expect(err).NotTo(HaveOccurred())
+						Expect(nmstate).To(ContainSubstring("caOverlapInterval: 42h0m0s"))
+						Expect(nmstate).To(ContainSubstring("caRotateInterval: 42h0m0s"))
+						Expect(nmstate).To(ContainSubstring("certOverlapInterval: 42h0m0s"))
+						Expect(nmstate).To(ContainSubstring("certRotateInterval: 42h0m0s"))
+
+						By("By updating SelfSignConfiguration configuration in networkAddonsConfig")
+						configSpec = cnao.NetworkAddonsConfigSpec{
+							NMState: &cnao.NMState{},
+							SelfSignConfiguration: &cnao.SelfSignConfiguration{
+								CARotateInterval:    "24h0m0s",
+								CAOverlapInterval:   "24h0m0s",
+								CertRotateInterval:  "24h0m0s",
+								CertOverlapInterval: "24h0m0s",
+							},
+						}
+						UpdateConfig(gvk, configSpec)
+						CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+
+						By("checking NMState still has initial configuration")
+						nmstate, err = kubectl.Kubectl("get", "nmstate", "nmstate", "-n", "nmstate", "-o", "yaml")
+						Expect(err).NotTo(HaveOccurred())
+						Expect(nmstate).To(ContainSubstring("caOverlapInterval: 42h0m0s"))
+						Expect(nmstate).To(ContainSubstring("caRotateInterval: 42h0m0s"))
+						Expect(nmstate).To(ContainSubstring("certOverlapInterval: 42h0m0s"))
+						Expect(nmstate).To(ContainSubstring("certRotateInterval: 42h0m0s"))
+					})
+				})
 			})
 			Context("when it is not already deployed", func() {
 				BeforeEach(func() {
