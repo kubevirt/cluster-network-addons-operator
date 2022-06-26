@@ -22,7 +22,7 @@ require (
 	github.com/openshift/origin v4.1.0+incompatible
 	github.com/operator-framework/operator-sdk v0.18.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.11.1
 	github.com/prometheus/common v0.28.0
 	github.com/spf13/pflag v1.0.5
 	github.com/thanhpk/randstr v1.0.4
@@ -274,6 +274,7 @@ replace (
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.11.1
 	golang.org/x/text => golang.org/x/text v0.3.3
 	k8s.io/client-go => k8s.io/client-go v0.23.1
 )
