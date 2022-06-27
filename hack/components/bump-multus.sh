@@ -62,7 +62,7 @@ git-utils::fetch_component ${MULTUS_PATH} ${MULTUS_URL} ${MULTUS_COMMIT}
 (
 	cd ${MULTUS_PATH}
 	mkdir -p config/cnao
-	cp images/multus-daemonset.yml config/cnao
+	cp deployments/multus-daemonset.yml config/cnao
 
 	echo 'Split manifest per object'
 	cd config/cnao
