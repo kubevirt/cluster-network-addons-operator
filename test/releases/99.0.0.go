@@ -13,7 +13,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "kube-multus",
-				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:9479537fe0827d23bc40056e98f8d1e75778ec294d89ae4d8a62f83dfc74a31d",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:659de43bbce2d15ff5398f806d2c7d0a1f011c4a25c3d4b469833d58ecc8c16c",
 			},
 			{
 				ParentName: "bridge-marker",
