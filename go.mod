@@ -24,7 +24,7 @@ require (
 	github.com/openshift/origin v4.1.0+incompatible
 	github.com/operator-framework/operator-sdk v1.12.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.11.1
 	github.com/prometheus/common v0.28.0
 	github.com/spf13/pflag v1.0.5
 	github.com/thanhpk/randstr v1.0.4
@@ -271,6 +271,7 @@ replace (
 	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.0-rc95
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.11.1
 	golang.org/x/text => golang.org/x/text v0.3.3
 	k8s.io/client-go => k8s.io/client-go v0.23.1
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20210113233702-8566a335510f
