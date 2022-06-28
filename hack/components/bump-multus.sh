@@ -25,6 +25,7 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.metadata.labels.name 'kube-multus-ds-amd64'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.priorityClassName 'system-cluster-critical'
 				yaml-utils::delete_param ${f} spec.template.spec.containers[0].volumeMounts[2]
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[2].name 'cnicache'
