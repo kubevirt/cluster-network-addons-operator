@@ -25,11 +25,7 @@ if [[ "${KUBEVIRT_PROVIDER}" == external ]]; then
     push_registry=$manifest_registry
 else
     manifest_registry=registry:5000
-    if [[ "${KUBEVIRT_PROVIDER}" =~ ^(okd|ocp)-.*$ ]]; then \
-		push_registry=localhost:$(./cluster/cli.sh ports --container-name=cluster registry | tr -d '\r')
-    else
-        push_registry=localhost:$(./cluster/cli.sh ports registry | tr -d '\r')
-    fi
+    push_registry=127.0.0.1:$(./cluster/cli.sh ports registry | tr -d '\r')
 fi
 
 # Cleanup previously generated manifests
