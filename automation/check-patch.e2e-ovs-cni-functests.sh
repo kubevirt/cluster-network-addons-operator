@@ -7,7 +7,7 @@
 # check-patch.packages installed and docker running.
 #
 # yum -y install automation/check-patch.packages
-# automation/check-patch.e2e-kubemacpool-functests.sh
+# automation/check-patch.e2e-ovs-cni-functests.sh
 
 teardown() {
     rm -rf "${TMP_COMPONENT_PATH}"
