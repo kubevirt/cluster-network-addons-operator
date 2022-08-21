@@ -18,7 +18,7 @@ tests:
         exp_alerts:
           - exp_annotations:
               summary: "CNAO pod is down."
-              runbook_url: "http://kubevirt.io/monitoring/runbooks/CnaoDown"
+              runbook_url: "https://kubevirt.io/monitoring/runbooks/CnaoDown"
             exp_labels:
               severity: "warning"
               kubernetes_operator_part_of: "kubevirt"
@@ -50,7 +50,7 @@ tests:
         exp_alerts:
           - exp_annotations:
               summary: "CNAO CR NetworkAddonsConfig is not ready."
-              runbook_url: "http://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady"
+              runbook_url: "https://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady"
             exp_labels:
               severity: "warning"
               kubernetes_operator_part_of: "kubevirt"
@@ -85,7 +85,7 @@ tests:
         exp_alerts:
           - exp_annotations:
               summary: "Duplicate macs found."
-              runbook_url: "http://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound"
+              runbook_url: "https://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound"
             exp_labels:
               severity: "warning"
               kubernetes_operator_part_of: "kubevirt"
@@ -118,7 +118,7 @@ tests:
         exp_alerts:
           - exp_annotations:
               summary: "KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down."
-              runbook_url: "http://kubevirt.io/monitoring/runbooks/KubeMacPoolDown"
+              runbook_url: "https://kubevirt.io/monitoring/runbooks/KubeMacPoolDown"
             exp_labels:
               severity: "critical"
               kubernetes_operator_part_of: "kubevirt"
