@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"log"
 	"sort"
 	"strings"
 	"text/template"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 
