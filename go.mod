@@ -64,7 +64,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/Masterminds/squirrel v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.4.17 // indirect
-	github.com/Microsoft/hcsshim v0.8.22 // indirect
+	github.com/Microsoft/hcsshim v0.8.24 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
@@ -76,10 +76,10 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/cloudflare/cfssl v1.5.0 // indirect
-	github.com/containerd/cgroups v1.0.1 // indirect
-	github.com/containerd/containerd v1.4.11 // indirect
+	github.com/containerd/cgroups v1.0.3 // indirect
+	github.com/containerd/containerd v1.5.0-rc.0 // indirect
 	github.com/containerd/continuity v0.1.0 // indirect
-	github.com/containerd/ttrpc v1.0.2 // indirect
+	github.com/containerd/ttrpc v1.1.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deislabs/oras v0.11.1 // indirect
@@ -115,7 +115,7 @@ require (
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.1.2 // indirect
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
@@ -162,7 +162,7 @@ require (
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/onsi/ginkgo/v2 v2.0.0
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/operator-framework/api v0.10.5 // indirect
 	github.com/operator-framework/java-operator-plugins v0.0.0-20210708174638-463fb91f3d5e // indirect
 	github.com/operator-framework/operator-registry v1.17.4 // indirect
@@ -212,7 +212,7 @@ require (
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
@@ -238,6 +238,12 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+require (
+	github.com/klauspost/compress v1.11.13 // indirect
+	github.com/moby/locker v1.0.1 // indirect
+	github.com/moby/sys/mountinfo v0.4.1 // indirect
 )
 
 // Pinned to kubernetes-1.23.1
@@ -270,7 +276,7 @@ replace (
 )
 
 replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.4.13
+	github.com/containerd/containerd => github.com/containerd/containerd v1.5.13
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
