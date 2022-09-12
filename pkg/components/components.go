@@ -128,6 +128,7 @@ func NewRelatedImage(image string) RelatedImage {
 func GetDeployment(version string, operatorVersion string, namespace string, repository string, imageName string, tag string, imagePullPolicy string, addonsImages *AddonsImages) *appsv1.Deployment {
 	image := fmt.Sprintf("%s/%s:%s", repository, imageName, tag)
 	runAsNonRoot := true
+	allowPrivilegeEscalation := false
 
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -168,6 +169,9 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 					ServiceAccountName: Name,
 					SecurityContext: &corev1.PodSecurityContext{
 						RunAsNonRoot: &runAsNonRoot,
+						SeccompProfile: &corev1.SeccompProfile{
+							Type: corev1.SeccompProfileTypeRuntimeDefault,
+						},
 					},
 					PriorityClassName: "system-cluster-critical",
 					Containers: []corev1.Container{
@@ -268,6 +272,12 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MONITORING_SERVICE_ACCOUNT",
 									Value: "prometheus-k8s",
+								},
+							},
+							SecurityContext: &corev1.SecurityContext{
+								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								Capabilities: &corev1.Capabilities{
+									Drop: []corev1.Capability{corev1.Capability("ALL")},
 								},
 							},
 						},
