@@ -22,6 +22,7 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	eventemitter "github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
+	nmstatev1 "github.com/nmstate/kubernetes-nmstate/api/v1"
 )
 
 const (
@@ -161,8 +162,9 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 			},
 		)
 	} else if reachedAvailableLevel {
-		if status.isRunningOnOpenshift411OrLater() && config.Spec.NMState != nil && !status.NmstateOperator {
+		if status.isRunningOnOpenshift411OrLater() && config.Spec.NMState != nil && !status.NmstateOperator && status.hasNNCPs() {
 			// CNAO doesn't support nmstate deployment anymore, set Degraded state is nmstate is requested in NetworkAddonsConfig
+			// and user has already use it deploying some NNCPs
 			reason := "InvalidConfiguration"
 			message := "NMState deployment is not supported by CNAO anymore, please install Kubernetes NMState Operator"
 			status.eventEmitter.EmitFailingForConfig(reason, message)
@@ -295,6 +297,12 @@ func (status *StatusManager) getOpenshiftDesiredVersion() (string, error) {
 		return "", err
 	}
 	return clusterVersion.Status.Desired.Version, nil
+}
+
+func (status *StatusManager) hasNNCPs() bool {
+	NNCPList := &nmstatev1.NodeNetworkConfigurationPolicyList{}
+	err := status.client.List(context.TODO(), NNCPList)
+	return err == nil && len(NNCPList.Items) != 0
 }
 
 func (status *StatusManager) SetAttributes(daemonSets []types.NamespacedName, deployments []types.NamespacedName, containers []cnao.Container, generation int64) {
