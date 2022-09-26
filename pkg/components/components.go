@@ -29,25 +29,29 @@ var (
 )
 
 const (
-	MultusImageDefault            = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:829c27e9392d013eee5086ca7670d7326d723ebaec526237215e86086b5a3234"
-	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:5d9442c26f8750d44f97175f36dbd74bef503f782b9adefcfd08215d065c437a"
-	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:5d24c6d1ecb0556896b7b81c7e5260b54173858425777b7a84df8a706c07e6d2"
-	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:fb07b1be9e0990e3846ef628e993694bf0765602af5907abf98f7e218db0cb4a"
-	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:4a914963def39ce39fbdad3701e55e6e5ca602305ddf39f7eae4a4b3d215044d"
-	OvsMarkerImageDefault         = "quay.io/kubevirt/ovs-cni-marker@sha256:e94ef06ec14c0e8fb47f216e8f2f606bad5d7388295f1ecdf333efd56be3825f"
-	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:48e79c33cea4820c483ec460e7dc29a9d402292c4b509c1f800a80c227c282ea"
-	KubeRbacProxyImageDefault     = "quay.io/openshift/origin-kube-rbac-proxy@sha256:baedb268ac66456018fb30af395bb3d69af5fff3252ff5d549f0231b1ebb6901"
+	MultusImageDefault               = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:829c27e9392d013eee5086ca7670d7326d723ebaec526237215e86086b5a3234"
+	LinuxBridgeCniImageDefault       = "quay.io/kubevirt/cni-default-plugins@sha256:5d9442c26f8750d44f97175f36dbd74bef503f782b9adefcfd08215d065c437a"
+	LinuxBridgeMarkerImageDefault    = "quay.io/kubevirt/bridge-marker@sha256:5d24c6d1ecb0556896b7b81c7e5260b54173858425777b7a84df8a706c07e6d2"
+	KubeMacPoolImageDefault          = "quay.io/kubevirt/kubemacpool@sha256:fb07b1be9e0990e3846ef628e993694bf0765602af5907abf98f7e218db0cb4a"
+	OvsCniImageDefault               = "quay.io/kubevirt/ovs-cni-plugin@sha256:4a914963def39ce39fbdad3701e55e6e5ca602305ddf39f7eae4a4b3d215044d"
+	OvsCniMirrorProducerImageDefault = "quay.io/kubevirt/ovs-cni-mirror-producer@sha256:9b1e368adc2c55485d25debfdf69794da81b9d718d5ded560fcc2d5a4c602c6b"
+	OvsCniMirrorConsumerImageDefault = "quay.io/kubevirt/ovs-cni-mirror-consumer@sha256:350b2a4bb48c4d77a611246b017afa135134e9ca7ea45db06ae943526a6b03df"
+	OvsMarkerImageDefault            = "quay.io/kubevirt/ovs-cni-marker@sha256:e94ef06ec14c0e8fb47f216e8f2f606bad5d7388295f1ecdf333efd56be3825f"
+	MacvtapCniImageDefault           = "quay.io/kubevirt/macvtap-cni@sha256:48e79c33cea4820c483ec460e7dc29a9d402292c4b509c1f800a80c227c282ea"
+	KubeRbacProxyImageDefault        = "quay.io/openshift/origin-kube-rbac-proxy@sha256:baedb268ac66456018fb30af395bb3d69af5fff3252ff5d549f0231b1ebb6901"
 )
 
 type AddonsImages struct {
-	Multus            string
-	LinuxBridgeCni    string
-	LinuxBridgeMarker string
-	KubeMacPool       string
-	OvsCni            string
-	OvsMarker         string
-	MacvtapCni        string
-	KubeRbacProxy     string
+	Multus               string
+	LinuxBridgeCni       string
+	LinuxBridgeMarker    string
+	KubeMacPool          string
+	OvsCni               string
+	OvsCniMirrorProducer string
+	OvsCniMirrorConsumer string
+	OvsMarker            string
+	MacvtapCni           string
+	KubeRbacProxy        string
 }
 
 type RelatedImage struct {
@@ -87,6 +91,12 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.OvsCni == "" {
 		ai.OvsCni = OvsCniImageDefault
 	}
+	if ai.OvsCniMirrorProducer == "" {
+		ai.OvsCniMirrorProducer = OvsCniMirrorProducerImageDefault
+	}
+	if ai.OvsCniMirrorConsumer == "" {
+		ai.OvsCniMirrorConsumer = OvsCniMirrorConsumerImageDefault
+	}
 	if ai.OvsMarker == "" {
 		ai.OvsMarker = OvsMarkerImageDefault
 	}
@@ -106,6 +116,8 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.LinuxBridgeMarker,
 		ai.KubeMacPool,
 		ai.OvsCni,
+		ai.OvsCniMirrorProducer,
+		ai.OvsCniMirrorConsumer,
 		ai.OvsMarker,
 		ai.MacvtapCni,
 		ai.KubeRbacProxy,
@@ -201,6 +213,14 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "OVS_CNI_IMAGE",
 									Value: addonsImages.OvsCni,
+								},
+								{
+									Name:  "OVS_CNI_MIRROR_PRODUCER_IMAGE",
+									Value: addonsImages.OvsCniMirrorProducer,
+								},
+								{
+									Name:  "OVS_CNI_MIRROR_CONSUMER_IMAGE",
+									Value: addonsImages.OvsCniMirrorConsumer,
 								},
 								{
 									Name:  "OVS_MARKER_IMAGE",
