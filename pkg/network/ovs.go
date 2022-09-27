@@ -22,10 +22,6 @@ func renderOvs(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterIn
 	data := render.MakeRenderData()
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["OvsCNIImage"] = os.Getenv("OVS_CNI_IMAGE")
-	data.Data["OvsMarkerImage"] = os.Getenv("OVS_MARKER_IMAGE")
-	data.Data["OvsImage"] = os.Getenv("OVS_IMAGE")
-	data.Data["OvsCNIMirrorProducerImage"] = os.Getenv("OVS_CNI_MIRROR_PRODUCER_IMAGE")
-	data.Data["OvsCNIMirrorConsumerImage"] = os.Getenv("OVS_CNI_MIRROR_CONSUMER_IMAGE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
 	if clusterInfo.OpenShift4 {

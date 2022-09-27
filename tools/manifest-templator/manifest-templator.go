@@ -245,7 +245,6 @@ func main() {
 	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
 	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
-	ovsMarkerImage := flag.String("ovs-marker-image", components.OvsMarkerImageDefault, "The ovs marker image managed by CNA")
 	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
 	kubeRbacProxyImage := flag.String("kube-rbac-proxy-image", components.KubeRbacProxyImageDefault, "The kube rbac proxy used by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
@@ -269,7 +268,6 @@ func main() {
 			LinuxBridgeMarker: *linuxBridgeMarkerImage,
 			KubeMacPool:       *kubeMacPoolImage,
 			OvsCni:            *ovsCniImage,
-			OvsMarker:         *ovsMarkerImage,
 			MacvtapCni:        *macvtapCniImage,
 			KubeRbacProxy:     *kubeRbacProxyImage,
 		}).FillDefaults(),
