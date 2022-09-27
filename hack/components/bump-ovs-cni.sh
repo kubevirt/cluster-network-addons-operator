@@ -24,6 +24,14 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].command  '["cp", "/ovs", "/host{{ .CNIBinDir }}/ovs"]'
 				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].imagePullPolicy  '{{ .ImagePullPolicy }}'
 				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].volumeMounts[0].mountPath  '/host{{ .CNIBinDir }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[1].image  '{{ .OvsCNIMirrorProducerImage }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[1].command  '["cp", "/ovs-mirror-producer", "/host{{ .CNIBinDir }}/ovs-mirror-producer"]'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[1].imagePullPolicy  '{{ .ImagePullPolicy }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[1].volumeMounts[0].mountPath  '/host{{ .CNIBinDir }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[2].image  '{{ .OvsCNIMirrorConsumerImage }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[2].command  '["cp", "/ovs-mirror-consumer", "/host{{ .CNIBinDir }}/ovs-mirror-consumer"]'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[2].imagePullPolicy  '{{ .ImagePullPolicy }}'
+				yaml-utils::update_param ${f} spec.template.spec.initContainers[2].volumeMounts[0].mountPath  '/host{{ .CNIBinDir }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .OvsMarkerImage }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].imagePullPolicy  '{{ .ImagePullPolicy }}'
 				yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path  '{{ .CNIBinDir }}'
@@ -115,6 +123,22 @@ OVS_PLUGIN_IMAGE_DIGEST="$(docker-utils::get_image_digest "${OVS_PLUGIN_IMAGE_TA
 
 sed -i -r "s#\"${OVS_PLUGIN_IMAGE}(@sha256)?:.*\"#\"${OVS_PLUGIN_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${OVS_PLUGIN_IMAGE}(@sha256)?:.*\"#\"${OVS_PLUGIN_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
+
+echo 'Get ovs-cni-mirror-producer image name and update it under CNAO'
+OVS_CNI_MIRROR_PRODUCER_IMAGE=quay.io/kubevirt/ovs-cni-mirror-producer
+OVS_CNI_MIRROR_PRODUCER_IMAGE_TAGGED=${OVS_CNI_MIRROR_PRODUCER_IMAGE}:${OVS_TAG}
+OVS_CNI_MIRROR_PRODUCER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${OVS_CNI_MIRROR_PRODUCER_IMAGE_TAGGED}" "${OVS_CNI_MIRROR_PRODUCER_IMAGE}")"
+
+sed -i -r "s#\"${OVS_CNI_MIRROR_PRODUCER_IMAGE}(@sha256)?:.*\"#\"${OVS_CNI_MIRROR_PRODUCER_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${OVS_CNI_MIRROR_PRODUCER_IMAGE}(@sha256)?:.*\"#\"${OVS_CNI_MIRROR_PRODUCER_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
+
+echo 'Get ovs-cni-mirror-consumer image name and update it under CNAO'
+OVS_CNI_MIRROR_CONSUMER_IMAGE=quay.io/kubevirt/ovs-cni-mirror-consumer
+OVS_CNI_MIRROR_CONSUMER_IMAGE_TAGGED=${OVS_CNI_MIRROR_CONSUMER_IMAGE}:${OVS_TAG}
+OVS_CNI_MIRROR_CONSUMER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${OVS_CNI_MIRROR_CONSUMER_IMAGE_TAGGED}" "${OVS_CNI_MIRROR_CONSUMER_IMAGE}")"
+
+sed -i -r "s#\"${OVS_CNI_MIRROR_CONSUMER_IMAGE}(@sha256)?:.*\"#\"${OVS_CNI_MIRROR_CONSUMER_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${OVS_CNI_MIRROR_CONSUMER_IMAGE}(@sha256)?:.*\"#\"${OVS_CNI_MIRROR_CONSUMER_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
 
 echo 'Get ovs-cni-marker image name and update it under CNAO'
 OVS_MARKER_IMAGE=quay.io/kubevirt/ovs-cni-marker
