@@ -55,25 +55,13 @@ func init() {
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:4a914963def39ce39fbdad3701e55e6e5ca602305ddf39f7eae4a4b3d215044d",
-			},
-			{
-				ParentName: "ovs-cni-amd64",
-				ParentKind: "DaemonSet",
-				Name:       "ovs-mirror-producer",
-				Image:      "quay.io/kubevirt/ovs-cni-mirror-producer@sha256:9b1e368adc2c55485d25debfdf69794da81b9d718d5ded560fcc2d5a4c602c6b",
-			},
-			{
-				ParentName: "ovs-cni-amd64",
-				ParentKind: "DaemonSet",
-				Name:       "ovs-mirror-consumer",
-				Image:      "quay.io/kubevirt/ovs-cni-mirror-consumer@sha256:350b2a4bb48c4d77a611246b017afa135134e9ca7ea45db06ae943526a6b03df",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:3654b80dd5e459c3e73dd027d732620ed8b488b8a15dfe7922457d16c7e834c3",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:e94ef06ec14c0e8fb47f216e8f2f606bad5d7388295f1ecdf333efd56be3825f",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:3654b80dd5e459c3e73dd027d732620ed8b488b8a15dfe7922457d16c7e834c3",
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
