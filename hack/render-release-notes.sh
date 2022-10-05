@@ -11,7 +11,7 @@ end() {
 
 trap end EXIT SIGINT SIGTERM SIGSTOP
 
-GOFLAGS=-mod=readonly go install k8s.io/release/cmd/release-notes@latest
+GOFLAGS=-mod=readonly go install k8s.io/release/cmd/release-notes@v0.13.0
 release-notes \
     --list-v2 \
     --go-template go-template:$script_dir/release-notes.tmpl \
