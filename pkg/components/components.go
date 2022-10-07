@@ -29,23 +29,25 @@ var (
 )
 
 const (
-	MultusImageDefault            = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:09a572e8bdf8a398db024ca252d06cf3ac0a03e07ae547d6a84221d4f6a9f96f"
-	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:c0d14ab010f44bf733aff02b77eb4b5a0ce38fd0c4918a7ecf6941a7bebd72df"
-	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:5d24c6d1ecb0556896b7b81c7e5260b54173858425777b7a84df8a706c07e6d2"
-	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:fb07b1be9e0990e3846ef628e993694bf0765602af5907abf98f7e218db0cb4a"
-	OvsCniImageDefault            = "quay.io/kubevirt/ovs-cni-plugin@sha256:3654b80dd5e459c3e73dd027d732620ed8b488b8a15dfe7922457d16c7e834c3"
-	MacvtapCniImageDefault        = "quay.io/kubevirt/macvtap-cni@sha256:5a288f1f9956c2ea8127fa736b598326852d2aa58a8469fa663a1150c2313b02"
-	KubeRbacProxyImageDefault     = "quay.io/openshift/origin-kube-rbac-proxy@sha256:baedb268ac66456018fb30af395bb3d69af5fff3252ff5d549f0231b1ebb6901"
+	MultusImageDefault                = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:09a572e8bdf8a398db024ca252d06cf3ac0a03e07ae547d6a84221d4f6a9f96f"
+	MultusDynamicNetworksImageDefault = "ghcr.io/maiqueb/multus-dynamic-networks-controller@sha256:bd1b07503fd505c66a6ba8b55445a9de94eb322c95d5c22a475df03a8ec67e50"
+	LinuxBridgeCniImageDefault        = "quay.io/kubevirt/cni-default-plugins@sha256:c0d14ab010f44bf733aff02b77eb4b5a0ce38fd0c4918a7ecf6941a7bebd72df"
+	LinuxBridgeMarkerImageDefault     = "quay.io/kubevirt/bridge-marker@sha256:5d24c6d1ecb0556896b7b81c7e5260b54173858425777b7a84df8a706c07e6d2"
+	KubeMacPoolImageDefault           = "quay.io/kubevirt/kubemacpool@sha256:fb07b1be9e0990e3846ef628e993694bf0765602af5907abf98f7e218db0cb4a"
+	OvsCniImageDefault                = "quay.io/kubevirt/ovs-cni-plugin@sha256:3654b80dd5e459c3e73dd027d732620ed8b488b8a15dfe7922457d16c7e834c3"
+	MacvtapCniImageDefault            = "quay.io/kubevirt/macvtap-cni@sha256:5a288f1f9956c2ea8127fa736b598326852d2aa58a8469fa663a1150c2313b02"
+	KubeRbacProxyImageDefault         = "quay.io/openshift/origin-kube-rbac-proxy@sha256:baedb268ac66456018fb30af395bb3d69af5fff3252ff5d549f0231b1ebb6901"
 )
 
 type AddonsImages struct {
-	Multus            string
-	LinuxBridgeCni    string
-	LinuxBridgeMarker string
-	KubeMacPool       string
-	OvsCni            string
-	MacvtapCni        string
-	KubeRbacProxy     string
+	Multus                string
+	MultusDynamicNetworks string
+	LinuxBridgeCni        string
+	LinuxBridgeMarker     string
+	KubeMacPool           string
+	OvsCni                string
+	MacvtapCni            string
+	KubeRbacProxy         string
 }
 
 type RelatedImage struct {
@@ -73,6 +75,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.Multus == "" {
 		ai.Multus = MultusImageDefault
 	}
+	if ai.MultusDynamicNetworks == "" {
+		ai.Multus = MultusDynamicNetworksImageDefault
+	}
 	if ai.LinuxBridgeCni == "" {
 		ai.LinuxBridgeCni = LinuxBridgeCniImageDefault
 	}
@@ -97,6 +102,7 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 func (ai AddonsImages) ToRelatedImages() RelatedImages {
 	return NewRelatedImages(
 		ai.Multus,
+		ai.MultusDynamicNetworks,
 		ai.LinuxBridgeCni,
 		ai.LinuxBridgeMarker,
 		ai.KubeMacPool,
@@ -183,6 +189,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MULTUS_IMAGE",
 									Value: addonsImages.Multus,
+								},
+								{
+									Name:  "MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE",
+									Value: addonsImages.MultusDynamicNetworks,
 								},
 								{
 									Name:  "LINUX_BRIDGE_IMAGE",
@@ -798,6 +808,10 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes",
 							Type:        "object",
 						},
+						"multusDynamicNetworks": extv1.JSONSchemaProps{
+							Description: "A multus extension enabling hot-plug and hot-unplug of Pod interfaces",
+							Type:        "object",
+						},
 						"ovs": extv1.JSONSchemaProps{
 							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
 							Type:        "object",
@@ -1014,12 +1028,13 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 			Name: "cluster",
 		},
 		Spec: cnao.NetworkAddonsConfigSpec{
-			Multus:          &cnao.Multus{},
-			LinuxBridge:     &cnao.LinuxBridge{},
-			KubeMacPool:     &cnao.KubeMacPool{},
-			Ovs:             &cnao.Ovs{},
-			MacvtapCni:      &cnao.MacvtapCni{},
-			ImagePullPolicy: corev1.PullIfNotPresent,
+			Multus:                &cnao.Multus{},
+			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
+			LinuxBridge:           &cnao.LinuxBridge{},
+			KubeMacPool:           &cnao.KubeMacPool{},
+			Ovs:                   &cnao.Ovs{},
+			MacvtapCni:            &cnao.MacvtapCni{},
+			ImagePullPolicy:       corev1.PullIfNotPresent,
 		},
 	}
 }
