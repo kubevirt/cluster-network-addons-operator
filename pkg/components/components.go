@@ -30,6 +30,7 @@ var (
 
 const (
 	MultusImageDefault            = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:829c27e9392d013eee5086ca7670d7326d723ebaec526237215e86086b5a3234"
+	MultusDynamicNetworksControllerImageDefault        = "TODO"
 	LinuxBridgeCniImageDefault    = "quay.io/kubevirt/cni-default-plugins@sha256:5d9442c26f8750d44f97175f36dbd74bef503f782b9adefcfd08215d065c437a"
 	LinuxBridgeMarkerImageDefault = "quay.io/kubevirt/bridge-marker@sha256:5d24c6d1ecb0556896b7b81c7e5260b54173858425777b7a84df8a706c07e6d2"
 	KubeMacPoolImageDefault       = "quay.io/kubevirt/kubemacpool@sha256:fb07b1be9e0990e3846ef628e993694bf0765602af5907abf98f7e218db0cb4a"
@@ -40,6 +41,7 @@ const (
 
 type AddonsImages struct {
 	Multus            string
+	MultusDynamicNetworksController            string
 	LinuxBridgeCni    string
 	LinuxBridgeMarker string
 	KubeMacPool       string
@@ -73,6 +75,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.Multus == "" {
 		ai.Multus = MultusImageDefault
 	}
+	if ai.MultusDynamicNetworksController == "" {
+		ai.Multus = MultusDynamicNetworksControllerImageDefault
+	}
 	if ai.LinuxBridgeCni == "" {
 		ai.LinuxBridgeCni = LinuxBridgeCniImageDefault
 	}
@@ -97,6 +102,7 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 func (ai AddonsImages) ToRelatedImages() RelatedImages {
 	return NewRelatedImages(
 		ai.Multus,
+		ai.MultusDynamicNetworksController,
 		ai.LinuxBridgeCni,
 		ai.LinuxBridgeMarker,
 		ai.KubeMacPool,
@@ -183,6 +189,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MULTUS_IMAGE",
 									Value: addonsImages.Multus,
+								},
+								{
+									Name:  "MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE",
+									Value: addonsImages.MultusDynamicNetworksController,
 								},
 								{
 									Name:  "LINUX_BRIDGE_IMAGE",
@@ -798,6 +808,10 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes",
 							Type:        "object",
 						},
+						"multusDynamicNetworksController": extv1.JSONSchemaProps{
+							Description: "A multus extension enabling hot-plug and hot-unplug of Pod interfaces",
+							Type:        "object",
+						},
 						"ovs": extv1.JSONSchemaProps{
 							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
 							Type:        "object",
@@ -1015,6 +1029,7 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 		},
 		Spec: cnao.NetworkAddonsConfigSpec{
 			Multus:          &cnao.Multus{},
+			MultusDynamicNetworksController:          &cnao.MultusDynamicNetworksController{},
 			LinuxBridge:     &cnao.LinuxBridge{},
 			KubeMacPool:     &cnao.KubeMacPool{},
 			Ovs:             &cnao.Ovs{},

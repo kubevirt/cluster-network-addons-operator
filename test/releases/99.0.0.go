@@ -16,6 +16,12 @@ func init() {
 				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:829c27e9392d013eee5086ca7670d7326d723ebaec526237215e86086b5a3234",
 			},
 			{
+				ParentName: "dynamic-networks-controller-ds",
+				ParentKind: "DaemonSet",
+				Name:       "dynamic-networks-controller",
+				Image:      "TODO",
+			},
+			{
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "install-multus-binary",

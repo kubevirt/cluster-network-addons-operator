@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+set -xeo pipefail
+
+source hack/components/yaml-utils.sh
+source hack/components/git-utils.sh
+source hack/components/docker-utils.sh
+
+function __parametize_by_object() {
+  for f in ./*; do
+    case "${f}" in
+      ./ConfigMap_dynamic-networks-controller-config.yaml)
+        yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+        yaml-utils::remove_single_quotes_from_yaml ${f}
+        ;;
+      ./ClusterRoleBinding_dynamic-networks-controller.yaml)
+        yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
+        yaml-utils::remove_single_quotes_from_yaml ${f}
+        ;;
+      ./DaemonSet_dynamic-networks-controller-ds.yaml)
+        yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+        yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+        yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .MultusDynamicNetworksControllerImage }}'
+        yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
+        yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+        yaml-utils::remove_single_quotes_from_yaml ${f}
+        ;;
+      ./ServiceAccount_dynamic-networks-controller.yaml)
+        yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+        yaml-utils::remove_single_quotes_from_yaml ${f}
+        ;;
+    esac
+  done
+}
+
+echo 'Bumping multus-dynamic-networks-controller'
+MULTUS_DYNAMIC_NETWORKS_CONTROLLER_URL=$(yaml-utils::get_component_url multus-dynamic-networks-controller)
+MULTUS_DYNAMIC_NETWORKS_CONTROLLER_COMMIT=$(yaml-utils::get_component_commit multus-dynamic-networks-controller)
+MULTUS_DYNAMIC_NETWORKS_CONTROLLER_REPO=$(yaml-utils::get_component_repo ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_URL})
+
+TEMP_DIR=$(git-utils::create_temp_path multus-dynamic-networks-controller)
+trap "rm -rf ${TEMP_DIR}" EXIT
+MULTUS_DYNAMIC_NETWORKS_CONTROLLER_PATH=${TEMP_DIR}/${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_REPO}
+
+echo 'Fetch multus-dynamic-networks-controller sources'
+git-utils::fetch_component ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_PATH} ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_URL} ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_COMMIT}
+
+echo 'Adjust multus-dynamic-networks-controller to CNAO'
+(
+  cd ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_PATH}
+  mkdir -p config/cnao
+  cp manifests/dynamic-networks-controller.yaml config/cnao
+
+  echo 'Split manifest per object'
+  cd config/cnao
+  $(yaml-utils::split_yaml_by_seperator . dynamic-networks-controller.yaml)
+
+  rm dynamic-networks-controller.yaml
+  $(yaml-utils::rename_files_by_object .)
+
+  echo 'parametize manifests by object'
+  __parametize_by_object
+
+  echo 'rejoin sub-manifests to final manifest'
+  cat * > multus-dynamic-networks-controller.yaml
+)
+
+echo 'copy manifests'
+rm -rf data/multus-dynamic-networks-controller/*
+cp ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_PATH}/config/cnao/multus-dynamic-networks-controller.yaml data/multus-dynamic-networks-controller/000-controller.yaml
+
+# echo 'Get multus-dynamic-networks-controller image name and update it under CNAO'
+# MULTUS_DYNAMIC_NETWORKS_CONTROLLER_TAG=$(git-utils::get_component_tag ${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_PATH})
+# MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE=quay.io/kubevirt/macvtap-cni
+# MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE_TAGGED=${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE}:${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_TAG}
+# MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE_TAGGED}" "${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE}")"
+
+# sed -i -r "s#\"${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE}(@sha256)?:.*\"#\"${MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE_DIGEST}\"#" pkg/components/components.go
