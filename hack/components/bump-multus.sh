@@ -18,6 +18,9 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
+                       ./ConfigMap_multus-daemon-config.yaml)
+                               yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+                               ;;
 			./DaemonSet_kube-multus-ds.yaml)
 				yaml-utils::update_param ${f} metadata.name 'multus'
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
@@ -27,14 +30,8 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
 				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.priorityClassName 'system-cluster-critical'
-				yaml-utils::delete_param ${f} spec.template.spec.containers[0].volumeMounts[2]
-				yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[2].name 'cnicache'
-				yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[2].mountPath '/host/var/lib/cni'
 				yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path '{{ .CNIConfigDir }}'
 				yaml-utils::update_param ${f} spec.template.spec.volumes[1].hostPath.path '{{ .CNIBinDir }}'
-				yaml-utils::delete_param ${f} spec.template.spec.volumes[2]
-				yaml-utils::set_param ${f} spec.template.spec.volumes[2].name 'cnicache'
-				yaml-utils::set_param ${f} spec.template.spec.volumes[2].hostPath.path '/var/lib/cni'
 				yaml-utils::delete_param ${f} spec.template.spec.containers[0].resources.limits
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.cpu '"10m"'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.memory '"15Mi"'
@@ -63,12 +60,13 @@ git-utils::fetch_component ${MULTUS_PATH} ${MULTUS_URL} ${MULTUS_COMMIT}
 (
 	cd ${MULTUS_PATH}
 	mkdir -p config/cnao
-	cp deployments/multus-daemonset.yml config/cnao
+	cp deployments/multus-daemonset-thick.yml config/cnao
 
 	echo 'Split manifest per object'
 	cd config/cnao
-	$(yaml-utils::split_yaml_by_seperator . multus-daemonset.yml)
-	rm multus-daemonset.yml
+	grep -v "^#" multus-daemonset-thick.yml > no-comments-multus-daemonset-thick.yml
+	$(yaml-utils::split_yaml_by_seperator . no-comments-multus-daemonset-thick.yml)
+       rm multus-daemonset-thick.yml no-comments-multus-daemonset-thick.yml
 	$(yaml-utils::rename_files_by_object .)
 
 	echo 'parametize manifests by object'
@@ -114,6 +112,7 @@ EOF
 		cat ClusterRole_multus.yaml >> ${YAML_FILE} &&
 		cat ClusterRoleBinding_multus.yaml >> ${YAML_FILE} &&
 		cat ServiceAccount_multus.yaml >> ${YAML_FILE} &&
+		cat ConfigMap_multus-daemon-config.yaml >> ${YAML_FILE} &&
 		cat DaemonSet_kube-multus-ds.yaml >> ${YAML_FILE} &&
 		cat SecurityContextConstraints_multus.yaml >> ${YAML_FILE}
 )
@@ -126,7 +125,7 @@ cp ${MULTUS_PATH}/config/cnao/001-multus.yaml data/multus/
 echo 'Get multus image name'
 MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
 MULTUS_IMAGE=ghcr.io/k8snetworkplumbingwg/multus-cni
-MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}
+MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}-thick
 if [[ -n "$(docker-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
     MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
 else

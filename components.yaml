@@ -25,10 +25,10 @@ components:
     metadata: v0.10.1
   multus:
     url: https://github.com/k8snetworkplumbingwg/multus-cni
-    commit: f4c0adf54c99d7395d30a050a8d29b674b99d700
+    commit: f530d3eb84608fa25a59737bcf49991d4a037d82
     branch: master
     update-policy: tagged
-    metadata: v3.9.1
+    metadata: v4.0.0-alpha
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: 05da205a682694307d1df78fdeccde1321f563f6

@@ -11,7 +11,7 @@ spec:
     singular: network-attachment-definition
     kind: NetworkAttachmentDefinition
     shortNames:
-    - net-attach-def
+      - net-attach-def
   versions:
     - name: v1
       served: true
@@ -91,6 +91,27 @@ metadata:
   name: multus
   namespace: {{ .Namespace }}
 ---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: multus-daemon-config
+  namespace: '{{ .Namespace }}'
+  labels:
+    tier: node
+    app: multus
+data:
+  daemon-config.json: |
+    {
+        "chrootDir": "/hostroot",
+        "confDir": "/host/etc/cni/net.d",
+        "logToStderr": true,
+        "logLevel": "debug",
+        "logFile": "/tmp/multus.log",
+        "binDir": "/opt/cni/bin",
+        "cniDir": "/var/lib/cni/multus",
+        "socketDir": "/host/run/multus/"
+    }
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -114,15 +135,19 @@ spec:
         name: kube-multus-ds-amd64
     spec:
       hostNetwork: true
+      hostPID: true
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       serviceAccountName: multus
       containers:
         - name: kube-multus
           image: {{ .MultusImage }}
-          command: ["/entrypoint.sh"]
+          command: ["/usr/src/multus-cni/bin/multus-daemon"]
           args:
-            - "--multus-conf-file=auto"
-            - "--cni-version=0.3.1"
+            - "-cni-version=0.3.1"
+            - "-cni-config-dir=/host/etc/cni/net.d"
+            - "-multus-autoconfig-dir=/host/etc/cni/net.d"
+            - "-multus-log-to-stderr=true"
+            - "-multus-log-level=verbose"
           resources:
             requests:
               cpu: "10m"
@@ -132,10 +157,23 @@ spec:
           volumeMounts:
             - name: cni
               mountPath: /host/etc/cni/net.d
-            - name: cnibin
-              mountPath: /host/opt/cni/bin
-            - name: cnicache
-              mountPath: /host/var/lib/cni
+            - name: host-run
+              mountPath: /host/run
+            - name: host-var-lib-cni-multus
+              mountPath: /var/lib/cni/multus
+            - name: host-var-lib-kubelet
+              mountPath: /var/lib/kubelet
+            - name: host-run-k8s-cni-cncf-io
+              mountPath: /run/k8s.cni.cncf.io
+            - name: host-run-netns
+              mountPath: /run/netns
+              mountPropagation: HostToContainer
+            - name: multus-daemon-config
+              mountPath: /etc/cni/net.d/multus.d
+              readOnly: true
+            - name: hostroot
+              mountPath: /hostroot
+              mountPropagation: HostToContainer
           imagePullPolicy: {{ .ImagePullPolicy }}
           lifecycle:
             preStop:
@@ -146,8 +184,8 @@ spec:
           image: {{ .MultusImage }}
           command:
             - "cp"
-            - "/usr/src/multus-cni/bin/multus"
-            - "/host/opt/cni/bin/multus"
+            - "/usr/src/multus-cni/bin/multus-shim"
+            - "/host/opt/cni/bin/multus-shim"
           resources:
             requests:
               cpu: "10m"
@@ -166,9 +204,30 @@ spec:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
-        - name: cnicache
+        - name: hostroot
           hostPath:
-            path: /var/lib/cni
+            path: /
+        - name: multus-daemon-config
+          configMap:
+            name: multus-daemon-config
+            items:
+              - key: daemon-config.json
+                path: daemon-config.json
+        - name: host-run
+          hostPath:
+            path: /run
+        - name: host-var-lib-cni-multus
+          hostPath:
+            path: /var/lib/cni/multus
+        - name: host-var-lib-kubelet
+          hostPath:
+            path: /var/lib/kubelet
+        - name: host-run-k8s-cni-cncf-io
+          hostPath:
+            path: /run/k8s.cni.cncf.io
+        - name: host-run-netns
+          hostPath:
+            path: /run/netns/
       priorityClassName: system-cluster-critical
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
