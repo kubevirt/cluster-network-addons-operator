@@ -52,7 +52,7 @@ func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
 		},
 		Workloads: &cnao.Placement{
 			NodeSelector: map[string]string{
-				"beta.kubernetes.io/arch": "amd64",
+				"kubernetes.io/arch": "amd64",
 			},
 			Tolerations: []corev1.Toleration{
 				corev1.Toleration{
