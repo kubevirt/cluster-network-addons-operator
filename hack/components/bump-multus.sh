@@ -125,7 +125,9 @@ cp ${MULTUS_PATH}/config/cnao/001-multus.yaml data/multus/
 echo 'Get multus image name'
 MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
 MULTUS_IMAGE=ghcr.io/k8snetworkplumbingwg/multus-cni
-MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}:${MULTUS_TAG}-thick
+# TODO: do not use this hardcoded image, and rely on tagged versions instead.
+# had to resort to this shenanigan because of https://github.com/k8snetworkplumbingwg/multus-cni/issues/944
+MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}@sha256:09a572e8bdf8a398db024ca252d06cf3ac0a03e07ae547d6a84221d4f6a9f96f
 if [[ -n "$(docker-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
     MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
 else
