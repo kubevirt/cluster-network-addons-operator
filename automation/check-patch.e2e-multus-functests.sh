@@ -37,13 +37,20 @@ function __prepare-test-environment() {
 
     echo "Deploy cni-plugins pod"
     CNI_PLUGIN_YAML="cni-install.yml"
+    cp "templates/${CNI_PLUGIN_YAML}.j2" ${CNI_PLUGIN_YAML}
     $KUBECTL create -f ${CNI_PLUGIN_YAML}
     $KUBECTL -n kube-system wait --for=condition=ready -l name=cni-plugins pod --timeout=300s
 
-    TEST_YAML="*macvlan1.yml"
+    mkdir -p yamls
+    TEST_YAML="simple-macvlan1.yml"
     # matching the test nodes to the CNAO cluster nodes
-    sed -i 's/kind-worker$/node01/g' ${TEST_YAML}
-    sed -i 's/kind-worker2$/node02/g' ${TEST_YAML}
+    sed 's/{{ CNI_VERSION }}/0.4.0/g' "templates/${TEST_YAML}.j2" > "yamls/${TEST_YAML}"
+    sed -i 's/kind-worker$/node01/g' "yamls/${TEST_YAML}"
+    sed -i 's/kind-worker2$/node02/g' "yamls/${TEST_YAML}"
+
+    TEST_YAML="default-route1.yml"
+    # matching the test nodes to the CNAO cluster nodes
+    sed 's/{{ CNI_VERSION }}/0.4.0/g' "templates/${TEST_YAML}.j2" > "yamls/${TEST_YAML}"
 
     echo "Deplopy kubernetes-nmstate"
     $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/nmstate.io_nmstates.yaml
