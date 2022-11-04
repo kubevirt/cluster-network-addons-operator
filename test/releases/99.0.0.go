@@ -16,6 +16,12 @@ func init() {
 				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:09a572e8bdf8a398db024ca252d06cf3ac0a03e07ae547d6a84221d4f6a9f96f",
 			},
 			{
+				ParentName: "dynamic-networks-controller-ds",
+				ParentKind: "DaemonSet",
+				Name:       "dynamic-networks-controller",
+				Image:      "ghcr.io/maiqueb/multus-dynamic-networks-controller@sha256:bd1b07503fd505c66a6ba8b55445a9de94eb322c95d5c22a475df03a8ec67e50",
+			},
+			{
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "install-multus-binary",
@@ -65,10 +71,11 @@ func init() {
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
-			KubeMacPool: &cnao.KubeMacPool{},
-			LinuxBridge: &cnao.LinuxBridge{},
-			Multus:      &cnao.Multus{},
-			Ovs:         &cnao.Ovs{},
+			KubeMacPool:           &cnao.KubeMacPool{},
+			LinuxBridge:           &cnao.LinuxBridge{},
+			Multus:                &cnao.Multus{},
+			Ovs:                   &cnao.Ovs{},
+			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
 		},
 		Manifests: []string{
 			"network-addons-config.crd.yaml",

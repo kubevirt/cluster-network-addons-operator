@@ -41,6 +41,7 @@ metadata:
   name: cluster
 spec:
   multus: {}
+  multusDynamicNetworks: {}
   linuxBridge: {}
   kubeMacPool:
    rangeStart: "02:00:00:00:00:00"

@@ -35,3 +35,9 @@ components:
     branch: main
     update-policy: tagged
     metadata: v0.29.1
+  multus-dynamic-networks:
+    url: https://github.com/maiqueb/multus-dynamic-networks-controller
+    commit: 5a51952040a6b3abfeef520189d22f4bc1c630f6
+    branch: main
+    update-policy: tagged
+    metadata: v0.1.1

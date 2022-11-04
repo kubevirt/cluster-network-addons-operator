@@ -14,6 +14,7 @@ metadata:
   name: cluster
 spec:
   multus: {}
+  multusDynamicNetworks: {}
   linuxBridge: {}
   kubeMacPool: {}
   ovs: {}
@@ -38,6 +39,26 @@ spec:
 
 Additionally, container image used to deliver this plugin can be set using
 `MULTUS_IMAGE` environment variable in operator deployment manifest.
+
+## Multus Dynamic Networks Controller
+
+[This controller](https://github.com/maiqueb/multus-dynamic-networks-controller)
+allows hot-plug and hot-unplug of additional Pod intefaces. It is done using
+`multusDynamicNetworks` attribute.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  multus: {}
+  multusDynamicNetworks: {}
+```
+
+Additionally, container image used to deliver this plugin can be set using
+`MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE` environment variable in operator
+deployment manifest.
 
 ## Linux Bridge
 
