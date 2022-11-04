@@ -29,9 +29,18 @@ main() {
 
     trap teardown EXIT
 
-    echo "Run multus-dynamic-networks functional tests"
+    echo "Install golang ..."
+    cp hack/install-go.sh ${TMP_COMPONENT_PATH}/hack/install-go.sh
     cd ${TMP_COMPONENT_PATH}
+    BIN_DIR="${TMP_COMPONENT_PATH}/build/_output/go1.18/bin/"
+    mkdir -p "$BIN_DIR"
+    hack/install-go.sh "$BIN_DIR"
+    export GOROOT="$BIN_DIR/go/"
+    export GOBIN="$GOROOT/bin/"
+    export PATH="$GOBIN:$PATH"
+    go version
 
+    echo "Run multus-dynamic-networks functional tests"
     export LOWER_DEVICE="eth0"
     make e2e/test
 }
