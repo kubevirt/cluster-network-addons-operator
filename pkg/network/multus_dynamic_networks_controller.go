@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -36,4 +37,15 @@ func renderMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec, manifestDir
 	}
 
 	return objs, nil
+}
+
+func validateMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec) []error {
+	if conf.MultusDynamicNetworks == nil {
+		return nil
+	}
+
+	if conf.Multus == nil {
+		return []error{fmt.Errorf("the `multus` configuration is required")}
+	}
+	return nil
 }
