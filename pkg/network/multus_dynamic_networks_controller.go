@@ -1,11 +1,14 @@
 package network
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	openshiftoperatorv1 "github.com/openshift/api/operator/v1"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network/cni"
@@ -36,4 +39,19 @@ func renderMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec, manifestDir
 	}
 
 	return objs, nil
+}
+
+func validateMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *openshiftoperatorv1.Network) []error {
+	if conf.MultusDynamicNetworks == nil {
+		return nil
+	}
+
+	if openshiftNetworkConfig != nil {
+		return []error{fmt.Errorf("`multusDynamicNetworks` configuration is not supported on Openshift yet")}
+	}
+
+	if conf.Multus == nil {
+		return []error{fmt.Errorf("the `multus` configuration is required")}
+	}
+	return nil
 }
