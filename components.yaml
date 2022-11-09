@@ -7,10 +7,10 @@ components:
     metadata: 0.10.0
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
-    commit: 3bf23d1c50844d6e845f93529cd0fee3c82c869a
+    commit: f559c0725c4d315d1bf48fbc380c25a19ddf9c10
     branch: main
     update-policy: tagged
-    metadata: v0.39.0
+    metadata: v0.40.0
   linux-bridge:
     url: https://github.com/containernetworking/plugins
     commit: 26745d375201a7e4851d2eb40aa6f2bb2bc0bb61
@@ -29,15 +29,15 @@ components:
     branch: master
     update-policy: static
     metadata: ""
-  ovs-cni:
-    url: https://github.com/k8snetworkplumbingwg/ovs-cni
-    commit: 05da205a682694307d1df78fdeccde1321f563f6
-    branch: main
-    update-policy: tagged
-    metadata: v0.29.1
   multus-dynamic-networks:
     url: https://github.com/maiqueb/multus-dynamic-networks-controller
     commit: 5a51952040a6b3abfeef520189d22f4bc1c630f6
     branch: main
     update-policy: tagged
     metadata: v0.1.1
+  ovs-cni:
+    url: https://github.com/k8snetworkplumbingwg/ovs-cni
+    commit: 05da205a682694307d1df78fdeccde1321f563f6
+    branch: main
+    update-policy: tagged
+    metadata: v0.29.1
