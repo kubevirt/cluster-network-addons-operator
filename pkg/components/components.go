@@ -37,6 +37,8 @@ const (
 	OvsCniImageDefault                = "quay.io/kubevirt/ovs-cni-plugin@sha256:3654b80dd5e459c3e73dd027d732620ed8b488b8a15dfe7922457d16c7e834c3"
 	MacvtapCniImageDefault            = "quay.io/kubevirt/macvtap-cni@sha256:5a288f1f9956c2ea8127fa736b598326852d2aa58a8469fa663a1150c2313b02"
 	KubeRbacProxyImageDefault         = "quay.io/openshift/origin-kube-rbac-proxy@sha256:baedb268ac66456018fb30af395bb3d69af5fff3252ff5d549f0231b1ebb6901"
+	KubeSecondaryDNSImageDefault      = "ghcr.io/kubevirt/kubesecondarydns@sha256:b25074818c76d149cbf64bfb4b5559afcc1c3d4733b450ce70856903a80eb2c7"
+	CoreDNSImageDefault               = "k8s.gcr.io/coredns/coredns@sha256:5b6ec0d6de9baaf3e92d0f66cd96a25b9edbce8716f5f15dcd1a616b3abd590e"
 )
 
 type AddonsImages struct {
@@ -48,6 +50,8 @@ type AddonsImages struct {
 	OvsCni                string
 	MacvtapCni            string
 	KubeRbacProxy         string
+	KubeSecondaryDNS      string
+	CoreDNS               string
 }
 
 type RelatedImage struct {
@@ -96,6 +100,12 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.KubeRbacProxy == "" {
 		ai.KubeRbacProxy = KubeRbacProxyImageDefault
 	}
+	if ai.KubeSecondaryDNS == "" {
+		ai.KubeSecondaryDNS = KubeSecondaryDNSImageDefault
+	}
+	if ai.CoreDNS == "" {
+		ai.CoreDNS = CoreDNSImageDefault
+	}
 	return ai
 }
 
@@ -109,6 +119,8 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.OvsCni,
 		ai.MacvtapCni,
 		ai.KubeRbacProxy,
+		ai.KubeSecondaryDNS,
+		ai.CoreDNS,
 	)
 }
 
@@ -217,6 +229,14 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "KUBE_RBAC_PROXY_IMAGE",
 									Value: addonsImages.KubeRbacProxy,
+								},
+								{
+									Name:  "KUBE_SECONDARY_DNS_IMAGE",
+									Value: addonsImages.KubeSecondaryDNS,
+								},
+								{
+									Name:  "CORE_DNS_IMAGE",
+									Value: addonsImages.CoreDNS,
 								},
 								{
 									Name:  "OPERATOR_IMAGE",
@@ -813,6 +833,20 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Description: "A multus extension enabling hot-plug and hot-unplug of Pod interfaces",
 							Type:        "object",
 						},
+						"kubeSecondaryDNS": extv1.JSONSchemaProps{
+							Description: "KubeSecondaryDNS plugin allows to support FQDN for VMI's secondary networks",
+							Type:        "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"domain": extv1.JSONSchemaProps{
+									Description: "Domain defines the FQDN domain",
+									Type:        "string",
+								},
+								"nameServerIP": extv1.JSONSchemaProps{
+									Description: "NameServerIp defines the name server IP",
+									Type:        "string",
+								},
+							},
+						},
 						"ovs": extv1.JSONSchemaProps{
 							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
 							Type:        "object",
@@ -1035,6 +1069,7 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 			KubeMacPool:           &cnao.KubeMacPool{},
 			Ovs:                   &cnao.Ovs{},
 			MacvtapCni:            &cnao.MacvtapCni{},
+			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
 			ImagePullPolicy:       corev1.PullIfNotPresent,
 		},
 	}

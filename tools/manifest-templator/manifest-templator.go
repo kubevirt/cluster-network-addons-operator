@@ -247,7 +247,9 @@ func main() {
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
 	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
 	kubeRbacProxyImage := flag.String("kube-rbac-proxy-image", components.KubeRbacProxyImageDefault, "The kube rbac proxy used by CNA")
+	coreDNSImage := flag.String("core-dns-image", components.CoreDNSImageDefault, "The coredns image used by CNA")
 	multusDynamicNetworksImage := flag.String("multus-dynamic-networks-image", components.MultusDynamicNetworksImageDefault, "The multus dynamic networks controller image managed by CNA")
+	kubeSecondaryDNSImage := flag.String("kube-secondary-dns", components.KubeSecondaryDNSImageDefault, "The kubesecondarydns-image managed by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -272,6 +274,8 @@ func main() {
 			MacvtapCni:            *macvtapCniImage,
 			KubeRbacProxy:         *kubeRbacProxyImage,
 			MultusDynamicNetworks: *multusDynamicNetworksImage,
+			KubeSecondaryDNS:      *kubeSecondaryDNSImage,
+			CoreDNS:               *coreDNSImage,
 		}).FillDefaults(),
 	}
 

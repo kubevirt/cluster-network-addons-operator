@@ -80,6 +80,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{MultusComponent, MultusDynamicNetworks},
 			),
+			Entry(
+				KubeSecondaryDNSComponent.ComponentName,
+				cnao.NetworkAddonsConfigSpec{
+					KubeSecondaryDNS: &cnao.KubeSecondaryDNS{},
+				},
+				[]Component{KubeSecondaryDNSComponent},
+			),
 		)
 		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {
 			testConfigCreate(gvk, cnao.NetworkAddonsConfigSpec{MacvtapCni: &cnao.MacvtapCni{}}, []Component{MacvtapComponent, MonitoringComponent})
@@ -93,6 +100,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				OvsComponent,
 				MacvtapComponent,
 				MultusDynamicNetworks,
+				KubeSecondaryDNSComponent,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				KubeMacPool:           &cnao.KubeMacPool{},
@@ -101,6 +109,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Ovs:                   &cnao.Ovs{},
 				MacvtapCni:            &cnao.MacvtapCni{},
 				MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
+				KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
 			}
 			testConfigCreate(gvk, configSpec, components)
 		})
@@ -143,6 +152,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.Multus = &cnao.Multus{}
 			configSpec.MultusDynamicNetworks = &cnao.MultusDynamicNetworks{}
 			components = append(components, MultusComponent, MultusDynamicNetworks)
+			testConfigUpdate(gvk, configSpec, components)
+
+			// Add KubeSecondaryDNS component
+			configSpec.KubeSecondaryDNS = &cnao.KubeSecondaryDNS{}
+			components = append(components, KubeSecondaryDNSComponent)
 			testConfigUpdate(gvk, configSpec, components)
 		})
 		Context("and workload PlacementConfiguration is deployed on components", func() {
@@ -241,6 +255,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			MacvtapComponent,
 			MonitoringComponent,
 			MultusDynamicNetworks,
+			KubeSecondaryDNSComponent,
 		}
 		configSpec := cnao.NetworkAddonsConfigSpec{
 			LinuxBridge:           &cnao.LinuxBridge{},
@@ -249,6 +264,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			Ovs:                   &cnao.Ovs{},
 			MacvtapCni:            &cnao.MacvtapCni{},
 			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
+			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
 		}
 		BeforeEach(func() {
 			CreateConfig(gvk, configSpec)
