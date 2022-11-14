@@ -6,3 +6,4 @@ metadata:
   labels:
     name: {{.Namespace}}
     openshift.io/cluster-monitoring: "true"
+    pod-security.kubernetes.io/enforce: "restricted"

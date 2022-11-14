@@ -23,3 +23,4 @@ if [[ ! $(./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster
 	./cluster/kubectl.sh describe deployment cluster-network-addons-operator -n cluster-network-addons
 	exit 1
 fi
+./cluster/kubectl.sh label --overwrite namespace cluster-network-addons pod-security.kubernetes.io/enforce=privileged
