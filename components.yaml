@@ -8,8 +8,8 @@ components:
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: 3bf23d1c50844d6e845f93529cd0fee3c82c869a
-    branch: main
-    update-policy: static
+    branch: release-0.39
+    update-policy: tagged
     metadata: v0.39.0
   linux-bridge:
     url: https://github.com/containernetworking/plugins
@@ -32,6 +32,6 @@ components:
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: 05da205a682694307d1df78fdeccde1321f563f6
-    branch: main
-    update-policy: static
+    branch: release-0.29
+    update-policy: tagged
     metadata: v0.29.1
