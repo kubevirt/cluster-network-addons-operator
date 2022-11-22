@@ -397,6 +397,7 @@ func GetClusterRole() *rbacv1.ClusterRole {
 					"get",
 					"list",
 					"watch",
+					"use",
 				},
 			},
 			{
