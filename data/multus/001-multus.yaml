@@ -144,7 +144,7 @@ spec:
           command: ["/usr/src/multus-cni/bin/multus-daemon"]
           args:
             - "-cni-version=0.3.1"
-            - "-cni-config-dir=/host/etc/cni/net.d"
+            - "-cni-config-dir=/host/etc/cni/multus/net.d"
             - "-multus-autoconfig-dir=/host/etc/cni/net.d"
             - "-multus-log-to-stderr=true"
             - "-multus-log-level=verbose"

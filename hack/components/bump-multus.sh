@@ -28,6 +28,7 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.metadata.labels.name 'kube-multus-ds-amd64'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].args[1] '"-cni-config-dir=/host/etc/cni/multus/net.d"' # https://github.com/k8snetworkplumbingwg/multus-cni/issues/971
 				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.priorityClassName 'system-cluster-critical'
 				yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path '{{ .CNIConfigDir }}'
