@@ -25,7 +25,7 @@ import (
 var _ = Describe("NetworkAddonsConfig", func() {
 	gvk := GetCnaoV1GroupVersionKind()
 	Context("when there is no pre-existing Config", func() {
-		DescribeTable("should succeed deploying single component",
+		DescribeTable("should succeed deploying selected components",
 			func(configSpec cnao.NetworkAddonsConfigSpec, components []Component) {
 				testConfigCreate(gvk, configSpec, components)
 
@@ -72,6 +72,14 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{MacvtapComponent},
 			),
+			Entry(
+				"Multus Dynamic Networks and dependencies",
+				cnao.NetworkAddonsConfigSpec{
+					Multus:                &cnao.Multus{},
+					MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
+				},
+				[]Component{MultusComponent, MultusDynamicNetworks},
+			),
 		)
 		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {
 			testConfigCreate(gvk, cnao.NetworkAddonsConfigSpec{MacvtapCni: &cnao.MacvtapCni{}}, []Component{MacvtapComponent, MonitoringComponent})
@@ -84,13 +92,15 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				KubeMacPoolComponent,
 				OvsComponent,
 				MacvtapComponent,
+				MultusDynamicNetworks,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
-				KubeMacPool: &cnao.KubeMacPool{},
-				LinuxBridge: &cnao.LinuxBridge{},
-				Multus:      &cnao.Multus{},
-				Ovs:         &cnao.Ovs{},
-				MacvtapCni:  &cnao.MacvtapCni{},
+				KubeMacPool:           &cnao.KubeMacPool{},
+				LinuxBridge:           &cnao.LinuxBridge{},
+				Multus:                &cnao.Multus{},
+				Ovs:                   &cnao.Ovs{},
+				MacvtapCni:            &cnao.MacvtapCni{},
+				MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
 			}
 			testConfigCreate(gvk, configSpec, components)
 		})
@@ -128,6 +138,12 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.MacvtapCni = &cnao.MacvtapCni{}
 			components = append(components, MacvtapComponent)
 			testConfigUpdate(gvk, configSpec, components)
+
+			// Add Multus Dynamic Networks component (requires multus ...)
+			configSpec.Multus = &cnao.Multus{}
+			configSpec.MultusDynamicNetworks = &cnao.MultusDynamicNetworks{}
+			components = append(components, MultusComponent, MultusDynamicNetworks)
+			testConfigUpdate(gvk, configSpec, components)
 		})
 		Context("and workload PlacementConfiguration is deployed on components", func() {
 			components := []Component{
@@ -141,6 +157,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Multus:                 &cnao.Multus{},
 				Ovs:                    &cnao.Ovs{},
 				MacvtapCni:             &cnao.MacvtapCni{},
+				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
 				PlacementConfiguration: &cnao.PlacementConfiguration{},
 			}
 			checkWorkloadPlacementOnComponents := func(expectedWorkLoadPlacement cnao.Placement) {
@@ -223,13 +240,15 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			OvsComponent,
 			MacvtapComponent,
 			MonitoringComponent,
+			MultusDynamicNetworks,
 		}
 		configSpec := cnao.NetworkAddonsConfigSpec{
-			LinuxBridge: &cnao.LinuxBridge{},
-			Multus:      &cnao.Multus{},
-			KubeMacPool: &cnao.KubeMacPool{},
-			Ovs:         &cnao.Ovs{},
-			MacvtapCni:  &cnao.MacvtapCni{},
+			LinuxBridge:           &cnao.LinuxBridge{},
+			Multus:                &cnao.Multus{},
+			KubeMacPool:           &cnao.KubeMacPool{},
+			Ovs:                   &cnao.Ovs{},
+			MacvtapCni:            &cnao.MacvtapCni{},
+			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
 		}
 		BeforeEach(func() {
 			CreateConfig(gvk, configSpec)

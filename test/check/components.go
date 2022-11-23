@@ -72,6 +72,14 @@ var (
 		ServiceMonitor: "service-monitor-cluster-network-addons-operator",
 		PrometheusRule: "prometheus-rules-cluster-network-addons-operator",
 	}
+	MultusDynamicNetworks = Component{
+		ClusterRole:        "dynamic-networks-controller",
+		ClusterRoleBinding: "dynamic-networks-controller",
+		ComponentName:      "Multus Dynamic Networks",
+		DaemonSets: []string{
+			"dynamic-networks-controller-ds",
+		},
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
@@ -79,6 +87,7 @@ var (
 		OvsComponent,
 		MacvtapComponent,
 		MonitoringComponent,
+		MultusDynamicNetworks,
 	}
 )
 
