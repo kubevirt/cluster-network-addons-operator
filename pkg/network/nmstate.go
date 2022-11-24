@@ -86,6 +86,10 @@ func removeCoreV1Resource(ctx context.Context, client k8sclient.Client, name, na
 	return removeResource(ctx, client, types.NamespacedName{Namespace: namespace, Name: name}, schema.GroupVersionKind{Group: "", Version: "v1", Kind: kind})
 }
 
+func removePolicyV1Resource(ctx context.Context, client k8sclient.Client, name, namespace, kind string) []error {
+	return removeResource(ctx, client, types.NamespacedName{Namespace: namespace, Name: name}, schema.GroupVersionKind{Group: "policy", Version: "v1", Kind: kind})
+}
+
 func removeResource(ctx context.Context, client k8sclient.Client, key types.NamespacedName, gvk schema.GroupVersionKind) []error {
 	// Get existing
 	existing := &unstructured.Unstructured{}
@@ -148,6 +152,15 @@ func removeConfig(ctx context.Context, client k8sclient.Client) []error {
 	return removeCoreV1Resource(ctx, client, name, namespace, kind)
 }
 
+func removePodDisruptionBudgetWebhook(ctx context.Context, client k8sclient.Client) []error {
+	namespace := os.Getenv("OPERAND_NAMESPACE")
+	name := "nmstate-webhook"
+	kind := "PodDisruptionBudget"
+
+	return removePolicyV1Resource(ctx, client, name, namespace, kind)
+
+}
+
 func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client, clusterInfo *ClusterInfo) []error {
 	if conf.NMState == nil {
 		return []error{}
@@ -159,6 +172,7 @@ func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, cli
 	if clusterInfo.NmstateOperator {
 		errList = append(errList, removeStandaloneHandler(ctx, client)...)
 		errList = append(errList, removeStandaloneWebhook(ctx, client)...)
+		errList = append(errList, removePodDisruptionBudgetWebhook(ctx, client)...)
 		errList = append(errList, removeStandaloneCertManager(ctx, client)...)
 	}
 
