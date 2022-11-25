@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -531,13 +532,15 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				})
 				It("should switch nmstate from CNAO deployment to nmstate-operator deployment", func() {
 					By("checking for NMState in CNAO namespace")
-					cnaoNmstateHandlerNotFound := func() bool {
+					cnaoNmstateNotFound := func() bool {
 						nmstateHandlerDaemonSet := &v1.DaemonSet{}
-						err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
-						return apierrors.IsNotFound(err)
+						errHandler := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
+						nmstateWebhookPDB := &policyv1.PodDisruptionBudget{}
+						errWebhookPDB := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "nmstate-webhook", Namespace: "cluster-network-addons"}, nmstateWebhookPDB)
+						return apierrors.IsNotFound(errHandler) && apierrors.IsNotFound(errWebhookPDB)
 					}
 					Eventually(func() bool {
-						return cnaoNmstateHandlerNotFound()
+						return cnaoNmstateNotFound()
 					}, 5*time.Minute, time.Second).Should(BeTrue(), "Timed out waiting for CNAO nmstate deployment to be removed")
 
 					By("checking for NMState in nmstate namespace")
