@@ -205,7 +205,8 @@ auto-bumper: $(GO)
 
 bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
-bump-all: bump-kubemacpool bump-macvtap-cni bump-linux-bridge bump-multus bump-ovs-cni bump-bridge-marker bump-multus-dynamic-networks
+bump-all:
+	set -e && for f in hack/components/bump*.*; do x=$${f%%.sh}; make $${x##*/}; done
 
 generate-doc:
 	go run ./tools/metricsdocs > docs/metrics.md
