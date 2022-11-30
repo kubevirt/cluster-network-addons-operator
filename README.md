@@ -42,7 +42,7 @@ Additionally, container image used to deliver this plugin can be set using
 
 ## Multus Dynamic Networks Controller
 
-[This controller](https://github.com/maiqueb/multus-dynamic-networks-controller)
+[This controller](https://github.com/k8snetworkplumbingwg/multus-dynamic-networks-controller)
 allows hot-plug and hot-unplug of additional Pod intefaces. It is done using
 `multusDynamicNetworks` attribute.
 
