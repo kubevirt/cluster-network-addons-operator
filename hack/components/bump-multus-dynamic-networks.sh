@@ -71,7 +71,7 @@ cp ${MULTUS_DYNAMIC_NETWORKS_PATH}/config/cnao/multus-dynamic-networks-controlle
 
 echo 'Get multus-dynamic-networks image name and update it under CNAO'
 MULTUS_DYNAMIC_NETWORKS_TAG=$(git-utils::get_component_tag ${MULTUS_DYNAMIC_NETWORKS_PATH})
-MULTUS_DYNAMIC_NETWORKS_IMAGE=ghcr.io/maiqueb/multus-dynamic-networks-controller
+MULTUS_DYNAMIC_NETWORKS_IMAGE=ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller
 MULTUS_DYNAMIC_NETWORKS_IMAGE_TAGGED=${MULTUS_DYNAMIC_NETWORKS_IMAGE}:${MULTUS_DYNAMIC_NETWORKS_TAG}
 MULTUS_DYNAMIC_NETWORKS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_DYNAMIC_NETWORKS_IMAGE_TAGGED}" "${MULTUS_DYNAMIC_NETWORKS_IMAGE}")"
 
