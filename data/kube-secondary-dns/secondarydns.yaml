@@ -1,0 +1,131 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Namespace }}
+---
+apiVersion: v1
+data:
+  DOMAIN: {{ .Domain }}
+  NAME_SERVER_IP: {{ .NameServerIp }}
+  Corefile: |
+    .:53 {
+        auto {
+          directory /zones db\.(.*) {1}
+          reload 45s
+        }
+        reload
+        log
+    }
+kind: ConfigMap
+metadata:
+  name: secondary-dns
+  namespace: {{ .Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secondary
+rules:
+- apiGroups:
+  - kubevirt.io
+  resources:
+  - virtualmachineinstances
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secondary
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secondary
+subjects:
+  - kind: ServiceAccount
+    name: secondary
+    namespace: {{ .Namespace }}
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: secondary
+  namespace: {{ .Namespace }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: secondary-dns
+  name: secondary-dns
+  namespace: {{ .Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: secondary-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: secondary-dns
+      annotations:
+        kubectl.kubernetes.io/default-container: status-monitor
+    spec:
+      serviceAccountName: secondary
+      containers:
+        - args:
+            - -conf
+            - /etc/coredns/Corefile
+          image: {{ .CoreDNSImage }}
+          imagePullPolicy: {{ .ImagePullPolicy }}
+          name: secondary-dns
+          ports:
+            - containerPort: 53
+              name: dns
+              protocol: UDP
+          resources:
+            limits:
+              memory: 170Mi
+            requests:
+              cpu: 100m
+              memory: 70Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/coredns
+              readOnly: true
+            - name: secdns-zones
+              mountPath: /zones
+              readOnly: true
+        - name: status-monitor
+          image: {{ .KubeSecondaryDNSImage }}
+          volumeMounts:
+            - name: secdns-zones
+              mountPath: /zones
+          env:
+            - name: DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: secondary-dns
+                  key: DOMAIN
+            - name: NAME_SERVER_IP
+              valueFrom:
+                configMapKeyRef:
+                  name: secondary-dns
+                  key: NAME_SERVER_IP
+          imagePullPolicy: {{ .ImagePullPolicy }}
+      priorityClassName: system-cluster-critical
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 1
+      volumes:
+        - name: config-volume
+          configMap:
+            defaultMode: 420
+            items:
+              - key: Corefile
+                path: Corefile
+            name: secondary-dns
+        - name: secdns-zones
+          emptyDir: {}

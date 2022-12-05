@@ -5,6 +5,8 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 )
 
+const secondaryDNSDeployment = "secondary-dns"
+
 func init() {
 	release := Release{
 		Version: "99.0.0",
@@ -69,6 +71,18 @@ func init() {
 				Name:       "ovs-cni-marker",
 				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:3654b80dd5e459c3e73dd027d732620ed8b488b8a15dfe7922457d16c7e834c3",
 			},
+			{
+				ParentName: secondaryDNSDeployment,
+				ParentKind: "Deployment",
+				Name:       "status-monitor",
+				Image:      "ghcr.io/kubevirt/kubesecondarydns@sha256:b25074818c76d149cbf64bfb4b5559afcc1c3d4733b450ce70856903a80eb2c7",
+			},
+			{
+				ParentName: secondaryDNSDeployment,
+				ParentKind: "Deployment",
+				Name:       "secondary-dns",
+				Image:      components.CoreDNSImageDefault,
+			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
 			KubeMacPool:           &cnao.KubeMacPool{},
@@ -76,6 +90,7 @@ func init() {
 			Multus:                &cnao.Multus{},
 			Ovs:                   &cnao.Ovs{},
 			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
+			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
 		},
 		Manifests: []string{
 			"network-addons-config.crd.yaml",

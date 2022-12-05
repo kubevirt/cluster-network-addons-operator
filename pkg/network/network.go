@@ -153,6 +153,13 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	}
 	objs = append(objs, o...)
 
+	// render KubeSecondaryDNS
+	o, err = renderKubeSecondaryDNS(conf, manifestDir, clusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
 	// render Monitoring Service
 	o, err = monitoring.RenderMonitoring(manifestDir, clusterInfo.MonitoringAvailable)
 	if err != nil {
@@ -216,6 +223,15 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 	// render MacvtapCni
 	if conf.MacvtapCni == nil {
 		o, err := renderMacvtapCni(conf, manifestDir, clusterInfo)
+		if err != nil {
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	// render KubeSecondaryDNS
+	if conf.KubeSecondaryDNS == nil {
+		o, err := renderKubeSecondaryDNS(conf, manifestDir, clusterInfo)
 		if err != nil {
 			return nil, err
 		}

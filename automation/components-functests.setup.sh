@@ -48,6 +48,7 @@ spec:
    rangeEnd: "02:00:00:00:00:0F"
   ovs: {}
   macvtap: {}
+  kubeSecondaryDNS: {}
   imagePullPolicy: Always
 EOF
 

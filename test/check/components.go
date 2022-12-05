@@ -80,6 +80,12 @@ var (
 			"dynamic-networks-controller-ds",
 		},
 	}
+	KubeSecondaryDNSComponent = Component{
+		ComponentName:      "KubeSecondaryDNS",
+		ClusterRole:        "secondary",
+		ClusterRoleBinding: "secondary",
+		Deployments:        []string{"secondary-dns"},
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
@@ -88,6 +94,7 @@ var (
 		MacvtapComponent,
 		MonitoringComponent,
 		MultusDynamicNetworks,
+		KubeSecondaryDNSComponent,
 	}
 )
 
