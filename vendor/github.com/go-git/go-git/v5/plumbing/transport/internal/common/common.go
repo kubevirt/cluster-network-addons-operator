@@ -233,7 +233,7 @@ func (s *session) handleAdvRefDecodeError(err error) error {
 // UploadPack performs a request to the server to fetch a packfile. A reader is
 // returned with the packfile content. The reader must be closed after reading.
 func (s *session) UploadPack(ctx context.Context, req *packp.UploadPackRequest) (*packp.UploadPackResponse, error) {
-	if req.IsEmpty() {
+	if req.IsEmpty() && len(req.Shallows) == 0 {
 		return nil, transport.ErrEmptyUploadPackRequest
 	}
 
@@ -427,11 +427,6 @@ func isRepoNotFoundError(s string) bool {
 
 	return false
 }
-
-var (
-	nak = []byte("NAK")
-	eol = []byte("\n")
-)
 
 // uploadPack implements the git-upload-pack protocol.
 func uploadPack(w io.WriteCloser, r io.Reader, req *packp.UploadPackRequest) error {

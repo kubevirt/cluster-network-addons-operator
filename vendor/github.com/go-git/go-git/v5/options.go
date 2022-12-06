@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/protocol/packp/sideband"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"golang.org/x/crypto/openpgp"
 )
 
 // SubmoduleRescursivity defines how depth will affect any submodule recursive
@@ -91,6 +91,8 @@ func (o *CloneOptions) Validate() error {
 type PullOptions struct {
 	// Name of the remote to be pulled. If empty, uses the default.
 	RemoteName string
+	// RemoteURL overrides the remote repo address with a custom URL
+	RemoteURL string
 	// Remote branch to clone. If empty, uses HEAD.
 	ReferenceName plumbing.ReferenceName
 	// Fetch only ReferenceName if true.
@@ -147,7 +149,9 @@ const (
 type FetchOptions struct {
 	// Name of the remote to fetch from. Defaults to origin.
 	RemoteName string
-	RefSpecs   []config.RefSpec
+	// RemoteURL overrides the remote repo address with a custom URL
+	RemoteURL string
+	RefSpecs  []config.RefSpec
 	// Depth limit fetching to the specified number of commits from the tip of
 	// each remote branch history.
 	Depth int
@@ -192,8 +196,16 @@ func (o *FetchOptions) Validate() error {
 type PushOptions struct {
 	// RemoteName is the name of the remote to be pushed to.
 	RemoteName string
-	// RefSpecs specify what destination ref to update with what source
-	// object. A refspec with empty src can be used to delete a reference.
+	// RemoteURL overrides the remote repo address with a custom URL
+	RemoteURL string
+	// RefSpecs specify what destination ref to update with what source object.
+	//
+	// The format of a <refspec> parameter is an optional plus +, followed by
+	//  the source object <src>, followed by a colon :, followed by the destination ref <dst>.
+	// The <src> is often the name of the branch you would want to push, but it can be a SHA-1.
+	// The <dst> tells which ref on the remote side is updated with this push.
+	//
+	// A refspec with empty src can be used to delete a reference.
 	RefSpecs []config.RefSpec
 	// Auth credentials, if required, to use with the remote repository.
 	Auth transport.AuthMethod
@@ -213,6 +225,28 @@ type PushOptions struct {
 	// RequireRemoteRefs only allows a remote ref to be updated if its current
 	// value is the one specified here.
 	RequireRemoteRefs []config.RefSpec
+	// FollowTags will send any annotated tags with a commit target reachable from
+	// the refs already being pushed
+	FollowTags bool
+	// ForceWithLease allows a force push as long as the remote ref adheres to a "lease"
+	ForceWithLease *ForceWithLease
+	// PushOptions sets options to be transferred to the server during push.
+	Options map[string]string
+	// Atomic sets option to be an atomic push
+	Atomic bool
+}
+
+// ForceWithLease sets fields on the lease
+// If neither RefName nor Hash are set, ForceWithLease protects
+// all refs in the refspec by ensuring the ref of the remote in the local repsitory
+// matches the one in the ref advertisement.
+type ForceWithLease struct {
+	// RefName, when set will protect the ref by ensuring it matches the
+	// hash in the ref advertisement.
+	RefName plumbing.ReferenceName
+	// Hash is the expected object id of RefName. The push will be rejected unless this
+	// matches the corresponding object id of RefName in the refs advertisement.
+	Hash plumbing.Hash
 }
 
 // Validate validates the fields and sets the default values.
@@ -274,6 +308,8 @@ type CheckoutOptions struct {
 	// target branch. Force and Keep are mutually exclusive, should not be both
 	// set to true.
 	Keep bool
+	// SparseCheckoutDirectories
+	SparseCheckoutDirectories []string
 }
 
 // Validate validates the fields and sets the default values.
@@ -393,7 +429,7 @@ var (
 	ErrMissingAuthor = errors.New("author field is required")
 )
 
-// AddOptions describes how a add operation should be performed
+// AddOptions describes how an `add` operation should be performed
 type AddOptions struct {
 	// All equivalent to `git add -A`, update the index not only where the
 	// working tree has a file matching `Path` but also where the index already
@@ -401,7 +437,7 @@ type AddOptions struct {
 	// working tree.  If no `Path` nor `Glob` is given when `All` option is
 	// used, all files in the entire working tree are updated.
 	All bool
-	// Path is the exact filepath to a the file or directory to be added.
+	// Path is the exact filepath to the file or directory to be added.
 	Path string
 	// Glob adds all paths, matching pattern, to the index. If pattern matches a
 	// directory path, all directory contents are added to the index recursively.
