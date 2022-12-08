@@ -43,7 +43,7 @@ components:
     metadata: v0.29.1
   kube-secondary-dns:
     url: https://github.com/kubevirt/kubesecondarydns
-    commit: a7779d99e0b196119f8bf9337186f091aea54df0
+    commit: 98b0eda5c294091ed7b5132419009c0751357838
     branch: main
     update-policy: tagged
-    metadata: v0.0.5
+    metadata: v0.0.7

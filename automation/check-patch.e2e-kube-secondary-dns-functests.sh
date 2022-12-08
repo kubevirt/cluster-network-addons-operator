@@ -29,6 +29,7 @@ main() {
 
     trap teardown EXIT
 
+    ./hack/deploy-kubevirt.sh
     cd ${TMP_COMPONENT_PATH}
     make create-nodeport
     echo "Run kube-secondary-dns functional tests"
