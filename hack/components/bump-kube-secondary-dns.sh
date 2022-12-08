@@ -15,8 +15,8 @@ function __parametize_by_object() {
         ;;
       ./ConfigMap_secondary-dns.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::update_param ${f} data.DOMAIN '{{ .Domain }}'
-        yaml-utils::update_param ${f} data.NAME_SERVER_IP '{{ .NameServerIp }}'
+        yaml-utils::set_param ${f} data.DOMAIN '{{ .Domain }}'
+        yaml-utils::set_param ${f} data.NAME_SERVER_IP '{{ .NameServerIp }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
       ./ClusterRoleBinding_secondary.yaml)
