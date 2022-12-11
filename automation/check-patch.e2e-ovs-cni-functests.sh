@@ -28,6 +28,8 @@ main() {
 
     # Run ovs-cni functional tests
     cd ${TMP_COMPONENT_PATH}
+    sed -i 's/30 \* time.Second/120 \* time.Second/' tests/mirror_test.go
+    cat tests/mirror_test.go
     KUBECONFIG=${KUBECONFIG} E2E_TEST_ARGS="-ginkgo.v -test.v -ginkgo.noColor -test.timeout 20m --junit-output=$ARTIFACTS/junit.functest.xml" make functest
 }
 
