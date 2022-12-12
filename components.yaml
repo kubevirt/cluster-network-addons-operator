@@ -5,6 +5,12 @@ components:
     branch: main
     update-policy: tagged
     metadata: 0.10.0
+  kube-secondary-dns:
+    url: https://github.com/kubevirt/kubesecondarydns
+    commit: 98b0eda5c294091ed7b5132419009c0751357838
+    branch: main
+    update-policy: tagged
+    metadata: v0.0.7
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: f559c0725c4d315d1bf48fbc380c25a19ddf9c10
@@ -37,13 +43,7 @@ components:
     metadata: v0.2.0
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
-    commit: 05da205a682694307d1df78fdeccde1321f563f6
+    commit: cef65800fef98f7a132b5845838341e700fae66d
     branch: main
     update-policy: tagged
-    metadata: v0.29.1
-  kube-secondary-dns:
-    url: https://github.com/kubevirt/kubesecondarydns
-    commit: 98b0eda5c294091ed7b5132419009c0751357838
-    branch: main
-    update-policy: tagged
-    metadata: v0.0.7
+    metadata: v0.30.0
