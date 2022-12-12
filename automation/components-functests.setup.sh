@@ -22,7 +22,6 @@ source hack/components/yaml-utils.sh
 source cluster/cluster.sh
 
 # Spin up Kubernetes cluster
-export KUBEVIRT_PROVIDER='k8s-1.23'
 make cluster-down cluster-up
 
 # Export .kubeconfig full path, so it will be possible
