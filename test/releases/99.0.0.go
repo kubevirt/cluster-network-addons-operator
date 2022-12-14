@@ -5,8 +5,6 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 )
 
-const secondaryDNSDeployment = "secondary-dns"
-
 func init() {
 	release := Release{
 		Version: "99.0.0",
@@ -72,13 +70,13 @@ func init() {
 				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:b9a56053b3469b02d96814cc2d67d35a81650db9dae9c2188011a986e3743aa4",
 			},
 			{
-				ParentName: secondaryDNSDeployment,
+				ParentName: "secondary-dns",
 				ParentKind: "Deployment",
 				Name:       "status-monitor",
 				Image:      "ghcr.io/kubevirt/kubesecondarydns@sha256:9bb0e7784cab32a8683f56b3d370b4ab5efed339fa372a8f3ca2e0408e1f8f19",
 			},
 			{
-				ParentName: secondaryDNSDeployment,
+				ParentName: "secondary-dns",
 				ParentKind: "Deployment",
 				Name:       "secondary-dns",
 				Image:      components.CoreDNSImageDefault,
