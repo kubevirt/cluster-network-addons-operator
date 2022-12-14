@@ -29,7 +29,7 @@ $(cluster::path)/cluster-up/up.sh
 
 if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
     echo 'Enable Open vSwitch'
-    for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
+    for node in $(./cluster/kubectl.sh get nodes --no-headers -o=custom-columns=NAME:.metadata.name); do
         ./cluster/cli.sh ssh ${node} -- sudo systemctl enable --now openvswitch
     done
 fi
