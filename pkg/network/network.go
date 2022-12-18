@@ -222,7 +222,7 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 
 	// render MacvtapCni
 	if conf.MacvtapCni == nil {
-		o, err := renderMacvtapCni(conf, manifestDir, clusterInfo)
+		o, err := renderMacvtapCni(prev, manifestDir, clusterInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -231,7 +231,7 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 
 	// render KubeSecondaryDNS
 	if conf.KubeSecondaryDNS == nil {
-		o, err := renderKubeSecondaryDNS(conf, manifestDir, clusterInfo)
+		o, err := renderKubeSecondaryDNS(prev, manifestDir, clusterInfo)
 		if err != nil {
 			return nil, err
 		}
