@@ -9,7 +9,7 @@ data:
   DOMAIN: {{ .Domain }}
   NAME_SERVER_IP: {{ .NameServerIp }}
   Corefile: |
-    .:53 {
+    .:5353 {
         auto {
           directory /zones db\.(.*) {1}
           reload 45s
@@ -75,6 +75,11 @@ spec:
         kubectl.kubernetes.io/default-container: status-monitor
     spec:
       serviceAccountName: secondary
+      securityContext:
+        runAsUser: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: "RuntimeDefault"
       containers:
         - args:
             - -conf
@@ -82,8 +87,12 @@ spec:
           image: {{ .CoreDNSImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           name: secondary-dns
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           ports:
-            - containerPort: 53
+            - containerPort: 5353
               name: dns
               protocol: UDP
           resources:
@@ -100,6 +109,10 @@ spec:
               mountPath: /zones
               readOnly: true
         - name: status-monitor
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           image: {{ .KubeSecondaryDNSImage }}
           volumeMounts:
             - name: secdns-zones
