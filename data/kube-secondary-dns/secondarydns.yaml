@@ -142,3 +142,6 @@ spec:
             name: secondary-dns
         - name: secdns-zones
           emptyDir: {}
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
