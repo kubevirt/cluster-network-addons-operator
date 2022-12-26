@@ -165,6 +165,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				OvsComponent,
 				LinuxBridgeComponent,
 				MultusComponent,
+				KubeSecondaryDNSComponent,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				LinuxBridge:            &cnao.LinuxBridge{},
@@ -172,6 +173,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Ovs:                    &cnao.Ovs{},
 				MacvtapCni:             &cnao.MacvtapCni{},
 				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
+				KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 				PlacementConfiguration: &cnao.PlacementConfiguration{},
 			}
 			checkWorkloadPlacementOnComponents := func(expectedWorkLoadPlacement cnao.Placement) {

@@ -29,6 +29,9 @@ function __parametize_by_object() {
         yaml-utils::update_param ${f} spec.template.spec.containers[1].image '{{ .KubeSecondaryDNSImage }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[1].imagePullPolicy '{{ .ImagePullPolicy }}'
+        yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+        yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
+        yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
       ./ServiceAccount_secondary.yaml)
