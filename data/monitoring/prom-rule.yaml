@@ -20,6 +20,7 @@ spec:
           for: 5m
           labels:
             severity: warning
+            operator_health_impact: warning
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
         - alert: NetworkAddonsConfigNotReady
@@ -30,6 +31,7 @@ spec:
           for: 5m
           labels:
             severity: warning
+            operator_health_impact: warning
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
         # +help:summary="Total count of duplicate KubeMacPool MAC addresses",type=Gauge
@@ -43,6 +45,7 @@ spec:
           for: 5m
           labels:
             severity: warning
+            operator_health_impact: warning
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
         # +help:summary="Total count of running KubeMacPool manager pods",type=Gauge
@@ -59,5 +62,6 @@ spec:
           for: 5m
           labels:
             severity: critical
+            operator_health_impact: critical
             kubernetes_operator_part_of: kubevirt
             kubernetes_operator_component: cluster-network-addons-operator
