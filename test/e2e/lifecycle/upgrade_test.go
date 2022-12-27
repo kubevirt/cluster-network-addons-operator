@@ -11,7 +11,7 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
 )
 
-const podsDeploymentTimeout = 20 * time.Minute
+const podsDeploymentTimeout = 30 * time.Minute
 
 var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
