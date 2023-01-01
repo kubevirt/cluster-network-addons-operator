@@ -775,7 +775,8 @@ func checkConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 func gatherClusterInfo() string {
 	podsStatus := cnaoPodsStatus()
 	describeAll := describeAll()
-	return strings.Join([]string{podsStatus, describeAll}, "\n")
+	cnaoLogs := cnaoPodsLogs()
+	return strings.Join([]string{podsStatus, describeAll, cnaoLogs}, "\n")
 }
 
 func cnaoPodsStatus() string {
@@ -786,6 +787,27 @@ func cnaoPodsStatus() string {
 func describeAll() string {
 	description, stderr, err := Kubectl("-n", components.Namespace, "describe", "all")
 	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description+stderr, err)
+}
+
+func cnaoPodsLogs() string {
+	cnaoPodsNameList, err := getCnaoPodsNameList()
+	if err != nil {
+		return fmt.Sprintf("CNAO Pod unavailable: %v", err)
+	}
+	podsLogs := "CNAO Pods Logs:\n"
+	for _, cnaoPodName := range cnaoPodsNameList {
+		cnaoLog, stderr, err := Kubectl("-n", components.Namespace, "logs", cnaoPodName)
+		podsLogs += fmt.Sprintf("CNAO Pod %s Log:\n%v\nerror:\n%v\n", cnaoPodName, cnaoLog+stderr, err)
+	}
+	return podsLogs
+}
+
+func getCnaoPodsNameList() ([]string, error) {
+	cnaoDeploymentName, _, err := Kubectl("-n", components.Namespace, "get", "pod", "--no-headers", "--selector=name="+components.Name, "-o", "jsonpath='{.items[*].metadata.name}'")
+	if err != nil {
+		return []string{}, err
+	}
+	return strings.Split(cnaoDeploymentName, " "), nil
 }
 
 func isNotSupportedKind(err error) bool {
