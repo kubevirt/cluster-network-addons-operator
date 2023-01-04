@@ -61,13 +61,13 @@ func init() {
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:b9a56053b3469b02d96814cc2d67d35a81650db9dae9c2188011a986e3743aa4",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:a4f54335a8ccdcd24edeef6a0ffe78548328fa69a6fbe732d38e5b967cd1135b",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:b9a56053b3469b02d96814cc2d67d35a81650db9dae9c2188011a986e3743aa4",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:a4f54335a8ccdcd24edeef6a0ffe78548328fa69a6fbe732d38e5b967cd1135b",
 			},
 			{
 				ParentName: "secondary-dns",
