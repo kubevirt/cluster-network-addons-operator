@@ -26,6 +26,8 @@ function __parametize_by_object() {
       ./Deployment_secondary-dns.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .CoreDNSImage }}'
+        yaml-utils::update_param ${f} spec.template.spec.securityContext.runAsNonRoot '{{ .RunAsNonRoot }}'
+        yaml-utils::update_param ${f} spec.template.spec.securityContext.runAsUser '{{ .RunAsUser }}'
         yaml-utils::update_param ${f} spec.template.spec.containers[1].image '{{ .KubeSecondaryDNSImage }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[1].imagePullPolicy '{{ .ImagePullPolicy }}'
