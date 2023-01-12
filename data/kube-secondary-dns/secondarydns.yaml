@@ -96,8 +96,6 @@ spec:
               name: dns
               protocol: UDP
           resources:
-            limits:
-              memory: 170Mi
             requests:
               cpu: 100m
               memory: 70Mi
@@ -114,6 +112,10 @@ spec:
             capabilities:
               drop: ["ALL"]
           image: {{ .KubeSecondaryDNSImage }}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 70Mi
           volumeMounts:
             - name: secdns-zones
               mountPath: /zones
