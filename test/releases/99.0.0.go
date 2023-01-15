@@ -73,7 +73,7 @@ func init() {
 				ParentName: "secondary-dns",
 				ParentKind: "Deployment",
 				Name:       "status-monitor",
-				Image:      "ghcr.io/kubevirt/kubesecondarydns@sha256:52baadf22ae10da4987b623b0c7a632429d09c5c080d96ded1086596a519d442",
+				Image:      "ghcr.io/kubevirt/kubesecondarydns@sha256:b489a7c5d05b000f776c9c302985b8b7f29ff31f577a1480912ed625c8772d6b",
 			},
 			{
 				ParentName: "secondary-dns",
