@@ -327,4 +327,6 @@ replace github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
 
 replace bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
 
+replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
+
 go 1.17
