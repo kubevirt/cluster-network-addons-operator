@@ -291,4 +291,6 @@ replace (
 	sigs.k8s.io/kustomize/kyaml => sigs.k8s.io/kustomize/kyaml v0.13.3
 )
 
+replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
+
 go 1.17
