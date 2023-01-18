@@ -31,7 +31,7 @@ github.com/BurntSushi/toml/internal
 # github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 ## explicit
 github.com/MakeNowJust/heredoc
-# github.com/Masterminds/goutils v1.1.1
+# github.com/Masterminds/goutils v1.1.1 => github.com/Masterminds/goutils v1.1.1
 ## explicit
 github.com/Masterminds/goutils
 # github.com/Masterminds/semver v1.5.0
@@ -2206,3 +2206,4 @@ sigs.k8s.io/yaml
 # sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v1.0.2
 # github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
 # bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
+# github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
