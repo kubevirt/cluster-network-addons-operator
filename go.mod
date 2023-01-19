@@ -54,7 +54,7 @@ require (
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd // indirect
-	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
 	github.com/Masterminds/squirrel v1.2.0 // indirect
@@ -277,5 +277,7 @@ replace (
 	golang.org/x/text => golang.org/x/text v0.3.3
 	k8s.io/client-go => k8s.io/client-go v0.23.1
 )
+
+replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
 
 go 1.17
