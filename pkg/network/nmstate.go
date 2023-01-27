@@ -112,7 +112,7 @@ func removeResource(ctx context.Context, client k8sclient.Client, key types.Name
 	return []error{}
 }
 
-func removeDaemonSetHandlerWorker(ctx context.Context, client k8sclient.Client) []error {
+func removeNmstateHandlerWorkerDaemonSet(ctx context.Context, client k8sclient.Client) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "nmstate-handler-worker"
 	kind := "DaemonSet"
@@ -120,7 +120,7 @@ func removeDaemonSetHandlerWorker(ctx context.Context, client k8sclient.Client) 
 	return removeAppsV1Resource(ctx, client, name, namespace, kind)
 }
 
-func removeStandaloneHandler(ctx context.Context, client k8sclient.Client) []error {
+func removeNmstateHandler(ctx context.Context, client k8sclient.Client) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "nmstate-handler"
 	kind := "DaemonSet"
@@ -128,7 +128,7 @@ func removeStandaloneHandler(ctx context.Context, client k8sclient.Client) []err
 	return removeAppsV1Resource(ctx, client, name, namespace, kind)
 }
 
-func removeStandaloneWebhook(ctx context.Context, client k8sclient.Client) []error {
+func removeNmstateWebhookDeployment(ctx context.Context, client k8sclient.Client) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "nmstate-webhook"
 	kind := "Deployment"
@@ -136,7 +136,15 @@ func removeStandaloneWebhook(ctx context.Context, client k8sclient.Client) []err
 	return removeAppsV1Resource(ctx, client, name, namespace, kind)
 }
 
-func removeStandaloneCertManager(ctx context.Context, client k8sclient.Client) []error {
+func removeNmstateWebhookService(ctx context.Context, client k8sclient.Client) []error {
+	namespace := os.Getenv("OPERAND_NAMESPACE")
+	name := "nmstate-webhook"
+	kind := "Service"
+
+	return removeAppsV1Resource(ctx, client, name, namespace, kind)
+}
+
+func removeNmstateCertManager(ctx context.Context, client k8sclient.Client) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "nmstate-cert-manager"
 	kind := "Deployment"
@@ -144,7 +152,7 @@ func removeStandaloneCertManager(ctx context.Context, client k8sclient.Client) [
 	return removeAppsV1Resource(ctx, client, name, namespace, kind)
 }
 
-func removeConfig(ctx context.Context, client k8sclient.Client) []error {
+func removeNmstateConfig(ctx context.Context, client k8sclient.Client) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "nmstate-config"
 	kind := "ConfigMap"
@@ -152,7 +160,7 @@ func removeConfig(ctx context.Context, client k8sclient.Client) []error {
 	return removeCoreV1Resource(ctx, client, name, namespace, kind)
 }
 
-func removePodDisruptionBudgetWebhook(ctx context.Context, client k8sclient.Client) []error {
+func removeNmstateWebhookPodDisruptionBudget(ctx context.Context, client k8sclient.Client) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 	name := "nmstate-webhook"
 	kind := "PodDisruptionBudget"
@@ -167,13 +175,14 @@ func cleanUpNMState(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, cli
 	}
 
 	errList := []error{}
-	errList = append(errList, removeDaemonSetHandlerWorker(ctx, client)...)
-	errList = append(errList, removeConfig(ctx, client)...)
+	errList = append(errList, removeNmstateHandlerWorkerDaemonSet(ctx, client)...)
+	errList = append(errList, removeNmstateConfig(ctx, client)...)
 	if clusterInfo.NmstateOperator {
-		errList = append(errList, removeStandaloneHandler(ctx, client)...)
-		errList = append(errList, removeStandaloneWebhook(ctx, client)...)
-		errList = append(errList, removePodDisruptionBudgetWebhook(ctx, client)...)
-		errList = append(errList, removeStandaloneCertManager(ctx, client)...)
+		errList = append(errList, removeNmstateHandler(ctx, client)...)
+		errList = append(errList, removeNmstateWebhookDeployment(ctx, client)...)
+		errList = append(errList, removeNmstateWebhookService(ctx, client)...)
+		errList = append(errList, removeNmstateWebhookPodDisruptionBudget(ctx, client)...)
+		errList = append(errList, removeNmstateCertManager(ctx, client)...)
 	}
 
 	return errList
