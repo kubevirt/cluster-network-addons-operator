@@ -141,7 +141,7 @@ func removeNmstateWebhookService(ctx context.Context, client k8sclient.Client) [
 	name := "nmstate-webhook"
 	kind := "Service"
 
-	return removeAppsV1Resource(ctx, client, name, namespace, kind)
+	return removeCoreV1Resource(ctx, client, name, namespace, kind)
 }
 
 func removeNmstateCertManager(ctx context.Context, client k8sclient.Client) []error {

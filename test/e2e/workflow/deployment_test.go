@@ -537,7 +537,9 @@ var _ = Describe("NetworkAddonsConfig", func() {
 						errHandler := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: NMStateComponent.DaemonSets[0], Namespace: "cluster-network-addons"}, nmstateHandlerDaemonSet)
 						nmstateWebhookPDB := &policyv1.PodDisruptionBudget{}
 						errWebhookPDB := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "nmstate-webhook", Namespace: "cluster-network-addons"}, nmstateWebhookPDB)
-						return apierrors.IsNotFound(errHandler) && apierrors.IsNotFound(errWebhookPDB)
+						nmstateWebhookService := &corev1.Service{}
+						errWebhookService := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "nmstate-webhook", Namespace: "cluster-network-addons"}, nmstateWebhookService)
+						return apierrors.IsNotFound(errHandler) && apierrors.IsNotFound(errWebhookPDB) && apierrors.IsNotFound(errWebhookService)
 					}
 					Eventually(func() bool {
 						return cnaoNmstateNotFound()
