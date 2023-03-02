@@ -107,3 +107,32 @@ func renderMultus(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, opensh
 
 	return objs, nil
 }
+
+// RenderMultus generates the manifests of Multus
+func renderMultusV3(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+	if conf.MultusV3 == nil || openshiftNetworkConfig != nil {
+		return nil, nil
+	}
+
+	// render manifests from disk
+	data := render.MakeRenderData()
+	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
+	data.Data["MultusImage"] = os.Getenv("MULTUS_V3_IMAGE")
+	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
+	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
+	if clusterInfo.OpenShift4 {
+		data.Data["CNIConfigDir"] = cni.ConfigDirOpenShift4
+		data.Data["CNIBinDir"] = cni.BinDirOpenShift4
+	} else {
+		data.Data["CNIConfigDir"] = cni.ConfigDir
+		data.Data["CNIBinDir"] = cni.BinDir
+	}
+	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
+
+	objs, err := render.RenderDir(filepath.Join(manifestDir, "multus-v3"), &data)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to render multus manifests")
+	}
+
+	return objs, nil
+}

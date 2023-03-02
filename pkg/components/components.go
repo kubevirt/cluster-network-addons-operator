@@ -30,6 +30,7 @@ var (
 
 const (
 	MultusImageDefault                = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:4e336bd177b5c60e753be48484abb48edb002c7207de9f265fff2e00e8f5106e"
+	MultusV3ImageDefault              = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:829c27e9392d013eee5086ca7670d7326d723ebaec526237215e86086b5a3234"
 	MultusDynamicNetworksImageDefault = "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:ef8fe97a52eb9b3c03e99979a42cf2edaa7b3365cb3eb4dd1654b1bb9e73d7a3"
 	LinuxBridgeCniImageDefault        = "quay.io/kubevirt/cni-default-plugins@sha256:e75d67fb44f4b748137c85b1c06b500607410a3218cafbf8a4bb6359f2b90373"
 	LinuxBridgeMarkerImageDefault     = "quay.io/kubevirt/bridge-marker@sha256:5d24c6d1ecb0556896b7b81c7e5260b54173858425777b7a84df8a706c07e6d2"
@@ -42,6 +43,7 @@ const (
 )
 
 type AddonsImages struct {
+	MultusV3              string
 	Multus                string
 	MultusDynamicNetworks string
 	LinuxBridgeCni        string
@@ -82,6 +84,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.MultusDynamicNetworks == "" {
 		ai.Multus = MultusDynamicNetworksImageDefault
 	}
+	if ai.MultusV3 == "" {
+		ai.MultusV3 = MultusV3ImageDefault
+	}
 	if ai.LinuxBridgeCni == "" {
 		ai.LinuxBridgeCni = LinuxBridgeCniImageDefault
 	}
@@ -113,6 +118,7 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 	return NewRelatedImages(
 		ai.Multus,
 		ai.MultusDynamicNetworks,
+		ai.MultusV3,
 		ai.LinuxBridgeCni,
 		ai.LinuxBridgeMarker,
 		ai.KubeMacPool,
@@ -205,6 +211,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE",
 									Value: addonsImages.MultusDynamicNetworks,
+								},
+								{
+									Name:  "MULTUS_V3_IMAGE",
+									Value: addonsImages.MultusV3,
 								},
 								{
 									Name:  "LINUX_BRIDGE_IMAGE",
@@ -831,6 +841,10 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						},
 						"multusDynamicNetworks": extv1.JSONSchemaProps{
 							Description: "A multus extension enabling hot-plug and hot-unplug of Pod interfaces",
+							Type:        "object",
+						},
+						"multusV3": extv1.JSONSchemaProps{
+							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes (using Multus V3)",
 							Type:        "object",
 						},
 						"kubeSecondaryDNS": extv1.JSONSchemaProps{

@@ -37,9 +37,22 @@ metadata:
 spec:
   multus: {}
 ```
-
 Additionally, container image used to deliver this plugin can be set using
 `MULTUS_IMAGE` environment variable in operator deployment manifest.
+
+### Multus V3.X
+
+The operator also enable deploying Multus V3.X which is the thin CNI plugin form. It is represented by the `multusV3` attribute.
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  multusV3: {}
+```
+
+> **_NOTE:_** Having both `multus` and `multusV3` specified is not supported and should be avoided.
 
 ## Multus Dynamic Networks Controller
 

@@ -9,6 +9,7 @@ import (
 
 // NetworkAddonsConfigSpec defines the desired state of NetworkAddonsConfig
 type NetworkAddonsConfigSpec struct {
+	MultusV3               *MultusV3                 `json:"multusV3,omitempty"`
 	Multus                 *Multus                   `json:"multus,omitempty"`
 	MultusDynamicNetworks  *MultusDynamicNetworks    `json:"multusDynamicNetworks,omitempty"`
 	LinuxBridge            *LinuxBridge              `json:"linuxBridge,omitempty"`
@@ -51,6 +52,9 @@ type Placement struct {
 
 // Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes
 type Multus struct{}
+
+// MultusV3 plugin enables attaching multiple network interfaces to Pods in Kubernetes using Multus V3
+type MultusV3 struct{}
 
 // A multus extension enabling hot-plug and hot-unplug of Pod interfaces
 type MultusDynamicNetworks struct{}

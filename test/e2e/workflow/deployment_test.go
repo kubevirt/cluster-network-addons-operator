@@ -52,6 +52,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				[]Component{MultusComponent},
 			),
 			Entry(
+				MultusV3Component.ComponentName,
+				cnao.NetworkAddonsConfigSpec{
+					MultusV3: &cnao.MultusV3{},
+				},
+				[]Component{MultusV3Component},
+			),
+			Entry(
 				KubeMacPoolComponent.ComponentName,
 				cnao.NetworkAddonsConfigSpec{
 					KubeMacPool: &cnao.KubeMacPool{},

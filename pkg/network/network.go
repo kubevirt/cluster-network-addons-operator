@@ -125,6 +125,12 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	}
 	objs = append(objs, o...)
 
+	o, err = renderMultusV3(conf, manifestDir, openshiftNetworkConfig, clusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
 	// render Linux Bridge
 	o, err = renderLinuxBridge(conf, manifestDir, clusterInfo)
 	if err != nil {
@@ -190,6 +196,14 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 
 	if conf.MultusDynamicNetworks == nil {
 		o, err := renderMultusDynamicNetworks(prev, manifestDir, clusterInfo)
+		if err != nil {
+			return nil, err
+		}
+		objsToRemove = append(objsToRemove, o...)
+	}
+
+	if conf.MultusV3 == nil {
+		o, err := renderMultusV3(prev, manifestDir, openshiftNetworkConfig, clusterInfo)
 		if err != nil {
 			return nil, err
 		}

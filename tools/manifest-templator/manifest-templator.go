@@ -241,6 +241,7 @@ func main() {
 	containerTag := flag.String("container-tag", "latest", "The operator image's container tag")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "The pull policy to use on the operator image")
 	multusImage := flag.String("multus-image", components.MultusImageDefault, "The multus image managed by CNA")
+	multusV3Image := flag.String("multus-v3-image", components.MultusV3ImageDefault, "The multus V3.X image managed by CNA")
 	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", components.LinuxBridgeCniImageDefault, "The linux bridge cni image managed by CNA")
 	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
 	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
@@ -267,6 +268,7 @@ func main() {
 		ImagePullPolicy: *imagePullPolicy,
 		AddonsImages: (&components.AddonsImages{
 			Multus:                *multusImage,
+			MultusV3:              *multusV3Image,
 			LinuxBridgeCni:        *linuxBridgeCniImage,
 			LinuxBridgeMarker:     *linuxBridgeMarkerImage,
 			KubeMacPool:           *kubeMacPoolImage,

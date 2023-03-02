@@ -48,6 +48,13 @@ var (
 		SecurityContextConstraints: "multus",
 		DaemonSets:                 []string{"multus"},
 	}
+	MultusV3Component = Component{
+		ComponentName:              "Multus",
+		ClusterRole:                "multus",
+		ClusterRoleBinding:         "multus",
+		SecurityContextConstraints: "multus",
+		DaemonSets:                 []string{"multus"},
+	}
 	OvsComponent = Component{
 		ComponentName:              "Ovs",
 		ClusterRole:                "ovs-cni-marker-cr",
@@ -90,6 +97,7 @@ var (
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
 		MultusComponent,
+		MultusV3Component,
 		OvsComponent,
 		MacvtapComponent,
 		MonitoringComponent,
