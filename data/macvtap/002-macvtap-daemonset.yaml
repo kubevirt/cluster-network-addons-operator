@@ -30,7 +30,7 @@ spec:
           command: ["/macvtap-deviceplugin", "-v", "3", "-logtostderr"]
           envFrom:
             - configMapRef:
-                name: macvtap-deviceplugin-config
+                name: {{ .DevicePluginConfigName }}
           image: {{ .MacvtapImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           resources:
