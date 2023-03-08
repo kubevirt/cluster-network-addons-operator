@@ -24,6 +24,7 @@ func renderMacvtapCni(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, cl
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 	data.Data["MacvtapImage"] = os.Getenv("MACVTAP_CNI_IMAGE")
+	data.Data["DevicePluginConfigName"] = conf.MacvtapCni.DevicePluginConfig
 	if clusterInfo.OpenShift4 {
 		data.Data["CniMountPath"] = cni.BinDirOpenShift4
 	} else {
