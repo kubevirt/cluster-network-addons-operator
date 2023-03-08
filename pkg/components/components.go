@@ -824,6 +824,12 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"macvtap": extv1.JSONSchemaProps{
 							Description: "MacvtapCni plugin allows users to define Kubernetes networks on top of existing host interfaces",
 							Type:        "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"devicePluginConfig": extv1.JSONSchemaProps{
+									Description: "DevicePluginConfig allows the user to override the name of the `ConfigMap` where the device plugin configuration is held",
+									Type:        "string",
+								},
+							},
 						},
 						"multus": extv1.JSONSchemaProps{
 							Description: "Multus plugin enables attaching multiple network interfaces to Pods in Kubernetes",
