@@ -7,6 +7,7 @@ import (
 
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
@@ -319,42 +320,70 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 	})
 	Context("when Macvtap is deployed", func() {
-		BeforeEach(func() {
-			configSpec := cnao.NetworkAddonsConfigSpec{
-				MacvtapCni: &cnao.MacvtapCni{},
-			}
-			CreateConfig(gvk, configSpec)
-			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-		})
-		Context("and a forbidden day2 change is introduced to Macvtap daemonSet", func() {
-			annotationKey := "newDay2Changes"
+		Context("with the default device plugin configuration", func() {
 			BeforeEach(func() {
-				By("Setting a new Annotation to the macvtap daemonSet")
-				err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-					macvtapDaemonSet := &v1.DaemonSet{}
-					err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
-					Expect(err).ToNot(HaveOccurred(), "should succeed getting the macvtap daemonSet")
+				configSpec := cnao.NetworkAddonsConfigSpec{
+					MacvtapCni: &cnao.MacvtapCni{},
+				}
+				CreateConfig(gvk, configSpec)
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			})
+			Context("and a forbidden day2 change is introduced to Macvtap daemonSet", func() {
+				annotationKey := "newDay2Changes"
+				BeforeEach(func() {
+					By("Setting a new Annotation to the macvtap daemonSet")
+					err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+						macvtapDaemonSet := &v1.DaemonSet{}
+						err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
+						Expect(err).ToNot(HaveOccurred(), "should succeed getting the macvtap daemonSet")
 
-					macvtapDaemonSet.Spec.Template.SetAnnotations(map[string]string{annotationKey: ""})
-					return testenv.Client.Update(context.TODO(), macvtapDaemonSet)
+						macvtapDaemonSet.Spec.Template.SetAnnotations(map[string]string{annotationKey: ""})
+						return testenv.Client.Update(context.TODO(), macvtapDaemonSet)
+					})
+					Expect(err).ToNot(HaveOccurred(), "should succeed setting a new Annotation to the macvtap daemonSet")
 				})
-				Expect(err).ToNot(HaveOccurred(), "should succeed setting a new Annotation to the macvtap daemonSet")
+
+				It("should reconcile the object and remove the new Annotation", func() {
+					By("checking that the Annotation eventually removed reconciled out by the CNAO operator")
+					Eventually(func() bool {
+						macvtapDaemonSet := &v1.DaemonSet{}
+						err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
+						Expect(err).ToNot(HaveOccurred(), "should succeed getting the macvtap daemonSet")
+
+						deamonSetAnnotations := macvtapDaemonSet.Spec.Template.GetAnnotations()
+						if _, exist := deamonSetAnnotations[annotationKey]; exist {
+							return false
+						}
+						return true
+
+					}, 2*time.Minute, time.Second).Should(BeTrue(), fmt.Sprintf("Timed out waiting for macvtap daemonset added Annotation to be removed"))
+				})
+			})
+		})
+
+		Context("with an overridden configuration", func() {
+			const overriddenConfigMapName = "another-config"
+
+			BeforeEach(func() {
+				configSpec := cnao.NetworkAddonsConfigSpec{
+					MacvtapCni: &cnao.MacvtapCni{DevicePluginConfig: overriddenConfigMapName},
+				}
+				CreateConfig(gvk, configSpec)
+				CheckConfigCondition(gvk, ConditionDegraded, ConditionTrue, 15*time.Minute, 2*time.Minute)
 			})
 
-			It("should reconcile the object and remove the new Annotation", func() {
-				By("checking that the Annotation eventually removed reconciled out by the CNAO operator")
-				Eventually(func() bool {
-					macvtapDaemonSet := &v1.DaemonSet{}
-					err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: MacvtapComponent.DaemonSets[0], Namespace: components.Namespace}, macvtapDaemonSet)
-					Expect(err).ToNot(HaveOccurred(), "should succeed getting the macvtap daemonSet")
-
-					deamonSetAnnotations := macvtapDaemonSet.Spec.Template.GetAnnotations()
-					if _, exist := deamonSetAnnotations[annotationKey]; exist {
-						return false
-					}
-					return true
-
-				}, 2*time.Minute, time.Second).Should(BeTrue(), fmt.Sprintf("Timed out waiting for macvtap daemonset added Annotation to be removed"))
+			It("goes to available once the device plugin configuration is provisioned", func() {
+				configMap := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      overriddenConfigMapName,
+						Namespace: components.Namespace,
+					},
+					Data: map[string]string{
+						"DP_MACVTAP_CONF": "[]",
+					},
+				}
+				Expect(testenv.KubeClient.CoreV1().ConfigMaps(components.Namespace).Create(context.Background(), configMap, metav1.CreateOptions{}))
+				CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 			})
 		})
 	})
