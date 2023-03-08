@@ -37,3 +37,11 @@ func renderMacvtapCni(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, cl
 
 	return objs, nil
 }
+
+func fillMacvtapDefaults(conf *cnao.NetworkAddonsConfigSpec) {
+	// https://github.com/kubevirt/macvtap-cni/blob/be1528fb09e9ac3c490a5df31330851d7e1f8b0a/manifests/macvtap.yaml#L23
+	const defaultMacvtapDevicePluginConfigMapName = "macvtap-deviceplugin-config"
+	if conf.MacvtapCni != nil && conf.MacvtapCni.DevicePluginConfig == "" {
+		conf.MacvtapCni.DevicePluginConfig = defaultMacvtapDevicePluginConfigMapName
+	}
+}
