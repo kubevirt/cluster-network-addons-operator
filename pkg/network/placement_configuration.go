@@ -7,6 +7,7 @@ import (
 )
 
 func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
+	var nodeNotNReadyTolerationInSeconds int64 = 60
 	return cnao.PlacementConfiguration{
 		Infra: &cnao.Placement{
 			Tolerations: []corev1.Toleration{
@@ -19,6 +20,18 @@ func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
 					Key:      "node-role.kubernetes.io/master",
 					Operator: corev1.TolerationOpExists,
 					Effect:   corev1.TaintEffectNoSchedule,
+				},
+				corev1.Toleration{
+					Key:               "node.kubernetes.io/unreachable",
+					Operator:          corev1.TolerationOpExists,
+					Effect:            corev1.TaintEffectNoExecute,
+					TolerationSeconds: &nodeNotNReadyTolerationInSeconds,
+				},
+				corev1.Toleration{
+					Key:               "node.kubernetes.io/not-ready",
+					Operator:          corev1.TolerationOpExists,
+					Effect:            corev1.TaintEffectNoExecute,
+					TolerationSeconds: &nodeNotNReadyTolerationInSeconds,
 				},
 			},
 			Affinity: corev1.Affinity{
