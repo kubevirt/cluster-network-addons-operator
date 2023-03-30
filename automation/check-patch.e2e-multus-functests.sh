@@ -53,12 +53,12 @@ function __prepare-test-environment() {
     sed 's/{{ CNI_VERSION }}/0.4.0/g' "templates/${TEST_YAML}.j2" > "yamls/${TEST_YAML}"
 
     echo "Deplopy kubernetes-nmstate"
-    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/nmstate.io_nmstates.yaml
-    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/namespace.yaml
-    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/service_account.yaml
-    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/role.yaml
-    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/role_binding.yaml
-    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.64.7/operator.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.76.0/nmstate.io_nmstates.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.76.0/namespace.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.76.0/service_account.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.76.0/role.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.76.0/role_binding.yaml
+    $KUBECTL apply -f https://github.com/nmstate/kubernetes-nmstate/releases/download/v0.76.0/operator.yaml
 
     cat <<EOF | $KUBECTL apply -f -
 apiVersion: nmstate.io/v1
