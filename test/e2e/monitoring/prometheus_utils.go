@@ -5,8 +5,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	. "github.com/onsi/gomega"
@@ -14,9 +14,12 @@ import (
 	promApi "github.com/prometheus/client_golang/api"
 	promApiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	promConfig "github.com/prometheus/common/config"
+	authenticationv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"kubevirt.io/client-go/kubecli"
 
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 )
@@ -74,29 +77,29 @@ func (p *promClient) getAlertByName(alertName string) *promApiv1.Alert {
 }
 
 func (p *promClient) getAuthorizationTokenForPrometheus() string {
-	var err error
-	var secretName string
-	sa := v1.ServiceAccount{}
-
-	err = testenv.Client.Get(context.TODO(), types.NamespacedName{Name: "prometheus-k8s", Namespace: p.namespace}, &sa)
+	virtCli, err := kubecli.GetKubevirtClientFromFlags("", os.Getenv("KUBECONFIG"))
 	Expect(err).NotTo(HaveOccurred())
-	Expect(sa).ToNot(BeNil())
 
-	for _, secret := range sa.Secrets {
-		if strings.HasPrefix(secret.Name, "prometheus-k8s-token") {
-			secretName = secret.Name
+	var token string
+	Eventually(func() bool {
+		treq, err := virtCli.CoreV1().ServiceAccounts(p.namespace).CreateToken(
+			context.TODO(),
+			"prometheus-k8s",
+			&authenticationv1.TokenRequest{
+				Spec: authenticationv1.TokenRequestSpec{
+					// Avoid specifying any audiences so that the token will be
+					// issued for the default audience of the issuer.
+				},
+			},
+			metav1.CreateOptions{},
+		)
+		if err != nil {
+			return false
 		}
-	}
-	Expect(secretName).NotTo(BeEmpty())
-
-	var secret v1.Secret
-	err = testenv.Client.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: p.namespace}, &secret)
-	Expect(err).NotTo(HaveOccurred())
-
-	data, ok := secret.Data["token"]
-	Expect(ok).To(BeTrue())
-
-	return string(data)
+		token = treq.Status.Token
+		return true
+	}, 10*time.Second, time.Second).Should(BeTrue())
+	return token
 }
 
 func initializePromClient(prometheusUrl string, token string) promApiv1.API {
