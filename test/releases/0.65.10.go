@@ -6,7 +6,7 @@ import (
 
 func init() {
 	release := Release{
-		Version: "0.62.0",
+		Version: "0.65.10",
 		Containers: []cnao.Container{
 			{
 				ParentName: "multus",
@@ -18,7 +18,7 @@ func init() {
 				ParentName: "bridge-marker",
 				ParentKind: "DaemonSet",
 				Name:       "bridge-marker",
-				Image:      "quay.io/kubevirt/bridge-marker@sha256:9d90a5bd051d71429b6d9fc34112081fe64c6d3fb02221e18ebe72d428d58092",
+				Image:      "quay.io/kubevirt/bridge-marker@sha256:109ee06aecc7bd2faba7e34bdc85123e6e132b5bdb1c41bc062749cb2af05548",
 			},
 			{
 				ParentName: "kube-cni-linux-bridge-plugin",
@@ -30,43 +30,43 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:5819cc8b64fde5d103a24a0426545bce9ff53645e1dd727fc941199905fdfd26",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:76fa87945610ea220612bf56da3ca67a5af183c8eef2c7218e31717cf0a23bd4",
 			},
 			{
 				ParentName: "kubemacpool-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:5819cc8b64fde5d103a24a0426545bce9ff53645e1dd727fc941199905fdfd26",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:76fa87945610ea220612bf56da3ca67a5af183c8eef2c7218e31717cf0a23bd4",
 			},
 			{
 				ParentName: "nmstate-handler",
 				ParentKind: "DaemonSet",
 				Name:       "nmstate-handler",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:99a828dad585fe83b3b4d9fab9bfc6b515da8eab57d29053d5c4df89d31c9c6d",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:c3f7ba9f2ad13a6097a667c2ef15a800cb28666329528405c36248c183742103",
 			},
 			{
 				ParentName: "nmstate-webhook",
 				ParentKind: "Deployment",
 				Name:       "nmstate-webhook",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:99a828dad585fe83b3b4d9fab9bfc6b515da8eab57d29053d5c4df89d31c9c6d",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:c3f7ba9f2ad13a6097a667c2ef15a800cb28666329528405c36248c183742103",
 			},
 			{
 				ParentName: "nmstate-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "nmstate-cert-manager",
-				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:99a828dad585fe83b3b4d9fab9bfc6b515da8eab57d29053d5c4df89d31c9c6d",
+				Image:      "quay.io/nmstate/kubernetes-nmstate-handler@sha256:c3f7ba9f2ad13a6097a667c2ef15a800cb28666329528405c36248c183742103",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:fd766d39f74528f94978b116908e9b86cbdfea30a53493043405c08d9d1e6527",
+				Image:      "quay.io/kubevirt/ovs-cni-plugin@sha256:cf669ca4967cd26c6629efa93b7426c8e1c65fa17d5ce59deaab1237a854d81b",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:6d506c66a779827659709d1c7253f96f3ad493e5fff23b549942a537f6304be4",
+				Image:      "quay.io/kubevirt/ovs-cni-marker@sha256:c09f882c64ee6449e13ff8b0a249d1dc4653d7d94a97f5ebee61de2d3ce9d5e8",
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
