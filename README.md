@@ -1,4 +1,4 @@
-# Cluster Network Addons Operator
+# Cluster Network Addons Operator - CNAO
 
 This operator can be used to deploy additional networking components on top of
 Kubernetes cluster.
