@@ -112,6 +112,26 @@ func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement
 	return placementList, nil
 }
 
+func PlacementListFromComponentDeployments(component Component) ([]cnao.Placement, error) {
+	placementList := []cnao.Placement{}
+	for _, deploymentName := range component.Deployments {
+		deployment := appsv1.Deployment{}
+		err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
+		if err != nil {
+			return placementList, err
+		}
+
+		deploymentPlacement := cnao.Placement{}
+		deploymentPlacement.NodeSelector = deployment.Spec.Template.Spec.NodeSelector
+		deploymentPlacement.Affinity = *deployment.Spec.Template.Spec.Affinity
+		deploymentPlacement.Tolerations = deployment.Spec.Template.Spec.Tolerations
+
+		placementList = append(placementList, deploymentPlacement)
+	}
+
+	return placementList, nil
+}
+
 func GetEnvVarsFromDeployment(deploymentName string) ([]corev1.EnvVar, error) {
 	deployment := appsv1.Deployment{}
 	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
