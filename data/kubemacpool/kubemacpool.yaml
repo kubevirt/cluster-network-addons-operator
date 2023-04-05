@@ -260,6 +260,7 @@ spec:
         control-plane: cert-manager
         controller-tools.k8s.io: "1.0"
     spec:
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       containers:
       - args:
         - --v=production
@@ -307,9 +308,11 @@ spec:
           requests:
             cpu: 30m
             memory: 30Mi
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always
       terminationGracePeriodSeconds: 5
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
 ---
 apiVersion: apps/v1
 kind: Deployment

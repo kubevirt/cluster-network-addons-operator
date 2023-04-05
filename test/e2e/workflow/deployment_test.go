@@ -208,6 +208,46 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				checkWorkloadPlacementOnComponents(*configSpec.PlacementConfiguration.Workloads)
 			})
 		})
+		Context("and infra PlacementConfiguration is deployed on components", func() {
+			components := []Component{
+				KubeMacPoolComponent,
+			}
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool:            &cnao.KubeMacPool{},
+				PlacementConfiguration: &cnao.PlacementConfiguration{},
+			}
+			checkInfraPlacementOnComponents := func(expectedInfraPlacement cnao.Placement) {
+				for _, component := range components {
+					componentPlacementList, err := PlacementListFromComponentDeployments(component)
+					Expect(err).ToNot(HaveOccurred(), "Should succeed getting the component Placement config")
+					for _, placement := range componentPlacementList {
+						Expect(placement).To(Equal(expectedInfraPlacement), fmt.Sprintf("PlacementConfiguration of %s component should equal the default infra PlacementConfiguration", component.ComponentName))
+					}
+				}
+			}
+
+			BeforeEach(func() {
+				By("Deploying components with default PlacementConfiguration")
+				testConfigCreate(gvk, configSpec, components)
+
+				By("Checking PlacementConfiguration was set on components to default infra PlacementConfiguration")
+				checkInfraPlacementOnComponents(*network.GetDefaultPlacementConfiguration().Infra)
+			})
+
+			It("should be able to update infra PlacementConfigurations on components specs", func() {
+				configSpec.PlacementConfiguration = &cnao.PlacementConfiguration{
+					Infra: &cnao.Placement{NodeSelector: map[string]string{
+						"kubernetes.io/hostname": "node01"},
+					},
+				}
+
+				By("Re-deploying PlacementConfiguration with different infra values")
+				testConfigUpdate(gvk, configSpec, components)
+
+				By("Checking PlacementConfiguration was set on components to updated infra PlacementConfiguration")
+				checkInfraPlacementOnComponents(*configSpec.PlacementConfiguration.Infra)
+			})
+		})
 		Context("and SelfSignConfiguration is deployed on components", func() {
 			components := []Component{
 				KubeMacPoolComponent,
