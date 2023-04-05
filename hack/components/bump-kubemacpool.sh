@@ -69,6 +69,9 @@ metadata:
 spec:
   template:
     spec:
+      affinity: AFFINITY
+      nodeSelector: NODE_SELECTOR
+      tolerations: TOLERATIONS
       containers:
       - image: "{{ .KubeMacPoolImage }}"
         imagePullPolicy: "{{ .ImagePullPolicy }}"
