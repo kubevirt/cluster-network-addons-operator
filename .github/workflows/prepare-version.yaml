@@ -24,6 +24,7 @@ on:
           - release-0.58
           - release-0.53
           - release-0.79
+          - release-0.85
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
