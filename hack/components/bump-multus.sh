@@ -28,7 +28,6 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.metadata.labels.name 'kube-multus-ds-amd64'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
-				yaml-utils::set_param ${f} spec.template.spec.containers[0].args[1] '"-cni-config-dir=/host/etc/cni/multus/net.d"' # https://github.com/k8snetworkplumbingwg/multus-cni/issues/971
 				yaml-utils::update_param ${f} spec.template.spec.initContainers[0].image '{{ .MultusImage }}'
 				yaml-utils::set_param ${f} spec.template.spec.priorityClassName 'system-cluster-critical'
 				yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path '{{ .CNIConfigDir }}'
@@ -126,9 +125,7 @@ cp ${MULTUS_PATH}/config/cnao/001-multus.yaml data/multus/
 echo 'Get multus image name'
 MULTUS_TAG=$(git-utils::get_component_tag ${MULTUS_PATH})
 MULTUS_IMAGE=ghcr.io/k8snetworkplumbingwg/multus-cni
-# TODO: do not use this hardcoded image, and rely on tagged versions instead.
-# had to resort to this shenanigan because of https://github.com/k8snetworkplumbingwg/multus-cni/issues/944
-MULTUS_IMAGE_TAGGED=${MULTUS_IMAGE}@sha256:4e336bd177b5c60e753be48484abb48edb002c7207de9f265fff2e00e8f5106e
+MULTUS_IMAGE_TAGGED="${MULTUS_IMAGE}:${MULTUS_TAG}-thick"
 if [[ -n "$(docker-utils::check_image_exists "${MULTUS_IMAGE}" "${MULTUS_TAG}")" ]]; then
     MULTUS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${MULTUS_IMAGE_TAGGED}" "${MULTUS_IMAGE}")"
 else
