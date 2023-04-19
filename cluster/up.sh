@@ -32,4 +32,15 @@ if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
     for node in $(./cluster/kubectl.sh get nodes --no-headers -o=custom-columns=NAME:.metadata.name); do
         ./cluster/cli.sh ssh ${node} -- sudo systemctl enable --now openvswitch
     done
+
+    ./cluster/ssh.sh node01 "sudo curl -LO https://github.com/liggitt/audit2rbac/releases/download/v0.10.0/audit2rbac-linux-386.tar.gz"
+    ./cluster/ssh.sh node01 "sudo tar -xvf audit2rbac-linux-386.tar.gz"
+    ./cluster/ssh.sh node01 "sudo chmod 777 /etc/kubernetes/audit/adv-audit.yaml"
+    ./cluster/ssh.sh node01 "sudo chmod 777 /etc/kubernetes/manifests/kube-apiserver.yaml"
+    ./cluster/ssh.sh node01 "sudo chmod 777 /tmp"
+    ./cluster/ssh.sh node01 "echo YXBpVmVyc2lvbjogYXVkaXQuazhzLmlvL3YxCmtpbmQ6IFBvbGljeQpydWxlczoKLSBsZXZlbDogTWV0YWRhdGEK | base64 -d  > /etc/kubernetes/audit/adv-audit.yaml"
+    ./cluster/ssh.sh node01 "sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /tmp"
+    sleep 3
+    ./cluster/ssh.sh node01 "sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests"
+    until ./cluster/kubectl.sh get pods -A; do sleep 1; done
 fi

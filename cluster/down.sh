@@ -20,4 +20,16 @@ SCRIPTS_PATH="$(dirname "$(realpath "$0")")"
 source ${SCRIPTS_PATH}/cluster.sh
 cluster::install
 
+echo
+echo
+echo
+./cluster/ssh.sh node01 "sudo ./audit2rbac -f /var/log/k8s-audit/k8s-audit.log --serviceaccount cluster-network-addons:cluster-network-addons-operator" || true
+echo
+echo
+echo
+./cluster/ssh.sh node01 "sudo ./audit2rbac -f /var/log/k8s-audit/k8s-audit.log --serviceaccount cluster-network-addons:default" || true
+echo
+echo
+echo
+
 $(cluster::path)/cluster-up/down.sh
