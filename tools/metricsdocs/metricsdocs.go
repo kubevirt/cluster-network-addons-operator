@@ -125,14 +125,16 @@ func parseTemplateFile() []byte {
 
 	var doc bytes.Buffer
 	test := struct {
-		Namespace string
+		Namespace          string
+		RunbookURLTemplate string
 	}{
-		Namespace: "test",
+		Namespace:          "testNamespace",
+		RunbookURLTemplate: "testRunbookURLTemplate",
 	}
 
 	err = t.Execute(&doc, test)
 	if err != nil {
-		return nil
+		log.Fatal(err)
 	}
 
 	return doc.Bytes()
