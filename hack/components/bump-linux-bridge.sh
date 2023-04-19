@@ -40,6 +40,7 @@ WORKDIR ${LINUX_BRIDGE_PATH}
 RUN GOFLAGS=-mod=vendor ./build_linux.sh
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal
+LABEL org.opencontainers.image.authors="phoracek@redhat.com"
 ENV SOURCE_DIR=${REMOTE_SOURCE_DIR}/app
 RUN mkdir -p ${LINUX_BRIDGE_TAR_CONTAINER_DIR}
 RUN microdnf install -y findutils
