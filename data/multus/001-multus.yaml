@@ -104,12 +104,12 @@ data:
     {
         "chrootDir": "/hostroot",
         "confDir": "/host/etc/cni/net.d",
-        "logToStderr": true,
-        "logLevel": "debug",
-        "logFile": "/tmp/multus.log",
-        "binDir": "/opt/cni/bin",
-        "cniDir": "/var/lib/cni/multus",
-        "socketDir": "/host/run/multus/"
+        "logLevel": "verbose",
+        "socketDir": "/host/run/multus/",
+        "cniVersion": "0.3.1",
+        "cniConfigDir": "/host/etc/cni/net.d",
+        "multusConfigFile": "auto",
+        "multusAutoconfigDir": "/host/etc/cni/net.d"
     }
 ---
 apiVersion: apps/v1
@@ -142,12 +142,6 @@ spec:
         - name: kube-multus
           image: {{ .MultusImage }}
           command: ["/usr/src/multus-cni/bin/multus-daemon"]
-          args:
-            - "-cni-version=0.3.1"
-            - "-cni-config-dir=/host/etc/cni/multus/net.d"
-            - "-multus-autoconfig-dir=/host/etc/cni/net.d"
-            - "-multus-log-to-stderr=true"
-            - "-multus-log-level=verbose"
           resources:
             requests:
               cpu: "10m"
