@@ -19,7 +19,7 @@ components:
     metadata: v0.40.0
   linux-bridge:
     url: https://github.com/containernetworking/plugins
-    commit: 9f1f9a588b1cce419007830c6301a894ff09d535
+    commit: c10af01dfb619b37ad631a84b823f99510151ee3
     branch: main
     update-policy: static
     metadata: ""
