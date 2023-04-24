@@ -19,7 +19,7 @@ set -ex
 if [[ "${KUBEVIRT_PROVIDER}" == external ]]; then
     if [[ ! -v DEV_IMAGE_REGISTRY ]]; then
         echo "Missing DEV_IMAGE_REGISTRY variable"
-        return 1
+        exit 1
     fi
     manifest_registry=$DEV_IMAGE_REGISTRY
     push_registry=$manifest_registry
