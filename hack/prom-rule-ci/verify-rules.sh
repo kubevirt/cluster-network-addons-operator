@@ -18,6 +18,7 @@ get_prometheus_rule_spec() {
 
   prom_rule_spec=$(yaml-utils::get_param ${prom_yaml} spec)
   echo "${prom_rule_spec}" >${output_prom_spec}
+  sed -i 's|{{ .RunbookURLTemplate }}|https://kubevirt.io/monitoring/runbooks/|g' ${output_prom_spec}
 }
 
 # test_setup prepares all the needed files in the tmp folder

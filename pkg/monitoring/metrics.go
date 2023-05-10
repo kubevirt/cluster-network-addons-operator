@@ -20,6 +20,8 @@ const (
 	defaultMetricPort          = 8080
 	defaultMonitoringNamespace = "monitoring"
 	defaultServiceAccountName  = "prometheus-k8s"
+	defaultRunbookURLTemplate  = "https://kubevirt.io/monitoring/runbooks/"
+	runbookURLTemplateEnv      = "RUNBOOK_URL_TEMPLATE"
 )
 
 type MetricsOpts struct {
@@ -94,6 +96,7 @@ func RenderMonitoring(manifestDir string, monitoringAvailable bool) ([]*unstruct
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["MonitoringNamespace"] = getNamespace()
 	data.Data["MonitoringServiceAccount"] = getServiceAccount()
+	data.Data["RunbookURLTemplate"] = GetRunbookURLTemplate()
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "monitoring"), &data)
 	if err != nil {
@@ -134,4 +137,13 @@ func getServiceAccount() string {
 		return monitoringServiceAccountFromEnv
 	}
 	return defaultServiceAccountName
+}
+
+func GetRunbookURLTemplate() string {
+	runbookURLTemplate, exists := os.LookupEnv(runbookURLTemplateEnv)
+	if !exists {
+		runbookURLTemplate = defaultRunbookURLTemplate
+	}
+
+	return runbookURLTemplate
 }

@@ -15,6 +15,7 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
@@ -285,6 +286,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MONITORING_SERVICE_ACCOUNT",
 									Value: "prometheus-k8s",
+								},
+								{
+									Name:  "RUNBOOK_URL_TEMPLATE",
+									Value: monitoring.GetRunbookURLTemplate(),
 								},
 							},
 							SecurityContext: &corev1.SecurityContext{
