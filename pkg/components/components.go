@@ -671,8 +671,6 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 			},
 			Verbs: []string{
 				"update",
-				"get",
-				"list",
 			},
 		},
 		{
@@ -688,8 +686,6 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 				"update",
 				"list",
 				"watch",
-				"create",
-				"patch",
 			},
 		},
 		{
@@ -738,7 +734,8 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 				"configmaps",
 			},
 			Verbs: []string{
-				"*",
+				"get",
+				"delete",
 			},
 		},
 		{
@@ -749,13 +746,23 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 				"secrets",
 			},
 			Verbs: []string{
-				"get",
 				"list",
 				"watch",
 				"create",
 				"update",
-				"patch",
-				"delete",
+			},
+		},
+		{
+			APIGroups: []string{
+				"admissionregistration.k8s.io",
+			},
+			Resources: []string{
+				"validatingwebhookconfigurations",
+				"mutatingwebhookconfigurations",
+			},
+			Verbs: []string{
+				"list",
+				"watch",
 			},
 		},
 		{
@@ -767,12 +774,10 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 			},
 			Verbs: []string{
 				"get",
-				"list",
-				"watch",
 				"create",
 				"update",
-				"patch",
-				"delete",
+				"list",
+				"watch",
 			},
 		},
 		{
@@ -786,9 +791,7 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 				"get",
 				"list",
 				"watch",
-				"create",
 				"update",
-				"patch",
 			},
 		},
 		{
@@ -824,41 +827,6 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 				"get",
 				"create",
 				"update",
-				"patch",
-			},
-		},
-		{
-			APIGroups: []string{
-				"admissionregistration.k8s.io",
-			},
-			Resources: []string{
-				"validatingwebhookconfigurations",
-				"mutatingwebhookconfigurations",
-			},
-			Verbs: []string{
-				"*",
-			},
-		},
-		{
-			APIGroups: []string{
-				"",
-			},
-			Resources: []string{
-				"namespaces",
-			},
-			Verbs: []string{
-				"get",
-			},
-		},
-		{
-			APIGroups: []string{
-				"apiextensions.k8s.io",
-			},
-			Resources: []string{
-				"customresourcedefinitions",
-			},
-			Verbs: []string{
-				"list",
 			},
 		},
 		{
