@@ -54,7 +54,7 @@ main() {
     cd ${TMP_COMPONENT_PATH}
 
     export CLUSTER_ROOT_DIRECTORY=${TMP_PROJECT_PATH}
-    KUBECONFIG=${KUBECONFIG} E2E_TEST_ARGS="--junit-output=$ARTIFACTS/junit.functest.xml --ginkgo.skip $SKIPPED_TESTS" make functest
+    KUBECONFIG=${KUBECONFIG} make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor -test.outputdir=$ARTIFACTS --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml --ginkgo.skip $SKIPPED_TESTS" functest
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
