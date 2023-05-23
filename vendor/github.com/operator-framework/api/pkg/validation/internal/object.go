@@ -5,7 +5,7 @@ import (
 	"github.com/operator-framework/api/pkg/validation/errors"
 	interfaces "github.com/operator-framework/api/pkg/validation/interfaces"
 
-	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -57,7 +57,7 @@ func validateObjects(objs ...interface{}) (results []errors.ManifestResult) {
 // validatePDB checks the PDB to ensure the minimum and maximum budgets are set to reasonable levels.
 // See https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/adding-pod-disruption-budgets.md#limitations-on-pod-disruption-budgets
 func validatePDB(u *unstructured.Unstructured) (result errors.ManifestResult) {
-	pdb := policyv1beta1.PodDisruptionBudget{}
+	pdb := policyv1.PodDisruptionBudget{}
 
 	b, err := u.MarshalJSON()
 	if err != nil {

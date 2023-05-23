@@ -20,6 +20,7 @@ import (
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
@@ -251,6 +252,10 @@ func CheckForLeftoverObjects(currentVersion string) {
 		services := corev1.ServiceList{}
 		Expect(testenv.Client.List(context.Background(), &services, &listOptions)).To(Succeed())
 		Expect(services.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
+
+		pdbs := policyv1beta1.PodDisruptionBudgetList{}
+		Expect(testenv.Client.List(context.Background(), &pdbs, &listOptions)).To(Succeed())
+		Expect(pdbs.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
 		serviceMonitors := monitoringv1.ServiceMonitorList{}
 		Expect(testenv.Client.List(context.Background(), &serviceMonitors, &listOptions)).To(Succeed())
