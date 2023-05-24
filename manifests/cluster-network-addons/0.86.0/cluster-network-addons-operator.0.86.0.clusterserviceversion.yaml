@@ -395,7 +395,7 @@ spec:
                 containers:
                 - env:
                   - name: MULTUS_IMAGE
-                    value: ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:42dc78591161880fadd741ccdbc1c6997d47122c4827dbc128ff591b0960b697
+                    value: ghcr.io/k8snetworkplumbingwg/multus-cni:v4.0.1-6-gf0376568-thick
                   - name: MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE
                     value: ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:dee1979d92f0a31598a6e3569ac7004be7d29e7ca9e31db23753ef263110dc04
                   - name: LINUX_BRIDGE_IMAGE
@@ -480,7 +480,7 @@ spec:
                 serviceAccountName: cluster-network-addons-operator
 
   relatedImages:
-    - image: "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:42dc78591161880fadd741ccdbc1c6997d47122c4827dbc128ff591b0960b697"
+    - image: "ghcr.io/k8snetworkplumbingwg/multus-cni:v4.0.1-6-gf0376568-thick"
       name: "multus-cni"
     - image: "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:dee1979d92f0a31598a6e3569ac7004be7d29e7ca9e31db23753ef263110dc04"
       name: "multus-dynamic-networks-controller"
