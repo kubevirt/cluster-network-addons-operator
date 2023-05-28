@@ -373,7 +373,7 @@ spec:
       containers:
       - env:
         - name: MULTUS_IMAGE
-          value: ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:42dc78591161880fadd741ccdbc1c6997d47122c4827dbc128ff591b0960b697
+          value: ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:3fbcc32bd4e4d15bd93c96def784a229cd84cca27942bf4858b581f31c97ee02
         - name: MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE
           value: ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:dee1979d92f0a31598a6e3569ac7004be7d29e7ca9e31db23753ef263110dc04
         - name: LINUX_BRIDGE_IMAGE
