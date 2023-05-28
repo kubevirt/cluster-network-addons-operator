@@ -50,10 +50,6 @@ func main() {
 
 	var failedComponents []string
 	for componentName, component := range componentsConfig.Components {
-		if componentName == "kube-secondary-dns" {
-			logger.Printf("~~Skipping %s because of known problem with go-git~~", componentName)
-			continue
-		}
 		logger.Printf("~~Checking if %s needs bumping~~", componentName)
 
 		err = printCurrentComponentParams(component)
