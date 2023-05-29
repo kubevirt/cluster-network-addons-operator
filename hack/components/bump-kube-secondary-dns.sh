@@ -99,3 +99,4 @@ sed -i -r "s#\"${KUBE_SECONDARY_DNS_IMAGE}(@sha256)?:.*\"#\"${KUBE_SECONDARY_DNS
 sed -i -r "s#\"${KUBE_SECONDARY_DNS_IMAGE}(@sha256)?:.*\"#\"${KUBE_SECONDARY_DNS_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
 
 sed -i -r "s#\"${CORE_DNS_IMAGE}(@sha256)?:.*\"#\"${CORE_DNS_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${CORE_DNS_IMAGE}(@sha256)?:.*\"#\"${CORE_DNS_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
