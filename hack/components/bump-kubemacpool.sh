@@ -49,12 +49,16 @@ patches:
     kind: Deployment
     name: mac-controller-manager
     namespace: system
-- path: cnao_mac-range_patch.json
+- path: cnao_mac-range_patch.yaml
   target:
     version: v1
     kind: ConfigMap
     name: mac-range-config
     namespace: system
+- path: cnao_remove-labels_patch.yaml
+  target:
+    version: v1
+    kind: Namespace
 EOF
 
     cat <<EOF > config/cnao/cnao_kubemacpool_manager_patch.yaml
@@ -116,13 +120,17 @@ EOF
   value: "{{ toYaml .Placement.Tolerations | nindent 8 }}"
 EOF
 
-    cat <<EOF > config/cnao/cnao_mac-range_patch.json
+    cat <<EOF > config/cnao/cnao_mac-range_patch.yaml
 - op: replace
   path: /data/RANGE_START
   value: "{{ .RangeStart }}"
 - op: replace
   path: /data/RANGE_END
   value: "{{ .RangeEnd }}"
+EOF
+    cat <<EOF > config/cnao/cnao_remove-labels_patch.yaml
+- op: remove
+  path: /metadata/labels
 EOF
 
 

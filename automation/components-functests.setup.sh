@@ -32,6 +32,18 @@ export KUBECONFIG=$(cluster::kubeconfig)
 make cluster-operator-push
 make cluster-operator-install
 
+# Test kubemacpool with restricted
+if [ "$COMPONENT" == "kubemacpool" ]; then
+    cluster/kubectl.sh apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-network-addons
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+EOF
+fi
+
 # Deploy all network addons components with CNAO
     cat <<EOF | cluster/kubectl.sh apply -f -
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1
