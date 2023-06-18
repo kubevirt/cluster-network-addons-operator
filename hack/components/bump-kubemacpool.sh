@@ -82,6 +82,9 @@ spec:
       - image: "{{ .KubeRbacProxyImage }}"
         imagePullPolicy: "{{ .ImagePullPolicy }}"
         name: kube-rbac-proxy
+      securityContext:
+        runAsNonRoot: "{{ .RunAsNonRoot }}"
+        runAsUser: "{{ .RunAsUser }}"
 EOF
 
     cat <<EOF > config/cnao/cnao_cert-manager_patch.yaml
@@ -106,6 +109,9 @@ spec:
             value: "{{ .CertRotateInterval | default \"4380h0m0s\" }}"
           - name: CERT_OVERLAP_INTERVAL
             value: "{{ .CertOverlapInterval | default \"24h0m0s\" }}"
+      securityContext:
+        runAsNonRoot: "{{ .RunAsNonRoot }}"
+        runAsUser: "{{ .RunAsUser }}"
 EOF
 
     cat <<EOF > config/cnao/cnao_placement_patch.yaml
@@ -153,7 +159,7 @@ mv kustomize $KUBEMACPOOL_PATH
 rm kustomize.tar.gz
 (
     cd $KUBEMACPOOL_PATH
-    ./kustomize build config/cnao | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/"
+    ./kustomize build config/cnao | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/;s/'{{ .RunAsNonRoot }}'/{{ .RunAsNonRoot }}/g;s/'{{ .RunAsUser }}'/{{ .RunAsUser }}/g"
 ) > data/kubemacpool/kubemacpool.yaml
 
 echo 'Get kubemacpool image name and update it under CNAO'

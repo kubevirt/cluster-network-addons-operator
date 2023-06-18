@@ -115,6 +115,14 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	data.Data["CertRotateInterval"] = conf.SelfSignConfiguration.CertRotateInterval
 	data.Data["CertOverlapInterval"] = conf.SelfSignConfiguration.CertOverlapInterval
 
+	if clusterInfo.SCCAvailable {
+		data.Data["RunAsNonRoot"] = "null"
+		data.Data["RunAsUser"] = "null"
+	} else {
+		data.Data["RunAsNonRoot"] = "true"
+		data.Data["RunAsUser"] = "107"
+	}
+
 	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
 	data.Data["TLSSecurityProfileCiphers"] = strings.Join(ciphers, ",")
 	data.Data["TLSMinVersion"] = TLSVersionToHumanReadable(tlsMinVersion)
