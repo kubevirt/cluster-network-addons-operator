@@ -201,8 +201,8 @@ spec:
       priorityClassName: system-cluster-critical
       restartPolicy: Always
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 107
+        runAsNonRoot: {{ .RunAsNonRoot }}
+        runAsUser: {{ .RunAsUser }}
         seccompProfile:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 5
@@ -320,8 +320,8 @@ spec:
       priorityClassName: system-cluster-critical
       restartPolicy: Always
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 107
+        runAsNonRoot: {{ .RunAsNonRoot }}
+        runAsUser: {{ .RunAsUser }}
         seccompProfile:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 5
