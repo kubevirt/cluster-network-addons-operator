@@ -96,7 +96,7 @@ func changeSafeKubeMacPool(prev, next *cnao.NetworkAddonsConfigSpec) []error {
 }
 
 // renderLinuxBridge generates the manifests of Linux Bridge
-func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string) ([]*unstructured.Unstructured, error) {
+func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.KubeMacPool == nil {
 		return nil, nil
 	}
