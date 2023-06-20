@@ -35,6 +35,9 @@ main() {
 
     make cluster-down
     make cluster-up
+
+    ./cluster/kubectl.sh label node node01 node-role.kubernetes.io/master="" --overwrite
+
     trap teardown EXIT SIGINT SIGTERM SIGSTOP
     make cluster-operator-push
     make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/lifecycle
