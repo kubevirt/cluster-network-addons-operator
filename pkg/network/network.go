@@ -134,7 +134,7 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	objs = append(objs, o...)
 
 	// render kubeMacPool
-	o, err = renderKubeMacPool(conf, manifestDir)
+	o, err = renderKubeMacPool(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 	}
 
 	if conf.KubeMacPool == nil {
-		o, err := renderKubeMacPool(prev, manifestDir)
+		o, err := renderKubeMacPool(prev, manifestDir, clusterInfo)
 		if err != nil {
 			return nil, err
 		}
