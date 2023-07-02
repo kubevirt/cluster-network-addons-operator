@@ -1,18 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 	"sort"
-	"strings"
-	"text/template"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-
-	"sigs.k8s.io/controller-tools/pkg/markers"
+	"github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
 const (
@@ -33,180 +26,19 @@ func main() {
 	writeToFile(metricsList)
 }
 
-func getMetrics() metricList {
-	metricsList := readFromPrometheusCR()
-	metricsList = metricsOptsToMetricList(monitoring.MetricsOptsList, metricsList)
+func getMetrics() metricsparser.MetricList {
+	metricsList := metricsparser.ReadFromPrometheusCR()
+	metricsList = metricsparser.MetricsOptsToMetricList(monitoring.MetricsOptsList, metricsList)
 
 	sort.Slice(metricsList, func(i, j int) bool {
-		return metricsList[i].name < metricsList[j].name
+		return metricsList[i].Name < metricsList[j].Name
 	})
 
 	return metricsList
 }
 
-func metricsOptsToMetricList(metrics map[monitoring.MetricsKey]monitoring.MetricsOpts, result metricList) metricList {
-	for _, opts := range metrics {
-		result = append(result, metricDescriptionToMetric(opts))
-	}
-	return result
-}
-
-type PrometheusCR struct {
-	Spec struct {
-		Groups []struct {
-			Name  string      `yaml:"name"`
-			Rules []yaml.Node `yaml:"rules"`
-		} `yaml:"groups"`
-	} `yaml:"spec"`
-}
-
-type Rule struct {
-	Record string `yaml:"record,omitempty"`
-}
-
-type Comment struct {
-	Summary string
-	Type    string
-}
-
-func readFromPrometheusCR() metricList {
-	var cr PrometheusCR
-	err := yaml.Unmarshal(parseTemplateFile(), &cr)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	reg := &markers.Registry{}
-	reg.Define("+help", markers.DescribesPackage, Comment{})
-	reg.Define(" +help", markers.DescribesPackage, Comment{})
-
-	ml := make([]metric, 0)
-
-	for _, group := range cr.Spec.Groups {
-		for _, ruleNode := range group.Rules {
-			rule := &Rule{}
-			_ = ruleNode.Decode(rule)
-
-			if rule.Record != "" {
-				s, t := getComments(reg, &ruleNode)
-
-				ml = append(ml, metric{
-					name:        rule.Record,
-					description: s,
-					mType:       t,
-				})
-			}
-		}
-	}
-
-	return ml
-}
-
-func getComments(reg *markers.Registry, ruleNode *yaml.Node) (string, string) {
-	if ruleNode.HeadComment == "" {
-		return "", ""
-	}
-
-	defn := reg.Lookup(ruleNode.HeadComment, markers.DescribesPackage)
-	rawComment, _ := defn.Parse(ruleNode.HeadComment)
-	comment, ok := rawComment.(Comment)
-	if !ok {
-		return "", ""
-	}
-
-	return comment.Summary, comment.Type
-}
-
-func parseTemplateFile() []byte {
-	t, err := template.ParseFiles("data/monitoring/prom-rule.yaml")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var doc bytes.Buffer
-	test := struct {
-		Namespace          string
-		RunbookURLTemplate string
-	}{
-		Namespace:          "testNamespace",
-		RunbookURLTemplate: "testRunbookURLTemplate",
-	}
-
-	err = t.Execute(&doc, test)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return doc.Bytes()
-}
-
-func writeToFile(metricsList metricList) {
+func writeToFile(metricsList metricsparser.MetricList) {
 	fmt.Print(opening)
-	metricsList.writeOut()
+	metricsList.WriteOut()
 	fmt.Print(footer)
-}
-
-type metric struct {
-	name        string
-	description string
-	mType       string
-}
-
-func metricDescriptionToMetric(rrd monitoring.MetricsOpts) metric {
-	return metric{
-		name:        rrd.Name,
-		description: rrd.Help,
-		mType:       rrd.Type,
-	}
-}
-
-func (m metric) writeOut() {
-	fmt.Println("###", m.name)
-
-	writeNewLine := false
-
-	if m.description != "" {
-		fmt.Print(m.description + ". ")
-		writeNewLine = true
-	}
-
-	if m.mType != "" {
-		fmt.Print("Type: " + m.mType + ".")
-		writeNewLine = true
-	}
-
-	if writeNewLine {
-		fmt.Println()
-	}
-}
-
-type metricList []metric
-
-// Len implements sort.Interface.Len
-func (m metricList) Len() int {
-	return len(m)
-}
-
-// Less implements sort.Interface.Less
-func (m metricList) Less(i, j int) bool {
-	return m[i].name < m[j].name
-}
-
-// Swap implements sort.Interface.Swap
-func (m metricList) Swap(i, j int) {
-	m[i], m[j] = m[j], m[i]
-}
-
-func (m *metricList) add(line string) {
-	split := strings.Split(line, " ")
-	name := split[2]
-	split[3] = strings.Title(split[3])
-	description := strings.Join(split[3:], " ")
-	*m = append(*m, metric{name: name, description: description})
-}
-
-func (m metricList) writeOut() {
-	for _, met := range m {
-		met.writeOut()
-	}
 }

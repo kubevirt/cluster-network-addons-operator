@@ -15,6 +15,7 @@ main() {
     make bump-all
     make check
     verify_metrics_docs_updated
+    make lint-metrics
     make docker-build
 }
 
