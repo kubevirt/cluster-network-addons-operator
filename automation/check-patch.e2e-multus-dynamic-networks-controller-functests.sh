@@ -32,6 +32,9 @@ main() {
     echo "Install golang ..."
     cp hack/install-go.sh ${TMP_COMPONENT_PATH}/hack/install-go.sh
     cd ${TMP_COMPONENT_PATH}
+
+    curl -L https://github.com/k8snetworkplumbingwg/multus-dynamic-networks-controller/pull/141.patch | git apply
+
     BIN_DIR="${TMP_COMPONENT_PATH}/build/_output/go1.18/bin/"
     mkdir -p "$BIN_DIR"
     hack/install-go.sh "$BIN_DIR"
