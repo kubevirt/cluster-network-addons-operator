@@ -213,6 +213,9 @@ bump-all:
 generate-doc:
 	go run ./tools/metricsdocs > docs/metrics.md
 
+lint-metrics:
+	./hack/prom_metric_linter.sh --operator-name="kubevirt" --sub-operator-name="cnao"
+
 
 .PHONY: \
 	$(E2E_SUITES) \

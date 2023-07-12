@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
+	"github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
 var _ = Describe("Test metricsdocs", func() {
@@ -25,11 +26,11 @@ var _ = Describe("Test metricsdocs", func() {
 
 	Describe("metricsOptsToMetricList function", func() {
 		Context("when metricsOptsList is empty", func() {
-			var metricsList metricList
+			var metricsList metricsparser.MetricList
 
 			BeforeEach(func() {
 				By("transforming metricsOpts to metricList")
-				metricsList = metricsOptsToMetricList(map[monitoring.MetricsKey]monitoring.MetricsOpts{}, metricsList)
+				metricsList = metricsparser.MetricsOptsToMetricList(map[monitoring.MetricsKey]monitoring.MetricsOpts{}, metricsList)
 			})
 
 			It("should return an empty metricList", func() {
@@ -38,11 +39,11 @@ var _ = Describe("Test metricsdocs", func() {
 		})
 
 		Context("when metricsOptsList is not empty", func() {
-			var metricsList metricList
+			var metricsList metricsparser.MetricList
 
 			BeforeEach(func() {
 				By("transforming metricsOpts to metricList")
-				metricsList = metricsOptsToMetricList(metricsOptsList, metricsList)
+				metricsList = metricsparser.MetricsOptsToMetricList(metricsOptsList, metricsList)
 				sort.Sort(metricsList)
 			})
 
@@ -53,13 +54,13 @@ var _ = Describe("Test metricsdocs", func() {
 			It("should return a metricList sorted by metric name", func() {
 				metricA := metricsList[0]
 				metricB := metricsList[1]
-				Expect(metricA.name <= metricB.name).To(BeTrue())
+				Expect(metricA.Name <= metricB.Name).To(BeTrue())
 			})
 		})
 	})
 
 	Describe("metricsdocs", func() {
-		var metricsList metricList
+		var metricsList metricsparser.MetricList
 		var stdout string
 
 		BeforeEach(func() {
@@ -72,9 +73,9 @@ var _ = Describe("Test metricsdocs", func() {
 			}()
 			os.Stdout = w
 			go func() {
-				metricsList = metricsOptsToMetricList(metricsOptsList, metricsList)
+				metricsList = metricsparser.MetricsOptsToMetricList(metricsOptsList, metricsList)
 				sort.Slice(metricsList, func(i, j int) bool {
-					return metricsList[i].name < metricsList[j].name
+					return metricsList[i].Name < metricsList[j].Name
 				})
 				writeToFile(metricsList)
 				w.Close()
