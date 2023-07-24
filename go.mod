@@ -297,7 +297,7 @@ replace (
 )
 
 replace (
-	github.com/containerd/containerd => github.com/containerd/containerd v1.5.13
+	github.com/containerd/containerd => github.com/containerd/containerd v1.5.18
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
