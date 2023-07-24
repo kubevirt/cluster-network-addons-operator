@@ -39,23 +39,24 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo 'Installing bridge and tuning CNIs'
               cni_mount_dir=/opt/cni/bin
-              sourcebinpath=/usr/src/github.com/containernetworking/plugins/bin
-              cp --remove-destination ${sourcebinpath}/bridge ${cni_mount_dir}/cnv-bridge
-              cp --remove-destination ${sourcebinpath}/tuning ${cni_mount_dir}/cnv-tuning
+              components=("bridge" "tuning")
+              for component in "${components[@]}"; do
+                if find "${cni_mount_dir}/${component}" &>/dev/null && ! test -L "${cni_mount_dir}/${component}"; then
+                  echo "${component} binary found, creating symbolic link ${cni_mount_dir}/cnv-${component}"
+                  ln -sf "${cni_mount_dir}/${component}" "${cni_mount_dir}/cnv-${component}"
+                else
+                  echo "installing cnv-${component}, and creating symbolic link ${cni_mount_dir}/${component}"
 
-              echo 'Checking bridge and tuning CNIs deployment on node'
-              printf -v bridgechecksum "%s" "$(<$sourcebinpath/bridge.checksum)"
-              printf -v tuningchecksum "%s" "$(<$sourcebinpath/tuning.checksum)"
-              printf "%s %s" "${bridgechecksum% *}" "${cni_mount_dir}/cnv-bridge" | sha256sum --check
-              printf "%s %s" "${tuningchecksum% *}" "${cni_mount_dir}/cnv-tuning" | sha256sum --check
+                  sourcebinpath="/usr/src/github.com/containernetworking/plugins/bin"
+                  cp --remove-destination "${sourcebinpath}/${component}" "${cni_mount_dir}/cnv-${component}"
 
-              # Some projects (e.g. openshift/console) use cnv- prefix to distinguish between
-              # binaries shipped by OpenShift and those shipped by KubeVirt (D/S matters).
-              # Following two lines make sure we will provide both names when needed.
-              find ${cni_mount_dir}/bridge &>/dev/null || ln -s ${cni_mount_dir}/cnv-bridge ${cni_mount_dir}/bridge
-              find ${cni_mount_dir}/tuning &>/dev/null || ln -s ${cni_mount_dir}/cnv-tuning ${cni_mount_dir}/tuning
+                  printf -v component_checksum "%s" "$(<${sourcebinpath}/${component}.checksum)"
+                  printf "%s %s" "${component_checksum% *}" "${cni_mount_dir}/cnv-${component}" | sha256sum --check
+
+                  ln -sf "${cni_mount_dir}/cnv-${component}" "${cni_mount_dir}/${component}"
+                fi
+              done
               echo 'Entering sleep... (success)'
               sleep infinity
           resources:
