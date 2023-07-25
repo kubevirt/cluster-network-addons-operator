@@ -26,14 +26,10 @@ import (
 	dto "github.com/prometheus/client_model/go"
 )
 
-// excludedMetrics defines the metrics to ignore,
-// open pr:https://github.com/kubevirt/hyperconverged-cluster-operator/pull/2358
-// Do not add metrics to this list!
-var excludedMetrics = map[string]struct{}{
-	"kubevirt_cnao_cr_kubemacpool_deployed_total":         struct{}{},
-	"kubevirt_cnao_kubemacpool_manager_num_up_pods_total": struct{}{},
-	"kubevirt_kubemacpool_duplicate_macs_total":           struct{}{},
-}
+// This should be used only for very rare cases where the naming conventions that are explained in the best practices:
+// https://sdk.operatorframework.io/docs/best-practices/observability-best-practices/#metrics-guidelines
+// should be ignored.
+var excludedMetrics = map[string]struct{}{}
 
 // Read the metrics and parse them to a MetricFamily
 func ReadMetrics() []*dto.MetricFamily {

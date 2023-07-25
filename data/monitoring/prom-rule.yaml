@@ -11,12 +11,12 @@ spec:
       rules:
         # +help:summary="Total count of running CNAO operators",type=Gauge
         - expr: sum(up{namespace='{{ .Namespace }}', pod=~'cluster-network-addons-operator-.*'} or vector(0))
-          record: kubevirt_cnao_num_up_operators
+          record: kubevirt_cnao_operator_up
         - alert: CnaoDown
           annotations:
             summary: CNAO pod is down.
             runbook_url: '{{ .RunbookURLTemplate }}CnaoDown'
-          expr: kubevirt_cnao_num_up_operators == 0
+          expr: kubevirt_cnao_operator_up == 0
           for: 5m
           labels:
             severity: warning
@@ -36,12 +36,12 @@ spec:
             kubernetes_operator_component: cluster-network-addons-operator
         # +help:summary="Total count of duplicate KubeMacPool MAC addresses",type=Gauge
         - expr: sum(kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'} or vector(0))
-          record: kubevirt_kubemacpool_duplicate_macs_total
+          record: kubevirt_cnao_kubemacpool_duplicate_macs
         - alert: KubeMacPoolDuplicateMacsFound
           annotations:
             summary: Duplicate macs found.
             runbook_url: '{{ .RunbookURLTemplate }}KubeMacPoolDuplicateMacsFound'
-          expr: kubevirt_kubemacpool_duplicate_macs_total != 0
+          expr: kubevirt_cnao_kubemacpool_duplicate_macs != 0
           for: 5m
           labels:
             severity: warning
@@ -50,15 +50,15 @@ spec:
             kubernetes_operator_component: cluster-network-addons-operator
         # +help:summary="Total count of running KubeMacPool manager pods",type=Gauge
         - expr: sum(up{namespace='{{ .Namespace }}', pod=~'kubemacpool-mac-controller-manager-.*'} or vector(0))
-          record: kubevirt_cnao_kubemacpool_manager_num_up_pods_total
+          record: kubevirt_cnao_kubemacpool_manager_up
         # +help:summary="Total count of KubeMacPool manager pods deployed by CNAO CR",type=Gauge
         - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='{{ .Namespace }}'} or vector(0))
-          record: kubevirt_cnao_cr_kubemacpool_deployed_total
+          record: kubevirt_cnao_cr_kubemacpool_aggregated
         - alert: KubemacpoolDown
           annotations:
             summary: KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down.
             runbook_url: '{{ .RunbookURLTemplate }}KubemacpoolDown'
-          expr: kubevirt_cnao_cr_kubemacpool_deployed_total == 1 and kubevirt_cnao_kubemacpool_manager_num_up_pods_total == 0
+          expr: kubevirt_cnao_cr_kubemacpool_aggregated == 1 and kubevirt_cnao_kubemacpool_manager_up == 0
           for: 5m
           labels:
             severity: critical
