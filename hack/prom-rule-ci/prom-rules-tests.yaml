@@ -9,7 +9,7 @@ tests:
 # CnaoDown positive tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_num_up_operators"
+      - series: "kubevirt_cnao_operator_up"
         values: "0 0 0 0 0 0"
 
     alert_rule_test:
@@ -27,11 +27,11 @@ tests:
 # CnaoDown negative tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_num_up_operators"
+      - series: "kubevirt_cnao_operator_up"
         values: "1 1 1 0 1 1"
-      - series: "kubevirt_cnao_num_up_operators"
+      - series: "kubevirt_cnao_operator_up"
         values: "1 1 1 1 1 1"
-      - series: "kubevirt_cnao_num_up_operators"
+      - series: "kubevirt_cnao_operator_up"
         values: "0 0 0 0 0 1"
 
     alert_rule_test:
@@ -110,9 +110,9 @@ tests:
 # KubemacpoolDown positive tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+      - series: "kubevirt_cnao_kubemacpool_manager_up"
         values: "0 0 0 0 0 0"
-      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
         values: "1 1 1 1 1 1"
 
     alert_rule_test:
@@ -131,9 +131,9 @@ tests:
   # KubemacpoolDown negative tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+      - series: "kubevirt_cnao_kubemacpool_manager_up"
         values: "0 0 0 0 1 0"
-      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
         values: "1 1 1 1 1 1"
 
     alert_rule_test:
@@ -143,9 +143,9 @@ tests:
 
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+      - series: "kubevirt_cnao_kubemacpool_manager_up"
         values: "0 0 0 0 0 0"
-      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
         values: "1 1 1 1 0 1"
 
     alert_rule_test:
@@ -155,9 +155,9 @@ tests:
 
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_num_up_pods_total"
+      - series: "kubevirt_cnao_kubemacpool_manager_up"
         values: "1 1 1 1 1 1"
-      - series: "kubevirt_cnao_cr_kubemacpool_deployed_total"
+      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
         values: "0 0 0 0 0 0"
 
     alert_rule_test:
