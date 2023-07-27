@@ -136,7 +136,7 @@ func marshallObject(obj interface{}, writer io.Writer) error {
 	return nil
 }
 
-func getCNA(data *templateData) {
+func getCNA(data *templateData, allowMultus bool) {
 	writer := strings.Builder{}
 
 	// Get CNA Deployment
@@ -177,7 +177,7 @@ func getCNA(data *templateData) {
 
 	// Get CNA ClusterRole
 	writer = strings.Builder{}
-	clusterRole := components.GetClusterRole()
+	clusterRole := components.GetClusterRole(allowMultus)
 	marshallObject(clusterRole, &writer)
 	clusterRoleString := writer.String()
 
@@ -240,6 +240,7 @@ func main() {
 	imageName := flag.String("image-name", components.Name, "The operator image's name")
 	containerTag := flag.String("container-tag", "latest", "The operator image's container tag")
 	imagePullPolicy := flag.String("image-pull-policy", "Always", "The pull policy to use on the operator image")
+	allowMultus := flag.Bool("allow-multus", true, "Install Multus RBAC, making it possible to deploy Multus through the operator (should be disabled on OpenShift to limit CNAO's RBAC to the necessary minimum)")
 	multusImage := flag.String("multus-image", components.MultusImageDefault, "The multus image managed by CNA")
 	linuxBridgeCniImage := flag.String("linux-bridge-cni-image", components.LinuxBridgeCniImageDefault, "The linux bridge cni image managed by CNA")
 	linuxBridgeMarkerImage := flag.String("linux-bridge-marker-image", components.LinuxBridgeMarkerImageDefault, "The linux bridge marker image managed by CNA")
@@ -280,7 +281,7 @@ func main() {
 	}
 
 	// Load in all CNA Resources
-	getCNA(&data)
+	getCNA(&data, *allowMultus)
 
 	if *inputFile == "" {
 		panic("Must specify input file")

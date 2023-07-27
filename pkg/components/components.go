@@ -463,7 +463,7 @@ func GetRole(namespace string) *rbacv1.Role {
 	return role
 }
 
-func GetClusterRole() *rbacv1.ClusterRole {
+func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 	role := &rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1",
@@ -657,12 +657,15 @@ func GetClusterRole() *rbacv1.ClusterRole {
 	}
 
 	role.Rules = append(role.Rules, componentsClusterRoles()...)
+	if allowMultus {
+		role.Rules = append(role.Rules, multusClusterRoles()...)
+	}
 
 	return role
 }
 
 func componentsClusterRoles() []rbacv1.PolicyRule {
-	rules := []rbacv1.PolicyRule{
+	return []rbacv1.PolicyRule{
 		{
 			APIGroups: []string{
 				"",
@@ -700,17 +703,6 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 				"create",
 				"patch",
 				"update",
-			},
-		},
-		{
-			APIGroups: []string{
-				"k8s.cni.cncf.io",
-			},
-			Resources: []string{
-				"*",
-			},
-			Verbs: []string{
-				"*",
 			},
 		},
 		{
@@ -857,8 +849,25 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 			},
 		},
 	}
+}
 
-	return rules
+// Multus CNCF rules are kept separate and optional to allow vendors
+// who ship Multus through different channels to not deploy Multus'
+// highly privileged cluster-wide RBAC with CNAO.
+func multusClusterRoles() []rbacv1.PolicyRule {
+	return []rbacv1.PolicyRule{
+		{
+			APIGroups: []string{
+				"k8s.cni.cncf.io",
+			},
+			Resources: []string{
+				"*",
+			},
+			Verbs: []string{
+				"*",
+			},
+		},
+	}
 }
 
 func GetCrd() *extv1.CustomResourceDefinition {
