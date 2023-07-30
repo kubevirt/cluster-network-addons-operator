@@ -1,9 +1,11 @@
 package network
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
+	openshiftoperatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -57,4 +59,16 @@ func fillMacvtapDefaults(conf *cnao.NetworkAddonsConfigSpec, previousConf *cnao.
 
 func hasDevicePluginConfigMapNameDefined(conf *cnao.NetworkAddonsConfigSpec) bool {
 	return conf != nil && conf.MacvtapCni != nil && conf.MacvtapCni.DevicePluginConfig != ""
+}
+
+func validateMacvtap(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *openshiftoperatorv1.Network) []error {
+	if conf.MacvtapCni == nil {
+		return nil
+	}
+
+	if openshiftNetworkConfig != nil {
+		return []error{fmt.Errorf("`macvtap` has been requested, but is not supported on OpenShift")}
+	}
+
+	return nil
 }
