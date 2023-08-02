@@ -40,11 +40,12 @@ spec:
             - -ce
             - |
               cni_mount_dir=/opt/cni/bin
+              host_dir={{ .CNIBinDir }}
               components=("bridge" "tuning")
               for component in "${components[@]}"; do
                 if find "${cni_mount_dir}/${component}" &>/dev/null && ! test -L "${cni_mount_dir}/${component}"; then
                   echo "${component} binary found, creating symbolic link ${cni_mount_dir}/cnv-${component}"
-                  ln -sf "${cni_mount_dir}/${component}" "${cni_mount_dir}/cnv-${component}"
+                  ln -sf "${host_dir}/${component}" "${cni_mount_dir}/cnv-${component}"
                 else
                   echo "installing cnv-${component}, and creating symbolic link ${cni_mount_dir}/${component}"
 
@@ -54,7 +55,7 @@ spec:
                   printf -v component_checksum "%s" "$(<${sourcebinpath}/${component}.checksum)"
                   printf "%s %s" "${component_checksum% *}" "${cni_mount_dir}/cnv-${component}" | sha256sum --check
 
-                  ln -sf "${cni_mount_dir}/cnv-${component}" "${cni_mount_dir}/${component}"
+                  ln -sf "${host_dir}/cnv-${component}" "${cni_mount_dir}/${component}"
                 fi
               done
               echo 'Entering sleep... (success)'
