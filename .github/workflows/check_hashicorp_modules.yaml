@@ -1,0 +1,52 @@
+name: Check HashiCorp Modules
+on: [push, pull_request]
+jobs:
+  check_modules:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Run script
+      run: |
+        allowed_hashicorp_modules=(
+            "github.com/hashicorp/consul/api"
+            "github.com/hashicorp/consul/sdk"
+            "github.com/hashicorp/errwrap"
+            "github.com/hashicorp/hcl"
+            "github.com/hashicorp/logutils"
+            "github.com/hashicorp/mdns"
+            "github.com/hashicorp/memberlist"
+            "github.com/hashicorp/serf"
+            "github.com/hashicorp/go-cleanhttp"
+            "github.com/hashicorp/go-immutable-radix"
+            "github.com/hashicorp/golang-lru"
+            "github.com/hashicorp/go-msgpack"
+            "github.com/hashicorp/go-multierror"
+            "github.com/hashicorp/go.net"
+            "github.com/hashicorp/go-retryablehttp"
+            "github.com/hashicorp/go-rootcerts"
+            "github.com/hashicorp/go-sockaddr"
+            "github.com/hashicorp/go-syslog"
+            "github.com/hashicorp/go-uuid"
+            "github.com/hashicorp/go-version"
+        )
+
+        error_found=false
+        while read -r line; do
+            module=$(echo "$line" | cut -d ' ' -f 1)
+            if [[ $module == github.com/hashicorp/* ]]; then
+                if ! [[ " ${allowed_hashicorp_modules[*]} " == *" $module "* ]]; then
+                    echo "found non allowlisted hashicorp module: $module"
+                    error_found=true
+                fi
+            fi
+        done < go.sum
+
+        if [[ $error_found == true ]]; then
+            echo "Non allowlisted hashicorp modules found, exiting with an error."
+            echo "HashiCorp adapted BSL, which we cant use on our projects."
+            echo "Please review the licensing, and either add it to the list if it isn't BSL,"
+            echo "or use a different library."
+            exit 1
+        fi
+        echo "All included hashicorp modules are allowlisted"
