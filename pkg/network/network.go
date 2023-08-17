@@ -42,6 +42,7 @@ func Validate(conf *cnao.NetworkAddonsConfigSpec, openshiftNetworkConfig *osv1.N
 	errs = append(errs, validateImagePullPolicy(conf)...)
 	errs = append(errs, validateSelfSignConfiguration(conf)...)
 	errs = append(errs, validateMultusDynamicNetworks(conf, openshiftNetworkConfig)...)
+	errs = append(errs, validateMacvtap(conf, openshiftNetworkConfig)...)
 
 	if len(errs) > 0 {
 		return errors.Errorf("invalid configuration:\n%s", errorListToMultiLineString(errs))
