@@ -166,19 +166,18 @@ func (o *Command) RunE(args []string) error {
 	switch vmType {
 	case "vmi", "vmis", "virtualmachineinstance", "virtualmachineinstances":
 		// get the VM
-		vmi, err := virtClient.VirtualMachineInstance(namespace).Get(context.Background(), vmName, &options)
+		vmi, err := virtClient.VirtualMachineInstance(namespace).Get(vmName, &options)
 		if err != nil {
 			return fmt.Errorf("error fetching VirtualMachineInstance: %v", err)
 		}
 		serviceSelector = vmi.ObjectMeta.Labels
 		ports = podNetworkPorts(&vmi.Spec)
 		// remove unwanted labels
-		delete(serviceSelector, virtv1.NodeNameLabel)
+		delete(serviceSelector, "kubevirt.io/nodeName")
 		delete(serviceSelector, virtv1.VirtualMachinePoolRevisionName)
-		delete(serviceSelector, virtv1.MigrationTargetNodeNameLabel)
 	case "vm", "vms", "virtualmachine", "virtualmachines":
 		// get the VM
-		vm, err := virtClient.VirtualMachine(namespace).Get(context.Background(), vmName, &options)
+		vm, err := virtClient.VirtualMachine(namespace).Get(vmName, &options)
 		if err != nil {
 			return fmt.Errorf("error fetching Virtual Machine: %v", err)
 		}

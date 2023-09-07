@@ -741,7 +741,10 @@ func (i *similarityIndex) add(key int, cnt uint64) error {
 			// It's the same key, so increment the counter.
 			var err error
 			i.hashes[j], err = newKeyCountPair(key, v.count()+cnt)
-			return err
+			if err != nil {
+				return err
+			}
+			return nil
 		} else if j+1 >= len(i.hashes) {
 			j = 0
 		} else {

@@ -108,21 +108,6 @@ func PVCNameFromVirtVolume(volume *virtv1.Volume) string {
 	return ""
 }
 
-func GetPVCsFromVolumes(volumes []virtv1.Volume) map[string]string {
-	pvcs := map[string]string{}
-
-	for _, volume := range volumes {
-		pvcName := PVCNameFromVirtVolume(&volume)
-		if pvcName == "" {
-			continue
-		}
-
-		pvcs[volume.Name] = pvcName
-	}
-
-	return pvcs
-}
-
 func VirtVolumesToPVCMap(volumes []*virtv1.Volume, pvcStore cache.Store, namespace string) (map[string]*k8sv1.PersistentVolumeClaim, error) {
 	volumeNamesPVCMap := make(map[string]*k8sv1.PersistentVolumeClaim)
 	for _, volume := range volumes {
@@ -160,7 +145,6 @@ func GetPersistentVolumeClaimFromCache(namespace, name string, pvcInformer cache
 
 	return pvc, nil
 }
-
 func HasUnboundPVC(namespace string, volumes []virtv1.Volume, pvcInformer cache.SharedInformer) bool {
 	for _, volume := range volumes {
 		claimName := PVCNameFromVirtVolume(&volume)
@@ -196,7 +180,7 @@ func VolumeReadyToAttachToNode(namespace string, volume virtv1.Volume, dataVolum
 	if pvcExists {
 		var err error
 		pvc := pvcInterface.(*k8sv1.PersistentVolumeClaim)
-		ready, err = cdiv1.IsSucceededOrPendingPopulation(pvc, dataVolumeFunc)
+		ready, err = cdiv1.IsPopulated(pvc, dataVolumeFunc)
 		if err != nil {
 			return false, false, err
 		}

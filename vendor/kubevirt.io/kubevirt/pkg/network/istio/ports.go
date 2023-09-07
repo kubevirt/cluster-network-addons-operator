@@ -24,13 +24,10 @@ import "fmt"
 const (
 	EnvoyAdminPort                     = 15000
 	EnvoyOutboundPort                  = 15001
-	EnvoyDebugPort                     = 15004
 	EnvoyInboundPort                   = 15006
 	EnvoyTunnelPort                    = 15008
-	EnvoySecureNetworkPort             = 15009
 	EnvoyMergedPrometheusTelemetryPort = 15020
 	EnvoyHealthCheckPort               = 15021
-	EnvoyDNSPort                       = 15053
 	EnvoyPrometheusTelemetryPort       = 15090
 	SshPort                            = 22
 )
@@ -39,13 +36,10 @@ func ReservedPorts() []string {
 	return []string{
 		fmt.Sprint(EnvoyAdminPort),
 		fmt.Sprint(EnvoyOutboundPort),
-		fmt.Sprint(EnvoyDebugPort),
 		fmt.Sprint(EnvoyInboundPort),
 		fmt.Sprint(EnvoyTunnelPort),
-		fmt.Sprint(EnvoySecureNetworkPort),
 		fmt.Sprint(EnvoyMergedPrometheusTelemetryPort),
 		fmt.Sprint(EnvoyHealthCheckPort),
-		fmt.Sprint(EnvoyDNSPort),
 		fmt.Sprint(EnvoyPrometheusTelemetryPort),
 	}
 }

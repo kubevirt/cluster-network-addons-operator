@@ -17,7 +17,6 @@ go_library(
         "//tests/errorhandling:go_default_library",
         "//tests/flags:go_default_library",
         "//tests/framework/cleanup:go_default_library",
-        "//tests/framework/kubevirt:go_default_library",
         "//tests/framework/matcher:go_default_library",
         "//tests/libnode:go_default_library",
         "//tests/util:go_default_library",
@@ -32,7 +31,6 @@ go_library(
         "//vendor/k8s.io/apimachinery/pkg/api/resource:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/apis/meta/v1:go_default_library",
         "//vendor/k8s.io/apimachinery/pkg/util/rand:go_default_library",
-        "//vendor/k8s.io/utils/pointer:go_default_library",
         "//vendor/kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1:go_default_library",
     ],
 )

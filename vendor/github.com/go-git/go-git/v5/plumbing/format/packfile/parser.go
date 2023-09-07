@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	stdioutil "io/ioutil"
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/cache"
@@ -236,15 +237,6 @@ func (p *Parser) indexObjects() error {
 				return err
 			}
 
-			// Move children of placeholder parent into actual parent, in case this
-			// was a non-external delta reference.
-			if placeholder, ok := p.oiByHash[sha1]; ok {
-				ota.Children = placeholder.Children
-				for _, c := range ota.Children {
-					c.Parent = ota
-				}
-			}
-
 			ota.SHA1 = sha1
 			p.oiByHash[ota.SHA1] = ota
 		}
@@ -296,7 +288,7 @@ func (p *Parser) resolveDeltas() error {
 
 		if !obj.IsDelta() && len(obj.Children) > 0 {
 			for _, child := range obj.Children {
-				if err := p.resolveObject(io.Discard, child, content); err != nil {
+				if err := p.resolveObject(stdioutil.Discard, child, content); err != nil {
 					return err
 				}
 				p.resolveExternalRef(child)

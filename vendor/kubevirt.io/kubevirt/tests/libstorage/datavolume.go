@@ -23,8 +23,6 @@ import (
 	"context"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	gomegatypes "github.com/onsi/gomega/types"
@@ -98,7 +96,8 @@ func EventuallyDV(dv *v1beta1.DataVolume, timeoutSec int, matcher gomegatypes.Go
 }
 
 func EventuallyDVWith(namespace, name string, timeoutSec int, matcher gomegatypes.GomegaMatcher) {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	if !IsDataVolumeGC(virtCli) {
 		Eventually(ThisDVWith(namespace, name), timeoutSec, time.Second).Should(matcher)
@@ -108,7 +107,6 @@ func EventuallyDVWith(namespace, name string, timeoutSec int, matcher gomegatype
 	ginkgo.By("Verifying DataVolume garbage collection")
 	var dv *v1beta1.DataVolume
 	Eventually(func() *v1beta1.DataVolume {
-		var err error
 		dv, err = ThisDVWith(namespace, name)()
 		Expect(err).ToNot(HaveOccurred())
 		return dv
@@ -136,9 +134,10 @@ func DeleteDataVolume(dv **v1beta1.DataVolume) {
 		return
 	}
 	ginkgo.By("Deleting DataVolume")
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
-	err := virtCli.CdiClient().CdiV1beta1().DataVolumes((*dv).Namespace).Delete(context.Background(), (*dv).Name, v12.DeleteOptions{})
+	err = virtCli.CdiClient().CdiV1beta1().DataVolumes((*dv).Namespace).Delete(context.Background(), (*dv).Name, v12.DeleteOptions{})
 	if !IsDataVolumeGC(virtCli) {
 		Expect(err).ToNot(HaveOccurred())
 		*dv = nil
@@ -172,7 +171,7 @@ func SetDataVolumeGC(virtCli kubecli.KubevirtClient, ttlSec *int32) {
 func IsDataVolumeGC(virtCli kubecli.KubevirtClient) bool {
 	config, err := virtCli.CdiClient().CdiV1beta1().CDIConfigs().Get(context.TODO(), "config", v12.GetOptions{})
 	Expect(err).ToNot(HaveOccurred())
-	return config.Spec.DataVolumeTTLSeconds == nil || *config.Spec.DataVolumeTTLSeconds >= 0
+	return config.Spec.DataVolumeTTLSeconds != nil
 }
 
 func GetCDI(virtCli kubecli.KubevirtClient) *v1beta1.CDI {
@@ -187,7 +186,8 @@ func GetCDI(virtCli kubecli.KubevirtClient) *v1beta1.CDI {
 }
 
 func HasDataVolumeCRD() bool {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	ext, err := clientset.NewForConfig(virtClient.Config())
 	util.PanicOnError(err)

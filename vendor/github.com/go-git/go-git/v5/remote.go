@@ -33,7 +33,6 @@ var (
 	ErrDeleteRefNotSupported = errors.New("server does not support delete-refs")
 	ErrForceNeeded           = errors.New("some refs were not updated")
 	ErrExactSHA1NotSupported = errors.New("server does not support exact SHA1 refspec")
-	ErrEmptyUrls             = errors.New("URLs cannot be empty")
 )
 
 type NoMatchingRefSpecError struct {
@@ -55,9 +54,6 @@ const (
 	// repo containing this remote, when not using the multi-ack
 	// protocol.  Setting this to 0 means there is no limit.
 	maxHavesToVisitPerRef = 100
-
-	// peeledSuffix is the suffix used to build peeled reference names.
-	peeledSuffix = "^{}"
 )
 
 // Remote represents a connection to a remote repository.
@@ -113,7 +109,7 @@ func (r *Remote) PushContext(ctx context.Context, o *PushOptions) (err error) {
 		o.RemoteURL = r.c.URLs[0]
 	}
 
-	s, err := newSendPackSession(o.RemoteURL, o.Auth, o.InsecureSkipTLS, o.CABundle, o.ProxyOptions)
+	s, err := newSendPackSession(o.RemoteURL, o.Auth, o.InsecureSkipTLS, o.CABundle)
 	if err != nil {
 		return err
 	}
@@ -414,7 +410,7 @@ func (r *Remote) fetch(ctx context.Context, o *FetchOptions) (sto storer.Referen
 		o.RemoteURL = r.c.URLs[0]
 	}
 
-	s, err := newUploadPackSession(o.RemoteURL, o.Auth, o.InsecureSkipTLS, o.CABundle, o.ProxyOptions)
+	s, err := newUploadPackSession(o.RemoteURL, o.Auth, o.InsecureSkipTLS, o.CABundle)
 	if err != nil {
 		return nil, err
 	}
@@ -511,8 +507,8 @@ func depthChanged(before []plumbing.Hash, s storage.Storer) (bool, error) {
 	return false, nil
 }
 
-func newUploadPackSession(url string, auth transport.AuthMethod, insecure bool, cabundle []byte, proxyOpts transport.ProxyOptions) (transport.UploadPackSession, error) {
-	c, ep, err := newClient(url, insecure, cabundle, proxyOpts)
+func newUploadPackSession(url string, auth transport.AuthMethod, insecure bool, cabundle []byte) (transport.UploadPackSession, error) {
+	c, ep, err := newClient(url, auth, insecure, cabundle)
 	if err != nil {
 		return nil, err
 	}
@@ -520,8 +516,8 @@ func newUploadPackSession(url string, auth transport.AuthMethod, insecure bool, 
 	return c.NewUploadPackSession(ep, auth)
 }
 
-func newSendPackSession(url string, auth transport.AuthMethod, insecure bool, cabundle []byte, proxyOpts transport.ProxyOptions) (transport.ReceivePackSession, error) {
-	c, ep, err := newClient(url, insecure, cabundle, proxyOpts)
+func newSendPackSession(url string, auth transport.AuthMethod, insecure bool, cabundle []byte) (transport.ReceivePackSession, error) {
+	c, ep, err := newClient(url, auth, insecure, cabundle)
 	if err != nil {
 		return nil, err
 	}
@@ -529,14 +525,13 @@ func newSendPackSession(url string, auth transport.AuthMethod, insecure bool, ca
 	return c.NewReceivePackSession(ep, auth)
 }
 
-func newClient(url string, insecure bool, cabundle []byte, proxyOpts transport.ProxyOptions) (transport.Transport, *transport.Endpoint, error) {
+func newClient(url string, auth transport.AuthMethod, insecure bool, cabundle []byte) (transport.Transport, *transport.Endpoint, error) {
 	ep, err := transport.NewEndpoint(url)
 	if err != nil {
 		return nil, nil, err
 	}
 	ep.InsecureSkipTLS = insecure
 	ep.CaBundle = cabundle
-	ep.Proxy = proxyOpts
 
 	c, err := client.NewClient(ep)
 	if err != nil {
@@ -1250,29 +1245,21 @@ func (r *Remote) buildFetchedTags(refs memory.ReferenceStorage) (updated bool, e
 // operation is complete, an error is returned. The context only affects to the
 // transport operations.
 func (r *Remote) ListContext(ctx context.Context, o *ListOptions) (rfs []*plumbing.Reference, err error) {
-	return r.list(ctx, o)
+	refs, err := r.list(ctx, o)
+	if err != nil {
+		return refs, err
+	}
+	return refs, nil
 }
 
 func (r *Remote) List(o *ListOptions) (rfs []*plumbing.Reference, err error) {
-	timeout := o.Timeout
-	// Default to the old hardcoded 10s value if a timeout is not explicitly set.
-	if timeout == 0 {
-		timeout = 10
-	}
-	if timeout < 0 {
-		return nil, fmt.Errorf("invalid timeout: %d", timeout)
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return r.ListContext(ctx, o)
 }
 
 func (r *Remote) list(ctx context.Context, o *ListOptions) (rfs []*plumbing.Reference, err error) {
-	if r.c == nil || len(r.c.URLs) == 0 {
-		return nil, ErrEmptyUrls
-	}
-
-	s, err := newUploadPackSession(r.c.URLs[0], o.Auth, o.InsecureSkipTLS, o.CABundle, o.ProxyOptions)
+	s, err := newUploadPackSession(r.c.URLs[0], o.Auth, o.InsecureSkipTLS, o.CABundle)
 	if err != nil {
 		return nil, err
 	}
@@ -1295,22 +1282,13 @@ func (r *Remote) list(ctx context.Context, o *ListOptions) (rfs []*plumbing.Refe
 	}
 
 	var resultRefs []*plumbing.Reference
-	if o.PeelingOption == AppendPeeled || o.PeelingOption == IgnorePeeled {
-		err = refs.ForEach(func(ref *plumbing.Reference) error {
-			resultRefs = append(resultRefs, ref)
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
+	err = refs.ForEach(func(ref *plumbing.Reference) error {
+		resultRefs = append(resultRefs, ref)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	if o.PeelingOption == AppendPeeled || o.PeelingOption == OnlyPeeled {
-		for k, v := range ar.Peeled {
-			resultRefs = append(resultRefs, plumbing.NewReferenceFromStrings(k+"^{}", v.String()))
-		}
-	}
-
 	return resultRefs, nil
 }
 

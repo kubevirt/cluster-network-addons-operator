@@ -44,6 +44,7 @@ type VirtualMachinePool struct {
 	Status VirtualMachinePoolStatus `json:"status,omitempty"`
 }
 
+//
 // +k8s:openapi-gen=true
 type VirtualMachineTemplateSpec struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
@@ -53,6 +54,7 @@ type VirtualMachineTemplateSpec struct {
 	Spec virtv1.VirtualMachineSpec `json:"spec,omitempty" valid:"required"`
 }
 
+//
 // +k8s:openapi-gen=true
 type VirtualMachinePoolConditionType string
 
@@ -66,6 +68,7 @@ const (
 	VirtualMachinePoolReplicaPaused VirtualMachinePoolConditionType = "ReplicaPaused"
 )
 
+//
 // +k8s:openapi-gen=true
 type VirtualMachinePoolCondition struct {
 	Type   VirtualMachinePoolConditionType `json:"type"`
@@ -78,11 +81,10 @@ type VirtualMachinePoolCondition struct {
 	Message            string      `json:"message,omitempty"`
 }
 
+//
 // +k8s:openapi-gen=true
 type VirtualMachinePoolStatus struct {
 	Replicas int32 `json:"replicas,omitempty" optional:"true"`
-
-	ReadyReplicas int32 `json:"readyReplicas,omitempty" optional:"true"`
 
 	// +listType=atomic
 	Conditions []VirtualMachinePoolCondition `json:"conditions,omitempty" optional:"true"`
@@ -91,6 +93,7 @@ type VirtualMachinePoolStatus struct {
 	LabelSelector string `json:"labelSelector,omitempty"`
 }
 
+//
 // +k8s:openapi-gen=true
 type VirtualMachinePoolSpec struct {
 	// Number of desired pods. This is a pointer to distinguish between explicit

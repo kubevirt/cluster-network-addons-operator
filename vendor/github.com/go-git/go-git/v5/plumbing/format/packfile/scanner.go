@@ -7,6 +7,7 @@ import (
 	"hash"
 	"hash/crc32"
 	"io"
+	stdioutil "io/ioutil"
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/utils/binary"
@@ -241,7 +242,7 @@ func (s *Scanner) discardObjectIfNeeded() error {
 	}
 
 	h := s.pendingObject
-	n, _, err := s.NextObject(io.Discard)
+	n, _, err := s.NextObject(stdioutil.Discard)
 	if err != nil {
 		return err
 	}
@@ -380,7 +381,7 @@ func (s *Scanner) Checksum() (plumbing.Hash, error) {
 // Close reads the reader until io.EOF
 func (s *Scanner) Close() error {
 	buf := sync.GetByteSlice()
-	_, err := io.CopyBuffer(io.Discard, s.r, *buf)
+	_, err := io.CopyBuffer(stdioutil.Discard, s.r, *buf)
 	sync.PutByteSlice(buf)
 
 	return err

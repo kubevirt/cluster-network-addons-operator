@@ -23,13 +23,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
 	"kubevirt.io/kubevirt/pkg/util/nodes"
+
+	utiltype "kubevirt.io/kubevirt/pkg/util/types"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 
@@ -46,7 +45,6 @@ import (
 	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
 	"kubevirt.io/kubevirt/pkg/virt-controller/services"
 
-	"kubevirt.io/kubevirt/pkg/apimachinery/patch"
 	"kubevirt.io/kubevirt/tests/flags"
 	"kubevirt.io/kubevirt/tests/framework/cleanup"
 	"kubevirt.io/kubevirt/tests/util"
@@ -55,7 +53,8 @@ import (
 var SchedulableNode = ""
 
 func CleanNodes() {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	clusterDrainKey := GetNodeDrainKey()
 
@@ -92,7 +91,6 @@ func CleanNodes() {
 
 		if node.Spec.Unschedulable {
 			new.Spec.Unschedulable = false
-			found = true
 		}
 
 		if !found {
@@ -101,16 +99,17 @@ func CleanNodes() {
 		newJson, err := json.Marshal(new)
 		Expect(err).ToNot(HaveOccurred())
 
-		patchBytes, err := strategicpatch.CreateTwoWayMergePatch(old, newJson, node)
+		patch, err := strategicpatch.CreateTwoWayMergePatch(old, newJson, node)
 		Expect(err).ToNot(HaveOccurred())
 
-		_, err = virtCli.CoreV1().Nodes().Patch(context.Background(), node.Name, types.StrategicMergePatchType, patchBytes, k8smetav1.PatchOptions{})
+		_, err = virtCli.CoreV1().Nodes().Patch(context.Background(), node.Name, types.StrategicMergePatchType, patch, k8smetav1.PatchOptions{})
 		Expect(err).ToNot(HaveOccurred())
 	}
 }
 
 func GetNodeDrainKey() string {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	kv := util.GetCurrentKv(virtClient)
 	if kv.Spec.Configuration.MigrationConfiguration != nil && kv.Spec.Configuration.MigrationConfiguration.NodeDrainTaintKey != nil {
@@ -135,7 +134,7 @@ const (
 )
 
 func patchLabelAnnotationHelper(virtCli kubecli.KubevirtClient, nodeName string, newMap, oldMap map[string]string, mapType mapType) (*k8sv1.Node, error) {
-	p := []patch.PatchOperation{
+	p := []utiltype.PatchOperation{
 		{
 			Op:    "test",
 			Path:  "/metadata/" + string(mapType) + "s",
@@ -184,7 +183,8 @@ func addRemoveLabelAnnotationHelper(nodeName, key, value string, mapType mapType
 	Expect(fetchMap).ToNot(BeNil())
 	Expect(mutateMap).ToNot(BeNil())
 
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	Expect(err).ToNot(HaveOccurred())
 
 	var nodeToReturn *k8sv1.Node
 	EventuallyWithOffset(2, func() error {
@@ -241,7 +241,8 @@ func RemoveAnnotationFromNode(nodeName string, key string) *k8sv1.Node {
 }
 
 func Taint(nodeName string, key string, effect k8sv1.TaintEffect) {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 	node, err := virtCli.CoreV1().Nodes().Get(context.Background(), nodeName, k8smetav1.GetOptions{})
 	Expect(err).ToNot(HaveOccurred())
 
@@ -256,15 +257,16 @@ func Taint(nodeName string, key string, effect k8sv1.TaintEffect) {
 	newJson, err := json.Marshal(new)
 	Expect(err).ToNot(HaveOccurred())
 
-	patchBytes, err := strategicpatch.CreateTwoWayMergePatch(old, newJson, node)
+	patch, err := strategicpatch.CreateTwoWayMergePatch(old, newJson, node)
 	Expect(err).ToNot(HaveOccurred())
 
-	_, err = virtCli.CoreV1().Nodes().Patch(context.Background(), node.Name, types.StrategicMergePatchType, patchBytes, k8smetav1.PatchOptions{})
+	_, err = virtCli.CoreV1().Nodes().Patch(context.Background(), node.Name, types.StrategicMergePatchType, patch, k8smetav1.PatchOptions{})
 	Expect(err).ToNot(HaveOccurred())
 }
 
 func GetNodesWithKVM() []*k8sv1.Node {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 	listOptions := k8smetav1.ListOptions{LabelSelector: v1.AppLabel + "=virt-handler"}
 	virtHandlerPods, err := virtClient.CoreV1().Pods(flags.KubeVirtInstallNamespace).List(context.Background(), listOptions)
 	Expect(err).ToNot(HaveOccurred())
@@ -317,7 +319,8 @@ func GetNodeWithHugepages(virtClient kubecli.KubevirtClient, hugepages k8sv1.Res
 }
 
 func GetArch() string {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 	nodes := GetAllSchedulableNodes(virtCli).Items
 	Expect(nodes).ToNot(BeEmpty(), "There should be some node")
 	return nodes[0].Status.NodeInfo.Architecture
@@ -347,8 +350,4 @@ func SetNodeUnschedulable(nodeName string, virtCli kubecli.KubevirtClient) {
 
 func SetNodeSchedulable(nodeName string, virtCli kubecli.KubevirtClient) {
 	setNodeSchedualability(nodeName, virtCli, true)
-}
-
-func GetVirtHandlerPod(virtCli kubecli.KubevirtClient, nodeName string) (*k8sv1.Pod, error) {
-	return kubecli.NewVirtHandlerClient(virtCli, &http.Client{}).Namespace(flags.KubeVirtInstallNamespace).ForNode(nodeName).Pod()
 }

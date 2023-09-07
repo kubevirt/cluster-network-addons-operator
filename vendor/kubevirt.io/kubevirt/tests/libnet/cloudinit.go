@@ -184,16 +184,13 @@ const (
 // for the Cloud-Init Network Data, in version 2 format.
 // The default configuration sets dynamic IPv4 (DHCP) and static IPv6 addresses,
 // inclusing DNS settings of the cluster nameserver IP and search domains.
-func CreateDefaultCloudInitNetworkData() string {
-	data, err := NewNetworkData(
+func CreateDefaultCloudInitNetworkData() (string, error) {
+	return NewNetworkData(
 		WithEthernet("eth0",
 			WithDHCP4Enabled(),
 			WithAddresses(DefaultIPv6CIDR),
 			WithGateway6(DefaultIPv6Gateway),
 			WithNameserverFromCluster(),
-		))
-	if err != nil {
-		panic(err)
-	}
-	return data
+		),
+	)
 }

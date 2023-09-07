@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"sort"
@@ -61,18 +62,18 @@ type ForwardedPort struct {
 }
 
 /*
-valid port specifications:
+	valid port specifications:
 
-5000
-- forwards from localhost:5000 to pod:5000
+	5000
+	- forwards from localhost:5000 to pod:5000
 
-8888:5000
-- forwards from localhost:8888 to pod:5000
+	8888:5000
+	- forwards from localhost:8888 to pod:5000
 
-0:5000
-:5000
-  - selects a random available local port,
-    forwards from localhost:<random port> to pod:5000
+	0:5000
+	:5000
+	- selects a random available local port,
+	  forwards from localhost:<random port> to pod:5000
 */
 func parsePorts(ports []string) ([]ForwardedPort, error) {
 	var forwards []ForwardedPort
@@ -347,11 +348,10 @@ func (pf *PortForwarder) handleConnection(conn net.Conn, port ForwardedPort) {
 	}
 	// we're not writing to this stream
 	errorStream.Close()
-	defer pf.streamConn.RemoveStreams(errorStream)
 
 	errorChan := make(chan error)
 	go func() {
-		message, err := io.ReadAll(errorStream)
+		message, err := ioutil.ReadAll(errorStream)
 		switch {
 		case err != nil:
 			errorChan <- fmt.Errorf("error reading from error stream for port %d -> %d: %v", port.Local, port.Remote, err)
@@ -368,7 +368,6 @@ func (pf *PortForwarder) handleConnection(conn net.Conn, port ForwardedPort) {
 		runtime.HandleError(fmt.Errorf("error creating forwarding stream for port %d -> %d: %v", port.Local, port.Remote, err))
 		return
 	}
-	defer pf.streamConn.RemoveStreams(dataStream)
 
 	localError := make(chan struct{})
 	remoteDone := make(chan struct{})

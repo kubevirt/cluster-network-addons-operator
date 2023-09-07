@@ -17,8 +17,6 @@
 package pb
 
 import (
-	"fmt"
-
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -40,53 +38,21 @@ type Db struct {
 	revFileDescriptorMap map[string]*FileDescription
 	// files contains the deduped set of FileDescriptions whose types are contained in the pb.Db.
 	files []*FileDescription
-	// extensions contains the mapping between a given type name, extension name and its FieldDescription
-	extensions map[string]map[string]*FieldDescription
 }
-
-// extensionsMap is a type alias to a map[typeName]map[extensionName]*FieldDescription
-type extensionMap = map[string]map[string]*FieldDescription
 
 var (
 	// DefaultDb used at evaluation time or unless overridden at check time.
 	DefaultDb = &Db{
 		revFileDescriptorMap: make(map[string]*FileDescription),
 		files:                []*FileDescription{},
-		extensions:           make(extensionMap),
 	}
 )
-
-// Merge will copy the source proto message into the destination, or error if the merge cannot be completed.
-//
-// Unlike the proto.Merge, this method will fallback to proto.Marshal/Unmarshal of the two proto messages do not
-// share the same instance of their type descriptor.
-func Merge(dstPB, srcPB proto.Message) error {
-	src, dst := srcPB.ProtoReflect(), dstPB.ProtoReflect()
-	if src.Descriptor() == dst.Descriptor() {
-		proto.Merge(dstPB, srcPB)
-		return nil
-	}
-	if src.Descriptor().FullName() != dst.Descriptor().FullName() {
-		return fmt.Errorf("pb.Merge() arguments must be the same type. got: %v, %v",
-			dst.Descriptor().FullName(), src.Descriptor().FullName())
-	}
-	bytes, err := proto.Marshal(srcPB)
-	if err != nil {
-		return fmt.Errorf("pb.Merge(dstPB, srcPB) failed to marshal source proto: %v", err)
-	}
-	err = proto.Unmarshal(bytes, dstPB)
-	if err != nil {
-		return fmt.Errorf("pb.Merge(dstPB, srcPB) failed to unmarshal to dest proto: %v", err)
-	}
-	return nil
-}
 
 // NewDb creates a new `pb.Db` with an empty type name to file description map.
 func NewDb() *Db {
 	pbdb := &Db{
 		revFileDescriptorMap: make(map[string]*FileDescription),
 		files:                []*FileDescription{},
-		extensions:           make(extensionMap),
 	}
 	// The FileDescription objects in the default db contain lazily initialized TypeDescription
 	// values which may point to the state contained in the DefaultDb irrespective of this shallow
@@ -103,34 +69,19 @@ func NewDb() *Db {
 // Copy creates a copy of the current database with its own internal descriptor mapping.
 func (pbdb *Db) Copy() *Db {
 	copy := NewDb()
-	for _, fd := range pbdb.files {
+	for k, v := range pbdb.revFileDescriptorMap {
+		copy.revFileDescriptorMap[k] = v
+	}
+	for _, f := range pbdb.files {
 		hasFile := false
-		for _, fd2 := range copy.files {
-			if fd2 == fd {
+		for _, f2 := range copy.files {
+			if f2 == f {
 				hasFile = true
 			}
 		}
 		if !hasFile {
-			fd = fd.Copy(copy)
-			copy.files = append(copy.files, fd)
+			copy.files = append(copy.files, f)
 		}
-		for _, enumValName := range fd.GetEnumNames() {
-			copy.revFileDescriptorMap[enumValName] = fd
-		}
-		for _, msgTypeName := range fd.GetTypeNames() {
-			copy.revFileDescriptorMap[msgTypeName] = fd
-		}
-		copy.revFileDescriptorMap[fd.GetName()] = fd
-	}
-	for typeName, extFieldMap := range pbdb.extensions {
-		copyExtFieldMap, found := copy.extensions[typeName]
-		if !found {
-			copyExtFieldMap = make(map[string]*FieldDescription, len(extFieldMap))
-		}
-		for extFieldName, fd := range extFieldMap {
-			copyExtFieldMap[extFieldName] = fd
-		}
-		copy.extensions[typeName] = copyExtFieldMap
 	}
 	return copy
 }
@@ -159,30 +110,17 @@ func (pbdb *Db) RegisterDescriptor(fileDesc protoreflect.FileDescriptor) (*FileD
 	if err == nil {
 		fileDesc = globalFD
 	}
-	var fileExtMap extensionMap
-	fd, fileExtMap = newFileDescription(fileDesc, pbdb)
+	fd = NewFileDescription(fileDesc, pbdb)
 	for _, enumValName := range fd.GetEnumNames() {
 		pbdb.revFileDescriptorMap[enumValName] = fd
 	}
 	for _, msgTypeName := range fd.GetTypeNames() {
 		pbdb.revFileDescriptorMap[msgTypeName] = fd
 	}
-	pbdb.revFileDescriptorMap[fd.GetName()] = fd
+	pbdb.revFileDescriptorMap[fileDesc.Path()] = fd
 
 	// Return the specific file descriptor registered.
 	pbdb.files = append(pbdb.files, fd)
-
-	// Index the protobuf message extensions from the file into the pbdb
-	for typeName, extMap := range fileExtMap {
-		typeExtMap, found := pbdb.extensions[typeName]
-		if !found {
-			pbdb.extensions[typeName] = extMap
-			continue
-		}
-		for extName, field := range extMap {
-			typeExtMap[extName] = field
-		}
-	}
 	return fd, nil
 }
 

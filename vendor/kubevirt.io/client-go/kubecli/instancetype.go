@@ -9,25 +9,21 @@ import (
 	v1 "kubevirt.io/api/core/v1"
 )
 
-func (k *kubevirt) ExpandSpec(namespace string) ExpandSpecInterface {
-	return &expandSpec{
+func (k *kubevirt) ExpandSpec() *ExpandSpec {
+	return &ExpandSpec{
 		restClient: k.restClient,
-		namespace:  namespace,
-		resource:   "expand-vm-spec",
 	}
 }
 
-type expandSpec struct {
+type ExpandSpec struct {
 	restClient *rest.RESTClient
-	namespace  string
-	resource   string
 }
 
-func (e *expandSpec) ForVirtualMachine(vm *v1.VirtualMachine) (*v1.VirtualMachine, error) {
-	uri := fmt.Sprintf("/apis/"+v1.SubresourceGroupName+"/%s/namespaces/%s/%s", v1.ApiStorageVersion, e.namespace, e.resource)
+func (e *ExpandSpec) ForVirtualMachine(vm *v1.VirtualMachine) (*v1.VirtualMachine, error) {
+	uri := fmt.Sprintf("/apis/"+v1.SubresourceGroupName+"/%s/expand-spec", v1.ApiStorageVersion)
 	expandedVm := &v1.VirtualMachine{}
 	err := e.restClient.Put().
-		AbsPath(uri).
+		RequestURI(uri).
 		Body(vm).
 		Do(context.Background()).
 		Into(expandedVm)

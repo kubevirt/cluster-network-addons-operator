@@ -1,7 +1,7 @@
 package components
 
 import (
-	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -36,20 +36,20 @@ const (
 	CaClusterLocal                  = "cluster.local"
 )
 
-type CertificateCreationCallback func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey)
+type CertificateCreationCallback func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey)
 
 var populationStrategy = map[string]CertificateCreationCallback{
-	KubeVirtCASecretName: func(secret *k8sv1.Secret, _ *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	KubeVirtCASecretName: func(secret *k8sv1.Secret, _ *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair, _ := triple.NewCA("kubevirt.io", duration)
 		return caKeyPair.Cert, caKeyPair.Key
 	},
-	KubeVirtExportCASecretName: func(secret *k8sv1.Secret, _ *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	KubeVirtExportCASecretName: func(secret *k8sv1.Secret, _ *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair, _ := triple.NewCA("export.kubevirt.io", duration)
 		return caKeyPair.Cert, caKeyPair.Key
 	},
-	VirtOperatorCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	VirtOperatorCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair := &triple.KeyPair{
-			Key:  caCert.PrivateKey.(*ecdsa.PrivateKey),
+			Key:  caCert.PrivateKey.(*rsa.PrivateKey),
 			Cert: caCert.Leaf,
 		}
 		keyPair, _ := triple.NewServerKeyPair(
@@ -64,9 +64,9 @@ var populationStrategy = map[string]CertificateCreationCallback{
 		)
 		return keyPair.Cert, keyPair.Key
 	},
-	VirtApiCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	VirtApiCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair := &triple.KeyPair{
-			Key:  caCert.PrivateKey.(*ecdsa.PrivateKey),
+			Key:  caCert.PrivateKey.(*rsa.PrivateKey),
 			Cert: caCert.Leaf,
 		}
 		keyPair, _ := triple.NewServerKeyPair(
@@ -81,9 +81,9 @@ var populationStrategy = map[string]CertificateCreationCallback{
 		)
 		return keyPair.Cert, keyPair.Key
 	},
-	VirtControllerCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	VirtControllerCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair := &triple.KeyPair{
-			Key:  caCert.PrivateKey.(*ecdsa.PrivateKey),
+			Key:  caCert.PrivateKey.(*rsa.PrivateKey),
 			Cert: caCert.Leaf,
 		}
 		keyPair, _ := triple.NewServerKeyPair(
@@ -98,9 +98,9 @@ var populationStrategy = map[string]CertificateCreationCallback{
 		)
 		return keyPair.Cert, keyPair.Key
 	},
-	VirtHandlerServerCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	VirtHandlerServerCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair := &triple.KeyPair{
-			Key:  caCert.PrivateKey.(*ecdsa.PrivateKey),
+			Key:  caCert.PrivateKey.(*rsa.PrivateKey),
 			Cert: caCert.Leaf,
 		}
 		keyPair, _ := triple.NewServerKeyPair(
@@ -115,9 +115,9 @@ var populationStrategy = map[string]CertificateCreationCallback{
 		)
 		return keyPair.Cert, keyPair.Key
 	},
-	VirtHandlerCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	VirtHandlerCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair := &triple.KeyPair{
-			Key:  caCert.PrivateKey.(*ecdsa.PrivateKey),
+			Key:  caCert.PrivateKey.(*rsa.PrivateKey),
 			Cert: caCert.Leaf,
 		}
 		clientKeyPair, _ := triple.NewClientKeyPair(caKeyPair,
@@ -127,9 +127,9 @@ var populationStrategy = map[string]CertificateCreationCallback{
 		)
 		return clientKeyPair.Cert, clientKeyPair.Key
 	},
-	VirtExportProxyCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *ecdsa.PrivateKey) {
+	VirtExportProxyCertSecretName: func(secret *k8sv1.Secret, caCert *tls.Certificate, duration time.Duration) (cert *x509.Certificate, key *rsa.PrivateKey) {
 		caKeyPair := &triple.KeyPair{
-			Key:  caCert.PrivateKey.(*ecdsa.PrivateKey),
+			Key:  caCert.PrivateKey.(*rsa.PrivateKey),
 			Cert: caCert.Leaf,
 		}
 		keyPair, _ := triple.NewServerKeyPair(

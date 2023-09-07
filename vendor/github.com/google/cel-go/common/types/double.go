@@ -16,7 +16,6 @@ package types
 
 import (
 	"fmt"
-	"math"
 	"reflect"
 
 	"github.com/google/cel-go/common/types/ref"
@@ -59,26 +58,21 @@ func (d Double) Add(other ref.Val) ref.Val {
 
 // Compare implements traits.Comparer.Compare.
 func (d Double) Compare(other ref.Val) ref.Val {
-	if math.IsNaN(float64(d)) {
-		return NewErr("NaN values cannot be ordered")
-	}
-	switch ov := other.(type) {
-	case Double:
-		if math.IsNaN(float64(ov)) {
-			return NewErr("NaN values cannot be ordered")
-		}
-		return compareDouble(d, ov)
-	case Int:
-		return compareDoubleInt(d, ov)
-	case Uint:
-		return compareDoubleUint(d, ov)
-	default:
+	otherDouble, ok := other.(Double)
+	if !ok {
 		return MaybeNoSuchOverloadErr(other)
 	}
+	if d < otherDouble {
+		return IntNegOne
+	}
+	if d > otherDouble {
+		return IntOne
+	}
+	return IntZero
 }
 
 // ConvertToNative implements ref.Val.ConvertToNative.
-func (d Double) ConvertToNative(typeDesc reflect.Type) (any, error) {
+func (d Double) ConvertToNative(typeDesc reflect.Type) (interface{}, error) {
 	switch typeDesc.Kind() {
 	case reflect.Float32:
 		v := float32(d)
@@ -134,13 +128,13 @@ func (d Double) ConvertToType(typeVal ref.Type) ref.Val {
 	case IntType:
 		i, err := doubleToInt64Checked(float64(d))
 		if err != nil {
-			return WrapErr(err)
+			return wrapErr(err)
 		}
 		return Int(i)
 	case UintType:
 		i, err := doubleToUint64Checked(float64(d))
 		if err != nil {
-			return WrapErr(err)
+			return wrapErr(err)
 		}
 		return Uint(i)
 	case DoubleType:
@@ -164,27 +158,12 @@ func (d Double) Divide(other ref.Val) ref.Val {
 
 // Equal implements ref.Val.Equal.
 func (d Double) Equal(other ref.Val) ref.Val {
-	if math.IsNaN(float64(d)) {
-		return False
+	otherDouble, ok := other.(Double)
+	if !ok {
+		return MaybeNoSuchOverloadErr(other)
 	}
-	switch ov := other.(type) {
-	case Double:
-		if math.IsNaN(float64(ov)) {
-			return False
-		}
-		return Bool(d == ov)
-	case Int:
-		return Bool(compareDoubleInt(d, ov) == 0)
-	case Uint:
-		return Bool(compareDoubleUint(d, ov) == 0)
-	default:
-		return False
-	}
-}
-
-// IsZeroValue returns true if double value is 0.0
-func (d Double) IsZeroValue() bool {
-	return float64(d) == 0.0
+	// TODO: Handle NaNs properly.
+	return Bool(d == otherDouble)
 }
 
 // Multiply implements traits.Multiplier.Multiply.
@@ -216,6 +195,6 @@ func (d Double) Type() ref.Type {
 }
 
 // Value implements ref.Val.Value.
-func (d Double) Value() any {
+func (d Double) Value() interface{} {
 	return float64(d)
 }

@@ -25,8 +25,6 @@ import (
 	"fmt"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -34,7 +32,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/utils/pointer"
 
 	v1 "kubevirt.io/api/core/v1"
 	"kubevirt.io/client-go/kubecli"
@@ -51,7 +48,8 @@ var (
 )
 
 func AdjustKubeVirtResource() {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	kv := util.GetCurrentKv(virtClient)
 	originalKV = kv.DeepCopy()
@@ -82,14 +80,6 @@ func AdjustKubeVirtResource() {
 	if kv.Spec.Configuration.DeveloperConfiguration.FeatureGates == nil {
 		kv.Spec.Configuration.DeveloperConfiguration.FeatureGates = []string{}
 	}
-
-	kv.Spec.Configuration.SeccompConfiguration = &v1.SeccompConfiguration{
-		VirtualMachineInstanceProfile: &v1.VirtualMachineInstanceProfile{
-			CustomProfile: &v1.CustomProfile{
-				LocalhostProfile: pointer.String("kubevirt/kubevirt.json"),
-			},
-		},
-	}
 	kv.Spec.Configuration.DeveloperConfiguration.FeatureGates = append(kv.Spec.Configuration.DeveloperConfiguration.FeatureGates,
 		virtconfig.CPUManager,
 		virtconfig.IgnitionGate,
@@ -105,16 +95,8 @@ func AdjustKubeVirtResource() {
 		virtconfig.ExpandDisksGate,
 		virtconfig.WorkloadEncryptionSEV,
 		virtconfig.VMExportGate,
-		virtconfig.KubevirtSeccompProfile,
-		virtconfig.HotplugNetworkIfacesGate,
-		virtconfig.VMPersistentState,
-		virtconfig.VMLiveUpdateFeaturesGate,
 	)
-	if flags.DisableCustomSELinuxPolicy {
-		kv.Spec.Configuration.DeveloperConfiguration.FeatureGates = append(kv.Spec.Configuration.DeveloperConfiguration.FeatureGates,
-			virtconfig.DisableCustomSELinuxPolicy,
-		)
-	}
+	kv.Spec.Configuration.SELinuxLauncherType = "virt_launcher.process"
 
 	if kv.Spec.Configuration.NetworkConfiguration == nil {
 		testDefaultPermitSlirpInterface := true
@@ -140,7 +122,8 @@ func AdjustKubeVirtResource() {
 
 func waitForSchedulableNodeWithCPUManager() {
 
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 	Eventually(func() bool {
 		nodes, err := virtClient.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{LabelSelector: v1.NodeSchedulable + "=" + "true," + v1.CPUManager + "=true"})
 		Expect(err).ToNot(HaveOccurred(), "Should list compute nodes")
@@ -150,7 +133,8 @@ func waitForSchedulableNodeWithCPUManager() {
 
 func RestoreKubeVirtResource() {
 	if originalKV != nil {
-		virtClient := kubevirt.Client()
+		virtClient, err := kubecli.GetKubevirtClient()
+		util.PanicOnError(err)
 		data, err := json.Marshal(originalKV.Spec)
 		Expect(err).ToNot(HaveOccurred())
 		patchData := fmt.Sprintf(`[{ "op": "replace", "path": "/spec", "value": %s }]`, string(data))
@@ -161,6 +145,8 @@ func RestoreKubeVirtResource() {
 
 func ShouldAllowEmulation(virtClient kubecli.KubevirtClient) bool {
 	allowEmulation := false
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	kv := util.GetCurrentKv(virtClient)
 	if kv.Spec.Configuration.DeveloperConfiguration != nil {
@@ -173,7 +159,8 @@ func ShouldAllowEmulation(virtClient kubecli.KubevirtClient) bool {
 // UpdateKubeVirtConfigValue updates the given configuration in the kubevirt custom resource
 func UpdateKubeVirtConfigValue(kvConfig v1.KubeVirtConfiguration) *v1.KubeVirt {
 
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	kv := util.GetCurrentKv(virtClient)
 	old, err := json.Marshal(kv)
@@ -183,7 +170,10 @@ func UpdateKubeVirtConfigValue(kvConfig v1.KubeVirtConfiguration) *v1.KubeVirt {
 		return kv
 	}
 
-	Expect(CurrentSpecReport().IsSerial).To(BeTrue(), "Tests which alter the global kubevirt configuration must not be executed in parallel, see https://onsi.github.io/ginkgo/#serial-specs")
+	suiteConfig, _ := GinkgoConfiguration()
+	if suiteConfig.ParallelTotal > 1 {
+		Fail("Tests which alter the global kubevirt configuration must not be executed in parallel")
+	}
 
 	updatedKV := kv.DeepCopy()
 	updatedKV.Spec.Configuration = kvConfig

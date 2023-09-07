@@ -125,7 +125,7 @@ type CPUInstancetype struct {
 
 	// Required number of vCPUs to expose to the guest.
 	//
-	// The resulting CPU topology being derived from the optional PreferredCPUTopology attribute of CPUPreferences that itself defaults to PreferSockets.
+	// The resulting CPU topology being derived from the optional PreferredCPUTopology attribute of CPUPreferences that itself defaults to PreferCores.
 	Guest uint32 `json:"guest"`
 
 	// Model specifies the CPU model inside the VMI.

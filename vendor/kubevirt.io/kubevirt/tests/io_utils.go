@@ -25,9 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-	"kubevirt.io/kubevirt/tests/libnode"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -37,8 +34,8 @@ import (
 	"k8s.io/utils/pointer"
 
 	v1 "kubevirt.io/api/core/v1"
+	"kubevirt.io/client-go/kubecli"
 
-	"kubevirt.io/kubevirt/tests/exec"
 	"kubevirt.io/kubevirt/tests/flags"
 	. "kubevirt.io/kubevirt/tests/framework/matcher"
 	"kubevirt.io/kubevirt/tests/testsuite"
@@ -52,7 +49,8 @@ const (
 
 func NodeNameWithHandler() string {
 	listOptions := metav1.ListOptions{LabelSelector: v1.AppLabel + "=virt-handler"}
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	Expect(err).ToNot(HaveOccurred())
 	virtHandlerPods, err := virtClient.CoreV1().Pods(flags.KubeVirtInstallNamespace).List(context.Background(), listOptions)
 	Expect(err).ToNot(HaveOccurred())
 	node, err := virtClient.CoreV1().Nodes().Get(context.Background(), virtHandlerPods.Items[0].Spec.NodeName, metav1.GetOptions{})
@@ -61,28 +59,29 @@ func NodeNameWithHandler() string {
 }
 
 func ExecuteCommandInVirtHandlerPod(nodeName string, args []string) (stdout string, err error) {
-	virtClient := kubevirt.Client()
-
-	pod, err := libnode.GetVirtHandlerPod(virtClient, nodeName)
+	virtClient, err := kubecli.GetKubevirtClient()
 	if err != nil {
 		return stdout, err
 	}
 
-	stdout, stderr, err := exec.ExecuteCommandOnPodWithResults(virtClient, pod, "virt-handler", args)
+	pod, err := kubecli.NewVirtHandlerClient(virtClient).Namespace(flags.KubeVirtInstallNamespace).ForNode(nodeName).Pod()
+	if err != nil {
+		return stdout, err
+	}
+
+	stdout, stderr, err := ExecuteCommandOnPodV2(virtClient, pod, "virt-handler", args)
 	if err != nil {
 		return stdout, fmt.Errorf("Failed excuting command=%v, error=%v, stdout=%s, stderr=%s", args, err, stdout, stderr)
 	}
 	return stdout, nil
 }
 
-// The tests using the function CreateErrorDisk need to be run serially as it relies on the kernel scsi_debug module
 func CreateErrorDisk(nodeName string) (address string, device string) {
 	By("Creating error disk")
 	return CreateSCSIDisk(nodeName, []string{"opts=2", "every_nth=4", "dev_size_mb=8"})
 }
 
 // CreateSCSIDisk creates a SCSI disk using the scsi_debug module. This function should be used only to check SCSI disk functionalities and not for creating a filesystem or any data. The disk is stored in ram and it isn't suitable for storing large amount of data.
-// If a test uses this function, it needs to be run serially. The device is created directly on the node and the addition and removal of the scsi_debug kernel module could create flakiness
 func CreateSCSIDisk(nodeName string, opts []string) (address string, device string) {
 	args := []string{UsrBinVirtChroot, Mount, Proc1NsMnt, "exec", "--", "/usr/sbin/modprobe", "scsi_debug"}
 	args = append(args, opts...)
@@ -145,7 +144,8 @@ func FixErrorDevice(nodeName string) {
 }
 
 func executeDeviceMapperOnNode(nodeName string, cmd []string) {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	Expect(err).ToNot(HaveOccurred())
 
 	// Image that happens to have dmsetup
 	image := fmt.Sprintf("%s/vm-killer:%s", flags.KubeVirtRepoPrefix, flags.KubeVirtVersionTag)
@@ -171,7 +171,7 @@ func executeDeviceMapperOnNode(nodeName string, cmd []string) {
 			},
 		},
 	}
-	pod, err := virtClient.CoreV1().Pods(testsuite.NamespacePrivileged).Create(context.Background(), pod, metav1.CreateOptions{})
+	pod, err = virtClient.CoreV1().Pods(testsuite.NamespacePrivileged).Create(context.Background(), pod, metav1.CreateOptions{})
 	Expect(err).ToNot(HaveOccurred())
 
 	Eventually(ThisPod(pod), 30).Should(HaveSucceeded())
@@ -188,7 +188,10 @@ func CreatePVandPVCwithFaultyDisk(nodeName, devicePath, namespace string) (*core
 }
 
 func CreatePVandPVCwithSCSIDisk(nodeName, devicePath, namespace, storageClass, pvName, pvcName string) (*corev1.PersistentVolume, *corev1.PersistentVolumeClaim, error) {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	if err != nil {
+		return nil, nil, err
+	}
 
 	size := resource.MustParse("8Mi")
 	volumeMode := corev1.PersistentVolumeBlock
@@ -225,7 +228,7 @@ func CreatePVandPVCwithSCSIDisk(nodeName, devicePath, namespace, storageClass, p
 			},
 		},
 	}
-	pv, err := virtClient.CoreV1().PersistentVolumes().Create(context.Background(), pv, metav1.CreateOptions{})
+	pv, err = virtClient.CoreV1().PersistentVolumes().Create(context.Background(), pv, metav1.CreateOptions{})
 	if err != nil {
 		return nil, nil, err
 	}

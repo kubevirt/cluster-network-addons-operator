@@ -169,9 +169,7 @@ func (w *Worktree) excludeIgnoredChanges(changes merkletrie.Changes) merkletrie.
 		if len(path) != 0 {
 			isDir := (len(ch.To) > 0 && ch.To.IsDir()) || (len(ch.From) > 0 && ch.From.IsDir())
 			if m.Match(path, isDir) {
-				if len(ch.From) == 0 {
-					continue
-				}
+				continue
 			}
 		}
 		res = append(res, ch)

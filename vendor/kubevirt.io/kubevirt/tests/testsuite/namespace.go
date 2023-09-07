@@ -25,8 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -41,10 +39,8 @@ import (
 	"kubevirt.io/client-go/kubecli"
 
 	"kubevirt.io/kubevirt/pkg/controller"
-	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
 
 	"kubevirt.io/kubevirt/tests/flags"
-	"kubevirt.io/kubevirt/tests/framework/checks"
 	"kubevirt.io/kubevirt/tests/framework/cleanup"
 	"kubevirt.io/kubevirt/tests/libnet"
 	"kubevirt.io/kubevirt/tests/libstorage"
@@ -91,32 +87,8 @@ func CleanNamespaces() {
 		}
 
 		// Clean namespace labels
-		err = resetNamespaceLabelsToDefault(virtCli, namespace)
+		err = libnet.RemoveAllLabelsFromNamespace(virtCli, namespace)
 		util.PanicOnError(err)
-
-		clusterinstancetypes, err := virtCli.VirtualMachineClusterInstancetype().List(context.Background(), listOptions)
-		util.PanicOnError(err)
-		for _, clusterinstancetypes := range clusterinstancetypes.Items {
-			util.PanicOnError(virtCli.VirtualMachineClusterInstancetype().Delete(context.Background(), clusterinstancetypes.Name, metav1.DeleteOptions{}))
-		}
-
-		instancetype, err := virtCli.VirtualMachineInstancetype(namespace).List(context.Background(), metav1.ListOptions{})
-		util.PanicOnError(err)
-		for _, instancetype := range instancetype.Items {
-			util.PanicOnError(virtCli.VirtualMachineInstancetype(namespace).Delete(context.Background(), instancetype.Name, metav1.DeleteOptions{}))
-		}
-
-		clusterPreference, err := virtCli.VirtualMachineClusterPreference().List(context.Background(), listOptions)
-		util.PanicOnError(err)
-		for _, clusterpreference := range clusterPreference.Items {
-			util.PanicOnError(virtCli.VirtualMachineClusterPreference().Delete(context.Background(), clusterpreference.Name, metav1.DeleteOptions{}))
-		}
-
-		vmPreference, err := virtCli.VirtualMachinePreference(namespace).List(context.Background(), metav1.ListOptions{})
-		util.PanicOnError(err)
-		for _, preference := range vmPreference.Items {
-			util.PanicOnError(virtCli.VirtualMachinePreference(namespace).Delete(context.Background(), preference.Name, metav1.DeleteOptions{}))
-		}
 
 		//Remove all Jobs
 		jobDeleteStrategy := metav1.DeletePropagationOrphan
@@ -136,11 +108,11 @@ func CleanNamespaces() {
 
 		// Remove all VMIs
 		util.PanicOnError(virtCli.RestClient().Delete().Namespace(namespace).Resource("virtualmachineinstances").Do(context.Background()).Error())
-		vmis, err := virtCli.VirtualMachineInstance(namespace).List(context.Background(), &metav1.ListOptions{})
+		vmis, err := virtCli.VirtualMachineInstance(namespace).List(&metav1.ListOptions{})
 		util.PanicOnError(err)
 		for _, vmi := range vmis.Items {
 			if controller.HasFinalizer(&vmi, v1.VirtualMachineInstanceFinalizer) {
-				_, err := virtCli.VirtualMachineInstance(vmi.Namespace).Patch(context.Background(), vmi.Name, types.JSONPatchType, []byte("[{ \"op\": \"remove\", \"path\": \"/metadata/finalizers\" }]"), &metav1.PatchOptions{})
+				_, err := virtCli.VirtualMachineInstance(vmi.Namespace).Patch(vmi.Name, types.JSONPatchType, []byte("[{ \"op\": \"remove\", \"path\": \"/metadata/finalizers\" }]"), &metav1.PatchOptions{})
 				if !errors.IsNotFound(err) {
 					util.PanicOnError(err)
 				}
@@ -163,22 +135,7 @@ func CleanNamespaces() {
 		svcList, err := virtCli.CoreV1().Services(namespace).List(context.Background(), metav1.ListOptions{})
 		util.PanicOnError(err)
 		for _, svc := range svcList.Items {
-			err := virtCli.CoreV1().Services(namespace).Delete(context.Background(), svc.Name, metav1.DeleteOptions{})
-			if errors.IsNotFound(err) {
-				continue
-			}
-			Expect(err).ToNot(HaveOccurred())
-		}
-
-		// Remove all ResourceQuota
-		rqList, err := virtCli.CoreV1().ResourceQuotas(namespace).List(context.Background(), metav1.ListOptions{})
-		util.PanicOnError(err)
-		for _, rq := range rqList.Items {
-			err := virtCli.CoreV1().ResourceQuotas(namespace).Delete(context.Background(), rq.Name, metav1.DeleteOptions{})
-			if errors.IsNotFound(err) {
-				continue
-			}
-			Expect(err).ToNot(HaveOccurred())
+			util.PanicOnError(virtCli.CoreV1().Services(namespace).Delete(context.Background(), svc.Name, metav1.DeleteOptions{}))
 		}
 
 		// Remove PVCs
@@ -252,43 +209,12 @@ func CleanNamespaces() {
 		for _, clone := range clonesList.Items {
 			util.PanicOnError(virtCli.VirtualMachineClone(namespace).Delete(context.Background(), clone.Name, metav1.DeleteOptions{}))
 		}
-
-		// Remove vm snapshots
-		util.PanicOnError(virtCli.VirtualMachineSnapshot(namespace).DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{}))
-		snapshots, err := virtCli.VirtualMachineSnapshot(namespace).List(context.Background(), metav1.ListOptions{})
-		util.PanicOnError(err)
-		vmSnapshotFinalizer := "snapshot.kubevirt.io/vmsnapshot-protection"
-		for _, snapshot := range snapshots.Items {
-			if controller.HasFinalizer(&snapshot, vmSnapshotFinalizer) {
-				_, err := virtCli.VirtualMachineSnapshot(snapshot.Namespace).Patch(context.Background(), snapshot.Name, types.JSONPatchType, []byte("[{ \"op\": \"remove\", \"path\": \"/metadata/finalizers\" }]"), metav1.PatchOptions{})
-				if !errors.IsNotFound(err) {
-					util.PanicOnError(err)
-				}
-			}
-		}
-
-		util.PanicOnError(virtCli.VirtualMachineSnapshotContent(namespace).DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{}))
-		snapshotContentList, err := virtCli.VirtualMachineSnapshotContent(namespace).List(context.Background(), metav1.ListOptions{})
-		util.PanicOnError(err)
-		vmSnapshotContentFinalizer := "snapshot.kubevirt.io/vmsnapshotcontent-protection"
-		for _, snapshotContent := range snapshotContentList.Items {
-			if controller.HasFinalizer(&snapshotContent, vmSnapshotContentFinalizer) {
-				_, err := virtCli.VirtualMachineSnapshot(snapshotContent.Namespace).Patch(context.Background(), snapshotContent.Name, types.JSONPatchType, []byte("[{ \"op\": \"remove\", \"path\": \"/metadata/finalizers\" }]"), metav1.PatchOptions{})
-				if !errors.IsNotFound(err) {
-					util.PanicOnError(err)
-				}
-			}
-		}
-
-		util.PanicOnError(virtCli.VirtualMachineRestore(namespace).DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{}))
-
-		// Remove events
-		util.PanicOnError(virtCli.CoreV1().Events(namespace).DeleteCollection(context.Background(), metav1.DeleteOptions{}, metav1.ListOptions{}))
 	}
 }
 
 func removeNamespaces() {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	// First send an initial delete to every namespace
 	for _, namespace := range TestNamespaces {
@@ -309,7 +235,10 @@ func removeNamespaces() {
 }
 
 func removeAllGroupVersionResourceFromNamespace(groupVersionResource schema.GroupVersionResource, namespace string) error {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	if err != nil {
+		return err
+	}
 
 	gvr, err := virtCli.DynamicClient().Resource(groupVersionResource).Namespace(namespace).List(context.Background(), metav1.ListOptions{})
 	if errors.IsNotFound(err) {
@@ -329,7 +258,8 @@ func removeAllGroupVersionResourceFromNamespace(groupVersionResource schema.Grou
 }
 
 func detectInstallNamespace() {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 	kvs, err := virtCli.KubeVirt("").List(&metav1.ListOptions{})
 	util.PanicOnError(err)
 	if len(kvs.Items) == 0 {
@@ -341,41 +271,26 @@ func detectInstallNamespace() {
 	flags.KubeVirtInstallNamespace = kvs.Items[0].Namespace
 }
 
-func GetLabelsForNamespace(namespace string) map[string]string {
-	labels := map[string]string{
-		cleanup.TestLabelForNamespace(namespace): "",
-	}
-	if namespace == NamespacePrivileged {
-		labels["pod-security.kubernetes.io/enforce"] = "privileged"
-		labels["pod-security.kubernetes.io/warn"] = "privileged"
-		labels["security.openshift.io/scc.podSecurityLabelSync"] = "false"
-	}
-
-	return labels
-}
-
-func resetNamespaceLabelsToDefault(client kubecli.KubevirtClient, namespace string) error {
-	return libnet.PatchNamespace(client, namespace, func(ns *k8sv1.Namespace) {
-		if ns.Labels == nil {
-			return
-		}
-		ns.Labels = GetLabelsForNamespace(namespace)
-	})
-}
-
 func createNamespaces() {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	// Create a Test Namespaces
 	for _, namespace := range TestNamespaces {
 		ns := &k8sv1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   namespace,
-				Labels: GetLabelsForNamespace(namespace),
+				Name: namespace,
+				Labels: map[string]string{
+					cleanup.TestLabelForNamespace(namespace):         "",
+					"security.openshift.io/scc.podSecurityLabelSync": "false",
+				},
 			},
 		}
+		if namespace == NamespacePrivileged {
+			ns.Labels["pod-security.kubernetes.io/enforce"] = "privileged"
+		}
 
-		_, err := virtCli.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
+		_, err = virtCli.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
 		if err != nil {
 			util.PanicOnError(err)
 		}
@@ -392,16 +307,4 @@ func CalculateNamespaces() {
 	// differently when running in parallel
 	NamespaceTestOperator = fmt.Sprintf("%s%d", NamespaceTestOperator, worker)
 	TestNamespaces = []string{util.NamespaceTestDefault, NamespaceTestAlternative, NamespaceTestOperator, NamespacePrivileged}
-}
-
-func GetTestNamespace(object metav1.Object) string {
-	if object != nil && object.GetNamespace() != "" {
-		return object.GetNamespace()
-	}
-
-	if checks.HasFeature(virtconfig.Root) {
-		return NamespacePrivileged
-	}
-
-	return util.NamespaceTestDefault
 }

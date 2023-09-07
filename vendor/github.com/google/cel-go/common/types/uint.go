@@ -16,7 +16,6 @@ package types
 
 import (
 	"fmt"
-	"math"
 	"reflect"
 	"strconv"
 
@@ -59,30 +58,28 @@ func (i Uint) Add(other ref.Val) ref.Val {
 	}
 	val, err := addUint64Checked(uint64(i), uint64(otherUint))
 	if err != nil {
-		return WrapErr(err)
+		return wrapErr(err)
 	}
 	return Uint(val)
 }
 
 // Compare implements traits.Comparer.Compare.
 func (i Uint) Compare(other ref.Val) ref.Val {
-	switch ov := other.(type) {
-	case Double:
-		if math.IsNaN(float64(ov)) {
-			return NewErr("NaN values cannot be ordered")
-		}
-		return compareUintDouble(i, ov)
-	case Int:
-		return compareUintInt(i, ov)
-	case Uint:
-		return compareUint(i, ov)
-	default:
+	otherUint, ok := other.(Uint)
+	if !ok {
 		return MaybeNoSuchOverloadErr(other)
 	}
+	if i < otherUint {
+		return IntNegOne
+	}
+	if i > otherUint {
+		return IntOne
+	}
+	return IntZero
 }
 
 // ConvertToNative implements ref.Val.ConvertToNative.
-func (i Uint) ConvertToNative(typeDesc reflect.Type) (any, error) {
+func (i Uint) ConvertToNative(typeDesc reflect.Type) (interface{}, error) {
 	switch typeDesc.Kind() {
 	case reflect.Uint, reflect.Uint32:
 		v, err := uint64ToUint32Checked(uint64(i))
@@ -149,7 +146,7 @@ func (i Uint) ConvertToType(typeVal ref.Type) ref.Val {
 	case IntType:
 		v, err := uint64ToInt64Checked(uint64(i))
 		if err != nil {
-			return WrapErr(err)
+			return wrapErr(err)
 		}
 		return Int(v)
 	case UintType:
@@ -172,31 +169,18 @@ func (i Uint) Divide(other ref.Val) ref.Val {
 	}
 	div, err := divideUint64Checked(uint64(i), uint64(otherUint))
 	if err != nil {
-		return WrapErr(err)
+		return wrapErr(err)
 	}
 	return Uint(div)
 }
 
 // Equal implements ref.Val.Equal.
 func (i Uint) Equal(other ref.Val) ref.Val {
-	switch ov := other.(type) {
-	case Double:
-		if math.IsNaN(float64(ov)) {
-			return False
-		}
-		return Bool(compareUintDouble(i, ov) == 0)
-	case Int:
-		return Bool(compareUintInt(i, ov) == 0)
-	case Uint:
-		return Bool(i == ov)
-	default:
-		return False
+	otherUint, ok := other.(Uint)
+	if !ok {
+		return MaybeNoSuchOverloadErr(other)
 	}
-}
-
-// IsZeroValue returns true if the uint is zero.
-func (i Uint) IsZeroValue() bool {
-	return i == 0
+	return Bool(i == otherUint)
 }
 
 // Modulo implements traits.Modder.Modulo.
@@ -207,7 +191,7 @@ func (i Uint) Modulo(other ref.Val) ref.Val {
 	}
 	mod, err := moduloUint64Checked(uint64(i), uint64(otherUint))
 	if err != nil {
-		return WrapErr(err)
+		return wrapErr(err)
 	}
 	return Uint(mod)
 }
@@ -220,7 +204,7 @@ func (i Uint) Multiply(other ref.Val) ref.Val {
 	}
 	val, err := multiplyUint64Checked(uint64(i), uint64(otherUint))
 	if err != nil {
-		return WrapErr(err)
+		return wrapErr(err)
 	}
 	return Uint(val)
 }
@@ -233,7 +217,7 @@ func (i Uint) Subtract(subtrahend ref.Val) ref.Val {
 	}
 	val, err := subtractUint64Checked(uint64(i), uint64(subtraUint))
 	if err != nil {
-		return WrapErr(err)
+		return wrapErr(err)
 	}
 	return Uint(val)
 }
@@ -244,7 +228,7 @@ func (i Uint) Type() ref.Type {
 }
 
 // Value implements ref.Val.Value.
-func (i Uint) Value() any {
+func (i Uint) Value() interface{} {
 	return uint64(i)
 }
 

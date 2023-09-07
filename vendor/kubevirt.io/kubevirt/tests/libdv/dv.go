@@ -25,8 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
-
-	cd "kubevirt.io/kubevirt/tests/containerdisk"
 )
 
 const (
@@ -62,28 +60,17 @@ func WithNamespace(namespace string) dvOption {
 	}
 }
 
-type pvcOption func(*corev1.PersistentVolumeClaimSpec)
-
 // WithPVC is a dvOption to add a PVCOption spec to the DataVolume
-// The function receives an optional list of pvcOption, to override the defaults
-//
-// The default values are:
-// * no storage class
-// * access mode of ReadWriteOnce
-// * volume size of cd.CirrosVolumeSize
-// * no volume mode. kubernetes default is PersistentVolumeFilesystem
-func WithPVC(options ...pvcOption) dvOption {
+func WithPVC(storageClass string, size string, accessMode corev1.PersistentVolumeAccessMode, volumeMode corev1.PersistentVolumeMode) dvOption {
 	pvc := &corev1.PersistentVolumeClaimSpec{
-		AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		AccessModes: []corev1.PersistentVolumeAccessMode{accessMode},
+		VolumeMode:  &volumeMode,
 		Resources: corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				"storage": resource.MustParse(cd.CirrosVolumeSize),
+				"storage": resource.MustParse(size),
 			},
 		},
-	}
-
-	for _, opt := range options {
-		opt(pvc)
+		StorageClassName: &storageClass,
 	}
 
 	return func(dv *v1beta1.DataVolume) {
@@ -134,8 +121,6 @@ func WithPVCSource(namespace, name string) dvOption {
 	})
 }
 
-// WithForceBindAnnotation adds the "cdi.kubevirt.io/storage.bind.immediate.requested" annotation to the DV,
-// with the value of "true"
 func WithForceBindAnnotation() dvOption {
 	return func(dv *v1beta1.DataVolume) {
 		if dv.Annotations == nil {
@@ -147,61 +132,4 @@ func WithForceBindAnnotation() dvOption {
 
 func randName() string {
 	return "test-datavolume-" + rand.String(dvRandomNameLength)
-}
-
-// PVC Options
-
-// PVCWithStorageClass add the sc storage class name to the DV
-func PVCWithStorageClass(sc string) pvcOption {
-	return func(pvc *corev1.PersistentVolumeClaimSpec) {
-		if pvc == nil {
-			return
-		}
-
-		pvc.StorageClassName = &sc
-	}
-}
-
-// PVCWithVolumeSize overrides the default volume size (cd.CirrosVolumeSize), with the size parameter
-// The size parameter must be in parsable valid quantity string.
-func PVCWithVolumeSize(size string) pvcOption {
-	return func(pvc *corev1.PersistentVolumeClaimSpec) {
-		if pvc == nil {
-			return
-		}
-
-		pvc.Resources.Requests = corev1.ResourceList{"storage": resource.MustParse(size)}
-	}
-}
-
-// PVCWithVolumeMode adds the volume mode to the DV
-func PVCWithVolumeMode(volumeMode corev1.PersistentVolumeMode) pvcOption {
-	return func(pvc *corev1.PersistentVolumeClaimSpec) {
-		if pvc == nil {
-			return
-		}
-
-		pvc.VolumeMode = &volumeMode
-	}
-}
-
-// PVCWithBlockVolumeMode adds the PersistentVolumeBlock volume mode to the DV
-func PVCWithBlockVolumeMode() pvcOption {
-	return PVCWithVolumeMode(corev1.PersistentVolumeBlock)
-}
-
-// PVCWithAccessMode overrides the DV default access mode (ReadWriteOnce) with the accessMode parameter
-func PVCWithAccessMode(accessMode corev1.PersistentVolumeAccessMode) pvcOption {
-	return func(pvc *corev1.PersistentVolumeClaimSpec) {
-		if pvc == nil {
-			return
-		}
-
-		pvc.AccessModes = []corev1.PersistentVolumeAccessMode{accessMode}
-	}
-}
-
-// PVCWithReadWriteManyAccessMode set the DV access mode to ReadWriteMany
-func PVCWithReadWriteManyAccessMode() pvcOption {
-	return PVCWithAccessMode(corev1.ReadWriteMany)
 }

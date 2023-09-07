@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
 	"kubevirt.io/kubevirt/tests/libnode"
 
 	"github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 
 	"kubevirt.io/kubevirt/pkg/util/cluster"
-	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
+
+	"kubevirt.io/client-go/kubecli"
 
 	"kubevirt.io/kubevirt/tests/util"
 
@@ -49,9 +48,10 @@ func Has2MiHugepages(node *v1.Node) bool {
 }
 
 func HasFeature(feature string) bool {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
-	var featureGates []string
+	featureGates := []string{}
 	kv := util.GetCurrentKv(virtClient)
 	if kv.Spec.Configuration.DeveloperConfiguration != nil {
 		featureGates = kv.Spec.Configuration.DeveloperConfiguration.FeatureGates
@@ -66,10 +66,10 @@ func HasFeature(feature string) bool {
 	return false
 }
 
-func IsSEVCapable(node *v1.Node, sevLabel string) bool {
+func IsSEVCapable(node *v1.Node) bool {
 	gomega.Expect(node).ToNot(gomega.BeNil())
 	for label, _ := range node.Labels {
-		if label == sevLabel {
+		if label == v12.SEVLabel {
 			return true
 		}
 	}
@@ -86,7 +86,8 @@ func HasLiveMigration() bool {
 
 func HasAtLeastTwoNodes() bool {
 	var nodes *v1.NodeList
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	gomega.Eventually(func() []v1.Node {
 		nodes = libnode.GetAllSchedulableNodes(virtClient)
@@ -97,7 +98,8 @@ func HasAtLeastTwoNodes() bool {
 }
 
 func IsOpenShift() bool {
-	virtClient := kubevirt.Client()
+	virtClient, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	isOpenShift, err := cluster.IsOnOpenShift(virtClient)
 	if err != nil {
@@ -106,15 +108,4 @@ func IsOpenShift() bool {
 	}
 
 	return isOpenShift
-}
-
-func RequireFeatureGateVirtHandlerRestart(feature string) bool {
-	// List of feature gates that requires virt-handler to be redeployed
-	fgs := []string{virtconfig.PersistentReservation}
-	for _, f := range fgs {
-		if feature == f {
-			return true
-		}
-	}
-	return false
 }

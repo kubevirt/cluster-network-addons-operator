@@ -36,29 +36,9 @@ import (
 // - Floating point values are converted to the small number of digits needed to represent the value.
 // - Spacing around punctuation marks may be lost.
 // - Parentheses will only be applied when they affect operator precedence.
-//
-// This function optionally takes in one or more UnparserOption to alter the unparsing behavior, such as
-// performing word wrapping on expressions.
-func Unparse(expr *exprpb.Expr, info *exprpb.SourceInfo, opts ...UnparserOption) (string, error) {
-	unparserOpts := &unparserOption{
-		wrapOnColumn:         defaultWrapOnColumn,
-		wrapAfterColumnLimit: defaultWrapAfterColumnLimit,
-		operatorsToWrapOn:    defaultOperatorsToWrapOn,
-	}
-
-	var err error
-	for _, opt := range opts {
-		unparserOpts, err = opt(unparserOpts)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	un := &unparser{
-		info:    info,
-		options: unparserOpts,
-	}
-	err = un.visit(expr)
+func Unparse(expr *exprpb.Expr, info *exprpb.SourceInfo) (string, error) {
+	un := &unparser{info: info}
+	err := un.visit(expr)
 	if err != nil {
 		return "", err
 	}
@@ -67,10 +47,8 @@ func Unparse(expr *exprpb.Expr, info *exprpb.SourceInfo, opts ...UnparserOption)
 
 // unparser visits an expression to reconstruct a human-readable string from an AST.
 type unparser struct {
-	str              strings.Builder
-	info             *exprpb.SourceInfo
-	options          *unparserOption
-	lastWrappedIndex int
+	str  strings.Builder
+	info *exprpb.SourceInfo
 }
 
 func (un *unparser) visit(expr *exprpb.Expr) error {
@@ -81,7 +59,7 @@ func (un *unparser) visit(expr *exprpb.Expr) error {
 	if visited || err != nil {
 		return err
 	}
-	switch expr.GetExprKind().(type) {
+	switch expr.ExprKind.(type) {
 	case *exprpb.Expr_CallExpr:
 		return un.visitCall(expr)
 	case *exprpb.Expr_ConstExpr:
@@ -106,15 +84,9 @@ func (un *unparser) visitCall(expr *exprpb.Expr) error {
 	// ternary operator
 	case operators.Conditional:
 		return un.visitCallConditional(expr)
-	// optional select operator
-	case operators.OptSelect:
-		return un.visitOptSelect(expr)
 	// index operator
 	case operators.Index:
 		return un.visitCallIndex(expr)
-	// optional index operator
-	case operators.OptIndex:
-		return un.visitCallOptIndex(expr)
 	// unary operators
 	case operators.LogicalNot, operators.Negate:
 		return un.visitCallUnary(expr)
@@ -163,8 +135,9 @@ func (un *unparser) visitCallBinary(expr *exprpb.Expr) error {
 	if !found {
 		return fmt.Errorf("cannot unmangle operator: %s", fun)
 	}
-
-	un.writeOperatorWithWrapping(fun, unmangled)
+	un.str.WriteString(" ")
+	un.str.WriteString(unmangled)
+	un.str.WriteString(" ")
 	return un.visitMaybeNested(rhs, rhsParen)
 }
 
@@ -178,8 +151,7 @@ func (un *unparser) visitCallConditional(expr *exprpb.Expr) error {
 	if err != nil {
 		return err
 	}
-	un.writeOperatorWithWrapping(operators.Conditional, "?")
-
+	un.str.WriteString(" ? ")
 	// add parens if operand is a conditional itself.
 	nested = isSamePrecedence(operators.Conditional, args[1]) ||
 		isComplexOperator(args[1])
@@ -187,7 +159,6 @@ func (un *unparser) visitCallConditional(expr *exprpb.Expr) error {
 	if err != nil {
 		return err
 	}
-
 	un.str.WriteString(" : ")
 	// add parens if operand is a conditional itself.
 	nested = isSamePrecedence(operators.Conditional, args[2]) ||
@@ -224,14 +195,6 @@ func (un *unparser) visitCallFunc(expr *exprpb.Expr) error {
 }
 
 func (un *unparser) visitCallIndex(expr *exprpb.Expr) error {
-	return un.visitCallIndexInternal(expr, "[")
-}
-
-func (un *unparser) visitCallOptIndex(expr *exprpb.Expr) error {
-	return un.visitCallIndexInternal(expr, "[?")
-}
-
-func (un *unparser) visitCallIndexInternal(expr *exprpb.Expr, op string) error {
 	c := expr.GetCallExpr()
 	args := c.GetArgs()
 	nested := isBinaryOrTernaryOperator(args[0])
@@ -239,7 +202,7 @@ func (un *unparser) visitCallIndexInternal(expr *exprpb.Expr, op string) error {
 	if err != nil {
 		return err
 	}
-	un.str.WriteString(op)
+	un.str.WriteString("[")
 	err = un.visit(args[1])
 	if err != nil {
 		return err
@@ -263,7 +226,7 @@ func (un *unparser) visitCallUnary(expr *exprpb.Expr) error {
 
 func (un *unparser) visitConst(expr *exprpb.Expr) error {
 	c := expr.GetConstExpr()
-	switch c.GetConstantKind().(type) {
+	switch c.ConstantKind.(type) {
 	case *exprpb.Constant_BoolValue:
 		un.str.WriteString(strconv.FormatBool(c.GetBoolValue()))
 	case *exprpb.Constant_BytesValue:
@@ -276,9 +239,6 @@ func (un *unparser) visitConst(expr *exprpb.Expr) error {
 		// represent the float using the minimum required digits
 		d := strconv.FormatFloat(c.GetDoubleValue(), 'g', -1, 64)
 		un.str.WriteString(d)
-		if !strings.Contains(d, ".") {
-			un.str.WriteString(".0")
-		}
 	case *exprpb.Constant_Int64Value:
 		i := strconv.FormatInt(c.GetInt64Value(), 10)
 		un.str.WriteString(i)
@@ -306,15 +266,8 @@ func (un *unparser) visitIdent(expr *exprpb.Expr) error {
 func (un *unparser) visitList(expr *exprpb.Expr) error {
 	l := expr.GetListExpr()
 	elems := l.GetElements()
-	optIndices := make(map[int]bool, len(elems))
-	for _, idx := range l.GetOptionalIndices() {
-		optIndices[int(idx)] = true
-	}
 	un.str.WriteString("[")
 	for i, elem := range elems {
-		if optIndices[i] {
-			un.str.WriteString("?")
-		}
 		err := un.visit(elem)
 		if err != nil {
 			return err
@@ -327,32 +280,20 @@ func (un *unparser) visitList(expr *exprpb.Expr) error {
 	return nil
 }
 
-func (un *unparser) visitOptSelect(expr *exprpb.Expr) error {
-	c := expr.GetCallExpr()
-	args := c.GetArgs()
-	operand := args[0]
-	field := args[1].GetConstExpr().GetStringValue()
-	return un.visitSelectInternal(operand, false, ".?", field)
-}
-
 func (un *unparser) visitSelect(expr *exprpb.Expr) error {
 	sel := expr.GetSelectExpr()
-	return un.visitSelectInternal(sel.GetOperand(), sel.GetTestOnly(), ".", sel.GetField())
-}
-
-func (un *unparser) visitSelectInternal(operand *exprpb.Expr, testOnly bool, op string, field string) error {
 	// handle the case when the select expression was generated by the has() macro.
-	if testOnly {
+	if sel.GetTestOnly() {
 		un.str.WriteString("has(")
 	}
-	nested := !testOnly && isBinaryOrTernaryOperator(operand)
-	err := un.visitMaybeNested(operand, nested)
+	nested := !sel.GetTestOnly() && isBinaryOrTernaryOperator(sel.GetOperand())
+	err := un.visitMaybeNested(sel.GetOperand(), nested)
 	if err != nil {
 		return err
 	}
-	un.str.WriteString(op)
-	un.str.WriteString(field)
-	if testOnly {
+	un.str.WriteString(".")
+	un.str.WriteString(sel.GetField())
+	if sel.GetTestOnly() {
 		un.str.WriteString(")")
 	}
 	return nil
@@ -375,9 +316,6 @@ func (un *unparser) visitStructMsg(expr *exprpb.Expr) error {
 	un.str.WriteString("{")
 	for i, entry := range entries {
 		f := entry.GetFieldKey()
-		if entry.GetOptionalEntry() {
-			un.str.WriteString("?")
-		}
 		un.str.WriteString(f)
 		un.str.WriteString(": ")
 		v := entry.GetValue()
@@ -399,9 +337,6 @@ func (un *unparser) visitStructMap(expr *exprpb.Expr) error {
 	un.str.WriteString("{")
 	for i, entry := range entries {
 		k := entry.GetMapKey()
-		if entry.GetOptionalEntry() {
-			un.str.WriteString("?")
-		}
 		err := un.visit(k)
 		if err != nil {
 			return err
@@ -508,130 +443,4 @@ func bytesToOctets(byteVal []byte) string {
 		fmt.Fprintf(&b, "\\%03o", c)
 	}
 	return b.String()
-}
-
-// writeOperatorWithWrapping outputs the operator and inserts a newline for operators configured
-// in the unparser options.
-func (un *unparser) writeOperatorWithWrapping(fun string, unmangled string) bool {
-	_, wrapOperatorExists := un.options.operatorsToWrapOn[fun]
-	lineLength := un.str.Len() - un.lastWrappedIndex + len(fun)
-
-	if wrapOperatorExists && lineLength >= un.options.wrapOnColumn {
-		un.lastWrappedIndex = un.str.Len()
-		// wrapAfterColumnLimit flag dictates whether the newline is placed
-		// before or after the operator
-		if un.options.wrapAfterColumnLimit {
-			// Input: a && b
-			// Output: a &&\nb
-			un.str.WriteString(" ")
-			un.str.WriteString(unmangled)
-			un.str.WriteString("\n")
-		} else {
-			// Input: a && b
-			// Output: a\n&& b
-			un.str.WriteString("\n")
-			un.str.WriteString(unmangled)
-			un.str.WriteString(" ")
-		}
-		return true
-	}
-	un.str.WriteString(" ")
-	un.str.WriteString(unmangled)
-	un.str.WriteString(" ")
-	return false
-}
-
-// Defined defaults for the unparser options
-var (
-	defaultWrapOnColumn         = 80
-	defaultWrapAfterColumnLimit = true
-	defaultOperatorsToWrapOn    = map[string]bool{
-		operators.LogicalAnd: true,
-		operators.LogicalOr:  true,
-	}
-)
-
-// UnparserOption is a functional option for configuring the output formatting
-// of the Unparse function.
-type UnparserOption func(*unparserOption) (*unparserOption, error)
-
-// Internal representation of the UnparserOption type
-type unparserOption struct {
-	wrapOnColumn         int
-	operatorsToWrapOn    map[string]bool
-	wrapAfterColumnLimit bool
-}
-
-// WrapOnColumn wraps the output expression when its string length exceeds a specified limit
-// for operators set by WrapOnOperators function or by default, "&&" and "||" will be wrapped.
-//
-// Example usage:
-//
-//	Unparse(expr, sourceInfo, WrapOnColumn(40), WrapOnOperators(Operators.LogicalAnd))
-//
-// This will insert a newline immediately after the logical AND operator for the below example input:
-//
-// Input:
-// 'my-principal-group' in request.auth.claims && request.auth.claims.iat > now - duration('5m')
-//
-// Output:
-// 'my-principal-group' in request.auth.claims &&
-// request.auth.claims.iat > now - duration('5m')
-func WrapOnColumn(col int) UnparserOption {
-	return func(opt *unparserOption) (*unparserOption, error) {
-		if col < 1 {
-			return nil, fmt.Errorf("Invalid unparser option. Wrap column value must be greater than or equal to 1. Got %v instead", col)
-		}
-		opt.wrapOnColumn = col
-		return opt, nil
-	}
-}
-
-// WrapOnOperators specifies which operators to perform word wrapping on an output expression when its string length
-// exceeds the column limit set by WrapOnColumn function.
-//
-// Word wrapping is supported on non-unary symbolic operators. Refer to operators.go for the full list
-//
-// This will replace any previously supplied operators instead of merging them.
-func WrapOnOperators(symbols ...string) UnparserOption {
-	return func(opt *unparserOption) (*unparserOption, error) {
-		opt.operatorsToWrapOn = make(map[string]bool)
-		for _, symbol := range symbols {
-			_, found := operators.FindReverse(symbol)
-			if !found {
-				return nil, fmt.Errorf("Invalid unparser option. Unsupported operator: %s", symbol)
-			}
-			arity := operators.Arity(symbol)
-			if arity < 2 {
-				return nil, fmt.Errorf("Invalid unparser option. Unary operators are unsupported: %s", symbol)
-			}
-
-			opt.operatorsToWrapOn[symbol] = true
-		}
-
-		return opt, nil
-	}
-}
-
-// WrapAfterColumnLimit dictates whether to insert a newline before or after the specified operator
-// when word wrapping is performed.
-//
-// Example usage:
-//
-//	Unparse(expr, sourceInfo, WrapOnColumn(40), WrapOnOperators(Operators.LogicalAnd), WrapAfterColumnLimit(false))
-//
-// This will insert a newline immediately before the logical AND operator for the below example input, ensuring
-// that the length of a line never exceeds the specified column limit:
-//
-// Input:
-// 'my-principal-group' in request.auth.claims && request.auth.claims.iat > now - duration('5m')
-//
-// Output:
-// 'my-principal-group' in request.auth.claims
-// && request.auth.claims.iat > now - duration('5m')
-func WrapAfterColumnLimit(wrapAfter bool) UnparserOption {
-	return func(opt *unparserOption) (*unparserOption, error) {
-		opt.wrapAfterColumnLimit = wrapAfter
-		return opt, nil
-	}
 }

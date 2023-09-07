@@ -3,7 +3,6 @@ package libnet
 import (
 	"context"
 	"encoding/json"
-	"reflect"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,10 +10,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 
 	"kubevirt.io/client-go/kubecli"
+
+	"kubevirt.io/kubevirt/tests/framework/cleanup"
 )
 
 func AddLabelToNamespace(client kubecli.KubevirtClient, namespace, key, value string) error {
-	return PatchNamespace(client, namespace, func(ns *v1.Namespace) {
+	return patchNamespace(client, namespace, func(ns *v1.Namespace) {
 		if ns.Labels == nil {
 			ns.Labels = map[string]string{}
 		}
@@ -23,7 +24,7 @@ func AddLabelToNamespace(client kubecli.KubevirtClient, namespace, key, value st
 }
 
 func RemoveLabelFromNamespace(client kubecli.KubevirtClient, namespace, key string) error {
-	return PatchNamespace(client, namespace, func(ns *v1.Namespace) {
+	return patchNamespace(client, namespace, func(ns *v1.Namespace) {
 		if ns.Labels == nil {
 			return
 		}
@@ -31,29 +32,37 @@ func RemoveLabelFromNamespace(client kubecli.KubevirtClient, namespace, key stri
 	})
 }
 
-func PatchNamespace(client kubecli.KubevirtClient, namespace string, patchFunc func(*v1.Namespace)) error {
+func RemoveAllLabelsFromNamespace(client kubecli.KubevirtClient, namespace string) error {
+	return patchNamespace(client, namespace, func(ns *v1.Namespace) {
+		if ns.Labels == nil {
+			return
+		}
+		ns.Labels = map[string]string{
+			cleanup.TestLabelForNamespace(namespace): "",
+		}
+	})
+}
+
+func patchNamespace(client kubecli.KubevirtClient, namespace string, patchFunc func(*v1.Namespace)) error {
 	ns, err := client.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	old, err := json.Marshal(ns)
 	if err != nil {
 		return err
 	}
 
 	newNS := ns.DeepCopy()
 	patchFunc(newNS)
-	if reflect.DeepEqual(ns, newNS) {
-		return nil
-	}
-
-	oldJSON, err := json.Marshal(ns)
-	if err != nil {
-		return err
-	}
 
 	newJSON, err := json.Marshal(newNS)
 	if err != nil {
 		return err
 	}
 
-	patch, err := strategicpatch.CreateTwoWayMergePatch(oldJSON, newJSON, ns)
+	patch, err := strategicpatch.CreateTwoWayMergePatch(old, newJSON, ns)
 	if err != nil {
 		return err
 	}

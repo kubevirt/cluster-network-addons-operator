@@ -32,17 +32,13 @@ func LookupPodNetwork(networks []v1.Network) *v1.Network {
 }
 
 func FilterMultusNonDefaultNetworks(networks []v1.Network) []v1.Network {
-	return FilterNetworksSpec(networks, IsSecondaryMultusNetwork)
-}
-
-func FilterNetworksSpec(nets []v1.Network, predicate func(i v1.Network) bool) []v1.Network {
-	var filteredNets []v1.Network
-	for _, net := range nets {
-		if predicate(net) {
-			filteredNets = append(filteredNets, net)
+	var multusNetworks []v1.Network
+	for _, network := range networks {
+		if IsSecondaryMultusNetwork(network) {
+			multusNetworks = append(multusNetworks, network)
 		}
 	}
-	return filteredNets
+	return multusNetworks
 }
 
 func LookUpDefaultNetwork(networks []v1.Network) *v1.Network {
@@ -56,23 +52,4 @@ func LookUpDefaultNetwork(networks []v1.Network) *v1.Network {
 
 func IsSecondaryMultusNetwork(net v1.Network) bool {
 	return net.Multus != nil && !net.Multus.Default
-}
-
-func IndexNetworkSpecByName(networks []v1.Network) map[string]v1.Network {
-	indexedNetworks := map[string]v1.Network{}
-	for _, network := range networks {
-		indexedNetworks[network.Name] = network
-	}
-	return indexedNetworks
-}
-
-func FilterNetworksByInterfaces(networks []v1.Network, interfaces []v1.Interface) []v1.Network {
-	var nets []v1.Network
-	networksByName := IndexNetworkSpecByName(networks)
-	for _, iface := range interfaces {
-		if net, exists := networksByName[iface.Name]; exists {
-			nets = append(nets, net)
-		}
-	}
-	return nets
 }

@@ -2,62 +2,34 @@ package components
 
 import (
 	"fmt"
+	"runtime"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
 
 	virtv1 "kubevirt.io/api/core/v1"
 
-	"kubevirt.io/kubevirt/pkg/storage/reservation"
+	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
+	"kubevirt.io/kubevirt/pkg/virt-operator/resource/generate/rbac"
 	operatorutil "kubevirt.io/kubevirt/pkg/virt-operator/util"
 )
 
 const (
 	VirtHandlerName = "virt-handler"
 	kubeletPodsPath = "/var/lib/kubelet/pods"
-	PrHelperName    = "pr-helper"
-	prVolumeName    = "pr-helper-socket-vol"
 )
 
-func RenderPrHelperContainer(image string, pullPolicy corev1.PullPolicy) corev1.Container {
-	bidi := corev1.MountPropagationBidirectional
-	return corev1.Container{
-		Name:            PrHelperName,
-		Image:           image,
-		ImagePullPolicy: pullPolicy,
-		Command:         []string{"/usr/bin/qemu-pr-helper"},
-		Args: []string{
-			"-k", reservation.GetPrHelperSocketPath(),
-		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:             prVolumeName,
-				MountPath:        reservation.GetPrHelperSocketDir(),
-				MountPropagation: &bidi,
-			},
-		},
-		SecurityContext: &corev1.SecurityContext{
-			Privileged: pointer.Bool(true),
-		},
-	}
-}
-
-func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVersion, prHelperVersion, productName, productVersion, productComponent, image, launcherImage, prHelperImage string, pullPolicy corev1.PullPolicy, imagePullSecrets []corev1.LocalObjectReference, migrationNetwork *string, verbosity string, extraEnv map[string]string, enablePrHelper bool) (*appsv1.DaemonSet, error) {
+func NewHandlerDaemonSet(namespace string, repository string, imagePrefix string, version string, launcherVersion string, productName string, productVersion string, productComponent string, pullPolicy corev1.PullPolicy, migrationNetwork *string, verbosity string, extraEnv map[string]string) (*appsv1.DaemonSet, error) {
 
 	deploymentName := VirtHandlerName
 	imageName := fmt.Sprintf("%s%s", imagePrefix, deploymentName)
 	env := operatorutil.NewEnvVarMap(extraEnv)
-	podTemplateSpec, err := newPodTemplateSpec(deploymentName, imageName, repository, version, productName, productVersion, productComponent, image, pullPolicy, imagePullSecrets, nil, env)
+	podTemplateSpec, err := newPodTemplateSpec(deploymentName, imageName, repository, version, productName, productVersion, productComponent, pullPolicy, nil, env)
 	if err != nil {
 		return nil, err
-	}
-
-	if launcherImage == "" {
-		launcherImage = fmt.Sprintf("%s/%s%s%s", repository, imagePrefix, "virt-launcher", AddVersionSeparatorPrefix(launcherVersion))
 	}
 
 	if migrationNetwork != nil {
@@ -105,55 +77,34 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 	}
 
 	pod := &daemonset.Spec.Template.Spec
-	pod.ServiceAccountName = HandlerServiceAccountName
+	pod.ServiceAccountName = rbac.HandlerServiceAccountName
 	pod.HostPID = true
 
-	// nodelabeller currently only support x86. The arch check will be done in node-labller.sh
-	pod.InitContainers = []corev1.Container{
-		{
-			Command: []string{
-				"/bin/sh",
-				"-c",
-			},
-			Image: launcherImage,
-			Name:  "virt-launcher",
-			Args: []string{
-				"node-labeller.sh",
-			},
-			SecurityContext: &corev1.SecurityContext{
-				Privileged: boolPtr(true),
-			},
-			VolumeMounts: []corev1.VolumeMount{
-				{
-					Name:      "node-labeller",
-					MountPath: nodeLabellerVolumePath,
+	// nodelabeller currently only support x86
+	if virtconfig.IsAMD64(runtime.GOARCH) {
+		launcherVersion = AddVersionSeparatorPrefix(launcherVersion)
+		pod.InitContainers = []corev1.Container{
+			{
+				Command: []string{
+					"/bin/sh",
+					"-c",
+				},
+				Image: fmt.Sprintf("%s/%s%s%s", repository, imagePrefix, "virt-launcher", launcherVersion),
+				Name:  "virt-launcher",
+				Args: []string{
+					"node-labeller.sh",
+				},
+				SecurityContext: &corev1.SecurityContext{
+					Privileged: boolPtr(true),
+				},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      "node-labeller",
+						MountPath: nodeLabellerVolumePath,
+					},
 				},
 			},
-		},
-	}
-
-	// If there is any image pull secret added to the `virt-handler` deployment
-	// it can mean that `virt-handler` is using private image. Therefore, we must
-	// add `virt-launcher` container that will pre-pull and keep the (probably)
-	// custom image of `virt-launcher`.
-	// Note that we cannot make it an init container because the `virt-launcher`
-	// image could be garbage collected by the kubelet.
-	// Note that we cannot add `imagePullSecrets` to `virt-launcher` as this could
-	// be a security risk - user could use this secret and abuse it.
-	if len(imagePullSecrets) > 0 {
-		pod.Containers = append(pod.Containers, corev1.Container{
-			Name:            "virt-launcher-image-holder",
-			Image:           launcherImage,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			Command:         []string{"/bin/sh", "-c"},
-			Args:            []string{"sleep infinity"},
-			Resources: corev1.ResourceRequirements{
-				Limits: map[corev1.ResourceName]resource.Quantity{
-					corev1.ResourceCPU:    resource.MustParse("100m"),
-					corev1.ResourceMemory: resource.MustParse("20Mi"),
-				},
-			},
-		})
+		}
 	}
 
 	// give the handler grace period some padding
@@ -274,9 +225,6 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 		{"kubelet-pods", kubeletPodsPath, kubeletPodsPath, &bidi},
 		{"node-labeller", "/var/lib/kubevirt-node-labeller", "/var/lib/kubevirt-node-labeller", nil},
 	}
-	if enablePrHelper {
-		volumes = append(volumes, volume{prVolumeName, reservation.GetPrHelperSocketDir(), reservation.GetPrHelperSocketDir(), &bidi})
-	}
 
 	for _, volume := range volumes {
 		container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
@@ -318,16 +266,10 @@ func NewHandlerDaemonSet(namespace, repository, imagePrefix, version, launcherVe
 	container.Resources = corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
 			corev1.ResourceCPU:    resource.MustParse("10m"),
-			corev1.ResourceMemory: resource.MustParse("325Mi"),
+			corev1.ResourceMemory: resource.MustParse("230Mi"),
 		},
 	}
-	if prHelperImage == "" {
-		prHelperImage = fmt.Sprintf("%s/%s%s%s", repository, imagePrefix, PrHelperName, AddVersionSeparatorPrefix(prHelperVersion))
-	}
 
-	if enablePrHelper {
-		pod.Containers = append(pod.Containers, RenderPrHelperContainer(prHelperImage, pullPolicy))
-	}
 	return daemonset, nil
 
 }

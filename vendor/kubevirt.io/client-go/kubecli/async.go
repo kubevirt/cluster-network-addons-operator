@@ -3,7 +3,6 @@ package kubecli
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/gorilla/websocket"
 	rest "k8s.io/client-go/rest"
@@ -22,8 +21,7 @@ func (a *AsyncSubresourceError) GetStatusCode() int {
 	return a.StatusCode
 }
 
-// params are strings with "key=value" format
-func asyncSubresourceHelper(config *rest.Config, resource, namespace, name string, subresource string, queryParams url.Values) (StreamInterface, error) {
+func asyncSubresourceHelper(config *rest.Config, resource, namespace, name string, subresource string) (StreamInterface, error) {
 
 	done := make(chan struct{})
 
@@ -38,7 +36,7 @@ func asyncSubresourceHelper(config *rest.Config, resource, namespace, name strin
 	}
 
 	// Create a request out of config and the query parameters
-	req, err := RequestFromConfig(config, resource, name, namespace, subresource, queryParams)
+	req, err := RequestFromConfig(config, resource, name, namespace, subresource)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request for remote execution: %v", err)
 	}

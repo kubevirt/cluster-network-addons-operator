@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	stdioutil "io/ioutil"
 	"strings"
 	"time"
 
@@ -155,7 +156,7 @@ func (c *client) listenFirstError(r io.Reader) chan string {
 			close(errLine)
 		}
 
-		_, _ = io.Copy(io.Discard, r)
+		_, _ = io.Copy(stdioutil.Discard, r)
 	}()
 
 	return errLine
@@ -373,7 +374,7 @@ func (s *session) checkNotFoundError() error {
 	case <-t.C:
 		return ErrTimeoutExceeded
 	case line, ok := <-s.firstErrLine:
-		if !ok || len(line) == 0 {
+		if !ok {
 			return nil
 		}
 

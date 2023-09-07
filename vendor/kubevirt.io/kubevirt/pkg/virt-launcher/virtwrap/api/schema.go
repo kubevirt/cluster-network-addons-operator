@@ -96,18 +96,14 @@ const (
 	FSThawed      = "thawed"
 	FSFrozen      = "frozen"
 	SchedulerFIFO = "fifo"
-
-	HostDevicePCI  = "pci"
-	HostDeviceMDev = "mdev"
-	AddressPCI     = "pci"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Domain struct {
 	metav1.TypeMeta
-	metav1.ObjectMeta `json:"ObjectMeta"`
-	Spec              DomainSpec
-	Status            DomainStatus
+	ObjectMeta metav1.ObjectMeta
+	Spec       DomainSpec
+	Status     DomainStatus
 }
 
 type DomainStatus struct {
@@ -200,7 +196,6 @@ type DomainSpec struct {
 	Features       *Features       `xml:"features,omitempty"`
 	CPU            CPU             `xml:"cpu"`
 	VCPU           *VCPU           `xml:"vcpu"`
-	VCPUs          *VCPUs          `xml:"vcpus"`
 	CPUTune        *CPUTune        `xml:"cputune"`
 	NUMATune       *NUMATune       `xml:"numatune"`
 	IOThreads      *IOThreads      `xml:"iothreads,omitempty"`
@@ -208,9 +203,10 @@ type DomainSpec struct {
 }
 
 type CPUTune struct {
-	VCPUPin     []CPUTuneVCPUPin     `xml:"vcpupin"`
-	IOThreadPin []CPUTuneIOThreadPin `xml:"iothreadpin,omitempty"`
-	EmulatorPin *CPUEmulatorPin      `xml:"emulatorpin"`
+	VCPUPin       []CPUTuneVCPUPin     `xml:"vcpupin"`
+	IOThreadPin   []CPUTuneIOThreadPin `xml:"iothreadpin,omitempty"`
+	EmulatorPin   *CPUEmulatorPin      `xml:"emulatorpin"`
+	VCPUScheduler *VCPUScheduler       `xml:"vcpusched,omitempty"`
 }
 
 type NUMATune struct {
@@ -243,20 +239,15 @@ type CPUEmulatorPin struct {
 	CPUSet string `xml:"cpuset,attr"`
 }
 
+type VCPUScheduler struct {
+	Scheduler string `xml:"scheduler,attr"`
+	Priority  uint   `xml:"priority,attr"`
+	VCPUs     string `xml:"vcpus,attr"`
+}
+
 type VCPU struct {
 	Placement string `xml:"placement,attr"`
 	CPUs      uint32 `xml:",chardata"`
-}
-
-type VCPUsVCPU struct {
-	ID           uint32 `xml:"id,attr"`
-	Enabled      string `xml:"enabled,attr,omitempty"`
-	Hotpluggable string `xml:"hotpluggable,attr,omitempty"`
-	Order        uint32 `xml:"order,attr,omitempty"`
-}
-
-type VCPUs struct {
-	VCPU []VCPUsVCPU `xml:"vcpu"`
 }
 
 type CPU struct {
@@ -479,7 +470,6 @@ type Devices struct {
 	Redirs      []RedirectedDevice `xml:"redirdev,omitempty"`
 	SoundCards  []SoundCard        `xml:"sound,omitempty"`
 	TPMs        []TPM              `xml:"tpm,omitempty"`
-	VSOCK       *VSOCK             `xml:"vsock,omitempty"`
 }
 
 type TPM struct {
@@ -488,9 +478,8 @@ type TPM struct {
 }
 
 type TPMBackend struct {
-	Type            string `xml:"type,attr"`
-	Version         string `xml:"version,attr"`
-	PersistentState string `xml:"persistent_state,attr,omitempty"`
+	Type    string `xml:"type,attr"`
+	Version string `xml:"version,attr"`
 }
 
 // RedirectedDevice describes a device to be redirected
@@ -642,7 +631,6 @@ type DiskSource struct {
 	Protocol      string          `xml:"protocol,attr,omitempty"`
 	Name          string          `xml:"name,attr,omitempty"`
 	Host          *DiskSourceHost `xml:"host,omitempty"`
-	Reservations  *Reservations   `xml:"reservations,omitempty"`
 }
 
 type DiskTarget struct {
@@ -681,17 +669,6 @@ type BackingStoreFormat struct {
 type BlockIO struct {
 	LogicalBlockSize  uint `xml:"logical_block_size,attr,omitempty"`
 	PhysicalBlockSize uint `xml:"physical_block_size,attr,omitempty"`
-}
-
-type Reservations struct {
-	Managed            string              `xml:"managed,attr,omitempty"`
-	SourceReservations *SourceReservations `xml:"source,omitempty"`
-}
-
-type SourceReservations struct {
-	Type string `xml:"type,attr"`
-	Path string `xml:"path,attr,omitempty"`
-	Mode string `xml:"mode,attr,omitempty"`
 }
 
 // END Disk -----------------------------
@@ -755,11 +732,6 @@ type Interface struct {
 	Alias               *Alias           `xml:"alias,omitempty"`
 	Driver              *InterfaceDriver `xml:"driver,omitempty"`
 	Rom                 *Rom             `xml:"rom,omitempty"`
-	ACPI                *ACPI            `xml:"acpi,omitempty"`
-}
-
-type ACPI struct {
-	Index uint `xml:"index,attr"`
 }
 
 type InterfaceDriver struct {
@@ -1043,30 +1015,15 @@ type Address struct {
 
 //END Video -------------------
 
-//BEGIN VSOCK -------------------
-
-type VSOCK struct {
-	Model string `xml:"model,attr,omitempty"`
-	CID   CID    `xml:"cid"`
-}
-
-type CID struct {
-	Auto    string `xml:"auto,attr"`
-	Address uint32 `xml:"address,attr,omitempty"`
-}
-
-//END VSOCK -------------------
-
 type Stats struct {
 	Period uint `xml:"period,attr"`
 }
 
 type MemBalloon struct {
-	Model             string            `xml:"model,attr"`
-	Stats             *Stats            `xml:"stats,omitempty"`
-	Address           *Address          `xml:"address,omitempty"`
-	Driver            *MemBalloonDriver `xml:"driver,omitempty"`
-	FreePageReporting string            `xml:"freePageReporting,attr,omitempty"`
+	Model   string            `xml:"model,attr"`
+	Stats   *Stats            `xml:"stats,omitempty"`
+	Address *Address          `xml:"address,omitempty"`
+	Driver  *MemBalloonDriver `xml:"driver,omitempty"`
 }
 
 type MemBalloonDriver struct {

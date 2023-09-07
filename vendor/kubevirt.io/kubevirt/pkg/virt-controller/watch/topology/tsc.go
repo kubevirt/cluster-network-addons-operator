@@ -85,24 +85,14 @@ func TSCFrequenciesOnNode(node *v1.Node) (frequencies []int64) {
 	return
 }
 
-func distance(freq1, freq2 int64) int64 {
-	if freq1 > freq2 {
-		return freq1 - freq2
-	}
-	return freq2 - freq1
-}
-
 func CalculateTSCLabelDiff(frequenciesInUse []int64, frequenciesOnNode []int64, nodeFrequency int64, scalable bool) (toAdd []int64, toRemove []int64) {
-	frequenciesInUse = append(frequenciesInUse, nodeFrequency)
-	tolerance := ToleranceForFrequency(nodeFrequency)
+	if scalable {
+		frequenciesInUse = append(frequenciesInUse, nodeFrequency)
+	} else {
+		frequenciesInUse = []int64{nodeFrequency}
+	}
 	requiredMap := map[int64]struct{}{}
 	for _, freq := range frequenciesInUse {
-		if !scalable && distance(freq, nodeFrequency) > tolerance {
-			// A non-scalable node can only accept frequencies that are within Qemu's tolerance:
-			// nodeFrequency*(1-0.000250) < acceptableFrequency < nodeFrequency*(1+0.000250).
-			// Skip the frequencies that are outside that range
-			continue
-		}
 		requiredMap[freq] = struct{}{}
 	}
 
@@ -112,10 +102,8 @@ func CalculateTSCLabelDiff(frequenciesInUse []int64, frequenciesOnNode []int64, 
 		}
 	}
 
-	for freq := range requiredMap {
-		// For the non-scalable case, the map was already sanitized above.
-		// For the scalable case, a node can accept frequencies that are either lower than its own or within the tolerance range
-		if !scalable || freq <= nodeFrequency || distance(freq, nodeFrequency) <= tolerance {
+	for _, freq := range frequenciesInUse {
+		if freq <= nodeFrequency {
 			toAdd = append(toAdd, freq)
 		}
 	}
@@ -135,18 +123,11 @@ func ToTSCSchedulableLabel(frequency int64) string {
 }
 
 func AreTSCFrequencyTopologyHintsDefined(vmi *k6tv1.VirtualMachineInstance) bool {
-	if vmi == nil {
-		return false
-	}
-
-	topologyHints := vmi.Status.TopologyHints
-	return topologyHints != nil && topologyHints.TSCFrequency != nil && *topologyHints.TSCFrequency > 0
+	return vmi != nil && vmi.Status.TopologyHints != nil && vmi.Status.TopologyHints.TSCFrequency != nil
 }
 
 func IsManualTSCFrequencyRequired(vmi *k6tv1.VirtualMachineInstance) bool {
-	return vmi != nil &&
-		GetTscFrequencyRequirement(vmi).Type != NotRequired &&
-		AreTSCFrequencyTopologyHintsDefined(vmi)
+	return GetTscFrequencyRequirement(vmi).Type != NotRequired
 }
 
 func GetTscFrequencyRequirement(vmi *k6tv1.VirtualMachineInstance) TscFrequencyRequirement {

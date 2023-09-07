@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	k8sv1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
 
 	v1 "kubevirt.io/api/core/v1"
 
@@ -87,32 +86,9 @@ func WithPrivileged() Option {
 
 func WithCapabilities(vmi *v1.VirtualMachineInstance) Option {
 	return func(renderer *ContainerSpecRenderer) {
-		if renderer.capabilities == nil {
-			renderer.capabilities = &k8sv1.Capabilities{
-				Add: requiredCapabilities(vmi),
-			}
-		} else {
-			renderer.capabilities.Add = requiredCapabilities(vmi)
-		}
-	}
-}
-
-func WithDropALLCapabilities() Option {
-	return func(renderer *ContainerSpecRenderer) {
-		if renderer.capabilities == nil {
-			renderer.capabilities = &k8sv1.Capabilities{
-				Drop: []k8sv1.Capability{"ALL"},
-			}
-		} else {
-			renderer.capabilities.Drop = []k8sv1.Capability{"ALL"}
-		}
-	}
-}
-
-func WithNoCapabilities() Option {
-	return func(renderer *ContainerSpecRenderer) {
 		renderer.capabilities = &k8sv1.Capabilities{
-			Drop: []k8sv1.Capability{"ALL"},
+			Add:  requiredCapabilities(vmi),
+			Drop: []k8sv1.Capability{CAP_NET_RAW},
 		}
 	}
 }
@@ -192,9 +168,7 @@ func securityContext(userId int64, privileged bool, requiredCapabilities *k8sv1.
 
 	if isNonRoot {
 		context.RunAsGroup = &userId
-		context.AllowPrivilegeEscalation = pointer.Bool(false)
 	}
-
 	return context
 }
 
@@ -262,7 +236,10 @@ func wrapExecProbeWithVirtProbe(vmi *v1.VirtualMachineInstance, probe *k8sv1.Pro
 
 func requiredCapabilities(vmi *v1.VirtualMachineInstance) []k8sv1.Capability {
 	// These capabilies are always required because we set them on virt-launcher binary
-	capabilities := []k8sv1.Capability{CAP_NET_BIND_SERVICE}
+	// add CAP_SYS_PTRACE capability needed by libvirt + swtpm
+	// TODO: drop SYS_PTRACE after updating libvirt to a release containing:
+	// https://github.com/libvirt/libvirt/commit/a9c500d2b50c5c041a1bb6ae9724402cf1cec8fe
+	capabilities := []k8sv1.Capability{CAP_NET_BIND_SERVICE, CAP_SYS_PTRACE}
 
 	if !util.IsNonRootVMI(vmi) {
 		// add a CAP_SYS_NICE capability to allow setting cpu affinity

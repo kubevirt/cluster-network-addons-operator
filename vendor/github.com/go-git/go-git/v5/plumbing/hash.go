@@ -2,6 +2,7 @@ package plumbing
 
 import (
 	"bytes"
+	"crypto"
 	"encoding/hex"
 	"sort"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 )
 
 // Hash SHA1 hashed content
-type Hash [hash.Size]byte
+type Hash [20]byte
 
 // ZeroHash is Hash with value zero
 var ZeroHash Hash
@@ -46,7 +47,7 @@ type Hasher struct {
 }
 
 func NewHasher(t ObjectType, size int64) Hasher {
-	h := Hasher{hash.New(hash.CryptoType)}
+	h := Hasher{hash.New(crypto.SHA1)}
 	h.Write(t.Bytes())
 	h.Write([]byte(" "))
 	h.Write([]byte(strconv.FormatInt(size, 10)))
@@ -74,11 +75,10 @@ func (p HashSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // IsHash returns true if the given string is a valid hash.
 func IsHash(s string) bool {
-	switch len(s) {
-	case hash.HexSize:
-		_, err := hex.DecodeString(s)
-		return err == nil
-	default:
+	if len(s) != 40 {
 		return false
 	}
+
+	_, err := hex.DecodeString(s)
+	return err == nil
 }

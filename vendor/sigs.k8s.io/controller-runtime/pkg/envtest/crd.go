@@ -20,9 +20,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -84,10 +84,8 @@ type CRDInstallOptions struct {
 	WebhookOptions WebhookInstallOptions
 }
 
-const (
-	defaultPollInterval = 100 * time.Millisecond
-	defaultMaxWait      = 10 * time.Second
-)
+const defaultPollInterval = 100 * time.Millisecond
+const defaultMaxWait = 10 * time.Second
 
 // InstallCRDs installs a collection of CRDs into a cluster by reading the crd yaml files from a directory.
 func InstallCRDs(config *rest.Config, options CRDInstallOptions) ([]*apiextensionsv1.CustomResourceDefinition, error) {
@@ -144,7 +142,7 @@ func defaultCRDOptions(o *CRDInstallOptions) {
 // WaitForCRDs waits for the CRDs to appear in discovery.
 func WaitForCRDs(config *rest.Config, crds []*apiextensionsv1.CustomResourceDefinition, options CRDInstallOptions) error {
 	// Add each CRD to a map of GroupVersion to Resource
-	waitingFor := map[schema.GroupVersion]*sets.Set[string]{}
+	waitingFor := map[schema.GroupVersion]*sets.String{}
 	for _, crd := range crds {
 		gvs := []schema.GroupVersion{}
 		for _, version := range crd.Spec.Versions {
@@ -157,7 +155,7 @@ func WaitForCRDs(config *rest.Config, crds []*apiextensionsv1.CustomResourceDefi
 			log.V(1).Info("adding API in waitlist", "GV", gv)
 			if _, found := waitingFor[gv]; !found {
 				// Initialize the set
-				waitingFor[gv] = &sets.Set[string]{}
+				waitingFor[gv] = &sets.String{}
 			}
 			// Add the Resource
 			waitingFor[gv].Insert(crd.Spec.Names.Plural)
@@ -175,7 +173,7 @@ type poller struct {
 	config *rest.Config
 
 	// waitingFor is the map of resources keyed by group version that have not yet been found in discovery
-	waitingFor map[schema.GroupVersion]*sets.Set[string]
+	waitingFor map[schema.GroupVersion]*sets.String
 }
 
 // poll checks if all the resources have been found in discovery, and returns false if not.
@@ -280,6 +278,12 @@ func CreateCRDs(config *rest.Config, crds []*apiextensionsv1.CustomResourceDefin
 
 // renderCRDs iterate through options.Paths and extract all CRD files.
 func renderCRDs(options *CRDInstallOptions) ([]*apiextensionsv1.CustomResourceDefinition, error) {
+	var (
+		err   error
+		info  os.FileInfo
+		files []os.FileInfo
+	)
+
 	type GVKN struct {
 		GVK  schema.GroupVersionKind
 		Name string
@@ -288,12 +292,7 @@ func renderCRDs(options *CRDInstallOptions) ([]*apiextensionsv1.CustomResourceDe
 	crds := map[GVKN]*apiextensionsv1.CustomResourceDefinition{}
 
 	for _, path := range options.Paths {
-		var (
-			err      error
-			info     os.FileInfo
-			files    []string
-			filePath = path
-		)
+		var filePath = path
 
 		// Return the error if ErrorIfPathMissing exists
 		if info, err = os.Stat(path); os.IsNotExist(err) {
@@ -304,15 +303,9 @@ func renderCRDs(options *CRDInstallOptions) ([]*apiextensionsv1.CustomResourceDe
 		}
 
 		if !info.IsDir() {
-			filePath, files = filepath.Dir(path), []string{info.Name()}
-		} else {
-			entries, err := os.ReadDir(path)
-			if err != nil {
-				return nil, err
-			}
-			for _, e := range entries {
-				files = append(files, e.Name())
-			}
+			filePath, files = filepath.Dir(path), []os.FileInfo{info}
+		} else if files, err = ioutil.ReadDir(path); err != nil {
+			return nil, err
 		}
 
 		log.V(1).Info("reading CRDs from path", "path", path)
@@ -364,7 +357,7 @@ func modifyConversionWebhooks(crds []*apiextensionsv1.CustomResourceDefinition, 
 	if err != nil {
 		return err
 	}
-	url := pointer.String(fmt.Sprintf("https://%s/convert", hostPort))
+	url := pointer.StringPtr(fmt.Sprintf("https://%s/convert", hostPort))
 
 	for i := range crds {
 		// Continue if we're preserving unknown fields.
@@ -396,7 +389,7 @@ func modifyConversionWebhooks(crds []*apiextensionsv1.CustomResourceDefinition, 
 }
 
 // readCRDs reads the CRDs from files and Unmarshals them into structs.
-func readCRDs(basePath string, files []string) ([]*apiextensionsv1.CustomResourceDefinition, error) {
+func readCRDs(basePath string, files []os.FileInfo) ([]*apiextensionsv1.CustomResourceDefinition, error) {
 	var crds []*apiextensionsv1.CustomResourceDefinition
 
 	// White list the file extensions that may contain CRDs
@@ -404,12 +397,12 @@ func readCRDs(basePath string, files []string) ([]*apiextensionsv1.CustomResourc
 
 	for _, file := range files {
 		// Only parse allowlisted file types
-		if !crdExts.Has(filepath.Ext(file)) {
+		if !crdExts.Has(filepath.Ext(file.Name())) {
 			continue
 		}
 
 		// Unmarshal CRDs from file into structs
-		docs, err := readDocuments(filepath.Join(basePath, file))
+		docs, err := readDocuments(filepath.Join(basePath, file.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -426,14 +419,14 @@ func readCRDs(basePath string, files []string) ([]*apiextensionsv1.CustomResourc
 			crds = append(crds, crd)
 		}
 
-		log.V(1).Info("read CRDs from file", "file", file)
+		log.V(1).Info("read CRDs from file", "file", file.Name())
 	}
 	return crds, nil
 }
 
 // readDocuments reads documents from file.
 func readDocuments(fp string) ([][]byte, error) {
-	b, err := os.ReadFile(fp)
+	b, err := ioutil.ReadFile(fp) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
@@ -444,7 +437,7 @@ func readDocuments(fp string) ([][]byte, error) {
 		// Read document
 		doc, err := reader.Read()
 		if err != nil {
-			if errors.Is(err, io.EOF) {
+			if err == io.EOF {
 				break
 			}
 

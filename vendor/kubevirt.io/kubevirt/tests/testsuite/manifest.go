@@ -28,11 +28,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
-
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
-	. "github.com/onsi/gomega"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
+	"kubevirt.io/client-go/kubecli"
 	"kubevirt.io/client-go/log"
 
 	"kubevirt.io/kubevirt/tests/util"
@@ -94,14 +90,15 @@ func ReadManifestYamlFile(pathToManifest string) []unstructured.Unstructured {
 }
 
 func ApplyRawManifest(object unstructured.Unstructured) error {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	uri := composeResourceURI(object)
 	jsonbody, err := object.MarshalJSON()
 	util.PanicOnError(err)
 	b, err := virtCli.CoreV1().RESTClient().Post().RequestURI(uri).Body(jsonbody).DoRaw(context.Background())
 	if err != nil {
-		fmt.Printf(fmt.Sprintf("ERROR: Can not apply %s\n, err: %#v", object, err))
+		fmt.Printf(fmt.Sprintf("ERROR: Can not apply %s\n", object))
 		panic(err)
 	}
 	status := unstructured.Unstructured{}
@@ -109,23 +106,21 @@ func ApplyRawManifest(object unstructured.Unstructured) error {
 }
 
 func DeleteRawManifest(object unstructured.Unstructured) error {
-	virtCli := kubevirt.Client()
+	virtCli, err := kubecli.GetKubevirtClient()
+	util.PanicOnError(err)
 
 	uri := composeResourceURI(object)
 	uri = path.Join(uri, object.GetName())
 
-	policy := metav1.DeletePropagationForeground
+	policy := metav1.DeletePropagationBackground
 	options := &metav1.DeleteOptions{PropagationPolicy: &policy}
 
 	log.DefaultLogger().Infof("Calling DELETE on testing manifest: %s", uri)
+	result := virtCli.CoreV1().RESTClient().Delete().RequestURI(uri).Body(options).Do(context.Background())
+	if err = result.Error(); err != nil && !k8serrors.IsNotFound(err) {
+		panic(fmt.Errorf("ERROR: Can not delete %s err: %#v %s\n", object.GetName(), err, object))
 
-	EventuallyWithOffset(2, func() error {
-		result := virtCli.CoreV1().RESTClient().Delete().RequestURI(uri).Body(options).Do(context.Background())
-		return result.Error()
-	}, 30*time.Second, 1*time.Second).Should(
-		SatisfyAll(HaveOccurred(), WithTransform(k8serrors.IsNotFound, BeTrue())),
-		fmt.Sprintf("%s failed to be cleaned up", uri),
-	)
+	}
 
 	return nil
 }

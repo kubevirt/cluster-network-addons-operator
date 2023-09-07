@@ -45,7 +45,7 @@ type ConfigModifiedFn func()
 // NewClusterConfig is a wrapper of NewClusterConfigWithCPUArch with default cpuArch.
 func NewClusterConfig(crdInformer cache.SharedIndexInformer,
 	kubeVirtInformer cache.SharedIndexInformer,
-	namespace string) (*ClusterConfig, error) {
+	namespace string) *ClusterConfig {
 	return NewClusterConfigWithCPUArch(
 		crdInformer,
 		kubeVirtInformer,
@@ -61,7 +61,7 @@ func NewClusterConfig(crdInformer cache.SharedIndexInformer,
 // 3. In case of errors or no updates (resource version stays the same), it returns the values from the last good config
 func NewClusterConfigWithCPUArch(crdInformer cache.SharedIndexInformer,
 	kubeVirtInformer cache.SharedIndexInformer,
-	namespace, cpuArch string) (*ClusterConfig, error) {
+	namespace, cpuArch string) *ClusterConfig {
 
 	defaultConfig := defaultClusterConfig(cpuArch)
 
@@ -75,24 +75,18 @@ func NewClusterConfigWithCPUArch(crdInformer cache.SharedIndexInformer,
 		defaultConfig:    defaultConfig,
 	}
 
-	_, err := c.crdInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.crdInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.crdAddedDeleted,
 		DeleteFunc: c.crdAddedDeleted,
 		UpdateFunc: c.crdUpdated,
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	_, err = c.kubeVirtInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	c.kubeVirtInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    c.configAddedDeleted,
 		UpdateFunc: c.configUpdated,
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	return c, nil
+	return c
 }
 
 func (c *ClusterConfig) configAddedDeleted(_ interface{}) {
@@ -125,19 +119,10 @@ func isDataSourceCrd(crd *extv1.CustomResourceDefinition) bool {
 	return crd.Spec.Names.Kind == "DataSource"
 }
 
-func isServiceMonitor(crd *extv1.CustomResourceDefinition) bool {
-	return crd.Spec.Names.Kind == "ServiceMonitor"
-}
-
-func isPrometheusRules(crd *extv1.CustomResourceDefinition) bool {
-	return crd.Spec.Names.Kind == "PrometheusRule"
-}
-
 func (c *ClusterConfig) crdAddedDeleted(obj interface{}) {
 	go c.GetConfig()
 	crd := obj.(*extv1.CustomResourceDefinition)
-	if !isDataVolumeCrd(crd) && !isDataSourceCrd(crd) &&
-		!isServiceMonitor(crd) && !isPrometheusRules(crd) {
+	if !isDataVolumeCrd(crd) && !isDataSourceCrd(crd) {
 		return
 	}
 
@@ -158,7 +143,7 @@ func (c *ClusterConfig) crdUpdated(_, cur interface{}) {
 func defaultClusterConfig(cpuArch string) *v1.KubeVirtConfiguration {
 	parallelOutboundMigrationsPerNodeDefault := ParallelOutboundMigrationsPerNodeDefault
 	parallelMigrationsPerClusterDefault := ParallelMigrationsPerClusterDefault
-	bandwidthPerMigrationDefault := resource.MustParse(BandwidthPerMigrationDefault)
+	bandwithPerMigrationDefault := resource.MustParse(BandwithPerMigrationDefault)
 	nodeDrainTaintDefaultKey := NodeDrainTaintDefaultKey
 	allowAutoConverge := MigrationAllowAutoConverge
 	allowPostCopy := MigrationAllowPostCopy
@@ -202,7 +187,7 @@ func defaultClusterConfig(cpuArch string) *v1.KubeVirtConfiguration {
 			ParallelMigrationsPerCluster:      &parallelMigrationsPerClusterDefault,
 			ParallelOutboundMigrationsPerNode: &parallelOutboundMigrationsPerNodeDefault,
 			NodeDrainTaintKey:                 &nodeDrainTaintDefaultKey,
-			BandwidthPerMigration:             &bandwidthPerMigrationDefault,
+			BandwidthPerMigration:             &bandwithPerMigrationDefault,
 			ProgressTimeout:                   &progressTimeout,
 			CompletionTimeoutPerGiB:           &completionTimeoutPerGiB,
 			UnsafeMigrationOverride:           &defaultUnsafeMigrationOverride,
@@ -246,24 +231,6 @@ func defaultClusterConfig(cpuArch string) *v1.KubeVirtConfiguration {
 				Burst: DefaultVirtWebhookClientBurst,
 			}}},
 		},
-		ArchitectureConfiguration: &v1.ArchConfiguration{
-			Amd64: &v1.ArchSpecificConfiguration{
-				OVMFPath:         DefaultARCHOVMFPath,
-				EmulatedMachines: strings.Split(DefaultAMD64EmulatedMachines, ","),
-				MachineType:      DefaultAMD64MachineType,
-			},
-			Arm64: &v1.ArchSpecificConfiguration{
-				OVMFPath:         DefaultAARCH64OVMFPath,
-				EmulatedMachines: strings.Split(DefaultAARCH64EmulatedMachines, ","),
-				MachineType:      DefaultAARCH64MachineType,
-			},
-			Ppc64le: &v1.ArchSpecificConfiguration{
-				OVMFPath:         DefaultARCHOVMFPath,
-				EmulatedMachines: strings.Split(DefaultPPC64LEEmulatedMachines, ","),
-				MachineType:      DefaultPPC64LEMachineType,
-			},
-			DefaultArchitecture: runtime.GOARCH,
-		},
 	}
 }
 
@@ -300,12 +267,6 @@ func setConfigFromKubeVirt(config *v1.KubeVirtConfiguration, kv *v1.KubeVirt) er
 	if err != nil {
 		return err
 	}
-
-	if config.ArchitectureConfiguration == nil {
-		config.ArchitectureConfiguration = &v1.ArchConfiguration{}
-	}
-	// set default architecture from status of CR
-	config.ArchitectureConfiguration.DefaultArchitecture = kv.Status.DefaultArchitecture
 
 	return validateConfig(config)
 }
@@ -411,36 +372,6 @@ func (c *ClusterConfig) HasDataVolumeAPI() bool {
 	for _, obj := range objects {
 		if crd, ok := obj.(*extv1.CustomResourceDefinition); ok && crd.DeletionTimestamp == nil {
 			if isDataVolumeCrd(crd) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (c *ClusterConfig) HasServiceMonitorAPI() bool {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	objects := c.crdInformer.GetStore().List()
-	for _, obj := range objects {
-		if crd, ok := obj.(*extv1.CustomResourceDefinition); ok && crd.DeletionTimestamp == nil {
-			if isServiceMonitor(crd) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (c *ClusterConfig) HasPrometheusRuleAPI() bool {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	objects := c.crdInformer.GetStore().List()
-	for _, obj := range objects {
-		if crd, ok := obj.(*extv1.CustomResourceDefinition); ok && crd.DeletionTimestamp == nil {
-			if isPrometheusRules(crd) {
 				return true
 			}
 		}

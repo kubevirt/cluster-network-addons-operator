@@ -22,37 +22,37 @@ var onceIPv6 sync.Once
 var clusterSupportsIpv6 bool
 var errIPv6 error
 
-func DualStack() (bool, error) {
-	supportsIpv4, err := SupportsIpv4()
+func DualStack(virtClient kubecli.KubevirtClient) (bool, error) {
+	supportsIpv4, err := SupportsIpv4(virtClient)
 	if err != nil {
 		return false, err
 	}
 
-	supportsIpv6, err := SupportsIpv6()
+	supportsIpv6, err := SupportsIpv6(virtClient)
 	if err != nil {
 		return false, err
 	}
 	return supportsIpv4 && supportsIpv6, nil
 }
 
-func SupportsIpv4() (bool, error) {
+func SupportsIpv4(virtClient kubecli.KubevirtClient) (bool, error) {
 	onceIPv4.Do(func() {
-		clusterSupportsIpv4, errIPv4 = clusterAnswersIPCondition(netutils.IsIPv4String)
+		clusterSupportsIpv4, errIPv4 = clusterAnswersIPCondition(virtClient, netutils.IsIPv4String)
 	})
 	return clusterSupportsIpv4, errIPv4
 }
 
-func SupportsIpv6() (bool, error) {
+func SupportsIpv6(virtClient kubecli.KubevirtClient) (bool, error) {
 	onceIPv6.Do(func() {
-		clusterSupportsIpv6, errIPv6 = clusterAnswersIPCondition(netutils.IsIPv6String)
+		clusterSupportsIpv6, errIPv6 = clusterAnswersIPCondition(virtClient, netutils.IsIPv6String)
 	})
 	return clusterSupportsIpv6, errIPv6
 }
 
-func clusterAnswersIPCondition(ipCondition func(ip string) bool) (bool, error) {
+func clusterAnswersIPCondition(virtClient kubecli.KubevirtClient, ipCondition func(ip string) bool) (bool, error) {
 	// grab us some neat kubevirt pod; let's say virt-handler is our target.
 	targetPodType := "virt-handler"
-	virtHandlerPod, err := getPodByKubeVirtRole(targetPodType)
+	virtHandlerPod, err := getPodByKubeVirtRole(virtClient, targetPodType)
 	if err != nil {
 		return false, err
 	}
@@ -65,12 +65,7 @@ func clusterAnswersIPCondition(ipCondition func(ip string) bool) (bool, error) {
 	return false, nil
 }
 
-func getPodByKubeVirtRole(kubevirtPodRole string) (*k8sv1.Pod, error) {
-	virtClient, err := kubecli.GetKubevirtClient()
-	if err != nil {
-		panic(err)
-	}
-
+func getPodByKubeVirtRole(virtClient kubecli.KubevirtClient, kubevirtPodRole string) (*k8sv1.Pod, error) {
 	labelSelectorValue := fmt.Sprintf("%s = %s", v1.AppLabel, kubevirtPodRole)
 	pods, err := virtClient.CoreV1().Pods(flags.KubeVirtInstallNamespace).List(
 		context.Background(),

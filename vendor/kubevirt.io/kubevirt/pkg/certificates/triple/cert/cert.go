@@ -18,8 +18,6 @@ package cert
 
 import (
 	"crypto"
-	"crypto/ecdsa"
-	"crypto/elliptic"
 	cryptorand "crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -38,11 +36,10 @@ const (
 
 // Config contains the basic fields required for creating a certificate
 type Config struct {
-	CommonName          string
-	Organization        []string
-	AltNames            AltNames
-	Usages              []x509.ExtKeyUsage
-	NotBefore, NotAfter *time.Time
+	CommonName   string
+	Organization []string
+	AltNames     AltNames
+	Usages       []x509.ExtKeyUsage
 }
 
 // AltNames contains the domain names and IP addresses that will be added
@@ -53,18 +50,18 @@ type AltNames struct {
 	IPs      []net.IP
 }
 
-// NewRSAPrivateKey creates an RSA private key
-func NewRSAPrivateKey() (*rsa.PrivateKey, error) {
+// NewPrivateKey creates an RSA private key
+func NewPrivateKey() (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(cryptorand.Reader, rsaKeySize)
 }
 
-// NewECDSAPrivateKey creates an ECDSA private key
-func NewECDSAPrivateKey() (*ecdsa.PrivateKey, error) {
-	return ecdsa.GenerateKey(elliptic.P256(), cryptorand.Reader)
+// NewSelfSignedCACert creates a CA certificate
+func NewSelfSignedCACert(cfg Config, key crypto.Signer, duration time.Duration, altNames ...string) (*x509.Certificate, error) {
+	return NewSelfSignedCACertWithAltNames(cfg, key, duration)
 }
 
-// NewSelfSignedCACert creates a CA certificate
-func NewSelfSignedCACert(cfg Config, key crypto.Signer, duration time.Duration) (*x509.Certificate, error) {
+// NewSelfSignedCACertWithAltNames creates a CA certificate that allows alternative names
+func NewSelfSignedCACertWithAltNames(cfg Config, key crypto.Signer, duration time.Duration, altNames ...string) (*x509.Certificate, error) {
 	now := time.Now()
 	tmpl := x509.Certificate{
 		SerialNumber: new(big.Int).SetInt64(randomSerialNumber()),
@@ -77,13 +74,7 @@ func NewSelfSignedCACert(cfg Config, key crypto.Signer, duration time.Duration) 
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		BasicConstraintsValid: true,
 		IsCA:                  true,
-		DNSNames:              cfg.AltNames.DNSNames,
-	}
-	if cfg.NotBefore != nil {
-		tmpl.NotBefore = *cfg.NotBefore
-	}
-	if cfg.NotAfter != nil {
-		tmpl.NotAfter = *cfg.NotAfter
+		DNSNames:              altNames,
 	}
 
 	certDERBytes, err := x509.CreateCertificate(cryptorand.Reader, &tmpl, &tmpl, key.Public(), key)
@@ -118,12 +109,6 @@ func NewSignedCert(cfg Config, key crypto.Signer, caCert *x509.Certificate, caKe
 		NotAfter:     time.Now().Add(duration).UTC(),
 		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  cfg.Usages,
-	}
-	if cfg.NotBefore != nil {
-		certTmpl.NotBefore = *cfg.NotBefore
-	}
-	if cfg.NotAfter != nil {
-		certTmpl.NotAfter = *cfg.NotAfter
 	}
 	certDERBytes, err := x509.CreateCertificate(cryptorand.Reader, &certTmpl, caCert, key.Public(), caKey)
 	if err != nil {

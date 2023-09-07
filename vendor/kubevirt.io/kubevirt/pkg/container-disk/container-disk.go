@@ -41,7 +41,6 @@ import (
 
 	diskutils "kubevirt.io/kubevirt/pkg/ephemeral-disk-utils"
 	"kubevirt.io/kubevirt/pkg/util"
-	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
 )
 
 var containerDiskOwner = "qemu"
@@ -215,23 +214,23 @@ func GetImage(root *safepath.Path, imagePath string) (*safepath.Path, error) {
 	}
 }
 
-func GenerateInitContainers(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName string, binVolumeName string) []kubev1.Container {
-	return generateContainersHelper(vmi, config, imageIDs, podVolumeName, binVolumeName, true)
+func GenerateInitContainers(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName string, binVolumeName string) []kubev1.Container {
+	return generateContainersHelper(vmi, imageIDs, podVolumeName, binVolumeName, true)
 }
 
-func GenerateContainers(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName string, binVolumeName string) []kubev1.Container {
-	return generateContainersHelper(vmi, config, imageIDs, podVolumeName, binVolumeName, false)
+func GenerateContainers(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName string, binVolumeName string) []kubev1.Container {
+	return generateContainersHelper(vmi, imageIDs, podVolumeName, binVolumeName, false)
 }
 
-func GenerateKernelBootContainer(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName string, binVolumeName string) *kubev1.Container {
-	return generateKernelBootContainerHelper(vmi, config, imageIDs, podVolumeName, binVolumeName, false)
+func GenerateKernelBootContainer(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName string, binVolumeName string) *kubev1.Container {
+	return generateKernelBootContainerHelper(vmi, imageIDs, podVolumeName, binVolumeName, false)
 }
 
-func GenerateKernelBootInitContainer(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName string, binVolumeName string) *kubev1.Container {
-	return generateKernelBootContainerHelper(vmi, config, imageIDs, podVolumeName, binVolumeName, true)
+func GenerateKernelBootInitContainer(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName string, binVolumeName string) *kubev1.Container {
+	return generateKernelBootContainerHelper(vmi, imageIDs, podVolumeName, binVolumeName, true)
 }
 
-func generateKernelBootContainerHelper(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName string, binVolumeName string, isInit bool) *kubev1.Container {
+func generateKernelBootContainerHelper(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName string, binVolumeName string, isInit bool) *kubev1.Container {
 	if !util.HasKernelBootContainerImage(vmi) {
 		return nil
 	}
@@ -251,12 +250,12 @@ func generateKernelBootContainerHelper(vmi *v1.VirtualMachineInstance, config *v
 	}
 
 	const fakeVolumeIdx = 0 // volume index makes no difference for kernel-boot container
-	return generateContainerFromVolume(vmi, config, imageIDs, podVolumeName, binVolumeName, isInit, true, &kernelBootVolume, fakeVolumeIdx)
+	return generateContainerFromVolume(vmi, imageIDs, podVolumeName, binVolumeName, isInit, true, &kernelBootVolume, fakeVolumeIdx)
 }
 
 // The controller uses this function to generate the container
 // specs for hosting the container registry disks.
-func generateContainersHelper(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName string, binVolumeName string, isInit bool) []kubev1.Container {
+func generateContainersHelper(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName string, binVolumeName string, isInit bool) []kubev1.Container {
 	var containers []kubev1.Container
 
 	// Make VirtualMachineInstance Image Wrapper Containers
@@ -264,14 +263,14 @@ func generateContainersHelper(vmi *v1.VirtualMachineInstance, config *virtconfig
 		if volume.Name == KernelBootVolumeName {
 			continue
 		}
-		if container := generateContainerFromVolume(vmi, config, imageIDs, podVolumeName, binVolumeName, isInit, false, &volume, index); container != nil {
+		if container := generateContainerFromVolume(vmi, imageIDs, podVolumeName, binVolumeName, isInit, false, &volume, index); container != nil {
 			containers = append(containers, *container)
 		}
 	}
 	return containers
 }
 
-func generateContainerFromVolume(vmi *v1.VirtualMachineInstance, config *virtconfig.ClusterConfig, imageIDs map[string]string, podVolumeName, binVolumeName string, isInit, isKernelBoot bool, volume *v1.Volume, volumeIdx int) *kubev1.Container {
+func generateContainerFromVolume(vmi *v1.VirtualMachineInstance, imageIDs map[string]string, podVolumeName, binVolumeName string, isInit, isKernelBoot bool, volume *v1.Volume, volumeIdx int) *kubev1.Container {
 	if volume.ContainerDisk == nil {
 		return nil
 	}
@@ -284,27 +283,11 @@ func generateContainerFromVolume(vmi *v1.VirtualMachineInstance, config *virtcon
 	}
 
 	resources := kubev1.ResourceRequirements{}
-	resources.Requests = make(kubev1.ResourceList)
 	resources.Limits = make(kubev1.ResourceList)
-
-	resources.Requests[kubev1.ResourceCPU] = resource.MustParse("1m")
-	if cpuRequest := config.GetSupportContainerRequest(v1.ContainerDisk, kubev1.ResourceCPU); cpuRequest != nil {
-		resources.Requests[kubev1.ResourceCPU] = *cpuRequest
-	}
-	resources.Requests[kubev1.ResourceMemory] = resource.MustParse("1M")
-	if memRequest := config.GetSupportContainerRequest(v1.ContainerDisk, kubev1.ResourceMemory); memRequest != nil {
-		resources.Requests[kubev1.ResourceMemory] = *memRequest
-	}
-	resources.Requests[kubev1.ResourceEphemeralStorage] = resource.MustParse(ephemeralStorageOverheadSize)
-
-	resources.Limits[kubev1.ResourceCPU] = resource.MustParse("10m")
-	if cpuLimit := config.GetSupportContainerLimit(v1.ContainerDisk, kubev1.ResourceCPU); cpuLimit != nil {
-		resources.Limits[kubev1.ResourceCPU] = *cpuLimit
-	}
+	resources.Requests = make(kubev1.ResourceList)
 	resources.Limits[kubev1.ResourceMemory] = resource.MustParse("40M")
-	if memLimit := config.GetSupportContainerLimit(v1.ContainerDisk, kubev1.ResourceMemory); memLimit != nil {
-		resources.Limits[kubev1.ResourceMemory] = *memLimit
-	}
+	resources.Requests[kubev1.ResourceCPU] = resource.MustParse("10m")
+	resources.Requests[kubev1.ResourceEphemeralStorage] = resource.MustParse(ephemeralStorageOverheadSize)
 
 	var mountedDiskName string
 	if isKernelBoot {
@@ -314,8 +297,11 @@ func generateContainerFromVolume(vmi *v1.VirtualMachineInstance, config *virtcon
 	}
 
 	if vmi.IsCPUDedicated() || vmi.WantsToHaveQOSGuaranteed() {
-		resources.Requests[kubev1.ResourceCPU] = resources.Limits[kubev1.ResourceCPU]
-		resources.Requests[kubev1.ResourceMemory] = resources.Limits[kubev1.ResourceMemory]
+		resources.Limits[kubev1.ResourceCPU] = resource.MustParse("10m")
+		resources.Requests[kubev1.ResourceMemory] = resource.MustParse("40M")
+	} else {
+		resources.Limits[kubev1.ResourceCPU] = resource.MustParse("100m")
+		resources.Requests[kubev1.ResourceMemory] = resource.MustParse("1M")
 	}
 	var args []string
 	var name string
@@ -330,7 +316,6 @@ func generateContainerFromVolume(vmi *v1.VirtualMachineInstance, config *virtcon
 		log.Log.Object(vmi).Infof("arguments for container-disk \"%s\": --copy-path %s", name, copyPathArg)
 	}
 
-	noPrivilegeEscalation := false
 	nonRoot := true
 	var userId int64 = util.NonRootUID
 
@@ -352,12 +337,8 @@ func generateContainerFromVolume(vmi *v1.VirtualMachineInstance, config *virtcon
 		},
 		Resources: resources,
 		SecurityContext: &kubev1.SecurityContext{
-			RunAsUser:                &userId,
-			RunAsNonRoot:             &nonRoot,
-			AllowPrivilegeEscalation: &noPrivilegeEscalation,
-			Capabilities: &kubev1.Capabilities{
-				Drop: []kubev1.Capability{"ALL"},
-			},
+			RunAsUser:    &userId,
+			RunAsNonRoot: &nonRoot,
 		},
 	}
 

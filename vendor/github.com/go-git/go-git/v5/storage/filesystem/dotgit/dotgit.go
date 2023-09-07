@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	stdioutil "io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/hash"
 	"github.com/go-git/go-git/v5/storage"
 	"github.com/go-git/go-git/v5/utils/ioutil"
 
@@ -552,8 +552,8 @@ func (d *DotGit) hasPack(h plumbing.Hash) error {
 }
 
 func (d *DotGit) objectPath(h plumbing.Hash) string {
-	hex := h.String()
-	return d.fs.Join(objectsPath, hex[0:2], hex[2:hash.HexSize])
+	hash := h.String()
+	return d.fs.Join(objectsPath, hash[0:2], hash[2:40])
 }
 
 // incomingObjectPath is intended to add support for a git pre-receive hook
@@ -563,16 +563,15 @@ func (d *DotGit) objectPath(h plumbing.Hash) string {
 //
 // More on git hooks found here : https://git-scm.com/docs/githooks
 // More on 'quarantine'/incoming directory here:
-//
-//	https://git-scm.com/docs/git-receive-pack
+//     https://git-scm.com/docs/git-receive-pack
 func (d *DotGit) incomingObjectPath(h plumbing.Hash) string {
 	hString := h.String()
 
 	if d.incomingDirName == "" {
-		return d.fs.Join(objectsPath, hString[0:2], hString[2:hash.HexSize])
+		return d.fs.Join(objectsPath, hString[0:2], hString[2:40])
 	}
 
-	return d.fs.Join(objectsPath, d.incomingDirName, hString[0:2], hString[2:hash.HexSize])
+	return d.fs.Join(objectsPath, d.incomingDirName, hString[0:2], hString[2:40])
 }
 
 // hasIncomingObjects searches for an incoming directory and keeps its name
@@ -646,7 +645,7 @@ func (d *DotGit) ObjectDelete(h plumbing.Hash) error {
 }
 
 func (d *DotGit) readReferenceFrom(rd io.Reader, name string) (ref *plumbing.Reference, err error) {
-	b, err := io.ReadAll(rd)
+	b, err := stdioutil.ReadAll(rd)
 	if err != nil {
 		return nil, err
 	}
@@ -717,56 +716,48 @@ func (d *DotGit) Ref(name plumbing.ReferenceName) (*plumbing.Reference, error) {
 	return d.packedRef(name)
 }
 
-func (d *DotGit) findPackedRefsInFile(f billy.File, recv refsRecv) error {
+func (d *DotGit) findPackedRefsInFile(f billy.File) ([]*plumbing.Reference, error) {
 	s := bufio.NewScanner(f)
+	var refs []*plumbing.Reference
 	for s.Scan() {
 		ref, err := d.processLine(s.Text())
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		if !recv(ref) {
-			// skip parse
-			return nil
+		if ref != nil {
+			refs = append(refs, ref)
 		}
 	}
-	if err := s.Err(); err != nil {
-		return err
-	}
-	return nil
+
+	return refs, s.Err()
 }
 
-// refsRecv: returning true means that the reference continues to be resolved, otherwise it is stopped, which will speed up the lookup of a single reference.
-type refsRecv func(*plumbing.Reference) bool
-
-func (d *DotGit) findPackedRefs(recv refsRecv) error {
+func (d *DotGit) findPackedRefs() (r []*plumbing.Reference, err error) {
 	f, err := d.fs.Open(packedRefsPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil
+			return nil, nil
 		}
-		return err
+		return nil, err
 	}
 
 	defer ioutil.CheckClose(f, &err)
-	return d.findPackedRefsInFile(f, recv)
+	return d.findPackedRefsInFile(f)
 }
 
 func (d *DotGit) packedRef(name plumbing.ReferenceName) (*plumbing.Reference, error) {
-	var ref *plumbing.Reference
-	if err := d.findPackedRefs(func(r *plumbing.Reference) bool {
-		if r != nil && r.Name() == name {
-			ref = r
-			// ref found
-			return false
-		}
-		return true
-	}); err != nil {
+	refs, err := d.findPackedRefs()
+	if err != nil {
 		return nil, err
 	}
-	if ref != nil {
-		return ref, nil
+
+	for _, ref := range refs {
+		if ref.Name() == name {
+			return ref, nil
+		}
 	}
+
 	return nil, plumbing.ErrReferenceNotFound
 }
 
@@ -786,22 +777,34 @@ func (d *DotGit) RemoveRef(name plumbing.ReferenceName) error {
 	return d.rewritePackedRefsWithoutRef(name)
 }
 
-func refsRecvFunc(refs *[]*plumbing.Reference, seen map[plumbing.ReferenceName]bool) refsRecv {
-	return func(r *plumbing.Reference) bool {
-		if r != nil && !seen[r.Name()] {
-			*refs = append(*refs, r)
-			seen[r.Name()] = true
-		}
-		return true
-	}
-}
-
 func (d *DotGit) addRefsFromPackedRefs(refs *[]*plumbing.Reference, seen map[plumbing.ReferenceName]bool) (err error) {
-	return d.findPackedRefs(refsRecvFunc(refs, seen))
+	packedRefs, err := d.findPackedRefs()
+	if err != nil {
+		return err
+	}
+
+	for _, ref := range packedRefs {
+		if !seen[ref.Name()] {
+			*refs = append(*refs, ref)
+			seen[ref.Name()] = true
+		}
+	}
+	return nil
 }
 
 func (d *DotGit) addRefsFromPackedRefsFile(refs *[]*plumbing.Reference, f billy.File, seen map[plumbing.ReferenceName]bool) (err error) {
-	return d.findPackedRefsInFile(f, refsRecvFunc(refs, seen))
+	packedRefs, err := d.findPackedRefsInFile(f)
+	if err != nil {
+		return err
+	}
+
+	for _, ref := range packedRefs {
+		if !seen[ref.Name()] {
+			*refs = append(*refs, ref)
+			seen[ref.Name()] = true
+		}
+	}
+	return nil
 }
 
 func (d *DotGit) openAndLockPackedRefs(doCreate bool) (
@@ -940,7 +943,6 @@ func (d *DotGit) walkReferencesTree(refs *[]*plumbing.Reference, relPath []strin
 	files, err := d.fs.ReadDir(d.fs.Join(relPath...))
 	if err != nil {
 		if os.IsNotExist(err) {
-			// a race happened, and our directory is gone now
 			return nil
 		}
 
@@ -958,10 +960,6 @@ func (d *DotGit) walkReferencesTree(refs *[]*plumbing.Reference, relPath []strin
 		}
 
 		ref, err := d.readReferenceFile(".", strings.Join(newRelPath, "/"))
-		if os.IsNotExist(err) {
-			// a race happened, and our file is gone now
-			continue
-		}
 		if err != nil {
 			return err
 		}

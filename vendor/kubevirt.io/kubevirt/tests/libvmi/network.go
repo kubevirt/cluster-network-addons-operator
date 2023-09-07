@@ -44,7 +44,7 @@ func WithNetwork(network *kvirtv1.Network) Option {
 }
 
 func WithMasqueradeNetworking(ports ...kvirtv1.Port) []Option {
-	networkData := libnet.CreateDefaultCloudInitNetworkData()
+	networkData, _ := libnet.CreateDefaultCloudInitNetworkData()
 	return []Option{
 		WithInterface(InterfaceDeviceWithMasqueradeBinding(ports...)),
 		WithNetwork(kvirtv1.DefaultPodNetwork()),

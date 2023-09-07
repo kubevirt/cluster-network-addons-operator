@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"crypto/tls"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"path/filepath"
 	"sync"
 	"time"
@@ -201,12 +201,12 @@ func (f *FileCertificateManager) rotateCerts() error {
 
 func (f *FileCertificateManager) loadCertificates() (serverCrt *tls.Certificate, err error) {
 	// #nosec No risk for path injection. Used for specific cert file for key rotation
-	certBytes, err := os.ReadFile(f.certBytesPath)
+	certBytes, err := ioutil.ReadFile(f.certBytesPath)
 	if err != nil {
 		return nil, err
 	}
 	// #nosec No risk for path injection. Used for specific cert file for key rotation
-	keyBytes, err := os.ReadFile(f.keyBytesPath)
+	keyBytes, err := ioutil.ReadFile(f.keyBytesPath)
 	if err != nil {
 		return nil, err
 	}
