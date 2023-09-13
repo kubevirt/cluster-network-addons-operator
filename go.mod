@@ -333,4 +333,4 @@ replace bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-201207
 
 replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
 
-go 1.17
+go 1.19
