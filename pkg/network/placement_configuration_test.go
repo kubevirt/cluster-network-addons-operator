@@ -55,7 +55,7 @@ var _ = Describe("Testing PlacementConfiguration", func() {
 				PlacementConfiguration: &cnao.PlacementConfiguration{
 					Workloads: &cnao.Placement{
 						NodeSelector: map[string]string{
-							"kubernetes.io/arch": "amd64",
+							"kubernetes.io/os": "linux",
 						},
 					},
 					Infra: &cnao.Placement{
@@ -68,7 +68,7 @@ var _ = Describe("Testing PlacementConfiguration", func() {
 			expectedConfig: cnao.PlacementConfiguration{
 				Workloads: &cnao.Placement{
 					NodeSelector: map[string]string{
-						"kubernetes.io/arch": "amd64",
+						"kubernetes.io/os": "linux",
 					},
 				},
 				Infra: &cnao.Placement{
