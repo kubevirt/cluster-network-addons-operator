@@ -1,4 +1,4 @@
-// Copyright 2021 The Prometheus Authors
+// Copyright 2022 The Prometheus Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,20 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build go1.15
+package prometheus
 
-package collectors
+type v2 struct{}
 
-import (
-	"database/sql"
-
-	"github.com/prometheus/client_golang/prometheus"
-)
-
-func (c *dbStatsCollector) describeNewInGo115(ch chan<- *prometheus.Desc) {
-	ch <- c.maxIdleTimeClosed
-}
-
-func (c *dbStatsCollector) collectNewInGo115(ch chan<- prometheus.Metric, stats sql.DBStats) {
-	ch <- prometheus.MustNewConstMetric(c.maxIdleTimeClosed, prometheus.CounterValue, float64(stats.MaxIdleTimeClosed))
-}
+// V2 is a struct that can be referenced to access experimental API that might
+// be present in v2 of client golang someday. It offers extended functionality
+// of v1 with slightly changed API. It is acceptable to use some pieces from v1
+// and e.g `prometheus.NewGauge` and some from v2 e.g. `prometheus.V2.NewDesc`
+// in the same codebase.
+var V2 = v2{}
