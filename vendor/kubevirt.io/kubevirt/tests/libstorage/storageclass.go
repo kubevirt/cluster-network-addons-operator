@@ -22,6 +22,8 @@ package libstorage
 import (
 	"context"
 
+	"kubevirt.io/kubevirt/tests/framework/kubevirt"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	k8sv1 "k8s.io/api/core/v1"
@@ -36,8 +38,7 @@ import (
 var wffc = storagev1.VolumeBindingWaitForFirstConsumer
 
 func CreateStorageClass(name string, bindingMode *storagev1.VolumeBindingMode) {
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 
 	sc := &storagev1.StorageClass{
 		ObjectMeta: metav1.ObjectMeta{
@@ -49,17 +50,16 @@ func CreateStorageClass(name string, bindingMode *storagev1.VolumeBindingMode) {
 		Provisioner:       "kubernetes.io/no-provisioner",
 		VolumeBindingMode: bindingMode,
 	}
-	_, err = virtClient.StorageV1().StorageClasses().Create(context.Background(), sc, metav1.CreateOptions{})
+	_, err := virtClient.StorageV1().StorageClasses().Create(context.Background(), sc, metav1.CreateOptions{})
 	if !errors.IsAlreadyExists(err) {
 		util.PanicOnError(err)
 	}
 }
 
 func DeleteStorageClass(name string) {
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 
-	_, err = virtClient.StorageV1().StorageClasses().Get(context.Background(), name, metav1.GetOptions{})
+	_, err := virtClient.StorageV1().StorageClasses().Get(context.Background(), name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		return
 	}
@@ -69,9 +69,68 @@ func DeleteStorageClass(name string) {
 	util.PanicOnError(err)
 }
 
-func GetSnapshotStorageClass() (string, bool) {
-	storageSnapshot := Config.StorageSnapshot
-	return storageSnapshot, storageSnapshot != ""
+func GetSnapshotStorageClass(client kubecli.KubevirtClient) (string, error) {
+	if Config != nil && Config.StorageSnapshot != "" {
+		return Config.StorageSnapshot, nil
+	}
+
+	crd, err := client.
+		ExtensionsClient().
+		ApiextensionsV1().
+		CustomResourceDefinitions().
+		Get(context.Background(), "volumesnapshotclasses.snapshot.storage.k8s.io", metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return "", nil
+		}
+
+		return "", err
+	}
+
+	hasV1 := false
+	for _, v := range crd.Spec.Versions {
+		if v.Name == "v1" && v.Served {
+			hasV1 = true
+		}
+	}
+
+	if !hasV1 {
+		return "", nil
+	}
+
+	volumeSnapshotClasses, err := client.KubernetesSnapshotClient().SnapshotV1().VolumeSnapshotClasses().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return "", err
+	}
+	if len(volumeSnapshotClasses.Items) == 0 {
+		return "", nil
+	}
+	defaultSnapClass := volumeSnapshotClasses.Items[0]
+	for _, snapClass := range volumeSnapshotClasses.Items {
+		if snapClass.Annotations["snapshot.storage.kubernetes.io/is-default-class"] == "true" {
+			defaultSnapClass = snapClass
+		}
+	}
+
+	storageClasses, err := client.StorageV1().StorageClasses().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	var storageClass string
+
+	for _, sc := range storageClasses.Items {
+		if sc.Provisioner == defaultSnapClass.Driver {
+			storageClass = sc.Name
+			break
+		}
+	}
+
+	if Config != nil {
+		Config.StorageSnapshot = storageClass
+	}
+
+	return storageClass, nil
 }
 
 func GetRWXFileSystemStorageClass() (string, bool) {
@@ -103,9 +162,42 @@ func GetBlockStorageClass(accessMode k8sv1.PersistentVolumeAccessMode) (string, 
 	return sc, foundSC
 }
 
-func IsStorageClassBindingModeWaitForFirstConsumer(sc string) bool {
-	virtClient, err := kubecli.GetKubevirtClient()
+// GetNoVolumeSnapshotStorageClass goes over all the existing storage classes
+// and returns one which doesnt have volume snapshot ability
+// if the preference storage class exists and is without snapshot
+// ability it will be returned
+func GetNoVolumeSnapshotStorageClass(preference string) string {
+	virtClient := kubevirt.Client()
+	scs, err := virtClient.StorageV1().StorageClasses().List(context.Background(), metav1.ListOptions{})
 	Expect(err).ToNot(HaveOccurred())
+
+	vscs, err := virtClient.KubernetesSnapshotClient().SnapshotV1().VolumeSnapshotClasses().List(context.Background(), metav1.ListOptions{})
+	if errors.IsNotFound(err) {
+		return ""
+	}
+	Expect(err).ToNot(HaveOccurred())
+	vscsDrivers := make(map[string]bool)
+	for _, vsc := range vscs.Items {
+		vscsDrivers[vsc.Driver] = true
+	}
+
+	candidate := ""
+	for _, sc := range scs.Items {
+		if _, ok := vscsDrivers[sc.Provisioner]; !ok {
+			if sc.Name == preference {
+				return sc.Name
+			}
+			if candidate == "" {
+				candidate = sc.Name
+			}
+		}
+	}
+
+	return candidate
+}
+
+func IsStorageClassBindingModeWaitForFirstConsumer(sc string) bool {
+	virtClient := kubevirt.Client()
 	storageClass, err := virtClient.StorageV1().StorageClasses().Get(context.Background(), sc, metav1.GetOptions{})
 	if err != nil {
 		return false
@@ -115,8 +207,7 @@ func IsStorageClassBindingModeWaitForFirstConsumer(sc string) bool {
 }
 
 func CheckNoProvisionerStorageClassPVs(storageClassName string, numExpectedPVs int) {
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 	sc, err := virtClient.StorageV1().StorageClasses().Get(context.Background(), storageClassName, metav1.GetOptions{})
 	Expect(err).ToNot(HaveOccurred())
 

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"kubevirt.io/kubevirt/tests/framework/kubevirt"
+
 	batchv1 "k8s.io/api/batch/v1"
 	k8sv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-
-	"kubevirt.io/client-go/kubecli"
 )
 
 const (
@@ -31,10 +31,7 @@ func WaitForJobToFail(job *batchv1.Job, timeout time.Duration) error {
 }
 
 func waitForJob(job *batchv1.Job, toSucceed bool, timeout time.Duration) error {
-	virtClient, err := kubecli.GetKubevirtClient()
-	if err != nil {
-		return err
-	}
+	virtClient := kubevirt.Client()
 
 	jobFailedError := func(job *batchv1.Job) error {
 		if toSucceed {
@@ -50,7 +47,8 @@ func waitForJob(job *batchv1.Job, toSucceed bool, timeout time.Duration) error {
 	}
 
 	const finish = true
-	err = wait.PollImmediate(time.Second, timeout, func() (bool, error) {
+	err := wait.PollImmediate(time.Second, timeout, func() (bool, error) {
+		var err error
 		job, err = virtClient.BatchV1().Jobs(job.Namespace).Get(context.Background(), job.Name, metav1.GetOptions{})
 		if err != nil {
 			return finish, err
@@ -88,7 +86,9 @@ const (
 // In addition, the following arguments control the job behavior:
 // retry: The number of times the job should try and run the pod.
 // ttlAfterFinished: The period of time between the job finishing and its auto-deletion.
-//                   Make sure to leave enough time for the reporter to collect the logs.
+//
+//	Make sure to leave enough time for the reporter to collect the logs.
+//
 // timeout: The overall time at which the job is terminated, regardless of it finishing or not.
 func NewJob(name string, cmd, args []string, retry, ttlAfterFinished int32, timeout int64) *batchv1.Job {
 	pod := RenderPod(name, cmd, args)

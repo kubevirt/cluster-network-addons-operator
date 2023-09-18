@@ -38,6 +38,8 @@ import (
 	v1 "kubevirt.io/api/core/v1"
 	"kubevirt.io/client-go/log"
 	cdiv1 "kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1"
+
+	"kubevirt.io/kubevirt/pkg/network/vmispec"
 )
 
 const (
@@ -73,7 +75,8 @@ func NewListWatchFromClient(c cache.Getter, resource string, namespace string, f
 
 func HandlePanic() {
 	if r := recover(); r != nil {
-		log.Log.Level(log.FATAL).Log("stacktrace", debug.Stack(), "msg", r)
+		// Ignoring error - There is nothing to do, if logging fails
+		_ = log.Log.Level(log.FATAL).Log("stacktrace", debug.Stack(), "msg", r)
 	}
 }
 
@@ -362,6 +365,11 @@ func VMIHasHotplugVolumes(vmi *v1.VirtualMachineInstance) bool {
 	return false
 }
 
+func VMIHasHotplugCPU(vmi *v1.VirtualMachineInstance) bool {
+	vmiConditionManager := NewVirtualMachineInstanceConditionManager()
+	return vmiConditionManager.HasCondition(vmi, v1.VirtualMachineInstanceVCPUChange)
+}
+
 func AttachmentPods(ownerPod *k8sv1.Pod, podInformer cache.SharedIndexInformer) ([]*k8sv1.Pod, error) {
 	objs, err := podInformer.GetIndexer().ByIndex(cache.NamespaceIndex, ownerPod.Namespace)
 	if err != nil {
@@ -377,4 +385,37 @@ func AttachmentPods(ownerPod *k8sv1.Pod, podInformer cache.SharedIndexInformer) 
 		attachmentPods = append(attachmentPods, pod)
 	}
 	return attachmentPods, nil
+}
+
+func ApplyNetworkInterfaceRequestOnVMISpec(vmiSpec *v1.VirtualMachineInstanceSpec, request *v1.VirtualMachineInterfaceRequest) *v1.VirtualMachineInstanceSpec {
+	switch {
+	case request.AddInterfaceOptions != nil:
+		if iface := vmispec.LookupInterfaceByName(vmiSpec.Domain.Devices.Interfaces, request.AddInterfaceOptions.Name); iface == nil {
+			newNetwork, newIface := newNetworkInterface(request.AddInterfaceOptions.Name, request.AddInterfaceOptions.NetworkAttachmentDefinitionName)
+			vmiSpec.Networks = append(vmiSpec.Networks, newNetwork)
+			vmiSpec.Domain.Devices.Interfaces = append(vmiSpec.Domain.Devices.Interfaces, newIface)
+		}
+	case request.RemoveInterfaceOptions != nil:
+		if iface := vmispec.LookupInterfaceByName(vmiSpec.Domain.Devices.Interfaces, request.RemoveInterfaceOptions.Name); iface != nil {
+			iface.State = v1.InterfaceStateAbsent
+		}
+	}
+
+	return vmiSpec
+}
+
+func newNetworkInterface(name, netAttachDefName string) (v1.Network, v1.Interface) {
+	network := v1.Network{
+		Name: name,
+		NetworkSource: v1.NetworkSource{
+			Multus: &v1.MultusNetwork{
+				NetworkName: netAttachDefName,
+			},
+		},
+	}
+	iface := v1.Interface{
+		Name:                   name,
+		InterfaceBindingMethod: v1.InterfaceBindingMethod{Bridge: &v1.InterfaceBridge{}},
+	}
+	return network, iface
 }

@@ -2,7 +2,9 @@ package services
 
 import (
 	"fmt"
+	"strings"
 
+	k8sv1 "k8s.io/api/core/v1"
 	v1 "kubevirt.io/api/core/v1"
 
 	"kubevirt.io/kubevirt/pkg/virt-controller/watch/topology"
@@ -23,9 +25,14 @@ type NodeSelectorRendererOption func(renderer *NodeSelectorRenderer)
 func NewNodeSelectorRenderer(
 	vmiNodeSelectors map[string]string,
 	clusterWideConfNodeSelectors map[string]string,
+	architecture string,
 	opts ...NodeSelectorRendererOption,
 ) *NodeSelectorRenderer {
 	podNodeSelectors := map[string]string{v1.NodeSchedulable: "true"}
+	if architecture != "" {
+		podNodeSelectors[k8sv1.LabelArchStable] = strings.ToLower(architecture)
+	}
+
 	copySelectors(clusterWideConfNodeSelectors, podNodeSelectors)
 	copySelectors(vmiNodeSelectors, podNodeSelectors)
 
@@ -134,7 +141,7 @@ func hypervNodeSelectors(vmiFeatures *v1.Features) map[string]string {
 		}
 	}
 
-	if vmiFeatures.Hyperv.EVMCS != nil {
+	if vmiFeatures.Hyperv.EVMCS != nil && (vmiFeatures.Hyperv.EVMCS.Enabled == nil || (*vmiFeatures.Hyperv.EVMCS.Enabled) == true) {
 		nodeSelectors[v1.CPUModelVendorLabel+IntelVendorName] = "true"
 	}
 
