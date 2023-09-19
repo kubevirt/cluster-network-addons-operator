@@ -1,5 +1,7 @@
 module github.com/kubevirt/cluster-network-addons-operator
 
+go 1.17
+
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
@@ -332,5 +334,3 @@ replace github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
 replace bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
 
 replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
-
-go 1.17
