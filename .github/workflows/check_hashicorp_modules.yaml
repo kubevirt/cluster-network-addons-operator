@@ -9,38 +9,18 @@ jobs:
     - name: Run script
       run: |
         allowed_hashicorp_modules=(
-            "github.com/hashicorp/consul/api"
-            "github.com/hashicorp/consul/sdk"
             "github.com/hashicorp/errwrap"
-            "github.com/hashicorp/hcl"
-            "github.com/hashicorp/logutils"
-            "github.com/hashicorp/mdns"
-            "github.com/hashicorp/memberlist"
-            "github.com/hashicorp/serf"
-            "github.com/hashicorp/go-cleanhttp"
-            "github.com/hashicorp/go-immutable-radix"
-            "github.com/hashicorp/golang-lru"
-            "github.com/hashicorp/go-msgpack"
             "github.com/hashicorp/go-multierror"
-            "github.com/hashicorp/go.net"
-            "github.com/hashicorp/go-retryablehttp"
-            "github.com/hashicorp/go-rootcerts"
-            "github.com/hashicorp/go-sockaddr"
-            "github.com/hashicorp/go-syslog"
-            "github.com/hashicorp/go-uuid"
-            "github.com/hashicorp/go-version"
+            "github.com/hashicorp/hcl"
         )
 
         error_found=false
         while read -r line; do
-            module=$(echo "$line" | cut -d ' ' -f 1)
-            if [[ $module == github.com/hashicorp/* ]]; then
-                if ! [[ " ${allowed_hashicorp_modules[*]} " == *" $module "* ]]; then
-                    echo "found non allowlisted hashicorp module: $module"
-                    error_found=true
-                fi
+            if ! [[ " ${allowed_hashicorp_modules[*]} " == *" $line "* ]]; then
+                echo "found non allowlisted hashicorp module: $line"
+                error_found=true
             fi
-        done < go.sum
+        done < <(grep -i hashicorp go.mod | grep -o 'github.com/[^ ]*')
 
         if [[ $error_found == true ]]; then
             echo "Non allowlisted hashicorp modules found, exiting with an error."
