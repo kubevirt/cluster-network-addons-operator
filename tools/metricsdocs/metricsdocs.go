@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-	"github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
+	metricsparser "github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
 const (
