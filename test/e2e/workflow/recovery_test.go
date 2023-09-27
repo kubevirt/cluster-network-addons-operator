@@ -10,7 +10,7 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
-//2297
+// 2297
 var _ = Describe("NetworkAddonsConfig", func() {
 	gvk := GetCnaoV1GroupVersionKind()
 	Context("when invalid config is applied", func() {

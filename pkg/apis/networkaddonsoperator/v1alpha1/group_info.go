@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1alpha1 contains API Schema definitions for the networkaddonsoperator.network.kubevirt.io v1alpha1 API group
-//+kubebuilder:object:generate=true
-//+groupName=networkaddonsoperator.network.kubevirt.io
+// +kubebuilder:object:generate=true
+// +groupName=networkaddonsoperator.network.kubevirt.io
 package v1alpha1
 
 import (
