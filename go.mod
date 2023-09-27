@@ -13,7 +13,8 @@ require (
 	github.com/go-git/go-git/v5 v5.7.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/go-github/v32 v32.1.0
-	github.com/kevinburke/rest v0.0.0-20210506044642-5611499aa33c // indirect
+	github.com/kubevirt/monitoring/pkg/metrics/parser v0.0.0-20230627123556-81a891d4462a
+	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v0.0.0
 	github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
@@ -22,35 +23,24 @@ require (
 	github.com/operator-framework/operator-sdk v1.12.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_model v0.4.0
 	github.com/prometheus/common v0.32.1
 	github.com/spf13/pflag v1.0.5
 	github.com/thanhpk/randstr v1.0.4
-	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
-	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/tools v0.2.0
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.24.2
 	k8s.io/apiextensions-apiserver v0.24.2
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubectl v0.24.2
-	sigs.k8s.io/controller-runtime v0.11.1
-	sigs.k8s.io/controller-tools v0.6.0
-)
-
-require (
-	github.com/bshuster-repo/logrus-logstash-hook v1.0.2 // indirect
-	github.com/kubevirt/monitoring/pkg/metrics/parser v0.0.0-20230627123556-81a891d4462a
-	github.com/onsi/ginkgo/v2 v2.1.3
-	github.com/prometheus/client_model v0.4.0
-	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.9.4 // indirect
 	kubevirt.io/client-go v0.58.0
 	kubevirt.io/kubevirt v0.58.0
-	rsc.io/letsencrypt v0.0.3 // indirect
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27 // indirect
+	sigs.k8s.io/controller-runtime v0.11.1
+	sigs.k8s.io/controller-tools v0.6.0
 )
 
 require (
@@ -79,6 +69,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/bshuster-repo/logrus-logstash-hook v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/cloudflare/cfssl v1.5.0 // indirect
@@ -154,6 +145,7 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.3.0 // indirect
+	github.com/kevinburke/rest v0.0.0-20210506044642-5611499aa33c // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -212,6 +204,8 @@ require (
 	github.com/stretchr/testify v1.7.2 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/thoas/go-funk v0.8.0 // indirect
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
+	github.com/voxelbrain/goptions v0.0.0-20180630082107-58cddc247ea2 // indirect
 	github.com/weppos/publicsuffix-go v0.13.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190809123943-df4f5c81cb3b // indirect
@@ -249,6 +243,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	helm.sh/helm/v3 v3.9.4 // indirect
 	k8s.io/apiserver v0.24.2 // indirect
 	k8s.io/cli-runtime v0.24.2 // indirect
 	k8s.io/component-base v0.24.2 // indirect
@@ -261,6 +256,8 @@ require (
 	kubevirt.io/containerized-data-importer-api v1.50.0 // indirect
 	kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90 // indirect
 	oras.land/oras-go v1.2.0 // indirect
+	rsc.io/letsencrypt v0.0.3 // indirect
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/kubebuilder/v3 v3.0.0-alpha.0.0.20210803185103-51e4a9aa5055 // indirect
 	sigs.k8s.io/kustomize/api v0.11.4 // indirect
@@ -299,6 +296,9 @@ replace (
 )
 
 replace (
+	bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
+	github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
+	github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
 	github.com/containerd/containerd => github.com/containerd/containerd v1.5.18
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
@@ -328,9 +328,3 @@ replace (
 	github.com/openshift/library-go => github.com/mhenriks/library-go v0.0.0-20200804184258-4fc3a5379c7a
 	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v1.0.2
 )
-
-replace github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
-
-replace bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
-
-replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
