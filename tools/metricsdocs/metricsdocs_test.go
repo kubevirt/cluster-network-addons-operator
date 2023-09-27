@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-	"github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
+	metricsparser "github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
 var _ = Describe("Test metricsdocs", func() {

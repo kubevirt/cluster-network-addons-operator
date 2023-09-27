@@ -21,7 +21,7 @@ package main
 
 import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-	"github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
+	metricsparser "github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 	"github.com/kubevirt/monitoring/pkg/metrics/parser"
 	dto "github.com/prometheus/client_model/go"
 )
