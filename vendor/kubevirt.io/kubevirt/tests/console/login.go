@@ -5,12 +5,13 @@ import (
 	"regexp"
 	"time"
 
+	"kubevirt.io/kubevirt/tests/framework/kubevirt"
+
 	v1 "kubevirt.io/api/core/v1"
 
 	expect "github.com/google/goexpect"
 	"google.golang.org/grpc/codes"
 
-	"kubevirt.io/client-go/kubecli"
 	"kubevirt.io/client-go/log"
 
 	"kubevirt.io/kubevirt/pkg/util/net/dns"
@@ -26,10 +27,7 @@ type LoginToFunction func(*v1.VirtualMachineInstance) error
 
 // LoginToCirros performs a console login to a Cirros base VM
 func LoginToCirros(vmi *v1.VirtualMachineInstance) error {
-	virtClient, err := kubecli.GetKubevirtClient()
-	if err != nil {
-		panic(err)
-	}
+	virtClient := kubevirt.Client()
 	expecter, _, err := NewExpecter(virtClient, vmi, connectionTimeout)
 	if err != nil {
 		return err
@@ -74,10 +72,7 @@ func LoginToCirros(vmi *v1.VirtualMachineInstance) error {
 
 // LoginToAlpine performs a console login to an Alpine base VM
 func LoginToAlpine(vmi *v1.VirtualMachineInstance) error {
-	virtClient, err := kubecli.GetKubevirtClient()
-	if err != nil {
-		panic(err)
-	}
+	virtClient := kubevirt.Client()
 
 	expecter, _, err := NewExpecter(virtClient, vmi, connectionTimeout)
 	if err != nil {
@@ -124,10 +119,7 @@ func LoginToAlpine(vmi *v1.VirtualMachineInstance) error {
 
 // LoginToFedora performs a console login to a Fedora base VM
 func LoginToFedora(vmi *v1.VirtualMachineInstance) error {
-	virtClient, err := kubecli.GetKubevirtClient()
-	if err != nil {
-		panic(err)
-	}
+	virtClient := kubevirt.Client()
 
 	expecter, _, err := NewExpecter(virtClient, vmi, connectionTimeout)
 	if err != nil {
@@ -141,9 +133,12 @@ func LoginToFedora(vmi *v1.VirtualMachineInstance) error {
 	}
 
 	// Do not login, if we already logged in
+	loggedInPromptRegex := fmt.Sprintf(
+		`(\[fedora@(localhost|fedora|%s) ~\]\$ |\[root@(localhost|fedora|%s) fedora\]\# )`, vmi.Name, vmi.Name,
+	)
 	b := []expect.Batcher{
 		&expect.BSnd{S: "\n"},
-		&expect.BExp{R: fmt.Sprintf(`(\[fedora@(localhost|fedora|%s) ~\]\$ |\[root@(localhost|fedora|%s) fedora\]\# )`, vmi.Name, vmi.Name)},
+		&expect.BExp{R: loggedInPromptRegex},
 	}
 	_, err = expecter.ExpectBatch(b, promptTimeout)
 	if err == nil {
@@ -174,7 +169,7 @@ func LoginToFedora(vmi *v1.VirtualMachineInstance) error {
 				Rt: 10,
 			},
 			&expect.Case{
-				R: regexp.MustCompile(fmt.Sprintf(`\[fedora@(localhost|fedora|%s) ~\]\$ `, vmi.Name)),
+				R: regexp.MustCompile(loggedInPromptRegex),
 				T: expect.OK(),
 			},
 		}},
@@ -201,10 +196,7 @@ func LoginToFedora(vmi *v1.VirtualMachineInstance) error {
 
 // OnPrivilegedPrompt performs a console check that the prompt is privileged.
 func OnPrivilegedPrompt(vmi *v1.VirtualMachineInstance, timeout int) bool {
-	virtClient, err := kubecli.GetKubevirtClient()
-	if err != nil {
-		panic(err)
-	}
+	virtClient := kubevirt.Client()
 
 	expecter, _, err := NewExpecter(virtClient, vmi, connectionTimeout)
 	if err != nil {

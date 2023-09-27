@@ -203,7 +203,7 @@ func createVirtualMachineWithPrimaryInterfaceMacAddress(virtClient kubecli.Kubev
 	vm := kvtests.NewRandomVirtualMachine(vmi, true)
 
 	vm.Spec.Template.Spec.Domain.Devices.Interfaces[0].MacAddress = macAddress
-	_, err := virtClient.VirtualMachine(kvtutil.NamespaceTestDefault).Create(vm)
+	_, err := virtClient.VirtualMachine(kvtutil.NamespaceTestDefault).Create(context.TODO(), vm)
 
 	return err
 }

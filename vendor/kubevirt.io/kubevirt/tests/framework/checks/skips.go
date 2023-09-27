@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"kubevirt.io/kubevirt/tests/framework/kubevirt"
+
 	"kubevirt.io/kubevirt/pkg/util/cluster"
 
 	"github.com/onsi/gomega"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/onsi/ginkgo/v2"
 
+	kubev1 "kubevirt.io/api/core/v1"
 	"kubevirt.io/client-go/kubecli"
 
 	virtconfig "kubevirt.io/kubevirt/pkg/virt-config"
@@ -29,8 +32,7 @@ func SkipTestIfNoCPUManager() {
 		ginkgo.Skip("the CPUManager feature gate is not enabled.")
 	}
 
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 	nodes := libnode.GetAllSchedulableNodes(virtClient)
 
 	for _, node := range nodes.Items {
@@ -52,8 +54,7 @@ func SkipTestIfNotEnoughNodesWithCPUManager(nodeCount int) {
 		ginkgo.Skip("the CPUManager feature gate is not enabled.")
 	}
 
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 	nodes := libnode.GetAllSchedulableNodes(virtClient)
 
 	found := 0
@@ -74,8 +75,7 @@ func SkipTestIfNotEnoughNodesWithCPUManager(nodeCount int) {
 }
 
 func SkipTestIfNotEnoughNodesWith2MiHugepages(nodeCount int) {
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 	nodes := libnode.GetAllSchedulableNodes(virtClient)
 
 	found := 0
@@ -102,8 +102,7 @@ func SkipTestIfNotEnoughNodesWithCPUManagerWith2MiHugepages(nodeCount int) {
 
 func SkipTestIfNotRealtimeCapable() {
 
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 	nodes := libnode.GetAllSchedulableNodes(virtClient)
 
 	for _, node := range nodes.Items {
@@ -116,16 +115,28 @@ func SkipTestIfNotRealtimeCapable() {
 }
 
 func SkipTestIfNotSEVCapable() {
+	virtClient := kubevirt.Client()
+	nodes := libnode.GetAllSchedulableNodes(virtClient)
+
+	for _, node := range nodes.Items {
+		if IsSEVCapable(&node, kubev1.SEVLabel) {
+			return
+		}
+	}
+	ginkgo.Skip("no node capable of running SEV workloads detected", 1)
+}
+
+func SkipTestIfNotSEVESCapable() {
 	virtClient, err := kubecli.GetKubevirtClient()
 	util.PanicOnError(err)
 	nodes := libnode.GetAllSchedulableNodes(virtClient)
 
 	for _, node := range nodes.Items {
-		if IsSEVCapable(&node) {
+		if IsSEVCapable(&node, kubev1.SEVESLabel) {
 			return
 		}
 	}
-	ginkgo.Skip("no node capable of running SEV workloads detected", 1)
+	ginkgo.Skip("no node capable of running SEV-ES workloads detected", 1)
 }
 
 func SkipIfNonRoot(feature string) {
@@ -208,8 +219,7 @@ func SkipIfOpenShift(message string) {
 }
 
 func SkipIfOpenShift4(message string) {
-	virtClient, err := kubecli.GetKubevirtClient()
-	util.PanicOnError(err)
+	virtClient := kubevirt.Client()
 
 	if t, err := cluster.IsOnOpenShift(virtClient); err != nil {
 		util.PanicOnError(err)

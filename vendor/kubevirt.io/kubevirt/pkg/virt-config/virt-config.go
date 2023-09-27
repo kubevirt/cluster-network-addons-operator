@@ -37,7 +37,7 @@ import (
 const (
 	ParallelOutboundMigrationsPerNodeDefault uint32 = 2
 	ParallelMigrationsPerClusterDefault      uint32 = 5
-	BandwithPerMigrationDefault                     = "0Mi"
+	BandwidthPerMigrationDefault                    = "0Mi"
 	MigrationAllowAutoConverge               bool   = false
 	MigrationAllowPostCopy                   bool   = false
 	MigrationProgressTimeout                 int64  = 150
@@ -62,13 +62,13 @@ const (
 	SmbiosConfigDefaultManufacturer                 = "KubeVirt"
 	SmbiosConfigDefaultProduct                      = "None"
 	DefaultPermitBridgeInterfaceOnPodNetwork        = true
-	DefaultSELinuxLauncherType                      = "virt_launcher.process"
+	DefaultSELinuxLauncherType                      = ""
 	SupportedGuestAgentVersions                     = "2.*,3.*,4.*,5.*"
 	DefaultARCHOVMFPath                             = "/usr/share/OVMF"
 	DefaultAARCH64OVMFPath                          = "/usr/share/AAVMF"
 	DefaultMemBalloonStatsPeriod             uint32 = 10
 	DefaultCPUAllocationRatio                       = 10
-	DefaultDiskVerificationMemoryLimitMBytes        = 1700
+	DefaultDiskVerificationMemoryLimitMBytes        = 2000
 	DefaultVirtAPILogVerbosity                      = 2
 	DefaultVirtControllerLogVerbosity               = 2
 	DefaultVirtHandlerLogVerbosity                  = 2
@@ -129,8 +129,15 @@ func (c *ClusterConfig) GetResourceVersion() string {
 	return c.lastValidConfigResourceVersion
 }
 
-func (c *ClusterConfig) GetMachineType() string {
-	return c.GetConfig().MachineType
+func (c *ClusterConfig) GetMachineType(arch string) string {
+	switch arch {
+	case "arm64":
+		return c.GetConfig().ArchitectureConfiguration.Arm64.MachineType
+	case "ppc64le":
+		return c.GetConfig().ArchitectureConfiguration.Ppc64le.MachineType
+	default:
+		return c.GetConfig().ArchitectureConfiguration.Amd64.MachineType
+	}
 }
 
 func (c *ClusterConfig) GetCPUModel() string {
@@ -149,8 +156,15 @@ func (c *ClusterConfig) GetMemoryOvercommit() int {
 	return c.GetConfig().DeveloperConfiguration.MemoryOvercommit
 }
 
-func (c *ClusterConfig) GetEmulatedMachines() []string {
-	return c.GetConfig().EmulatedMachines
+func (c *ClusterConfig) GetEmulatedMachines(arch string) []string {
+	switch arch {
+	case "arm64":
+		return c.GetConfig().ArchitectureConfiguration.Arm64.EmulatedMachines
+	case "ppc64le":
+		return c.GetConfig().ArchitectureConfiguration.Ppc64le.EmulatedMachines
+	default:
+		return c.GetConfig().ArchitectureConfiguration.Amd64.EmulatedMachines
+	}
 }
 
 func (c *ClusterConfig) GetLessPVCSpaceToleration() int {
@@ -169,32 +183,36 @@ func (c *ClusterConfig) GetDefaultNetworkInterface() string {
 	return c.GetConfig().NetworkConfiguration.NetworkInterface
 }
 
-func (c *ClusterConfig) SetVMIDefaultNetworkInterface(vmi *v1.VirtualMachineInstance) error {
-	autoAttach := vmi.Spec.Domain.Devices.AutoattachPodInterface
+func (c *ClusterConfig) GetDefaultArchitecture() string {
+	return c.GetConfig().ArchitectureConfiguration.DefaultArchitecture
+}
+
+func (c *ClusterConfig) SetVMISpecDefaultNetworkInterface(spec *v1.VirtualMachineInstanceSpec) error {
+	autoAttach := spec.Domain.Devices.AutoattachPodInterface
 	if autoAttach != nil && *autoAttach == false {
 		return nil
 	}
 
 	// Override only when nothing is specified
-	if len(vmi.Spec.Networks) == 0 && len(vmi.Spec.Domain.Devices.Interfaces) == 0 {
+	if len(spec.Networks) == 0 && len(spec.Domain.Devices.Interfaces) == 0 {
 		iface := v1.NetworkInterfaceType(c.GetDefaultNetworkInterface())
 		switch iface {
 		case v1.BridgeInterface:
 			if !c.IsBridgeInterfaceOnPodNetworkEnabled() {
 				return fmt.Errorf("Bridge interface is not enabled in kubevirt-config")
 			}
-			vmi.Spec.Domain.Devices.Interfaces = []v1.Interface{*v1.DefaultBridgeNetworkInterface()}
+			spec.Domain.Devices.Interfaces = []v1.Interface{*v1.DefaultBridgeNetworkInterface()}
 		case v1.MasqueradeInterface:
-			vmi.Spec.Domain.Devices.Interfaces = []v1.Interface{*v1.DefaultMasqueradeNetworkInterface()}
+			spec.Domain.Devices.Interfaces = []v1.Interface{*v1.DefaultMasqueradeNetworkInterface()}
 		case v1.SlirpInterface:
 			if !c.IsSlirpInterfaceEnabled() {
 				return fmt.Errorf("Slirp interface is not enabled in kubevirt-config")
 			}
 			defaultIface := v1.DefaultSlirpNetworkInterface()
-			vmi.Spec.Domain.Devices.Interfaces = []v1.Interface{*defaultIface}
+			spec.Domain.Devices.Interfaces = []v1.Interface{*defaultIface}
 		}
 
-		vmi.Spec.Networks = []v1.Network{*v1.DefaultPodNetwork()}
+		spec.Networks = []v1.Network{*v1.DefaultPodNetwork()}
 	}
 	return nil
 }
@@ -227,8 +245,15 @@ func (c *ClusterConfig) GetSupportedAgentVersions() []string {
 	return c.GetConfig().SupportedGuestAgentVersions
 }
 
-func (c *ClusterConfig) GetOVMFPath() string {
-	return c.GetConfig().OVMFPath
+func (c *ClusterConfig) GetOVMFPath(arch string) string {
+	switch arch {
+	case "arm64":
+		return c.GetConfig().ArchitectureConfiguration.Arm64.OVMFPath
+	case "ppc64le":
+		return c.GetConfig().ArchitectureConfiguration.Ppc64le.OVMFPath
+	default:
+		return c.GetConfig().ArchitectureConfiguration.Amd64.OVMFPath
+	}
 }
 
 func (c *ClusterConfig) GetCPUAllocationRatio() int {
@@ -241,6 +266,30 @@ func (c *ClusterConfig) GetMinimumClusterTSCFrequency() *int64 {
 
 func (c *ClusterConfig) GetPermittedHostDevices() *v1.PermittedHostDevices {
 	return c.GetConfig().PermittedHostDevices
+}
+
+func (c *ClusterConfig) GetSupportContainerRequest(typeName v1.SupportContainerType, resourceName k8sv1.ResourceName) *resource.Quantity {
+	for _, containerResource := range c.GetConfig().SupportContainerResources {
+		if containerResource.Type == typeName {
+			quantity := containerResource.Resources.Requests[resourceName]
+			if !quantity.IsZero() {
+				return &quantity
+			}
+		}
+	}
+	return nil
+}
+
+func (c *ClusterConfig) GetSupportContainerLimit(typeName v1.SupportContainerType, resourceName k8sv1.ResourceName) *resource.Quantity {
+	for _, containerResource := range c.GetConfig().SupportContainerResources {
+		if containerResource.Type == typeName {
+			quantity := containerResource.Resources.Limits[resourceName]
+			if !quantity.IsZero() {
+				return &quantity
+			}
+		}
+	}
+	return nil
 }
 
 func canSelectNode(nodeSelector map[string]string, node *k8sv1.Node) bool {
@@ -263,7 +312,12 @@ func (c *ClusterConfig) GetDesiredMDEVTypes(node *k8sv1.Node) []string {
 		mdevTypesMap := make(map[string]struct{})
 		for _, nodeConfig := range nodeMdevConf {
 			if canSelectNode(nodeConfig.NodeSelector, node) {
-				for _, mdevType := range nodeConfig.MediatedDevicesTypes {
+				types := nodeConfig.MediatedDeviceTypes
+				// Handle deprecated spelling
+				if len(types) == 0 {
+					types = nodeConfig.MediatedDevicesTypes
+				}
+				for _, mdevType := range types {
 					mdevTypesMap[mdevType] = struct{}{}
 				}
 			}
@@ -276,7 +330,11 @@ func (c *ClusterConfig) GetDesiredMDEVTypes(node *k8sv1.Node) []string {
 			return mdevTypesList
 		}
 	}
-	return mdevTypesConf.MediatedDevicesTypes
+	// Handle deprecated spelling
+	if len(mdevTypesConf.MediatedDeviceTypes) == 0 {
+		return mdevTypesConf.MediatedDevicesTypes
+	}
+	return mdevTypesConf.MediatedDeviceTypes
 }
 
 type virtComponent int
@@ -336,17 +394,49 @@ func (c *ClusterConfig) GetVirtLauncherVerbosity() uint {
 	return c.getComponentVerbosity(virtLauncher, "")
 }
 
-//GetMinCPUModel return minimal cpu which is used in node-labeller
+// GetMinCPUModel return minimal cpu which is used in node-labeller
 func (c *ClusterConfig) GetMinCPUModel() string {
 	return c.GetConfig().MinCPUModel
 }
 
-//GetObsoleteCPUModels return slice of obsolete cpus which are used in node-labeller
+// GetObsoleteCPUModels return slice of obsolete cpus which are used in node-labeller
 func (c *ClusterConfig) GetObsoleteCPUModels() map[string]bool {
 	return c.GetConfig().ObsoleteCPUModels
 }
 
-//GetClusterCPUArch return the CPU architecture in ClusterConfig
+// GetClusterCPUArch return the CPU architecture in ClusterConfig
 func (c *ClusterConfig) GetClusterCPUArch() string {
 	return c.cpuArch
+}
+
+// GetDeveloperConfigurationUseEmulation return the UseEmulation value in DeveloperConfiguration
+func (c *ClusterConfig) GetDeveloperConfigurationUseEmulation() bool {
+	config := c.GetConfig()
+
+	if config.DeveloperConfiguration != nil {
+		return config.DeveloperConfiguration.UseEmulation
+	}
+
+	return false
+}
+
+func (c *ClusterConfig) GetVMStateStorageClass() string {
+	return c.GetConfig().VMStateStorageClass
+}
+
+func (c *ClusterConfig) IsFreePageReportingDisabled() bool {
+	return c.GetConfig().VirtualMachineOptions != nil && c.GetConfig().VirtualMachineOptions.DisableFreePageReporting != nil
+}
+
+func (c *ClusterConfig) GetKSMConfiguration() *v1.KSMConfiguration {
+	return c.GetConfig().KSMConfiguration
+}
+
+func (c *ClusterConfig) GetMaximumCpuSockets() (numOfSockets uint32) {
+	liveConfig := c.GetConfig().LiveUpdateConfiguration
+	if liveConfig != nil && liveConfig.MaxCpuSockets != nil {
+		numOfSockets = *liveConfig.MaxCpuSockets
+	}
+
+	return
 }
