@@ -4,21 +4,28 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"kubevirt.io/kubevirt/tests/framework/checks"
+	"kubevirt.io/kubevirt/tests/testsuite"
 
 	k8sv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"kubevirt.io/client-go/kubecli"
+	k8slabels "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
+	v1 "kubevirt.io/api/core/v1"
 	kvtests "kubevirt.io/kubevirt/tests"
+	"kubevirt.io/kubevirt/tests/libvmi"
 	kvtutil "kubevirt.io/kubevirt/tests/util"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
+	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
@@ -149,20 +156,15 @@ var _ = Context("Prometheus Alerts", func() {
 		})
 
 		Context("and there are duplicate MACs", func() {
-			var virtClient kubecli.KubevirtClient
 			var err error
 
 			AfterEach(func() {
 				By("deleting test namespace")
-				err = virtClient.CoreV1().Namespaces().Delete(context.Background(), kvtutil.NamespaceTestDefault, metav1.DeleteOptions{})
+				err = testenv.Client.Delete(context.Background(), &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: kvtutil.NamespaceTestDefault}})
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			BeforeEach(func() {
-				By("starting virtClient")
-				virtClient, err = kubecli.GetKubevirtClientFromFlags("", os.Getenv("KUBECONFIG"))
-				Expect(err).ToNot(HaveOccurred())
-
 				By("creating test namespace that is not managed by kubemacpool (opted-out)")
 				namespace := &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{
 					Name: kvtutil.NamespaceTestDefault,
@@ -170,21 +172,21 @@ var _ = Context("Prometheus Alerts", func() {
 						"mutatevirtualmachines.kubemacpool.io": "ignore",
 					},
 				}}
-				_, err = virtClient.CoreV1().Namespaces().Create(context.Background(), namespace, metav1.CreateOptions{})
+				err := testenv.Client.Create(context.Background(), namespace)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("creating 2 VMs with a duplicate MAC")
-				err = createVirtualMachineWithPrimaryInterfaceMacAddress(virtClient, "00-B0-D0-63-C2-26")
+				err = createVirtualMachineWithPrimaryInterfaceMacAddress("00-B0-D0-63-C2-26")
 				Expect(err).ToNot(HaveOccurred())
-				err = createVirtualMachineWithPrimaryInterfaceMacAddress(virtClient, "00-B0-D0-63-C2-26")
+				err = createVirtualMachineWithPrimaryInterfaceMacAddress("00-B0-D0-63-C2-26")
 				Expect(err).ToNot(HaveOccurred())
 
 				By("cleaning namespace labels, returning the namespace to managed by kubemacpool")
-				err = cleanNamespaceLabels(virtClient, kvtutil.NamespaceTestDefault)
+				err = cleanNamespaceLabels(kvtutil.NamespaceTestDefault)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("restaring kubemacpool pods")
-				restartKubemacpoolPods(virtClient)
+				restartKubemacpoolPods()
 			})
 
 			It("should issue KubeMacPoolDuplicateMacsFound alert", func() {
@@ -198,40 +200,67 @@ var _ = Context("Prometheus Alerts", func() {
 	})
 })
 
-func createVirtualMachineWithPrimaryInterfaceMacAddress(virtClient kubecli.KubevirtClient, macAddress string) error {
-	vmi := kvtests.NewRandomVMI()
+func newRandomVMI() *v1.VirtualMachineInstance {
+	vmi := libvmi.New(
+		libvmi.WithInterface(libvmi.InterfaceDeviceWithMasqueradeBinding()),
+		libvmi.WithNetwork(v1.DefaultPodNetwork()),
+	)
+	vmi.ObjectMeta.Namespace = kvtutil.NamespaceTestDefault
+	vmi.Spec.Domain.Resources.Requests = k8sv1.ResourceList{}
+
+	if checks.IsARM64(testsuite.Arch) {
+		// Cirros image need 256M to boot on ARM64,
+		vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("256Mi")
+	} else {
+		vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("128Mi")
+	}
+
+	return vmi
+}
+
+func createVirtualMachineWithPrimaryInterfaceMacAddress(macAddress string) error {
+	vmi := newRandomVMI()
 	vm := kvtests.NewRandomVirtualMachine(vmi, true)
 
 	vm.Spec.Template.Spec.Domain.Devices.Interfaces[0].MacAddress = macAddress
-	_, err := virtClient.VirtualMachine(kvtutil.NamespaceTestDefault).Create(context.TODO(), vm)
+	err := testenv.Client.Create(context.Background(), vm)
 
 	return err
 }
 
-func cleanNamespaceLabels(virtClient kubecli.KubevirtClient, namespace string) error {
-	nsObject, err := virtClient.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
+func cleanNamespaceLabels(namespace string) error {
+	nsObject := &k8sv1.Namespace{}
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: namespace}, nsObject)
 	if err != nil {
 		return err
 	}
 
 	nsObject.Labels = make(map[string]string)
 
-	_, err = virtClient.CoreV1().Namespaces().Update(context.TODO(), nsObject, metav1.UpdateOptions{})
-	return err
+	return testenv.Client.Update(context.Background(), nsObject)
 }
 
-func restartKubemacpoolPods(virtClient kubecli.KubevirtClient) {
-	pods, err := virtClient.CoreV1().Pods(components.Namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: "app=kubemacpool"})
+func restartKubemacpoolPods() {
+	labelSelector, err := k8slabels.Parse("app=kubemacpool")
+	Expect(err).ToNot(HaveOccurred())
+
+	listOptions := k8sclient.ListOptions{
+		LabelSelector: labelSelector,
+		Namespace:     components.Namespace,
+	}
+
+	pods := &k8sv1.PodList{}
+	err = testenv.Client.List(context.Background(), pods, &listOptions)
 	Expect(err).ToNot(HaveOccurred())
 	nPods := len(pods.Items)
 
 	for _, pod := range pods.Items {
-		err = virtClient.CoreV1().Pods(components.Namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+		err = testenv.Client.Delete(context.Background(), &pod)
 		Expect(err).ToNot(HaveOccurred())
 	}
 
 	Eventually(func() error {
-		pods, err = virtClient.CoreV1().Pods(components.Namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: "app=kubemacpool"})
+		err = testenv.Client.List(context.Background(), pods, &listOptions)
 		Expect(err).ToNot(HaveOccurred())
 
 		if len(pods.Items) != nPods {

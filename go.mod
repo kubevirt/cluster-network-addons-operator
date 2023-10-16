@@ -22,9 +22,9 @@ require (
 	github.com/openshift/origin v4.1.0+incompatible
 	github.com/operator-framework/operator-sdk v1.12.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.17.0
-	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16
-	github.com/prometheus/common v0.44.0
+	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/client_model v0.4.0
+	github.com/prometheus/common v0.37.0
 	github.com/spf13/pflag v1.0.5
 	github.com/thanhpk/randstr v1.0.4
 	golang.org/x/oauth2 v0.8.0
@@ -37,6 +37,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/helm v2.16.10+incompatible
 	k8s.io/kubectl v0.24.2
+	kubevirt.io/api v0.0.0-20230706190111-5527663af491
 	kubevirt.io/client-go v1.0.0
 	kubevirt.io/kubevirt v1.0.0
 	sigs.k8s.io/controller-runtime v0.14.6
@@ -249,7 +250,6 @@ require (
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
 	k8s.io/kubernetes v1.14.0 // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
-	kubevirt.io/api v0.0.0-20230706190111-5527663af491 // indirect
 	kubevirt.io/containerized-data-importer-api v1.57.0-alpha1 // indirect
 	kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90 // indirect
 	oras.land/oras-go v1.2.0 // indirect
