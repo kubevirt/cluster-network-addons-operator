@@ -10,7 +10,7 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/releases"
 )
 
-var _ = Context("Cluster Network Addons Operator", func() {
+var _ = Context("Cluster Network Addons Operator - just a test", func() {
 	Context("when installed from main release", func() {
 		mainRelease := LatestRelease()
 		BeforeEach(func() {
