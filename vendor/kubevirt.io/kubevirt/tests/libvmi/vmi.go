@@ -24,9 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/utils/pointer"
 
 	v1 "kubevirt.io/api/core/v1"
+
+	"kubevirt.io/kubevirt/pkg/pointer"
 )
 
 // Option represents an action that enables an option.
@@ -68,6 +69,12 @@ func WithAnnotation(key, value string) Option {
 			vmi.Annotations = map[string]string{}
 		}
 		vmi.Annotations[key] = value
+	}
+}
+
+func WithNamespace(namespace string) Option {
+	return func(vmi *v1.VirtualMachineInstance) {
+		vmi.Namespace = namespace
 	}
 }
 
@@ -147,7 +154,7 @@ func WithUefi(secureBoot bool) Option {
 		if vmi.Spec.Domain.Firmware.Bootloader.EFI == nil {
 			vmi.Spec.Domain.Firmware.Bootloader.EFI = &v1.EFI{}
 		}
-		vmi.Spec.Domain.Firmware.Bootloader.EFI.SecureBoot = pointer.Bool(secureBoot)
+		vmi.Spec.Domain.Firmware.Bootloader.EFI.SecureBoot = pointer.P(secureBoot)
 		// secureBoot Requires SMM to be enabled
 		if secureBoot {
 			if vmi.Spec.Domain.Features == nil {
@@ -156,18 +163,21 @@ func WithUefi(secureBoot bool) Option {
 			if vmi.Spec.Domain.Features.SMM == nil {
 				vmi.Spec.Domain.Features.SMM = &v1.FeatureState{}
 			}
-			vmi.Spec.Domain.Features.SMM.Enabled = pointer.Bool(secureBoot)
+			vmi.Spec.Domain.Features.SMM.Enabled = pointer.P(secureBoot)
 		}
 	}
 }
 
 // WithSEV adds `launchSecurity` with `sev`.
-func WithSEV() Option {
+func WithSEV(isESEnabled bool) Option {
 	return func(vmi *v1.VirtualMachineInstance) {
-		if vmi.Spec.Domain.LaunchSecurity == nil {
-			vmi.Spec.Domain.LaunchSecurity = &v1.LaunchSecurity{}
+		vmi.Spec.Domain.LaunchSecurity = &v1.LaunchSecurity{
+			SEV: &v1.SEV{
+				Policy: &v1.SEVPolicy{
+					EncryptedState: &isESEnabled,
+				},
+			},
 		}
-		vmi.Spec.Domain.LaunchSecurity.SEV = &v1.SEV{}
 	}
 }
 
@@ -181,6 +191,39 @@ func WithCPUFeature(featureName, policy string) Option {
 			Name:   featureName,
 			Policy: policy,
 		})
+	}
+}
+
+func WithPasstInterfaceWithPort() Option {
+	return WithInterface(InterfaceDeviceWithPasstBinding([]v1.Port{{Port: 1234, Protocol: "TCP"}}...))
+}
+
+func WithNodeAffinityFor(node *k8sv1.Node) Option {
+	return func(vmi *v1.VirtualMachineInstance) {
+		nodeSelectorTerm := k8sv1.NodeSelectorTerm{
+			MatchExpressions: []k8sv1.NodeSelectorRequirement{
+				{Key: "kubernetes.io/hostname", Operator: k8sv1.NodeSelectorOpIn, Values: []string{node.Name}},
+			},
+		}
+
+		if vmi.Spec.Affinity == nil {
+			vmi.Spec.Affinity = &k8sv1.Affinity{}
+		}
+
+		if vmi.Spec.Affinity.NodeAffinity == nil {
+			vmi.Spec.Affinity.NodeAffinity = &k8sv1.NodeAffinity{}
+		}
+
+		if vmi.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+			vmi.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &k8sv1.NodeSelector{}
+		}
+
+		if vmi.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms == nil {
+			vmi.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = []k8sv1.NodeSelectorTerm{}
+		}
+
+		vmi.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms =
+			append(vmi.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, nodeSelectorTerm)
 	}
 }
 

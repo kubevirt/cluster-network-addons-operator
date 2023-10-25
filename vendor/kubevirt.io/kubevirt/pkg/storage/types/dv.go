@@ -171,8 +171,12 @@ func GenerateDataVolumeFromTemplate(clientset kubecli.KubevirtClient, dataVolume
 		return nil, err
 	}
 
-	if cloneSource != nil && newDataVolume.Spec.SourceRef != nil {
-		newDataVolume.Spec.SourceRef = nil
+	if cloneSource != nil {
+		// If SourceRef is set, populate spec.Source with data from the DataSource
+		// If not, update the field anyway to account for possible namespace changes
+		if newDataVolume.Spec.SourceRef != nil {
+			newDataVolume.Spec.SourceRef = nil
+		}
 		newDataVolume.Spec.Source = &cdiv1.DataVolumeSource{
 			PVC: &cdiv1.DataVolumeSourcePVC{
 				Namespace: cloneSource.Namespace,
@@ -183,6 +187,7 @@ func GenerateDataVolumeFromTemplate(clientset kubecli.KubevirtClient, dataVolume
 
 	return newDataVolume, nil
 }
+
 func GetDataVolumeFromCache(namespace, name string, dataVolumeInformer cache.SharedInformer) (*cdiv1.DataVolume, error) {
 	key := controller.NamespacedKey(namespace, name)
 	obj, exists, err := dataVolumeInformer.GetStore().GetByKey(key)
@@ -244,17 +249,14 @@ func HasDataVolumeProvisioning(namespace string, volumes []virtv1.Volume, dataVo
 			log.Log.Errorf("Error fetching DataVolume %s while determining virtual machine status: %v", volume.DataVolume.Name, err)
 			continue
 		}
-		if dv == nil {
+		if dv == nil || dv.Status.Phase == cdiv1.Succeeded || dv.Status.Phase == cdiv1.PendingPopulation {
 			continue
 		}
 
-		// Skip DataVolumes with unbound PVCs since these cannot possibly be provisioning
 		dvConditions := NewDataVolumeConditionManager()
-		if !dvConditions.HasConditionWithStatus(dv, cdiv1.DataVolumeBound, v1.ConditionTrue) {
-			continue
-		}
-
-		if dv.Status.Phase != cdiv1.Succeeded {
+		isBound := dvConditions.HasConditionWithStatus(dv, cdiv1.DataVolumeBound, v1.ConditionTrue)
+		// WFFC + plus unbound is not provisioning
+		if isBound || dv.Status.Phase != cdiv1.WaitForFirstConsumer {
 			return true
 		}
 	}

@@ -36,6 +36,7 @@ var ContainerizedDataImporterNamespace = "cdi"
 var KubeVirtKubectlPath = ""
 var KubeVirtOcPath = ""
 var KubeVirtVirtctlPath = ""
+var KubeVirtExampleGuestAgentPath = ""
 var KubeVirtGoCliPath = ""
 var KubeVirtInstallNamespace string
 var PreviousReleaseTag = ""
@@ -60,6 +61,8 @@ var DNSServiceNamespace = ""
 
 var MigrationNetworkNIC = "eth1"
 
+var DisableCustomSELinuxPolicy bool
+
 func init() {
 	kubecli.Init()
 	flag.StringVar(&KubeVirtUtilityVersionTag, "utility-container-tag", "", "Set the image tag or digest to use")
@@ -72,6 +75,7 @@ func init() {
 	flag.StringVar(&KubeVirtKubectlPath, "kubectl-path", "", "Set path to kubectl binary")
 	flag.StringVar(&KubeVirtOcPath, "oc-path", "", "Set path to oc binary")
 	flag.StringVar(&KubeVirtVirtctlPath, "virtctl-path", "", "Set path to virtctl binary")
+	flag.StringVar(&KubeVirtExampleGuestAgentPath, "example-guest-agent-path", "", "Set path to the example-guest-agent binary which is used for vsock testing")
 	flag.StringVar(&KubeVirtGoCliPath, "gocli-path", "", "Set path to gocli binary")
 	flag.StringVar(&KubeVirtInstallNamespace, "installed-namespace", "", "Set the namespace KubeVirt is installed in")
 	flag.BoolVar(&DeployTestingInfrastructureFlag, "deploy-testing-infra", false, "Deploy testing infrastructure if set")
@@ -93,6 +97,7 @@ func init() {
 	flag.StringVar(&DNSServiceName, "dns-service-name", "kube-dns", "cluster DNS service name")
 	flag.StringVar(&DNSServiceNamespace, "dns-service-namespace", "kube-system", "cluster DNS service namespace")
 	flag.StringVar(&MigrationNetworkNIC, "migration-network-nic", "eth1", "NIC to use on cluster nodes to access the dedicated migration network")
+	flag.BoolVar(&DisableCustomSELinuxPolicy, "disable-custom-selinux-policy", false, "disables the installation and use of the custom SELinux policy for virt-launcher")
 }
 
 func NormalizeFlags() {

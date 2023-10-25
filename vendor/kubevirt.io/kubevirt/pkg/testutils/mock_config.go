@@ -32,8 +32,8 @@ func NewFakeClusterConfigUsingKVWithCPUArch(kv *KVv1.KubeVirt, CPUArch string) (
 	kubeVirtInformer.GetStore().Add(kv)
 
 	AddDataVolumeAPI(crdInformer)
-
-	return virtconfig.NewClusterConfigWithCPUArch(crdInformer, kubeVirtInformer, namespace, CPUArch), crdInformer, kubeVirtInformer
+	cfg, _ := virtconfig.NewClusterConfigWithCPUArch(crdInformer, kubeVirtInformer, namespace, CPUArch)
+	return cfg, crdInformer, kubeVirtInformer
 }
 
 func NewFakeClusterConfigUsingKVConfig(config *KVv1.KubeVirtConfiguration) (*virtconfig.ClusterConfig, cache.SharedIndexInformer, cache.SharedIndexInformer) {
@@ -46,7 +46,8 @@ func NewFakeClusterConfigUsingKVConfig(config *KVv1.KubeVirtConfiguration) (*vir
 			Configuration: *config,
 		},
 		Status: KVv1.KubeVirtStatus{
-			Phase: "Deployed",
+			DefaultArchitecture: runtime.GOARCH,
+			Phase:               "Deployed",
 		},
 	}
 	return NewFakeClusterConfigUsingKV(kv)
@@ -57,6 +58,14 @@ func NewFakeContainerDiskSource() *KVv1.ContainerDiskSource {
 		Image:           "fake-image",
 		ImagePullSecret: "fake-pull-secret",
 		Path:            "/fake-path",
+	}
+}
+
+func NewFakePersistentVolumeSource() *KVv1.PersistentVolumeClaimVolumeSource {
+	return &KVv1.PersistentVolumeClaimVolumeSource{
+		PersistentVolumeClaimVolumeSource: k8score.PersistentVolumeClaimVolumeSource{
+			ClaimName: "fake-pvc",
+		},
 	}
 }
 
@@ -93,4 +102,38 @@ func UpdateFakeKubeVirtClusterConfig(kubeVirtInformer cache.SharedIndexInformer,
 	clone.Status.Phase = "Deployed"
 
 	kubeVirtInformer.GetStore().Update(clone)
+}
+
+func AddServiceMonitorAPI(crdInformer cache.SharedIndexInformer) {
+	crdInformer.GetStore().Add(&extv1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "service-monitors.monitoring.coreos.com",
+		},
+		Spec: extv1.CustomResourceDefinitionSpec{
+			Names: extv1.CustomResourceDefinitionNames{
+				Kind: "ServiceMonitor",
+			},
+		},
+	})
+}
+
+func RemoveServiceMonitorAPI(crdInformer cache.SharedIndexInformer) {
+	crdInformer.GetStore().Replace(nil, "")
+}
+
+func AddPrometheusRuleAPI(crdInformer cache.SharedIndexInformer) {
+	crdInformer.GetStore().Add(&extv1.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "prometheusrules.monitoring.coreos.com",
+		},
+		Spec: extv1.CustomResourceDefinitionSpec{
+			Names: extv1.CustomResourceDefinitionNames{
+				Kind: "PrometheusRule",
+			},
+		},
+	})
+}
+
+func RemovePrometheusRuleAPI(crdInformer cache.SharedIndexInformer) {
+	crdInformer.GetStore().Replace(nil, "")
 }
