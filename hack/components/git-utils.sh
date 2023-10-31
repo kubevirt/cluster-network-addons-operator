@@ -23,7 +23,7 @@ function git-utils::get_component_tag() {
 
     (
         cd ${component_dir}
-        git describe --tags
+        git describe --tags --abbrev=7
     )
 }
 
