@@ -14,8 +14,8 @@ components:
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: 09d6598c46192921fb35099223070f05ca80b237
-    branch: main
-    update-policy: static
+    branch: release-0.41
+    update-policy: tagged
     metadata: v0.41.0
   linux-bridge:
     url: https://github.com/containernetworking/plugins
