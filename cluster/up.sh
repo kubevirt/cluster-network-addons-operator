@@ -35,12 +35,8 @@ if [[ "$KUBEVIRT_PROVIDER" =~ (ocp|okd)- ]]; then
 fi
 
 if [[ "$KUBEVIRT_PROVIDER" =~ k8s- ]]; then
-    echo 'Installing Open vSwitch'
+    echo 'Enable Open vSwitch'
     for node in $(./cluster/kubectl.sh get nodes --no-headers | awk '{print $1}'); do
-        ./cluster/cli.sh ssh ${node} -- sudo dnf install -y centos-release-nfv-openvswitch
-        ./cluster/cli.sh ssh ${node} -- sudo dnf install -y openvswitch2.16 libibverbs
-        ./cluster/cli.sh ssh ${node} -- sudo systemctl daemon-reload
         ./cluster/cli.sh ssh ${node} -- sudo systemctl enable --now openvswitch
-        ./cluster/cli.sh ssh ${node} -- sudo systemctl restart openvswitch
     done
 fi
