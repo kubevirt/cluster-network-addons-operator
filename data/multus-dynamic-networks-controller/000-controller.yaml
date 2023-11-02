@@ -96,6 +96,16 @@ spec:
           args:
             - "-config=/etc/dynamic-networks-controller/dynamic-networks-config.json"
             - "-v=5"
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - --fail
+                - --unix-socket
+                - /host/run/multus/multus.sock
+                - localhost/healthz
+            initialDelaySeconds: 15
+            periodSeconds: 5
           resources:
             requests:
               cpu: "100m"
