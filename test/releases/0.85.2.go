@@ -79,7 +79,7 @@ func init() {
 				ParentName: "secondary-dns",
 				ParentKind: "Deployment",
 				Name:       "secondary-dns",
-				Image:      components.CoreDNSImageDefault,
+				Image:      "k8s.gcr.io/coredns/coredns@sha256:5b6ec0d6de9baaf3e92d0f66cd96a25b9edbce8716f5f15dcd1a616b3abd590e",
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
