@@ -91,5 +91,12 @@ KUBE_SECONDARY_DNS_IMAGE=ghcr.io/kubevirt/kubesecondarydns
 KUBE_SECONDARY_DNS_IMAGE_TAGGED=${KUBE_SECONDARY_DNS_IMAGE}:${KUBE_SECONDARY_DNS_TAG}
 KUBE_SECONDARY_DNS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${KUBE_SECONDARY_DNS_IMAGE_TAGGED}" "${KUBE_SECONDARY_DNS_IMAGE}")"
 
+CORE_DNS_IMAGE=registry.k8s.io/coredns/coredns
+CORE_DNS_IMAGE_TAGGED=$(grep $CORE_DNS_IMAGE ${KUBE_SECONDARY_DNS_PATH}/manifests/secondarydns.yaml | awk -F": " '{print $2}')
+CORE_DNS_IMAGE_DIGEST="$(docker-utils::get_image_digest "${CORE_DNS_IMAGE_TAGGED}" "${CORE_DNS_IMAGE}")"
+
 sed -i -r "s#\"${KUBE_SECONDARY_DNS_IMAGE}(@sha256)?:.*\"#\"${KUBE_SECONDARY_DNS_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${KUBE_SECONDARY_DNS_IMAGE}(@sha256)?:.*\"#\"${KUBE_SECONDARY_DNS_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
+
+sed -i -r "s#\"${CORE_DNS_IMAGE}(@sha256)?:.*\"#\"${CORE_DNS_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${CORE_DNS_IMAGE}(@sha256)?:.*\"#\"${CORE_DNS_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
