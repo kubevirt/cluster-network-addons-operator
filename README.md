@@ -303,7 +303,7 @@ For more information about the configuration format check [configuring section](
 
 # Upgrades
 
-Starting with version `0.65.0`, this operator supports upgrades to any newer
+Starting with version `0.76.0`, this operator supports upgrades to any newer
 version. If you wish to upgrade, remove old operator (`operator.yaml`) and
 install new, operands will remain available during the operator's downtime.
 
