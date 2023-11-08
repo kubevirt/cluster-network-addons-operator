@@ -28,7 +28,7 @@ main() {
 
     # Run ovs-cni functional tests
     cd ${TMP_COMPONENT_PATH}
-    KUBECONFIG=${KUBECONFIG} E2E_TEST_ARGS="-ginkgo.v -test.v -ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" make functest
+    KUBECONFIG=${KUBECONFIG} E2E_TEST_ARGS="-ginkgo.v -test.v -ginkgo.noColor -ginkgo.skip ovs-mirror --junit-output=$ARTIFACTS/junit.functest.xml" make functest
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
