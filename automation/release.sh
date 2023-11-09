@@ -5,9 +5,6 @@
 # To run it just do proper docker login and pass the git hub user password/token as
 # GITHUB_USER and GITHUB_TOKEN env variables.
 
-echo "disabling release creation to prevent false push on reverting specific release"
-exit 0
-
 # To pass user/password from automations, idea is taken from [1]
 # [1] https://stackoverflow.com/questions/8536732/can-i-hold-git-credentials-in-environment-variables
 git config credential.helper '!f() { sleep 1; echo "username=${GITHUB_USER}"; echo "password=${GITHUB_TOKEN}"; }; f'
