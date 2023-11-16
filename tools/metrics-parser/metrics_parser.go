@@ -2,24 +2,14 @@ package metricsparser
 
 import (
 	"bytes"
-	"fmt"
 	"log"
-	"strings"
 	"text/template"
 
+	"github.com/machadovilaca/operator-observability/pkg/operatormetrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v3"
-
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
-
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
-
-func MetricsOptsToMetricList(Metrics map[monitoring.MetricsKey]monitoring.MetricsOpts, result MetricList) MetricList {
-	for _, opts := range Metrics {
-		result = append(result, MetricDescriptionToMetric(opts))
-	}
-	return result
-}
 
 type PrometheusCR struct {
 	Spec struct {
@@ -39,7 +29,7 @@ type Comment struct {
 	Type    string
 }
 
-func ReadFromPrometheusCR() MetricList {
+func ReadFromPrometheusCR() []Metric {
 	var cr PrometheusCR
 	err := yaml.Unmarshal(ParseTemplateFile(), &cr)
 	if err != nil {
@@ -111,66 +101,22 @@ func ParseTemplateFile() []byte {
 }
 
 type Metric struct {
+	operatormetrics.Metric
+
 	Name        string
 	Description string
 	MType       string
 }
 
-func MetricDescriptionToMetric(rrd monitoring.MetricsOpts) Metric {
-	return Metric{
-		Name:        rrd.Name,
-		Description: rrd.Help,
-		MType:       rrd.Type,
+func (m Metric) getCollector() prometheus.Collector { return nil }
+
+func (m Metric) GetOpts() operatormetrics.MetricOpts {
+	return operatormetrics.MetricOpts{
+		Name: m.Name,
+		Help: m.Description,
 	}
 }
 
-func (m Metric) WriteOut() {
-	fmt.Println("###", m.Name)
-
-	writeNewLine := false
-
-	if m.Description != "" {
-		fmt.Print(m.Description + ". ")
-		writeNewLine = true
-	}
-
-	if m.MType != "" {
-		fmt.Print("Type: " + m.MType + ".")
-		writeNewLine = true
-	}
-
-	if writeNewLine {
-		fmt.Println()
-	}
-}
-
-type MetricList []Metric
-
-// Len implements sort.Interface.Len
-func (m MetricList) Len() int {
-	return len(m)
-}
-
-// Less implements sort.Interface.Less
-func (m MetricList) Less(i, j int) bool {
-	return m[i].Name < m[j].Name
-}
-
-// Swap implements sort.Interface.Swap
-func (m MetricList) Swap(i, j int) {
-	m[i], m[j] = m[j], m[i]
-}
-
-func (m *MetricList) add(line string) {
-	split := strings.Split(line, " ")
-	name := split[2]
-	split[3] = strings.Title(split[3])
-	description := strings.Join(split[3:], " ")
-	*m = append(*m, Metric{Name: name, Description: description})
-}
-
-func (m MetricList) WriteOut() {
-	for _, met := range m {
-		met.WriteOut()
-	}
+func (m Metric) GetType() operatormetrics.MetricType {
+	return operatormetrics.MetricType(m.MType)
 }
