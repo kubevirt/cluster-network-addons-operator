@@ -19,7 +19,7 @@ import (
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -65,7 +65,7 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{
 		Scheme:             scheme,
 		Namespace:          namespace,
-		MetricsBindAddress: monitoring.GetMetricsAddress(),
+		MetricsBindAddress: metrics.GetMetricsAddress(),
 		MapperProvider:     k8s.NewDynamicRESTMapper,
 	})
 	if err != nil {
