@@ -183,6 +183,7 @@ require (
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/openshift/client-go v0.0.0 // indirect
 	github.com/operator-framework/api v0.10.5 // indirect
 	github.com/operator-framework/java-operator-plugins v0.0.0-20210708174638-463fb91f3d5e // indirect
@@ -304,7 +305,6 @@ replace (
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.2
-	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.3
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.11.1
 	k8s.io/client-go => k8s.io/client-go v0.23.1
