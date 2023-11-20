@@ -302,7 +302,6 @@ replace (
 	github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.2
 	github.com/opencontainers/runc => github.com/opencontainers/runc v1.0.3
 	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
-	golang.org/x/text => golang.org/x/text v0.3.3
 	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.11.1
 	sigs.k8s.io/kustomize/kyaml => sigs.k8s.io/kustomize/kyaml v0.13.3
 )
