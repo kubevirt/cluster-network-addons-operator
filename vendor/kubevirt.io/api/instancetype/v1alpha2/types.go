@@ -20,11 +20,10 @@
 package v1alpha2
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "kubevirt.io/api/core/v1"
-
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // VirtualMachineInstancetype resource contains quantitative and resource related VirtualMachine configuration
@@ -232,6 +231,19 @@ type VirtualMachinePreferenceSpec struct {
 	//
 	//+optional
 	Machine *MachinePreferences `json:"machine,omitempty"`
+
+	// Volumes optionally defines preferences associated with the Volumes attribute of a VirtualMachineInstace DomainSpec
+	//
+	//+optional
+	Volumes *VolumePreferences `json:"volumes,omitempty"`
+}
+
+type VolumePreferences struct {
+
+	// PreffereedStorageClassName optionally defines the preferred storageClass
+	//
+	//+optional
+	PreferredStorageClassName string `json:"preferredStorageClassName,omitempty"`
 }
 
 // PreferredCPUTopology defines a preferred CPU topology to be exposed to the guest

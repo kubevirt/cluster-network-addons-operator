@@ -17,6 +17,10 @@ package spec
 import (
 	"encoding/json"
 	"strings"
+
+	"github.com/go-openapi/swag"
+	"k8s.io/kube-openapi/pkg/internal"
+	jsonv2 "k8s.io/kube-openapi/pkg/internal/third_party/go-json-experiment/json"
 )
 
 // Extensions vendor specific extensions
@@ -66,6 +70,38 @@ func (e Extensions) GetStringSlice(key string) ([]string, bool) {
 	return nil, false
 }
 
+// GetObject gets the object value from the extensions.
+// out must be a json serializable type; the json go struct
+// tags of out are used to populate it.
+func (e Extensions) GetObject(key string, out interface{}) error {
+	// This json serialization/deserialization could be replaced with
+	// an approach using reflection if the optimization becomes justified.
+	if v, ok := e[strings.ToLower(key)]; ok {
+		b, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(b, out)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e Extensions) sanitizeWithExtra() (extra map[string]any) {
+	for k, v := range e {
+		if !internal.IsExtensionKey(k) {
+			if extra == nil {
+				extra = make(map[string]any)
+			}
+			extra[k] = v
+			delete(e, k)
+		}
+	}
+	return extra
+}
+
 // VendorExtensible composition block.
 type VendorExtensible struct {
 	Extensions Extensions
@@ -109,5 +145,75 @@ func (v *VendorExtensible) UnmarshalJSON(data []byte) error {
 			v.Extensions[k] = vv
 		}
 	}
+	return nil
+}
+
+// InfoProps the properties for an info definition
+type InfoProps struct {
+	Description    string       `json:"description,omitempty"`
+	Title          string       `json:"title,omitempty"`
+	TermsOfService string       `json:"termsOfService,omitempty"`
+	Contact        *ContactInfo `json:"contact,omitempty"`
+	License        *License     `json:"license,omitempty"`
+	Version        string       `json:"version,omitempty"`
+}
+
+// Info object provides metadata about the API.
+// The metadata can be used by the clients if needed, and can be presented in the Swagger-UI for convenience.
+//
+// For more information: http://goo.gl/8us55a#infoObject
+type Info struct {
+	VendorExtensible
+	InfoProps
+}
+
+// MarshalJSON marshal this to JSON
+func (i Info) MarshalJSON() ([]byte, error) {
+	if internal.UseOptimizedJSONMarshaling {
+		return internal.DeterministicMarshal(i)
+	}
+	b1, err := json.Marshal(i.InfoProps)
+	if err != nil {
+		return nil, err
+	}
+	b2, err := json.Marshal(i.VendorExtensible)
+	if err != nil {
+		return nil, err
+	}
+	return swag.ConcatJSON(b1, b2), nil
+}
+
+func (i Info) MarshalNextJSON(opts jsonv2.MarshalOptions, enc *jsonv2.Encoder) error {
+	var x struct {
+		Extensions
+		InfoProps
+	}
+	x.Extensions = i.Extensions
+	x.InfoProps = i.InfoProps
+	return opts.MarshalNext(enc, x)
+}
+
+// UnmarshalJSON marshal this from JSON
+func (i *Info) UnmarshalJSON(data []byte) error {
+	if internal.UseOptimizedJSONUnmarshaling {
+		return jsonv2.Unmarshal(data, i)
+	}
+
+	if err := json.Unmarshal(data, &i.InfoProps); err != nil {
+		return err
+	}
+	return json.Unmarshal(data, &i.VendorExtensible)
+}
+
+func (i *Info) UnmarshalNextJSON(opts jsonv2.UnmarshalOptions, dec *jsonv2.Decoder) error {
+	var x struct {
+		Extensions
+		InfoProps
+	}
+	if err := opts.UnmarshalNext(dec, &x); err != nil {
+		return err
+	}
+	i.Extensions = internal.SanitizeExtensions(x.Extensions)
+	i.InfoProps = x.InfoProps
 	return nil
 }

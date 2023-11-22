@@ -17,7 +17,6 @@ package validate
 import (
 	"reflect"
 	"regexp"
-	"strings"
 
 	"k8s.io/kube-openapi/pkg/validation/errors"
 	"k8s.io/kube-openapi/pkg/validation/spec"
@@ -51,34 +50,19 @@ func (o *objectValidator) Applies(source interface{}, kind reflect.Kind) bool {
 	return r
 }
 
-func (o *objectValidator) isProperties() bool {
-	p := strings.Split(o.Path, ".")
-	return len(p) > 1 && p[len(p)-1] == jsonProperties && p[len(p)-2] != jsonProperties
-}
-
-func (o *objectValidator) isDefault() bool {
-	p := strings.Split(o.Path, ".")
-	return len(p) > 1 && p[len(p)-1] == jsonDefault && p[len(p)-2] != jsonDefault
-}
-
-func (o *objectValidator) isExample() bool {
-	p := strings.Split(o.Path, ".")
-	return len(p) > 1 && (p[len(p)-1] == swaggerExample || p[len(p)-1] == swaggerExamples) && p[len(p)-2] != swaggerExample
-}
-
 func (o *objectValidator) Validate(data interface{}) *Result {
 	val := data.(map[string]interface{})
 	// TODO: guard against nil data
 	numKeys := int64(len(val))
 
+	res := new(Result)
+
 	if o.MinProperties != nil && numKeys < *o.MinProperties {
-		return errorHelp.sErr(errors.TooFewProperties(o.Path, o.In, *o.MinProperties))
+		res.AddErrors(errors.TooFewProperties(o.Path, o.In, *o.MinProperties, numKeys))
 	}
 	if o.MaxProperties != nil && numKeys > *o.MaxProperties {
-		return errorHelp.sErr(errors.TooManyProperties(o.Path, o.In, *o.MaxProperties))
+		res.AddErrors(errors.TooManyProperties(o.Path, o.In, *o.MaxProperties, numKeys))
 	}
-
-	res := new(Result)
 
 	// check validity of field names
 	if o.AdditionalProperties != nil && !o.AdditionalProperties.Allows {
@@ -115,7 +99,7 @@ func (o *objectValidator) Validate(data interface{}) *Result {
 				// Cases: properties which are not regular properties and have not been matched by the PatternProperties validator
 				if o.AdditionalProperties != nil && o.AdditionalProperties.Schema != nil {
 					// AdditionalProperties as Schema
-					res.Merge(NewSchemaValidator(o.AdditionalProperties.Schema, o.Root, o.Path+"."+key, o.KnownFormats, o.Options.Options()...).Validate(value))
+					res.Merge(o.Options.NewValidatorForField(key, o.AdditionalProperties.Schema, o.Root, o.Path+"."+key, o.KnownFormats, o.Options.Options()...).Validate(value))
 				} else if regularProperty && !(matched || succeededOnce) {
 					// TODO: this is dead code since regularProperty=false here
 					res.AddErrors(errors.FailedAllPatternProperties(o.Path, o.In, key))
@@ -137,7 +121,7 @@ func (o *objectValidator) Validate(data interface{}) *Result {
 
 		// Recursively validates each property against its schema
 		if v, ok := val[pName]; ok {
-			r := NewSchemaValidator(&pSchema, o.Root, rName, o.KnownFormats, o.Options.Options()...).Validate(v)
+			r := o.Options.NewValidatorForField(pName, &pSchema, o.Root, rName, o.KnownFormats, o.Options.Options()...).Validate(v)
 			res.Merge(r)
 		}
 	}
@@ -160,7 +144,7 @@ func (o *objectValidator) Validate(data interface{}) *Result {
 		if !regularProperty && (matched /*|| succeededOnce*/) {
 			for _, pName := range patterns {
 				if v, ok := o.PatternProperties[pName]; ok {
-					res.Merge(NewSchemaValidator(&v, o.Root, o.Path+"."+key, o.KnownFormats, o.Options.Options()...).Validate(value))
+					res.Merge(o.Options.NewValidatorForField(key, &v, o.Root, o.Path+"."+key, o.KnownFormats, o.Options.Options()...).Validate(value))
 				}
 			}
 		}
@@ -179,7 +163,7 @@ func (o *objectValidator) validatePatternProperty(key string, value interface{},
 		if match, _ := regexp.MatchString(k, key); match {
 			patterns = append(patterns, k)
 			matched = true
-			validator := NewSchemaValidator(&sch, o.Root, o.Path+"."+key, o.KnownFormats, o.Options.Options()...)
+			validator := o.Options.NewValidatorForField(key, &sch, o.Root, o.Path+"."+key, o.KnownFormats, o.Options.Options()...)
 
 			res := validator.Validate(value)
 			result.Merge(res)

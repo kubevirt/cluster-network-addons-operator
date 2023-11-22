@@ -46,26 +46,48 @@ const (
 	DownwardMetricsFeatureGate = "DownwardMetrics"
 	NonRootDeprecated          = "NonRootExperimental"
 	NonRoot                    = "NonRoot"
+	Root                       = "Root"
 	ClusterProfiler            = "ClusterProfiler"
 	WorkloadEncryptionSEV      = "WorkloadEncryptionSEV"
 	// DockerSELinuxMCSWorkaround sets the SELinux level of all the non-compute virt-launcher containers to "s0".
 	DockerSELinuxMCSWorkaround = "DockerSELinuxMCSWorkaround"
 	PSA                        = "PSA"
+	VSOCKGate                  = "VSOCK"
+	// DisableCustomSELinuxPolicy disables the installation of the custom SELinux policy for virt-launcher
+	DisableCustomSELinuxPolicy = "DisableCustomSELinuxPolicy"
+	// KubevirtSeccompProfile indicate that Kubevirt will install its custom profile and
+	// user can tell Kubevirt to use it
+	KubevirtSeccompProfile = "KubevirtSeccompProfile"
+	// DisableMediatedDevicesHandling disables the handling of mediated
+	// devices, its creation and deletion
+	DisableMediatedDevicesHandling = "DisableMDEVConfiguration"
+	// HotplugNetworkIfacesGate enables the virtio network interface hotplug feature
+	HotplugNetworkIfacesGate = "HotplugNICs"
+	// PersistentReservation enables the use of the SCSI persistent reservation with the pr-helper daemon
+	PersistentReservation = "PersistentReservation"
+	// VMPersistentState enables persisting backend state files of VMs, such as the contents of the vTPM
+	VMPersistentState = "VMPersistentState"
+	Multiarchitecture = "MultiArchitecture"
+	// VMLiveUpdateFeaturesGate allows updating ceratin VM fields, such as CPU sockets to enable hot-plug functionality.
+	VMLiveUpdateFeaturesGate = "VMLiveUpdateFeatures"
 )
 
 var deprecatedFeatureGates = [...]string{
 	LiveMigrationGate,
 	SRIOVLiveMigrationGate,
+	NonRoot,
+	NonRootDeprecated,
+	PSA,
 }
 
-func (c *ClusterConfig) isFeatureGateEnabled(featureGate string) bool {
-	if c.IsFeatureGateDeprecated(featureGate) {
+func (config *ClusterConfig) isFeatureGateEnabled(featureGate string) bool {
+	if config.IsFeatureGateDeprecated(featureGate) {
 		// Deprecated feature gates are considered enabled and no-op.
 		// For more info about deprecation policy: https://github.com/kubevirt/kubevirt/blob/main/docs/deprecation.md
 		return true
 	}
 
-	for _, fg := range c.GetConfig().DeveloperConfiguration.FeatureGates {
+	for _, fg := range config.GetConfig().DeveloperConfiguration.FeatureGates {
 		if fg == featureGate {
 			return true
 		}
@@ -73,7 +95,7 @@ func (c *ClusterConfig) isFeatureGateEnabled(featureGate string) bool {
 	return false
 }
 
-func (c *ClusterConfig) IsFeatureGateDeprecated(featureGate string) bool {
+func (config *ClusterConfig) IsFeatureGateDeprecated(featureGate string) bool {
 	for _, deprecatedFeatureGate := range deprecatedFeatureGates {
 		if featureGate == deprecatedFeatureGate {
 			return true
@@ -159,8 +181,8 @@ func (config *ClusterConfig) HostDevicesPassthroughEnabled() bool {
 	return config.isFeatureGateEnabled(HostDevicesGate)
 }
 
-func (config *ClusterConfig) NonRootEnabled() bool {
-	return config.isFeatureGateEnabled(NonRoot) || config.isFeatureGateEnabled(NonRootDeprecated)
+func (config *ClusterConfig) RootEnabled() bool {
+	return config.isFeatureGateEnabled(Root)
 }
 
 func (config *ClusterConfig) ClusterProfilerEnabled() bool {
@@ -175,6 +197,36 @@ func (config *ClusterConfig) DockerSELinuxMCSWorkaroundEnabled() bool {
 	return config.isFeatureGateEnabled(DockerSELinuxMCSWorkaround)
 }
 
-func (config *ClusterConfig) PSAEnabled() bool {
-	return config.isFeatureGateEnabled(PSA)
+func (config *ClusterConfig) VSOCKEnabled() bool {
+	return config.isFeatureGateEnabled(VSOCKGate)
+}
+
+func (config *ClusterConfig) CustomSELinuxPolicyDisabled() bool {
+	return config.isFeatureGateEnabled(DisableCustomSELinuxPolicy)
+}
+
+func (config *ClusterConfig) MediatedDevicesHandlingDisabled() bool {
+	return config.isFeatureGateEnabled(DisableMediatedDevicesHandling)
+}
+
+func (config *ClusterConfig) KubevirtSeccompProfileEnabled() bool {
+	return config.isFeatureGateEnabled(KubevirtSeccompProfile)
+}
+
+func (config *ClusterConfig) HotplugNetworkInterfacesEnabled() bool {
+	return config.isFeatureGateEnabled(HotplugNetworkIfacesGate)
+}
+
+func (config *ClusterConfig) PersistentReservationEnabled() bool {
+	return config.isFeatureGateEnabled(PersistentReservation)
+}
+
+func (config *ClusterConfig) VMPersistentStateEnabled() bool {
+	return config.isFeatureGateEnabled(VMPersistentState)
+}
+func (config *ClusterConfig) MultiArchitectureEnabled() bool {
+	return config.isFeatureGateEnabled(Multiarchitecture)
+}
+func (config *ClusterConfig) VMLiveUpdateFeaturesEnabled() bool {
+	return config.isFeatureGateEnabled(VMLiveUpdateFeaturesGate)
 }

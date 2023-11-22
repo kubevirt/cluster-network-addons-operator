@@ -23,12 +23,6 @@ import (
 	v1 "kubevirt.io/api/core/v1"
 )
 
-const (
-	InfoSourceDomain      string = "domain"
-	InfoSourceGuestAgent  string = "guest-agent"
-	InfoSourceDomainAndGA string = InfoSourceDomain + ", " + InfoSourceGuestAgent
-)
-
 func FilterSRIOVInterfaces(ifaces []v1.Interface) []v1.Interface {
 	var sriovIfaces []v1.Interface
 	for _, iface := range ifaces {
@@ -60,8 +54,17 @@ func FilterInterfacesSpec(ifaces []v1.Interface, predicate func(i v1.Interface) 
 
 func IsPodNetworkWithMasqueradeBindingInterface(networks []v1.Network, ifaces []v1.Interface) bool {
 	if podNetwork := LookupPodNetwork(networks); podNetwork != nil {
-		if podInterface := LookupInterfaceByNetwork(ifaces, podNetwork); podInterface != nil {
+		if podInterface := LookupInterfaceByName(ifaces, podNetwork.Name); podInterface != nil {
 			return podInterface.Masquerade != nil
+		}
+	}
+	return true
+}
+
+func IsPodNetworkWithBridgeBindingInterface(networks []v1.Network, ifaces []v1.Interface) bool {
+	if podNetwork := LookupPodNetwork(networks); podNetwork != nil {
+		if podInterface := LookupInterfaceByName(ifaces, podNetwork.Name); podInterface != nil {
+			return podInterface.Bridge != nil
 		}
 	}
 	return true
@@ -117,11 +120,10 @@ func IndexInterfaceSpecByMac(interfaces []v1.Interface) map[string]v1.Interface 
 	return ifacesByMac
 }
 
-func LookupInterfaceByNetwork(ifaces []v1.Interface, network *v1.Network) *v1.Interface {
-	for _, iface := range ifaces {
-		if iface.Name == network.Name {
-			iface := iface
-			return &iface
+func LookupInterfaceByName(ifaces []v1.Interface, name string) *v1.Interface {
+	for idx := range ifaces {
+		if ifaces[idx].Name == name {
+			return &ifaces[idx]
 		}
 	}
 	return nil
