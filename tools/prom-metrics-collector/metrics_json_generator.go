@@ -21,16 +21,46 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"strings"
+
+	"github.com/kubevirt/monitoring/pkg/metrics/parser"
+
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
+	metricsparser "github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
+// This should be used only for very rare cases where the naming conventions that are explained in the best practices:
+// https://sdk.operatorframework.io/docs/best-practices/observability-best-practices/#metrics-guidelines
+// should be ignored.
+var excludedMetrics = map[string]bool{}
+
 func main() {
-	metricFamilies := ReadMetrics()
+	err := metrics.SetupMetrics()
+	if err != nil {
+		panic(err)
+	}
+
+	metricsList := metrics.ListMetrics()
+	for _, metric := range metricsparser.ReadFromPrometheusCR() {
+		metricsList = append(metricsList, metric)
+	}
+
+	var metricFamilies []parser.Metric
+	for _, m := range metricsList {
+		if excludedMetrics[m.GetOpts().Name] {
+			continue
+		}
+
+		metricFamilies = append(metricFamilies, parser.Metric{
+			Name: m.GetOpts().Name,
+			Help: m.GetOpts().Help,
+			Type: strings.ToUpper(string(m.GetType())),
+		})
+	}
 
 	jsonBytes, err := json.Marshal(metricFamilies)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 
 	fmt.Println(string(jsonBytes)) // Write the JSON string to standard output

@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/machadovilaca/operator-observability/pkg/operatormetrics"
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/spf13/pflag"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
@@ -15,11 +16,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -65,11 +67,19 @@ func main() {
 	mgr, err := manager.New(cfg, manager.Options{
 		Scheme:             scheme,
 		Namespace:          namespace,
-		MetricsBindAddress: monitoring.GetMetricsAddress(),
+		MetricsBindAddress: controllerruntimemetrics.DefaultBindAddress,
 		MapperProvider:     k8s.NewDynamicRESTMapper,
 	})
 	if err != nil {
 		log.Printf("failed to instantiate new operator manager: %v", err)
+		os.Exit(1)
+	}
+
+	// Setup Monitoring
+	operatormetrics.Register = controllerruntimemetrics.Registry.Register
+	err = metrics.SetupMetrics()
+	if err != nil {
+		log.Printf("failed to setup metrics: %v", err)
 		os.Exit(1)
 	}
 
