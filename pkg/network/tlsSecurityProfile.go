@@ -11,10 +11,26 @@ func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]st
 			Intermediate: &ocpv1.IntermediateTLSProfile{},
 		}
 	}
+	var ciphers []string
+	var minTlsVersion ocpv1.TLSProtocolVersion
 	if profile.Custom != nil {
-		return profile.Custom.TLSProfileSpec.Ciphers, profile.Custom.TLSProfileSpec.MinTLSVersion
+		ciphers = profile.Custom.TLSProfileSpec.Ciphers
+		minTlsVersion = profile.Custom.TLSProfileSpec.MinTLSVersion
+	} else {
+		ciphers = ocpv1.TLSProfiles[profile.Type].Ciphers
+		minTlsVersion = ocpv1.TLSProfiles[profile.Type].MinTLSVersion
 	}
-	return ocpv1.TLSProfiles[profile.Type].Ciphers, ocpv1.TLSProfiles[profile.Type].MinTLSVersion
+	m := make(map[string]bool)
+	var result []string
+	for _, c := range ciphers {
+		if m[c] {
+			continue
+		}
+		m[c] = true
+		result = append(result, c)
+	}
+
+	return result, minTlsVersion
 }
 
 func TLSVersionToHumanReadable(version ocpv1.TLSProtocolVersion) string {

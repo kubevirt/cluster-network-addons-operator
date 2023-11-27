@@ -63,4 +63,24 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			expectedMinTLSVersion: testCustomTLSProfileSpec.MinTLSVersion,
 		}),
 	)
+
+	Context("When selecting ciphers", func() {
+		It("should not generate duplicates", func() {
+			var profile = &ocpv1.TLSSecurityProfile{
+				Type: ocpv1.TLSProfileCustomType,
+				Custom: &ocpv1.CustomTLSProfile{
+					TLSProfileSpec: ocpv1.TLSProfileSpec{
+						Ciphers: []string{"foo", "foo", "bar"},
+					},
+				},
+				Intermediate: &ocpv1.IntermediateTLSProfile{},
+			}
+			var ciphers, _ = SelectCipherSuitesAndMinTLSVersion(profile)
+			for i, vi := range ciphers {
+				for j := i + 1; j < len(ciphers); j++ {
+					Expect(vi).ToNot(Equal(ciphers[j]))
+				}
+			}
+		})
+	})
 })

@@ -94,4 +94,19 @@ var _ = Describe("Components", func() {
 			Expect(ris[2].Ref).To(Equal("quay.io/kubevirt/ovs-cni-marker@sha256:0f08d6b1550a90c9f10221f2bb07709d1090e7c675ee1a711981bd429074d620"))
 		})
 	})
+
+	Context("When calculating ciphers", func() {
+		It("should not generate duplicates", func() {
+			var ciphers = GetCrd().Spec.Versions[0].Schema.OpenAPIV3Schema.Properties["spec"].Properties["tlsSecurityProfile"].Properties["custom"].Properties["ciphers"].Items.Schema.Enum
+			var stringCiphers = make([]string, len(ciphers))
+			for i, c := range ciphers {
+				stringCiphers[i] = string(c.Raw[:])
+			}
+			for i, vi := range stringCiphers {
+				for j := i + 1; j < len(stringCiphers); j++ {
+					Expect(vi).ToNot(Equal(stringCiphers[j]))
+				}
+			}
+		})
+	})
 })
