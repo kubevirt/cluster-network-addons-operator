@@ -43,6 +43,8 @@ func Releases() []Release {
 
 	// Keep only releases matching the selector
 	if releasesSelectorRaw, found := os.LookupEnv("RELEASES_SELECTOR"); found {
+		Expect(validateReleasesSelector(releases, releasesSelectorRaw)).NotTo(HaveOccurred())
+
 		releasesSelector := glob.MustCompile(releasesSelectorRaw)
 
 		filteredReleases := []Release{}
@@ -164,4 +166,31 @@ func dropMultusContainers(containers []cnao.Container) []cnao.Container {
 		}
 	}
 	return filteredContainers
+}
+
+func validateReleasesSelector(releases []Release, rawReleaseSelector string) error {
+	releasesSelector := glob.MustCompile(rawReleaseSelector)
+
+	rawSelector := strings.Trim(rawReleaseSelector, "{}")
+	candidReleasesSelector := strings.Split(rawSelector, ",")
+
+	existingReleases := make(map[string]bool)
+	for _, release := range releases {
+		if releasesSelector.Match(release.Version) {
+			existingReleases[release.Version] = true
+		}
+	}
+
+	var missingReleases []string
+	for _, candRelease := range candidReleasesSelector {
+		if !existingReleases[candRelease] {
+			missingReleases = append(missingReleases, candRelease)
+		}
+	}
+
+	if len(missingReleases) != 0 {
+		return fmt.Errorf("Releases selector has missing releases: %v", missingReleases)
+	}
+
+	return nil
 }
