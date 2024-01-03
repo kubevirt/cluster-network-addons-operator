@@ -1036,9 +1036,14 @@ func GetCrd() *extv1.CustomResourceDefinition {
 
 	cipherSuites := func() []extv1.JSON {
 		suites := []extv1.JSON{}
+		m := make(map[string]bool)
 		for _, p := range tlsProfiles(ocpv1.TLSProfiles).sortedKeys() {
 			for _, c := range ocpv1.TLSProfiles[p].Ciphers {
-				suites = append(suites, extv1.JSON{Raw: []byte(fmt.Sprintf("\"%s\"", c))})
+				if m[c] {
+					continue
+				}
+				m[c] = true
+				suites = append(suites, extv1.JSON{Raw: []byte(fmt.Sprintf(`"%s"`, c))})
 			}
 		}
 		return suites
