@@ -26,7 +26,6 @@ import (
 	"github.com/kubevirt/monitoring/pkg/metrics/parser"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
-	metricsparser "github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
 // This should be used only for very rare cases where the naming conventions that are explained in the best practices:
@@ -40,13 +39,8 @@ func main() {
 		panic(err)
 	}
 
-	metricsList := metrics.ListMetrics()
-	for _, metric := range metricsparser.ReadFromPrometheusCR() {
-		metricsList = append(metricsList, metric)
-	}
-
 	var metricFamilies []parser.Metric
-	for _, m := range metricsList {
+	for _, m := range metrics.ListMetrics() {
 		if excludedMetrics[m.GetOpts().Name] {
 			continue
 		}

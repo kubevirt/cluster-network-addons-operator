@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules"
+
 	"github.com/machadovilaca/operator-observability/pkg/docs"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
-	metricsparser "github.com/kubevirt/cluster-network-addons-operator/tools/metrics-parser"
 )
 
 const tpl = `# Cluster Network Addons Operator Metrics
@@ -36,17 +37,14 @@ this document.
 `
 
 func main() {
-	err := metrics.SetupMetrics()
-	if err != nil {
+	if err := metrics.SetupMetrics(); err != nil {
 		panic(err)
 	}
 
-	metricsList := metrics.ListMetrics()
-
-	for _, metric := range metricsparser.ReadFromPrometheusCR() {
-		metricsList = append(metricsList, metric)
+	if err := rules.SetupRules("test"); err != nil {
+		panic(err)
 	}
 
-	docsString := docs.BuildMetricsDocsWithCustomTemplate(metricsList, nil, tpl)
+	docsString := docs.BuildMetricsDocsWithCustomTemplate(metrics.ListMetrics(), rules.ListRecordingRules(), tpl)
 	fmt.Print(docsString)
 }
