@@ -1,9 +1,10 @@
 ---
 rule_files:
-  - /tmp/rules.verify.yaml
+  - /tmp/rules.verify
 
 group_eval_order:
-  - kubevirt.cnao.rules
+  - recordingRules.rules
+  - alerts.rules
 
 tests:
 # CnaoDown positive tests
@@ -42,7 +43,7 @@ tests:
 # NetworkAddonsConfigNotReady positive tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+      - series: "kubevirt_cnao_cr_ready{namespace='ci'}"
         values: "0 0 0 0 0 0"
 
     alert_rule_test:
@@ -61,13 +62,13 @@ tests:
 # NetworkAddonsConfigNotReady negative tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+      - series: "kubevirt_cnao_cr_ready{namespace='ci'}"
         values: "1 1 1 0 1 1"
-      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+      - series: "kubevirt_cnao_cr_ready{namespace='ci'}"
         values: "1 1 1 1 1 1"
-      - series: "kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'}"
+      - series: "kubevirt_cnao_cr_ready{namespace='ci'}"
         values: "0 0 0 0 0 1"
-      - series: "kubevirt_cnao_cr_ready{namespace='other-namespace'}"
+      - series: "kubevirt_cnao_cr_ready{namespace='not-ci'}"
         values: "0 0 0 0 0 0"
 
     alert_rule_test:
@@ -78,7 +79,7 @@ tests:
 # KubeMacPoolDuplicateMacsFound positive tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'}"
+      - series: "kubevirt_kmp_duplicate_macs{namespace='ci'}"
         values: "1 1 1 1 1 1"
 
     alert_rule_test:
@@ -97,9 +98,9 @@ tests:
 # KubeMacPoolDuplicateMacsFound negative tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_kmp_duplicate_macs{namespace='{{ .Namespace }}'}"
+      - series: "kubevirt_kmp_duplicate_macs{namespace='ci'}"
         values: "1 0 0 0 0 0"
-      - series: "kubevirt_kmp_duplicate_macs{namespace='other-namespace'}"
+      - series: "kubevirt_kmp_duplicate_macs{namespace='not-ci'}"
         values: "1 1 1 1 1 1"
 
     alert_rule_test:

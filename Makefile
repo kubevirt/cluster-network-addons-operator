@@ -124,9 +124,7 @@ docker-push-registry:
 	$(OCI_BIN) push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
 prom-rules-verify:
-	hack/prom-rule-ci/verify-rules.sh \
-	data/monitoring/prom-rule.yaml \
-	hack/prom-rule-ci/prom-rules-tests.yaml
+	go run ./tools/prom-rule-ci $(OCI_BIN) ./tools/prom-rule-ci/tmp_prom_rules.yaml ./tools/prom-rule-ci/prom-rules-tests.yaml
 
 cluster-up:
 	./cluster/up.sh
