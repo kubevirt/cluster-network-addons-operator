@@ -26,6 +26,7 @@ import (
 	"github.com/kubevirt/monitoring/pkg/metrics/parser"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules"
 )
 
 // This should be used only for very rare cases where the naming conventions that are explained in the best practices:
@@ -39,8 +40,25 @@ func main() {
 		panic(err)
 	}
 
+	err = rules.SetupRules("test")
+	if err != nil {
+		panic(err)
+	}
+
 	var metricFamilies []parser.Metric
 	for _, m := range metrics.ListMetrics() {
+		if excludedMetrics[m.GetOpts().Name] {
+			continue
+		}
+
+		metricFamilies = append(metricFamilies, parser.Metric{
+			Name: m.GetOpts().Name,
+			Help: m.GetOpts().Help,
+			Type: strings.ToUpper(string(m.GetType())),
+		})
+	}
+
+	for _, m := range rules.ListRecordingRules() {
 		if excludedMetrics[m.GetOpts().Name] {
 			continue
 		}
