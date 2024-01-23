@@ -23,6 +23,7 @@ require (
 	github.com/openshift/origin v4.1.0+incompatible
 	github.com/operator-framework/operator-sdk v1.12.0
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prometheus/common v0.44.0
 	github.com/spf13/pflag v1.0.5
@@ -30,7 +31,6 @@ require (
 	golang.org/x/oauth2 v0.10.0
 	golang.org/x/tools v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.28.1
 	k8s.io/apiextensions-apiserver v0.28.0
 	k8s.io/apimachinery v0.28.1
@@ -182,7 +182,6 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
@@ -241,6 +240,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.1 // indirect
 	k8s.io/apiserver v0.28.1 // indirect
 	k8s.io/cli-runtime v0.26.3 // indirect
