@@ -2,6 +2,9 @@
 
 destination=$1
 version=$(grep "^go " go.mod |awk '{print $2}')
+if [ $version == "1.21" ]; then
+    version="1.21.6"
+fi
 tarball=go$version.linux-amd64.tar.gz
 url=https://dl.google.com/go/
 
