@@ -49,6 +49,8 @@ GITHUB_RELEASE ?= $(BIN_DIR)/github-release
 
 CONTROLLER_GEN ?= $(BIN_DIR)/controller-gen
 
+MONITORING_LINTER ?= $(BIN_DIR)/monitoringlinter
+
 GO := $(GOBIN)/go
 
 $(GO):
@@ -214,6 +216,9 @@ generate-doc:
 lint-metrics:
 	./hack/prom_metric_linter.sh --operator-name="kubevirt" --sub-operator-name="cnao"
 
+lint-monitoring:
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -mod=mod github.com/kubevirt/monitoring/monitoringlinter/cmd/monitoringlinter@e2be790
+	$(MONITORING_LINTER) ./...
 
 .PHONY: \
 	$(E2E_SUITES) \
@@ -248,5 +253,6 @@ lint-metrics:
 	prom-rules-verify \
 	release \
 	update-workflows-branches \
-	statify-components
+	statify-components \
+	lint-monitoring
 
