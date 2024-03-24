@@ -23,6 +23,7 @@ seLinuxContext:
   type: RunAsAny
 users:
 - system:serviceaccount:{{ .Namespace }}:linux-bridge
+- system:serviceaccount:{{ .Namespace }}:cluster-network-addons-operator
 volumes:
 - "*"
 {{ end }}
