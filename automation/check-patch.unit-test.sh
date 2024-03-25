@@ -16,6 +16,7 @@ main() {
     make check
     verify_metrics_docs_updated
     make lint-metrics
+    make lint-monitoring
     make docker-build
 }
 
