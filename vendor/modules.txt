@@ -512,6 +512,9 @@ github.com/gorilla/websocket
 github.com/gosuri/uitable
 github.com/gosuri/uitable/util/strutil
 github.com/gosuri/uitable/util/wordwrap
+# github.com/grafana/regexp v0.0.0-20221122212121-6b5c0a4cb7fd
+## explicit; go 1.17
+github.com/grafana/regexp
 # github.com/gregjones/httpcache v0.0.0-20190203031600-7a902570cb17
 ## explicit
 github.com/gregjones/httpcache
@@ -626,6 +629,7 @@ github.com/liggitt/tabwriter
 github.com/machadovilaca/operator-observability/pkg/docs
 github.com/machadovilaca/operator-observability/pkg/operatormetrics
 github.com/machadovilaca/operator-observability/pkg/operatorrules
+github.com/machadovilaca/operator-observability/pkg/testutil
 # github.com/magiconair/properties v1.8.5
 ## explicit; go 1.13
 github.com/magiconair/properties
