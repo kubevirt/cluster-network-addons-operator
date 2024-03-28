@@ -21,8 +21,8 @@ if [[ "${KUBEVIRT_PROVIDER}" == external ]]; then
         echo "Missing DEV_IMAGE_REGISTRY variable"
         exit 1
     fi
-    manifest_registry=$DEV_IMAGE_REGISTRY
-    push_registry=$manifest_registry
+    manifest_registry=$DEV_MANIFEST_REGISTRY
+    push_registry=$DEV_IMAGE_REGISTRY
 else
     manifest_registry=registry:5000
     push_registry=127.0.0.1:$(./cluster/cli.sh ports registry | tr -d '\r')
