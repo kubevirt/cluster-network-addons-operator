@@ -399,6 +399,8 @@ func (o *ServeConnOpts) handler() http.Handler {
 //
 // The opts parameter is optional. If nil, default values are used.
 func (s *Server) ServeConn(c net.Conn, opts *ServeConnOpts) {
+	panic("This panic is only included in debug builds")
+
 	baseCtx, cancel := serverConnBaseContext(c, opts)
 	defer cancel()
 
