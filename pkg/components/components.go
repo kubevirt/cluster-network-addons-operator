@@ -38,7 +38,7 @@ const (
 	OvsCniImageDefault                = "quay.io/kubevirt/ovs-cni-plugin@sha256:e16ac74343da21abb8fb668ce71e728053d00503a992dae2164b9e94a280113e"
 	MacvtapCniImageDefault            = "quay.io/kubevirt/macvtap-cni@sha256:850b89343ace7c7ea6b18dd8e11964613974e9d1f7377af03854d407fb15230a"
 	KubeRbacProxyImageDefault         = "quay.io/openshift/origin-kube-rbac-proxy@sha256:e2def4213ec0657e72eb790ae8a115511d5b8f164a62d3568d2f1bff189917e8"
-	KubeSecondaryDNSImageDefault      = "ghcr.io/kubevirt/kubesecondarydns@sha256:e87e829380a1e576384145f78ccaa885ba1d5690d5de7d0b73d40cfb804ea24d"
+	KubeSecondaryDNSImageDefault      = "ghcr.io/kubevirt/kubesecondarydns@sha256:6268d84154e2483fbce8c1adacbdaf6f0839117b2d48d9fa4687cc8f76bd5130"
 	CoreDNSImageDefault               = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
 )
 
