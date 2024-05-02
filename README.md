@@ -342,7 +342,7 @@ make cluster-operator-push
 make cluster-operator-install
 
 # run workflow e2e tests on the cluster, requires cluster with installed operator,
-# workflow covers deployment of operands
+# iworkflow covers deployment of operands
 make test/e2e/workflow
 
 # run lifecycle e2e tests on the cluster, requires cluster without operator installed,
