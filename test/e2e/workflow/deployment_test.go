@@ -88,6 +88,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{KubeSecondaryDNSComponent},
 			),
+			Entry(
+				KubevirtIpamController.ComponentName,
+				cnao.NetworkAddonsConfigSpec{
+					KubevirtIpamController: &cnao.KubevirtIpamController{},
+				},
+				[]Component{KubevirtIpamController},
+			),
 		)
 		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {
 			testConfigCreate(gvk, cnao.NetworkAddonsConfigSpec{MacvtapCni: &cnao.MacvtapCni{}}, []Component{MacvtapComponent, MonitoringComponent})
@@ -102,15 +109,17 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				MacvtapComponent,
 				MultusDynamicNetworks,
 				KubeSecondaryDNSComponent,
+				KubevirtIpamController,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
-				KubeMacPool:           &cnao.KubeMacPool{},
-				LinuxBridge:           &cnao.LinuxBridge{},
-				Multus:                &cnao.Multus{},
-				Ovs:                   &cnao.Ovs{},
-				MacvtapCni:            &cnao.MacvtapCni{},
-				MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
-				KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
+				KubeMacPool:            &cnao.KubeMacPool{},
+				LinuxBridge:            &cnao.LinuxBridge{},
+				Multus:                 &cnao.Multus{},
+				Ovs:                    &cnao.Ovs{},
+				MacvtapCni:             &cnao.MacvtapCni{},
+				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
+				KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
+				KubevirtIpamController: &cnao.KubevirtIpamController{},
 			}
 			testConfigCreate(gvk, configSpec, components)
 		})
@@ -159,6 +168,11 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec.KubeSecondaryDNS = &cnao.KubeSecondaryDNS{}
 			components = append(components, KubeSecondaryDNSComponent)
 			testConfigUpdate(gvk, configSpec, components)
+
+			// Add KubevirtIpamController component
+			configSpec.KubevirtIpamController = &cnao.KubevirtIpamController{}
+			components = append(components, KubevirtIpamController)
+			testConfigUpdate(gvk, configSpec, components)
 		})
 		Context("and workload PlacementConfiguration is deployed on components", func() {
 			components := []Component{
@@ -167,6 +181,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				LinuxBridgeComponent,
 				MultusComponent,
 				KubeSecondaryDNSComponent,
+				KubevirtIpamController,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				LinuxBridge:            &cnao.LinuxBridge{},
@@ -175,6 +190,7 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				MacvtapCni:             &cnao.MacvtapCni{},
 				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
 				KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
+				KubevirtIpamController: &cnao.KubevirtIpamController{},
 				PlacementConfiguration: &cnao.PlacementConfiguration{},
 			}
 			checkWorkloadPlacementOnComponents := func(expectedWorkLoadPlacement cnao.Placement) {

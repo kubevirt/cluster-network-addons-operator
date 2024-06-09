@@ -251,6 +251,7 @@ func main() {
 	coreDNSImage := flag.String("core-dns-image", components.CoreDNSImageDefault, "The coredns image used by CNA")
 	multusDynamicNetworksImage := flag.String("multus-dynamic-networks-image", components.MultusDynamicNetworksImageDefault, "The multus dynamic networks controller image managed by CNA")
 	kubeSecondaryDNSImage := flag.String("kube-secondary-dns", components.KubeSecondaryDNSImageDefault, "The kubesecondarydns-image managed by CNA")
+	kubevirtIpamControllerImage := flag.String("kubevirt-ipam-controller", components.KubevirtIpamControllerImageDefault, "The kubevirtipamcontroller-image managed by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -267,16 +268,17 @@ func main() {
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
 		AddonsImages: (&components.AddonsImages{
-			Multus:                *multusImage,
-			LinuxBridgeCni:        *linuxBridgeCniImage,
-			LinuxBridgeMarker:     *linuxBridgeMarkerImage,
-			KubeMacPool:           *kubeMacPoolImage,
-			OvsCni:                *ovsCniImage,
-			MacvtapCni:            *macvtapCniImage,
-			KubeRbacProxy:         *kubeRbacProxyImage,
-			MultusDynamicNetworks: *multusDynamicNetworksImage,
-			KubeSecondaryDNS:      *kubeSecondaryDNSImage,
-			CoreDNS:               *coreDNSImage,
+			Multus:                 *multusImage,
+			LinuxBridgeCni:         *linuxBridgeCniImage,
+			LinuxBridgeMarker:      *linuxBridgeMarkerImage,
+			KubeMacPool:            *kubeMacPoolImage,
+			OvsCni:                 *ovsCniImage,
+			MacvtapCni:             *macvtapCniImage,
+			KubeRbacProxy:          *kubeRbacProxyImage,
+			MultusDynamicNetworks:  *multusDynamicNetworksImage,
+			KubeSecondaryDNS:       *kubeSecondaryDNSImage,
+			KubevirtIpamController: *kubevirtIpamControllerImage,
+			CoreDNS:                *coreDNSImage,
 		}).FillDefaults(),
 	}
 
