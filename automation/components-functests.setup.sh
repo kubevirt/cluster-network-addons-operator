@@ -60,6 +60,7 @@ spec:
   ovs: {}
   macvtap: {}
   kubeSecondaryDNS: {}
+  kubevirtIpamController: {}
   imagePullPolicy: Always
 EOF
 

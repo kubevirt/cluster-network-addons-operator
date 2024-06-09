@@ -20,6 +20,7 @@ spec:
   ovs: {}
   macvtap: {}
   kubeSecondaryDNS: {}
+  kubevirtIpamController: {}
   imagePullPolicy: Always
 ```
 
@@ -178,6 +179,25 @@ spec:
 
 Additionally, container image used to deliver this plugin can be set using
 `KUBE_SECONDARY_DNS_IMAGE` environment variable in operator
+deployment manifest.
+
+## kubevirtIpamController
+
+[This controller](https://github.com/maiqueb/kubevirt-ipam-claims)
+allows to support IPAM for secondary networks.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  multus: {}
+  kubevirtIpamController: {}
+```
+
+Additionally, container image used to deliver this plugin can be set using
+`KUBEVIRT_IPAM_CONTROLLER_IMAGE` environment variable in operator
 deployment manifest.
 
 ## Image Pull Policy

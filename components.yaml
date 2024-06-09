@@ -17,6 +17,12 @@ components:
     branch: main
     update-policy: tagged
     metadata: v0.43.0
+  kubevirt-ipam-controller:
+    url: https://github.com/maiqueb/kubevirt-ipam-claims
+    commit: c01d8855783da6b2a1773ec1f82694cd0658cd10
+    branch: main
+    update-policy: tagged
+    metadata: v0.1.1-alpha
   linux-bridge:
     url: https://github.com/containernetworking/plugins
     commit: 14bdce598f9d332303c375c35719c4a158f1e7db

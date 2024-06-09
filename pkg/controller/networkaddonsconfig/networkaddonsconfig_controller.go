@@ -516,7 +516,7 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 		if labels == nil {
 			labels = map[string]string{}
 		}
-		if !isOperatorNamespace(obj) {
+		if !isOperatorNamespace(obj) && !isCertManagerDeployment(obj) {
 			// Label objects with version of the operator they were created by
 			labels[cnaov1.GroupVersion.Group+"/version"] = operatorVersionLabel
 			labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
@@ -689,4 +689,9 @@ func isOpenshiftSingleReplica(c k8sclient.Client) (bool, error) {
 func isOperatorNamespace(obj *unstructured.Unstructured) bool {
 	const namespaceKind = "Namespace"
 	return obj.GetKind() == namespaceKind && obj.GetName() == operatorNamespace
+}
+
+func isCertManagerDeployment(obj *unstructured.Unstructured) bool {
+	const namespaceKind = "Deployment"
+	return obj.GetKind() == namespaceKind && strings.HasPrefix(obj.GetName(), "cert-manager")
 }
