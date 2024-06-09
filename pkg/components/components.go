@@ -30,29 +30,31 @@ var (
 )
 
 const (
-	MultusImageDefault                = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:3fbcc32bd4e4d15bd93c96def784a229cd84cca27942bf4858b581f31c97ee02"
-	MultusDynamicNetworksImageDefault = "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:83b460502671fb4f34116363a1a39b2ddfc9d14a920ee0a6413bfc3bd0580404"
-	LinuxBridgeCniImageDefault        = "quay.io/kubevirt/cni-default-plugins@sha256:0c354fa9d695b8cab97b459e8afea2f7662407a987e83f6f6f1a8af4b45726be"
-	LinuxBridgeMarkerImageDefault     = "quay.io/kubevirt/bridge-marker@sha256:bba066e3b5ff3fb8c5e20861fe8abe51e3c9b50ad6ce3b2616af9cb5479a06d0"
-	KubeMacPoolImageDefault           = "quay.io/kubevirt/kubemacpool@sha256:20e156be33e6d3692c456081acbb91a4349f94de448f7d1f1cddd0228931b31f"
-	OvsCniImageDefault                = "quay.io/kubevirt/ovs-cni-plugin@sha256:e16ac74343da21abb8fb668ce71e728053d00503a992dae2164b9e94a280113e"
-	MacvtapCniImageDefault            = "quay.io/kubevirt/macvtap-cni@sha256:850b89343ace7c7ea6b18dd8e11964613974e9d1f7377af03854d407fb15230a"
-	KubeRbacProxyImageDefault         = "quay.io/openshift/origin-kube-rbac-proxy@sha256:e2def4213ec0657e72eb790ae8a115511d5b8f164a62d3568d2f1bff189917e8"
-	KubeSecondaryDNSImageDefault      = "ghcr.io/kubevirt/kubesecondarydns@sha256:6268d84154e2483fbce8c1adacbdaf6f0839117b2d48d9fa4687cc8f76bd5130"
-	CoreDNSImageDefault               = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
+	MultusImageDefault                 = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:3fbcc32bd4e4d15bd93c96def784a229cd84cca27942bf4858b581f31c97ee02"
+	MultusDynamicNetworksImageDefault  = "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:83b460502671fb4f34116363a1a39b2ddfc9d14a920ee0a6413bfc3bd0580404"
+	LinuxBridgeCniImageDefault         = "quay.io/kubevirt/cni-default-plugins@sha256:0c354fa9d695b8cab97b459e8afea2f7662407a987e83f6f6f1a8af4b45726be"
+	LinuxBridgeMarkerImageDefault      = "quay.io/kubevirt/bridge-marker@sha256:bba066e3b5ff3fb8c5e20861fe8abe51e3c9b50ad6ce3b2616af9cb5479a06d0"
+	KubeMacPoolImageDefault            = "quay.io/kubevirt/kubemacpool@sha256:20e156be33e6d3692c456081acbb91a4349f94de448f7d1f1cddd0228931b31f"
+	OvsCniImageDefault                 = "quay.io/kubevirt/ovs-cni-plugin@sha256:e16ac74343da21abb8fb668ce71e728053d00503a992dae2164b9e94a280113e"
+	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:850b89343ace7c7ea6b18dd8e11964613974e9d1f7377af03854d407fb15230a"
+	KubeRbacProxyImageDefault          = "quay.io/openshift/origin-kube-rbac-proxy@sha256:e2def4213ec0657e72eb790ae8a115511d5b8f164a62d3568d2f1bff189917e8"
+	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:6268d84154e2483fbce8c1adacbdaf6f0839117b2d48d9fa4687cc8f76bd5130"
+	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
+	KubevirtIpamControllerImageDefault = "ghcr.io/maiqueb/kubevirt-ipam-claims@sha256:4667b37655dc87b79a63ca0b127517d0f9b971808b8fda8f5ea01398e8833294"
 )
 
 type AddonsImages struct {
-	Multus                string
-	MultusDynamicNetworks string
-	LinuxBridgeCni        string
-	LinuxBridgeMarker     string
-	KubeMacPool           string
-	OvsCni                string
-	MacvtapCni            string
-	KubeRbacProxy         string
-	KubeSecondaryDNS      string
-	CoreDNS               string
+	Multus                 string
+	MultusDynamicNetworks  string
+	LinuxBridgeCni         string
+	LinuxBridgeMarker      string
+	KubeMacPool            string
+	OvsCni                 string
+	MacvtapCni             string
+	KubeRbacProxy          string
+	KubeSecondaryDNS       string
+	CoreDNS                string
+	KubevirtIpamController string
 }
 
 type RelatedImage struct {
@@ -107,6 +109,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.CoreDNS == "" {
 		ai.CoreDNS = CoreDNSImageDefault
 	}
+	if ai.KubevirtIpamController == "" {
+		ai.KubevirtIpamController = KubevirtIpamControllerImageDefault
+	}
 	return ai
 }
 
@@ -122,6 +127,7 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.KubeRbacProxy,
 		ai.KubeSecondaryDNS,
 		ai.CoreDNS,
+		ai.KubevirtIpamController,
 	)
 }
 
@@ -238,6 +244,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "CORE_DNS_IMAGE",
 									Value: addonsImages.CoreDNS,
+								},
+								{
+									Name:  "KUBEVIRT_IPAM_CONTROLLER_IMAGE",
+									Value: addonsImages.KubevirtIpamController,
 								},
 								{
 									Name:  "OPERATOR_IMAGE",
@@ -458,6 +468,49 @@ func GetRole(namespace string) *rbacv1.Role {
 					"delete",
 				},
 			},
+			{
+				APIGroups: []string{
+					"",
+				},
+				Resources: []string{
+					"configmaps",
+				},
+				Verbs: []string{
+					"patch",
+				},
+			},
+			{
+				APIGroups: []string{
+					"coordination.k8s.io",
+				},
+				Resources: []string{
+					"leases",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+					"create",
+					"update",
+					"patch",
+					"delete",
+				},
+			},
+			{
+				APIGroups: []string{
+					"cert-manager.io",
+				},
+				Resources: []string{
+					"certificates",
+					"issuers",
+				},
+				Verbs: []string{
+					"get",
+					"create",
+					"update",
+					"delete",
+				},
+			},
 		},
 	}
 	return role
@@ -651,6 +704,34 @@ func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 				},
 				Verbs: []string{
 					"delete",
+				},
+			},
+			{
+				APIGroups: []string{
+					"k8s.cni.cncf.io",
+				},
+				Resources: []string{
+					"ipamclaims",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+					"create",
+					"update",
+				},
+			},
+			{
+				APIGroups: []string{
+					"k8s.cni.cncf.io",
+				},
+				Resources: []string{
+					"network-attachment-definitions",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
 				},
 			},
 		},
@@ -1273,6 +1354,10 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							Description: "Ovs plugin allows users to define Kubernetes networks on top of Open vSwitch bridges available on nodes",
 							Type:        "object",
 						},
+						"kubevirtIpamController": extv1.JSONSchemaProps{
+							Description: "KubevirtIpamController plugin allows to support IPAM for secondary networks",
+							Type:        "object",
+						},
 						"selfSignConfiguration": extv1.JSONSchemaProps{
 							Description: "SelfSignConfiguration defines self sign configuration",
 							Type:        "object",
@@ -1485,14 +1570,15 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 			Name: "cluster",
 		},
 		Spec: cnao.NetworkAddonsConfigSpec{
-			Multus:                &cnao.Multus{},
-			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
-			LinuxBridge:           &cnao.LinuxBridge{},
-			KubeMacPool:           &cnao.KubeMacPool{},
-			Ovs:                   &cnao.Ovs{},
-			MacvtapCni:            &cnao.MacvtapCni{},
-			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
-			ImagePullPolicy:       corev1.PullIfNotPresent,
+			Multus:                 &cnao.Multus{},
+			MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
+			LinuxBridge:            &cnao.LinuxBridge{},
+			KubeMacPool:            &cnao.KubeMacPool{},
+			Ovs:                    &cnao.Ovs{},
+			MacvtapCni:             &cnao.MacvtapCni{},
+			KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
+			KubevirtIpamController: &cnao.KubevirtIpamController{},
+			ImagePullPolicy:        corev1.PullIfNotPresent,
 		},
 	}
 }
