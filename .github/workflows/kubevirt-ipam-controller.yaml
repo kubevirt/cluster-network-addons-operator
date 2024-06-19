@@ -1,0 +1,23 @@
+name: Kubevirt IPAM controller Tests
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version-file: 'go.mod'
+
+    - name: Run e2e tests
+      env:
+        KIND_ALLOW_SYSTEM_WRITES: true
+      run: automation/check-patch.e2e-kubevirt-ipam-controller-functests.sh
