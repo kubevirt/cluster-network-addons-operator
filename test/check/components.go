@@ -86,6 +86,12 @@ var (
 		ClusterRoleBinding: "secondary",
 		Deployments:        []string{"secondary-dns"},
 	}
+	KubevirtIpamController = Component{
+		ComponentName:      "KubevirtIpamController",
+		ClusterRole:        "kubevirt-ipam-claims-manager-role",
+		ClusterRoleBinding: "kubevirt-ipam-claims-manager-rolebinding",
+		Deployments:        []string{"kubevirt-ipam-claims-controller-manager"},
+	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
 		LinuxBridgeComponent,
@@ -95,6 +101,7 @@ var (
 		MonitoringComponent,
 		MultusDynamicNetworks,
 		KubeSecondaryDNSComponent,
+		KubevirtIpamController,
 	}
 )
 

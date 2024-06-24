@@ -20,6 +20,7 @@ spec:
   ovs: {}
   macvtap: {}
   kubeSecondaryDNS: {}
+  kubevirtIpamController: {}
   imagePullPolicy: Always
 ```
 
@@ -179,6 +180,29 @@ spec:
 Additionally, container image used to deliver this plugin can be set using
 `KUBE_SECONDARY_DNS_IMAGE` environment variable in operator
 deployment manifest.
+
+## kubevirtIpamController
+
+[This controller](https://github.com/maiqueb/kubevirt-ipam-claims)
+allows to support IPAM for user defined networks.
+
+```yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  multus: {}
+  kubevirtIpamController: {}
+```
+
+Additionally, container image used to deliver this plugin can be set using
+`KUBEVIRT_IPAM_CONTROLLER_IMAGE` environment variable in operator
+deployment manifest.
+
+Note: This component requires certificates mounted on the controller pods for the webhook to work.
+On non OpenShift clusters, the user should manually install a certificate library (e.g. [cert-manager](https://github.com/cert-manager/cert-manager)).
+It is done for convenience as part of the helper scripts.
 
 ## Image Pull Policy
 

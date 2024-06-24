@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2018-2019 Red Hat, Inc.
+# Copyright 2024 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 set -ex
 
-./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/operator.yaml
-if [[ ! $(./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster-network-addons-operator --for condition=Available --timeout=600s) ]]; then
-	echo "Failed to wait for CNAO deployment to be ready"
-	./cluster/kubectl.sh get pods -n cluster-network-addons
-	./cluster/kubectl.sh describe deployment cluster-network-addons-operator -n cluster-network-addons
-	exit 1
-fi
+export DEPLOY_CERT_MANAGER=${DEPLOY_CERT_MANAGER:-true}
 
+if [[ $DEPLOY_CERT_MANAGER == true ]]; then
+	CERT_MANAGER_VERSION="v1.14.4"
+	echo "Installing cert-manager..."
+	manifest="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
+	./cluster/kubectl.sh apply -f "$manifest"
+fi

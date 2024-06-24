@@ -1,0 +1,289 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app: ipam-virt-workloads
+    control-plane: controller-manager
+  name: {{ .Namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-controller-manager
+  namespace: {{ .Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-leader-election-role
+  namespace: {{ .Namespace }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kubevirt.io
+  resources:
+  - virtualmachines
+  - virtualmachineinstances
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - ipamclaims
+  - network-attachment-definitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - ipamclaims
+  verbs:
+  - create
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-leader-election-rolebinding
+  namespace: {{ .Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubevirt-ipam-claims-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: kubevirt-ipam-claims-controller-manager
+    namespace: {{ .Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubevirt-ipam-claims-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: kubevirt-ipam-claims-controller-manager
+    namespace: {{ .Namespace }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+{{ if .IsOpenshift }}
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: kubevirt-ipam-claims-webhook-service
+{{ end }}
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-webhook-service
+  namespace: {{ .Namespace }}
+spec:
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 9443
+  selector:
+    app: ipam-virt-workloads
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ipam-virt-workloads
+    control-plane: controller-manager
+  name: kubevirt-ipam-claims-controller-manager
+  namespace: {{ .Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ipam-virt-workloads
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app: ipam-virt-workloads
+        control-plane: controller-manager
+    spec:
+      containers:
+        - args:
+            - --leader-elect
+            - "--certificates-dir={{ .CertDir }}"
+          command:
+            - /manager
+          image: {{ .KubevirtIpamControllerImage }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          ports:
+            - containerPort: 9443
+              name: webhook-server
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: {{ .MountPath }}
+              name: cert
+              readOnly: true
+          imagePullPolicy: {{ .ImagePullPolicy }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kubevirt-ipam-claims-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: cert
+          secret:
+            defaultMode: 420
+            secretName: {{ .SecretName }}
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
+{{ if not .IsOpenshift }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-serving-cert
+  namespace: {{ .Namespace }}
+spec:
+  dnsNames:
+    - kubevirt-ipam-claims-webhook-service.{{ .Namespace }}.svc
+    - kubevirt-ipam-claims-webhook-service.{{ .Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: kubevirt-ipam-claims-selfsigned-issuer
+  secretName: webhook-server-cert
+{{ end }}
+{{ if not .IsOpenshift }}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-selfsigned-issuer
+  namespace: {{ .Namespace }}
+spec:
+  selfSigned: {}
+{{ end }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    {{ .WebhookAnnotation }}
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-claims-mutating-webhook-configuration
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: kubevirt-ipam-claims-webhook-service
+        namespace: {{ .Namespace }}
+        path: /mutate-v1-pod
+    failurePolicy: Fail
+    name: ipam-claims.k8s.cni.cncf.io
+    objectSelector:
+      matchLabels:
+        kubevirt.io: virt-launcher
+    rules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+    sideEffects: None

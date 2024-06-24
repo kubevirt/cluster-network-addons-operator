@@ -130,6 +130,7 @@ prom-rules-verify:
 
 cluster-up:
 	./cluster/up.sh
+	./cluster/cert-manager-install.sh
 
 cluster-down:
 	./cluster/down.sh
@@ -160,6 +161,7 @@ gen-manifests: manifest-templator
 	MACVTAP_CNI_IMAGE=$(MACVTAP_CNI_IMAGE) \
 	MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE=$(MULTUS_DYNAMIC_NETWORKS_CONTROLLER_IMAGE) \
 	KUBE_SECONDARY_DNS_IMAGE=$(KUBE_SECONDARY_DNS_IMAGE) \
+	KUBEVIRT_IPAM_CONTROLLER_IMAGE=$(KUBEVIRT_IPAM_CONTROLLER_IMAGE) \
 	CORE_DNS_IMAGE=$(CORE_DNS_IMAGE) \
 	KUBE_RBAC_PROXY_IMAGE=$(KUBE_RBAC_PROXY_IMAGE) \
 		./hack/generate-manifests.sh
