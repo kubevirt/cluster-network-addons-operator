@@ -42,7 +42,7 @@ func (g mockGithubApi) listCommits(owner, repo string, opts *github.CommitsListO
 		return nil, nil, errors.Wrap(err, "failed performing mock git log")
 	}
 
-	return convertLogToRepositoryCommitList(gitCommitObjList), nil, nil
+	return convertLogToRepositoryCommitList(gitCommitObjList), &github.Response{NextPage: 1}, nil
 }
 
 func (g mockGithubApi) getBranchRef(owner string, repo string, ref string) (*github.Reference, *github.Response, error) {

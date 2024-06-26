@@ -202,11 +202,10 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 		return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
 	}
 
-	branchCommits, _, err := componentOps.githubInterface.listCommits(owner, repo, &github.CommitsListOptions{ListOptions: github.ListOptions{PerPage: 100}, SHA: branch})
-	if err != nil {
-		return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
-	}
-
+	const (
+		maxPagePaginate = 10
+		pageSize        = 100
+	)
 	// look for the first tag that belongs to the chosen branch, going over from last tag
 	for i := len(tagRefs) - 1; i >= 0; i-- {
 		tag := tagRefs[i]
@@ -216,14 +215,24 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 			return "", "", errors.Wrap(err, "Failed to get commit-sha from tag name")
 		}
 
-		for _, commit := range branchCommits {
-			if commit.GetSHA() == commitShaOfTag {
-				return tagName, commit.GetSHA(), nil
+		for pageIdx := 1; pageIdx <= maxPagePaginate; pageIdx++ {
+			branchCommits, resp, err := componentOps.githubInterface.listCommits(owner, repo, &github.CommitsListOptions{ListOptions: github.ListOptions{PerPage: pageSize, Page: pageIdx}, SHA: branch})
+			if err != nil {
+				return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
+			}
+			if resp.NextPage == 0 {
+				break
+			}
+
+			for _, commit := range branchCommits {
+				if commit.GetSHA() == commitShaOfTag {
+					return tagName, commit.GetSHA(), nil
+				}
 			}
 		}
 	}
 
-	return "", "", fmt.Errorf("Error: tag not found in branch %s\n tagRefs=\n%v\nbranchCommits=\n%v\n", branch, tagRefs, branchCommits)
+	return "", "", fmt.Errorf("Error: tag not found in branch %s on last %d commits\n", branch, maxPagePaginate*pageSize)
 }
 
 // getLatestFromBranch get the latest HEAD commit-sha under a given branch, using "latest" Update policy
