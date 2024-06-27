@@ -220,14 +220,15 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 			if err != nil {
 				return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
 			}
-			if resp.NextPage == 0 {
-				break
-			}
 
 			for _, commit := range branchCommits {
 				if commit.GetSHA() == commitShaOfTag {
 					return tagName, commit.GetSHA(), nil
 				}
+			}
+
+			if resp.NextPage == 0 {
+				break
 			}
 		}
 	}
