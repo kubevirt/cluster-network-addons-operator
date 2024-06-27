@@ -88,9 +88,9 @@ var (
 	}
 	KubevirtIpamController = Component{
 		ComponentName:      "KubevirtIpamController",
-		ClusterRole:        "kubevirt-ipam-claims-manager-role",
-		ClusterRoleBinding: "kubevirt-ipam-claims-manager-rolebinding",
-		Deployments:        []string{"kubevirt-ipam-claims-controller-manager"},
+		ClusterRole:        "kubevirt-ipam-controller-manager-role",
+		ClusterRoleBinding: "kubevirt-ipam-controller-manager-rolebinding",
+		Deployments:        []string{"kubevirt-ipam-controller-manager"},
 	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,

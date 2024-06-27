@@ -183,7 +183,7 @@ deployment manifest.
 
 ## kubevirtIpamController
 
-[This controller](https://github.com/maiqueb/kubevirt-ipam-claims)
+[This controller](https://github.com/kubevirt/ipam-extensions)
 allows to support IPAM for user defined networks.
 
 ```yaml

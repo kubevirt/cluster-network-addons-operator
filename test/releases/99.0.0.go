@@ -81,10 +81,10 @@ func init() {
 				Image:      "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e",
 			},
 			{
-				ParentName: "kubevirt-ipam-claims-controller-manager",
+				ParentName: "kubevirt-ipam-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "ghcr.io/maiqueb/kubevirt-ipam-claims@sha256:4667b37655dc87b79a63ca0b127517d0f9b971808b8fda8f5ea01398e8833294",
+				Image:      "ghcr.io/kubevirt/ipam-controller@sha256:f272eaf82c9e4fcd7fdee5d9031afba8019cff2dc842ca3e36be49de28083fee",
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{

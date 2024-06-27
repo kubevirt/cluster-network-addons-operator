@@ -11,15 +11,15 @@ IPAMCLAIMS_CRD_VERSION="v0.4.0-alpha"
 function __parametize_by_object() {
   for f in ./*; do
     case "${f}" in
-      ./Namespace_kubevirt-ipam-claims-system.yaml)
+      ./Namespace_kubevirt-ipam-controller-system.yaml)
         yaml-utils::update_param ${f} metadata.name '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./ClusterRoleBinding_kubevirt-ipam-claims-manager-rolebinding.yaml)
+      ./ClusterRoleBinding_kubevirt-ipam-controller-manager-rolebinding.yaml)
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./Deployment_kubevirt-ipam-claims-controller-manager.yaml)
+      ./Deployment_kubevirt-ipam-controller-manager.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .KubevirtIpamControllerImage }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
@@ -31,39 +31,39 @@ function __parametize_by_object() {
         yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./Service_kubevirt-ipam-claims-webhook-service.yaml)
+      ./Service_kubevirt-ipam-controller-webhook-service.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./Certificate_kubevirt-ipam-claims-serving-cert.yaml)
+      ./Certificate_kubevirt-ipam-controller-serving-cert.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::update_param ${f} spec.dnsNames[0] 'kubevirt-ipam-claims-webhook-service.{{ .Namespace }}.svc'
-        yaml-utils::update_param ${f} spec.dnsNames[1] 'kubevirt-ipam-claims-webhook-service.{{ .Namespace }}.svc.cluster.local'
+        yaml-utils::update_param ${f} spec.dnsNames[0] 'kubevirt-ipam-controller-webhook-service.{{ .Namespace }}.svc'
+        yaml-utils::update_param ${f} spec.dnsNames[1] 'kubevirt-ipam-controller-webhook-service.{{ .Namespace }}.svc.cluster.local'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./Issuer_kubevirt-ipam-claims-selfsigned-issuer.yaml)
+      ./Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./MutatingWebhookConfiguration_kubevirt-ipam-claims-mutating-webhook-configuration.yaml)
+      ./MutatingWebhookConfiguration_kubevirt-ipam-controller-mutating-webhook-configuration.yaml)
         yaml-utils::update_param ${f} webhooks[0].clientConfig.service.namespace '{{ .Namespace }}'
         sed -i '/cert-manager.io\/inject-ca-from/c\    {{ .WebhookAnnotation }}' ${f}
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./RoleBinding_kubevirt-ipam-claims-leader-election-rolebinding.yaml)
+      ./RoleBinding_kubevirt-ipam-controller-leader-election-rolebinding.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./Role_kubevirt-ipam-claims-leader-election-role.yaml)
+      ./Role_kubevirt-ipam-controller-leader-election-role.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./ServiceAccount_kubevirt-ipam-claims-controller-manager.yaml)
+      ./ServiceAccount_kubevirt-ipam-controller-manager.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
-      ./Service_kubevirt-ipam-claims-webhook-service.yaml)
+      ./Service_kubevirt-ipam-controller-webhook-service.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
@@ -100,29 +100,29 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
   echo 'parametize manifests by object'
   __parametize_by_object
 
-  sed -i '1i{{ if not .IsOpenshift }}' Issuer_kubevirt-ipam-claims-selfsigned-issuer.yaml
-  echo "{{ end }}" >> Issuer_kubevirt-ipam-claims-selfsigned-issuer.yaml
+  sed -i '1i{{ if not .IsOpenshift }}' Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml
+  echo "{{ end }}" >> Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml
 
-  sed -i '1i{{ if not .IsOpenshift }}' Certificate_kubevirt-ipam-claims-serving-cert.yaml
-  echo "{{ end }}" >> Certificate_kubevirt-ipam-claims-serving-cert.yaml
+  sed -i '1i{{ if not .IsOpenshift }}' Certificate_kubevirt-ipam-controller-serving-cert.yaml
+  echo "{{ end }}" >> Certificate_kubevirt-ipam-controller-serving-cert.yaml
 
   sed -i '/metadata:/a\{{ if .IsOpenshift }}\
   annotations:\
-    service.beta.openshift.io/serving-cert-secret-name: kubevirt-ipam-claims-webhook-service\
-{{ end }}' Service_kubevirt-ipam-claims-webhook-service.yaml
+    service.beta.openshift.io/serving-cert-secret-name: kubevirt-ipam-controller-webhook-service\
+{{ end }}' Service_kubevirt-ipam-controller-webhook-service.yaml
 
   echo 'rejoin sub-manifests to a final manifest'
-  cat Namespace_kubevirt-ipam-claims-system.yaml \
-      ServiceAccount_kubevirt-ipam-claims-controller-manager.yaml \
-      Role_kubevirt-ipam-claims-leader-election-role.yaml \
-      ClusterRole_kubevirt-ipam-claims-manager-role.yaml \
-      RoleBinding_kubevirt-ipam-claims-leader-election-rolebinding.yaml \
-      ClusterRoleBinding_kubevirt-ipam-claims-manager-rolebinding.yaml \
-      Service_kubevirt-ipam-claims-webhook-service.yaml \
-      Deployment_kubevirt-ipam-claims-controller-manager.yaml \
-      Certificate_kubevirt-ipam-claims-serving-cert.yaml \
-      Issuer_kubevirt-ipam-claims-selfsigned-issuer.yaml \
-      MutatingWebhookConfiguration_kubevirt-ipam-claims-mutating-webhook-configuration.yaml > 001-kubevirtipamcontroller.yaml
+  cat Namespace_kubevirt-ipam-controller-system.yaml \
+      ServiceAccount_kubevirt-ipam-controller-manager.yaml \
+      Role_kubevirt-ipam-controller-leader-election-role.yaml \
+      ClusterRole_kubevirt-ipam-controller-manager-role.yaml \
+      RoleBinding_kubevirt-ipam-controller-leader-election-rolebinding.yaml \
+      ClusterRoleBinding_kubevirt-ipam-controller-manager-rolebinding.yaml \
+      Service_kubevirt-ipam-controller-webhook-service.yaml \
+      Deployment_kubevirt-ipam-controller-manager.yaml \
+      Certificate_kubevirt-ipam-controller-serving-cert.yaml \
+      Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml \
+      MutatingWebhookConfiguration_kubevirt-ipam-controller-mutating-webhook-configuration.yaml > 001-kubevirtipamcontroller.yaml
 
 )
 
@@ -141,7 +141,7 @@ sed -i '/app\.kubernetes\.io\//d' data/kubevirt-ipam-controller/001-kubevirtipam
 
 echo 'Get kubevirt-ipam-controller image name and update it under CNAO'
 KUBEVIRT_IPAM_CONTROLLER_TAG=$(git-utils::get_component_tag ${KUBEVIRT_IPAM_CONTROLLER_PATH})
-KUBEVIRT_IPAM_CONTROLLER_IMAGE=ghcr.io/maiqueb/kubevirt-ipam-claims
+KUBEVIRT_IPAM_CONTROLLER_IMAGE=ghcr.io/kubevirt/ipam-controller
 KUBEVIRT_IPAM_CONTROLLER_IMAGE_TAGGED=${KUBEVIRT_IPAM_CONTROLLER_IMAGE}:${KUBEVIRT_IPAM_CONTROLLER_TAG}
 KUBEVIRT_IPAM_CONTROLLER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${KUBEVIRT_IPAM_CONTROLLER_IMAGE_TAGGED}" "${KUBEVIRT_IPAM_CONTROLLER_IMAGE}")"
 
