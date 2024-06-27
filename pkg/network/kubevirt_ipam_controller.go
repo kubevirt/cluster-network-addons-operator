@@ -28,10 +28,10 @@ func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 		data.Data["WebhookAnnotation"] = `service.beta.openshift.io/inject-cabundle: "true"`
 		data.Data["CertDir"] = "/etc/ipam-controller/certificates"
 		data.Data["MountPath"] = data.Data["CertDir"]
-		data.Data["SecretName"] = "kubevirt-ipam-claims-webhook-service"
+		data.Data["SecretName"] = "kubevirt-ipam-controller-webhook-service"
 	} else {
 		data.Data["WebhookAnnotation"] =
-			"cert-manager.io/inject-ca-from: " + os.Getenv("OPERAND_NAMESPACE") + "/kubevirt-ipam-claims-serving-cert"
+			"cert-manager.io/inject-ca-from: " + os.Getenv("OPERAND_NAMESPACE") + "/kubevirt-ipam-controller-serving-cert"
 		data.Data["CertDir"] = ""
 		data.Data["MountPath"] = "/tmp/k8s-webhook-server/serving-certs"
 		data.Data["SecretName"] = "webhook-server-cert"

@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   labels:
     app: ipam-virt-workloads
-    control-plane: controller-manager
+    control-plane: manager
   name: {{ .Namespace }}
 ---
 apiVersion: v1
@@ -12,7 +12,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-controller-manager
+  name: kubevirt-ipam-controller-manager
   namespace: {{ .Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -20,7 +20,7 @@ kind: Role
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-leader-election-role
+  name: kubevirt-ipam-controller-leader-election-role
   namespace: {{ .Namespace }}
 rules:
   - apiGroups:
@@ -60,7 +60,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-manager-role
+  name: kubevirt-ipam-controller-manager-role
 rules:
 - apiGroups:
   - ""
@@ -101,15 +101,15 @@ kind: RoleBinding
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-leader-election-rolebinding
+  name: kubevirt-ipam-controller-leader-election-rolebinding
   namespace: {{ .Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: kubevirt-ipam-claims-leader-election-role
+  name: kubevirt-ipam-controller-leader-election-role
 subjects:
   - kind: ServiceAccount
-    name: kubevirt-ipam-claims-controller-manager
+    name: kubevirt-ipam-controller-manager
     namespace: {{ .Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -117,14 +117,14 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-manager-rolebinding
+  name: kubevirt-ipam-controller-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kubevirt-ipam-claims-manager-role
+  name: kubevirt-ipam-controller-manager-role
 subjects:
   - kind: ServiceAccount
-    name: kubevirt-ipam-claims-controller-manager
+    name: kubevirt-ipam-controller-manager
     namespace: {{ .Namespace }}
 ---
 apiVersion: v1
@@ -132,11 +132,11 @@ kind: Service
 metadata:
 {{ if .IsOpenshift }}
   annotations:
-    service.beta.openshift.io/serving-cert-secret-name: kubevirt-ipam-claims-webhook-service
+    service.beta.openshift.io/serving-cert-secret-name: kubevirt-ipam-controller-webhook-service
 {{ end }}
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-webhook-service
+  name: kubevirt-ipam-controller-webhook-service
   namespace: {{ .Namespace }}
 spec:
   ports:
@@ -145,29 +145,29 @@ spec:
       targetPort: 9443
   selector:
     app: ipam-virt-workloads
-    control-plane: controller-manager
+    control-plane: manager
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app: ipam-virt-workloads
-    control-plane: controller-manager
-  name: kubevirt-ipam-claims-controller-manager
+    control-plane: manager
+  name: kubevirt-ipam-controller-manager
   namespace: {{ .Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: ipam-virt-workloads
-      control-plane: controller-manager
+      control-plane: manager
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
         app: ipam-virt-workloads
-        control-plane: controller-manager
+        control-plane: manager
     spec:
       containers:
         - args:
@@ -214,7 +214,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: kubevirt-ipam-claims-controller-manager
+      serviceAccountName: kubevirt-ipam-controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
         - name: cert
@@ -231,15 +231,15 @@ kind: Certificate
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-serving-cert
+  name: kubevirt-ipam-controller-serving-cert
   namespace: {{ .Namespace }}
 spec:
   dnsNames:
-    - kubevirt-ipam-claims-webhook-service.{{ .Namespace }}.svc
-    - kubevirt-ipam-claims-webhook-service.{{ .Namespace }}.svc.cluster.local
+    - kubevirt-ipam-controller-webhook-service.{{ .Namespace }}.svc
+    - kubevirt-ipam-controller-webhook-service.{{ .Namespace }}.svc.cluster.local
   issuerRef:
     kind: Issuer
-    name: kubevirt-ipam-claims-selfsigned-issuer
+    name: kubevirt-ipam-controller-selfsigned-issuer
   secretName: webhook-server-cert
 {{ end }}
 {{ if not .IsOpenshift }}
@@ -249,7 +249,7 @@ kind: Issuer
 metadata:
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-selfsigned-issuer
+  name: kubevirt-ipam-controller-selfsigned-issuer
   namespace: {{ .Namespace }}
 spec:
   selfSigned: {}
@@ -262,13 +262,13 @@ metadata:
     {{ .WebhookAnnotation }}
   labels:
     app: ipam-virt-workloads
-  name: kubevirt-ipam-claims-mutating-webhook-configuration
+  name: kubevirt-ipam-controller-mutating-webhook-configuration
 webhooks:
   - admissionReviewVersions:
       - v1
     clientConfig:
       service:
-        name: kubevirt-ipam-claims-webhook-service
+        name: kubevirt-ipam-controller-webhook-service
         namespace: {{ .Namespace }}
         path: /mutate-v1-pod
     failurePolicy: Fail
