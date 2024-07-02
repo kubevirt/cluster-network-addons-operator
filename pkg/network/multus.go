@@ -79,6 +79,95 @@ func cleanUpMultusOldName(ctx context.Context, client k8sclient.Client) []error 
 	return []error{}
 }
 
+// cleanUpKubevirtIpamController checks specific kic outdated objects or ones that are no longer compatible and deletes them.
+func cleanUpKubevirtIpamController(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
+	if conf.KubevirtIpamController == nil {
+		return []error{}
+	}
+
+	errList := []error{}
+	errList = append(errList, cleanUpKubevirtIpamControllerOldNames(ctx, client)...)
+	return errList
+}
+
+// cleanUpKubevirtIpamControllerOldNames deletes kic objects with old name after a new name was introduces in version 0.94.1
+// REQUIRED_FOR upgrade from kubevirt-ipam-controller == 0.94.0
+func cleanUpKubevirtIpamControllerOldNames(ctx context.Context, client k8sclient.Client) []error {
+	namespace := os.Getenv("OPERAND_NAMESPACE")
+
+	resources := []struct {
+		gvk  schema.GroupVersionKind
+		name string
+	}{
+		{
+			gvk:  schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
+			name: "kubevirt-ipam-claims-controller-manager",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ServiceAccount"},
+			name: "kubevirt-ipam-claims-controller-manager",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"},
+			name: "kubevirt-ipam-claims-leader-election-role",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"},
+			name: "kubevirt-ipam-claims-manager-role",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"},
+			name: "kubevirt-ipam-claims-leader-election-rolebinding",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"},
+			name: "kubevirt-ipam-claims-manager-rolebinding",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Service"},
+			name: "kubevirt-ipam-claims-webhook-service",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "cert-manager.io", Version: "v1", Kind: "Certificate"},
+			name: "kubevirt-ipam-claims-serving-cert",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "cert-manager.io", Version: "v1", Kind: "Issuer"},
+			name: "kubevirt-ipam-claims-selfsigned-issuer",
+		},
+		{
+			gvk:  schema.GroupVersionKind{Group: "admissionregistration.k8s.io", Version: "v1", Kind: "MutatingWebhookConfiguration"},
+			name: "kubevirt-ipam-claims-mutating-webhook-configuration",
+		},
+	}
+
+	var errors []error
+	for _, resource := range resources {
+		existing := &unstructured.Unstructured{}
+		existing.SetGroupVersionKind(resource.gvk)
+
+		err := client.Get(ctx, types.NamespacedName{Name: resource.name, Namespace: namespace}, existing)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			errors = append(errors, err)
+			continue
+		}
+
+		objDesc := fmt.Sprintf("(%s) %s/%s", resource.gvk.String(), namespace, resource.name)
+		log.Printf("Cleaning up %s Object", objDesc)
+
+		err = client.Delete(ctx, existing)
+		if err != nil {
+			log.Printf("Failed Cleaning up %s Object", objDesc)
+			errors = append(errors, err)
+		}
+	}
+
+	return errors
+}
+
 // RenderMultus generates the manifests of Multus
 func renderMultus(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.Multus == nil || openshiftNetworkConfig != nil {
