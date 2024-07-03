@@ -108,7 +108,7 @@ cp ${OVS_PATH}/config/cnao/001-ovs-cni.yaml data/ovs/
 OVS_TAG=$(git-utils::get_component_tag ${OVS_PATH})
 
 echo 'Get ovs-cni-plugin image name and update it under CNAO'
-OVS_PLUGIN_IMAGE=quay.io/kubevirt/ovs-cni-plugin
+OVS_PLUGIN_IMAGE=ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin
 OVS_PLUGIN_IMAGE_TAGGED=${OVS_PLUGIN_IMAGE}:${OVS_TAG}
 OVS_PLUGIN_IMAGE_DIGEST="$(docker-utils::get_image_digest "${OVS_PLUGIN_IMAGE_TAGGED}" "${OVS_PLUGIN_IMAGE}")"
 
