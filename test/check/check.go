@@ -228,7 +228,7 @@ func CheckForLeftoverObjects(currentVersion string) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(clusterRoles.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
 
-		clusterRoleBindings := rbacv1.ClusterRoleList{}
+		clusterRoleBindings := rbacv1.ClusterRoleBindingList{}
 		err = testenv.Client.List(context.Background(), &clusterRoleBindings, &listOptions)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(clusterRoleBindings.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
