@@ -54,19 +54,19 @@ func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 }
 
 // cleanUpKubevirtIpamController checks specific kic outdated objects or ones that are no longer compatible and deletes them.
-func cleanUpKubevirtIpamController(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client) []error {
+func cleanUpKubevirtIpamController(conf *cnao.NetworkAddonsConfigSpec, ctx context.Context, client k8sclient.Client, isOpenShift bool) []error {
 	if conf.KubevirtIpamController == nil {
 		return []error{}
 	}
 
 	errList := []error{}
-	errList = append(errList, cleanUpKubevirtIpamControllerOldNames(ctx, client)...)
+	errList = append(errList, cleanUpKubevirtIpamControllerOldNames(ctx, client, isOpenShift)...)
 	return errList
 }
 
 // cleanUpKubevirtIpamControllerOldNames deletes kic objects with old name after a new name was introduces in version 0.94.1
 // REQUIRED_FOR upgrade from kubevirt-ipam-controller == 0.94.0
-func cleanUpKubevirtIpamControllerOldNames(ctx context.Context, client k8sclient.Client) []error {
+func cleanUpKubevirtIpamControllerOldNames(ctx context.Context, client k8sclient.Client, isOpenShift bool) []error {
 	namespace := os.Getenv("OPERAND_NAMESPACE")
 
 	resources := []struct {
@@ -117,6 +117,10 @@ func cleanUpKubevirtIpamControllerOldNames(ctx context.Context, client k8sclient
 
 	var errors []error
 	for _, resource := range resources {
+		if isOpenShift && resource.gvk.Group == "cert-manager.io" {
+			continue
+		}
+
 		existing := &unstructured.Unstructured{}
 		existing.SetGroupVersionKind(resource.gvk)
 

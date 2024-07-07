@@ -77,7 +77,7 @@ func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client,
 	ctx := context.TODO()
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
-	errs = append(errs, cleanUpKubevirtIpamController(conf, ctx, client)...)
+	errs = append(errs, cleanUpKubevirtIpamController(conf, ctx, client, clusterInfo.OpenShift4)...)
 	errs = append(errs, cleanUpNamespaceLabels(ctx, client)...)
 
 	if len(errs) > 0 {
