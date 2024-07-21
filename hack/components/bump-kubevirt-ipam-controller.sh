@@ -71,6 +71,20 @@ function __parametize_by_object() {
   done
 }
 
+function __parametize_passt_binding_cni() {
+  f=003-passtbindingcni.yaml
+
+  yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+  yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+  yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
+  yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+  yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .PasstBindingCNIImage }}'
+  yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+  yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path '{{ .CNIBinDir }}'
+
+  yaml-utils::remove_single_quotes_from_yaml ${f}
+}
+
 echo 'Bumping kubevirt-ipam-controller'
 KUBEVIRT_IPAM_CONTROLLER_URL=$(yaml-utils::get_component_url kubevirt-ipam-controller)
 KUBEVIRT_IPAM_CONTROLLER_COMMIT=$(yaml-utils::get_component_commit kubevirt-ipam-controller)
@@ -124,10 +138,17 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
       Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml \
       MutatingWebhookConfiguration_kubevirt-ipam-controller-mutating-webhook-configuration.yaml > 001-kubevirtipamcontroller.yaml
 
+  cp ${KUBEVIRT_IPAM_CONTROLLER_PATH}/passt/passt-binding-cni-ds.yaml 003-passtbindingcni.yaml
+  __parametize_passt_binding_cni
+
+  sed -i '/containers:/i\{{ if .EnableSCC }}\
+      serviceAccountName: passt-binding-cni\
+{{ end }}' 003-passtbindingcni.yaml
 )
 
 echo 'Copy manifests'
-rm -rf data/kubevirt-ipam-controller/*
+shopt -s extglob
+rm -rf data/kubevirt-ipam-controller/!(002-rbac.yaml)
 
 # CRD
 crd_manifest="https://raw.githubusercontent.com/k8snetworkplumbingwg/ipamclaims/${IPAMCLAIMS_CRD_VERSION}/artifacts/k8s.cni.cncf.io_ipamclaims.yaml"
@@ -139,11 +160,22 @@ echo "{{ end }}" >> data/kubevirt-ipam-controller/000-crd.yaml
 cp ${KUBEVIRT_IPAM_CONTROLLER_PATH}/config/cnao/001-kubevirtipamcontroller.yaml data/kubevirt-ipam-controller
 sed -i '/app\.kubernetes\.io\//d' data/kubevirt-ipam-controller/001-kubevirtipamcontroller.yaml
 
+# Passt binding CNI
+cp ${KUBEVIRT_IPAM_CONTROLLER_PATH}/config/cnao/003-passtbindingcni.yaml data/kubevirt-ipam-controller
+
 echo 'Get kubevirt-ipam-controller image name and update it under CNAO'
 KUBEVIRT_IPAM_CONTROLLER_TAG=$(git-utils::get_component_tag ${KUBEVIRT_IPAM_CONTROLLER_PATH})
 KUBEVIRT_IPAM_CONTROLLER_IMAGE=ghcr.io/kubevirt/ipam-controller
 KUBEVIRT_IPAM_CONTROLLER_IMAGE_TAGGED=${KUBEVIRT_IPAM_CONTROLLER_IMAGE}:${KUBEVIRT_IPAM_CONTROLLER_TAG}
 KUBEVIRT_IPAM_CONTROLLER_IMAGE_DIGEST="$(docker-utils::get_image_digest "${KUBEVIRT_IPAM_CONTROLLER_IMAGE_TAGGED}" "${KUBEVIRT_IPAM_CONTROLLER_IMAGE}")"
 
+PASST_BINDING_CNI_TAG=${KUBEVIRT_IPAM_CONTROLLER_TAG}
+PASST_BINDING_CNI_IMAGE=ghcr.io/kubevirt/passt-binding-cni
+PASST_BINDING_CNI_IMAGE_TAGGED=${PASST_BINDING_CNI_IMAGE}:${PASST_BINDING_CNI_TAG}
+PASST_BINDING_CNI_IMAGE_DIGEST="$(docker-utils::get_image_digest "${PASST_BINDING_CNI_IMAGE_TAGGED}" "${PASST_BINDING_CNI_IMAGE}")"
+
 sed -i -r "s#\"${KUBEVIRT_IPAM_CONTROLLER_IMAGE}(@sha256)?:.*\"#\"${KUBEVIRT_IPAM_CONTROLLER_IMAGE_DIGEST}\"#" pkg/components/components.go
 sed -i -r "s#\"${KUBEVIRT_IPAM_CONTROLLER_IMAGE}(@sha256)?:.*\"#\"${KUBEVIRT_IPAM_CONTROLLER_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go
+
+sed -i -r "s#\"${PASST_BINDING_CNI_IMAGE}(@sha256)?:.*\"#\"${PASST_BINDING_CNI_IMAGE_DIGEST}\"#" pkg/components/components.go
+sed -i -r "s#\"${PASST_BINDING_CNI_IMAGE}(@sha256)?:.*\"#\"${PASST_BINDING_CNI_IMAGE_DIGEST}\"#" test/releases/${CNAO_VERSION}.go

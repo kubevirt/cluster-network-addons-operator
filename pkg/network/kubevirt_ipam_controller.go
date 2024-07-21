@@ -15,6 +15,7 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/network/cni"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 )
 
@@ -30,20 +31,24 @@ func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
 	data.Data["KubevirtIpamControllerImage"] = os.Getenv("KUBEVIRT_IPAM_CONTROLLER_IMAGE")
+	data.Data["PasstBindingCNIImage"] = os.Getenv("PASST_BINDING_CNI_IMAGE")
 
 	if clusterInfo.OpenShift4 {
 		data.Data["WebhookAnnotation"] = `service.beta.openshift.io/inject-cabundle: "true"`
 		data.Data["CertDir"] = "/etc/ipam-controller/certificates"
 		data.Data["MountPath"] = data.Data["CertDir"]
 		data.Data["SecretName"] = "kubevirt-ipam-controller-webhook-service"
+		data.Data["CNIBinDir"] = cni.BinDirOpenShift4
 	} else {
 		data.Data["WebhookAnnotation"] =
 			"cert-manager.io/inject-ca-from: " + os.Getenv("OPERAND_NAMESPACE") + "/kubevirt-ipam-controller-serving-cert"
 		data.Data["CertDir"] = ""
 		data.Data["MountPath"] = "/tmp/k8s-webhook-server/serving-certs"
 		data.Data["SecretName"] = "webhook-server-cert"
+		data.Data["CNIBinDir"] = cni.BinDir
 	}
 	data.Data["IsOpenshift"] = clusterInfo.OpenShift4
+	data.Data["EnableSCC"] = clusterInfo.SCCAvailable
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubevirt-ipam-controller"), &data)
 	if err != nil {

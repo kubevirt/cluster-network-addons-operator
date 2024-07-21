@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: passt-binding-cni
+  namespace: {{ .Namespace }}
+  labels:
+    tier: node
+    app: passt-binding-cni
+spec:
+  selector:
+    matchLabels:
+      name: passt-binding-cni
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 10%
+  template:
+    metadata:
+      labels:
+        name: passt-binding-cni
+        tier: node
+        app: passt-binding-cni
+      annotations:
+        description: passt-binding-cni installs passt binding CNI on cluster nodes
+    spec:
+      priorityClassName: system-cluster-critical
+{{ if .EnableSCC }}
+      serviceAccountName: passt-binding-cni
+{{ end }}
+      containers:
+        - name: installer
+          image: {{ .PasstBindingCNIImage }}
+          command: ["/bin/sh", "-ce"]
+          args:
+            - |
+              ls -la "/cni/network-passt-binding"
+              cp -f "/cni/network-passt-binding" "/opt/cni/bin"
+              echo "passt binding CNI plugin installation complete..sleep inf"
+              sleep infinity
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "15Mi"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: cnibin
+              mountPath: /opt/cni/bin
+          imagePullPolicy: {{ .ImagePullPolicy }}
+      volumes:
+        - name: cnibin
+          hostPath:
+            path: {{ .CNIBinDir }}
+      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
+      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
+      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
