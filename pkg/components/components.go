@@ -40,7 +40,8 @@ const (
 	KubeRbacProxyImageDefault          = "quay.io/openshift/origin-kube-rbac-proxy@sha256:e2def4213ec0657e72eb790ae8a115511d5b8f164a62d3568d2f1bff189917e8"
 	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:6268d84154e2483fbce8c1adacbdaf6f0839117b2d48d9fa4687cc8f76bd5130"
 	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
-	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:f272eaf82c9e4fcd7fdee5d9031afba8019cff2dc842ca3e36be49de28083fee"
+	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:abf5abbf5547213130b016216ce2d2c28eb89372977229b6921ff6d6e1e26cb3"
+	PasstBindingCNIImageDefault        = "ghcr.io/kubevirt/passt-binding-cni@sha256:331a8b4dee412e4e79154d480d703a40a96a216944cfd4f9884c1ac58fed480f"
 )
 
 type AddonsImages struct {
@@ -55,6 +56,7 @@ type AddonsImages struct {
 	KubeSecondaryDNS       string
 	CoreDNS                string
 	KubevirtIpamController string
+	PasstBindingCNI        string
 }
 
 type RelatedImage struct {
@@ -112,6 +114,9 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.KubevirtIpamController == "" {
 		ai.KubevirtIpamController = KubevirtIpamControllerImageDefault
 	}
+	if ai.PasstBindingCNI == "" {
+		ai.PasstBindingCNI = PasstBindingCNIImageDefault
+	}
 	return ai
 }
 
@@ -128,6 +133,7 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.KubeSecondaryDNS,
 		ai.CoreDNS,
 		ai.KubevirtIpamController,
+		ai.PasstBindingCNI,
 	)
 }
 
@@ -248,6 +254,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "KUBEVIRT_IPAM_CONTROLLER_IMAGE",
 									Value: addonsImages.KubevirtIpamController,
+								},
+								{
+									Name:  "PASST_BINDING_CNI_IMAGE",
+									Value: addonsImages.PasstBindingCNI,
 								},
 								{
 									Name:  "OPERATOR_IMAGE",
