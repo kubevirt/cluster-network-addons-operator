@@ -481,7 +481,7 @@ func checkConfigChange(gvk schema.GroupVersionKind, components []Component, whil
 		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
 	} else {
 		// If there are any components to deploy wait until Progressing condition is reported
-		CheckConfigCondition(gvk, ConditionProgressing, ConditionTrue, time.Minute, CheckDoNotRepeat)
+		CheckConfigCondition(gvk, ConditionProgressing, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
 		// Wait until Available condition is reported. It may take a few minutes the first time
 		// we are pulling component images to the Node
 		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
