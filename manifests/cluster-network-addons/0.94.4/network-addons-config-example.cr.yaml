@@ -1,0 +1,15 @@
+---
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  imagePullPolicy: IfNotPresent
+  kubeMacPool: {}
+  kubeSecondaryDNS: {}
+  kubevirtIpamController: {}
+  linuxBridge: {}
+  macvtap: {}
+  multus: {}
+  multusDynamicNetworks: {}
+  ovs: {}
