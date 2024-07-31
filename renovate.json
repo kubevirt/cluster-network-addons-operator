@@ -1,0 +1,69 @@
+{
+  "extends": [
+    ":gitSignOff",
+    ":dependencyDashboard"
+  ],
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "baseBranches": [
+    "main",
+    "release-0.94",
+    "release-0.93"
+  ],
+  "prConcurrentLimit": 3,
+  "groupName": "all dependencies",
+  "groupSlug": "all",
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "labels": [
+    "release-note-none"
+  ],
+  "ignorePaths": [
+    "automation/**",
+    "cluster/**",
+    "hack/**",
+    "test/**",
+    "tools/**"
+  ],
+  "packageRules": [
+    {
+      "groupName": "all dependencies bump on main",
+      "groupSlug": "all",
+      "matchBaseBranches": [
+        "main"
+      ],
+      "matchPackagePatterns": [
+        "*"
+      ]
+    },
+    {
+      "groupName": "all dependencies",
+      "groupSlug": "all",
+      "enabled": false,
+      "matchBaseBranches": [
+        "release-0.94",
+        "release-0.93"
+      ],
+      "matchPackagePatterns": [
+        "*"
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "golang",
+        "go"
+      ],
+      "allowedVersions": "<=1.21",
+      "matchBaseBranches": [
+        "release-0.94",
+        "release-0.93"
+      ]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "osvVulnerabilityAlerts": true,
+  "assigneesFromCodeOwners": true,
+  "separateMajorMinor": false
+}
