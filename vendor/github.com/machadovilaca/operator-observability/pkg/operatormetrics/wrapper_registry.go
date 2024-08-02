@@ -1,8 +1,9 @@
 package operatormetrics
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 )
 
 var operatorRegistry = newRegistry()
@@ -62,6 +63,21 @@ func RegisterCollector(collectors ...Collector) error {
 	return nil
 }
 
+// UnregisterMetrics unregisters the metrics from the Prometheus registry.
+func UnregisterMetrics(allMetrics ...[]Metric) error {
+	for _, metricList := range allMetrics {
+		for _, metric := range metricList {
+			if metricExists(metric) {
+				if err := unregisterMetric(metric); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // ListMetrics returns a list of all registered metrics.
 func ListMetrics() []Metric {
 	var result []Metric
@@ -74,8 +90,8 @@ func ListMetrics() []Metric {
 		result = append(result, rc)
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].GetOpts().Name < result[j].GetOpts().Name
+	slices.SortFunc(result, func(a, b Metric) int {
+		return cmp.Compare(a.GetOpts().Name, b.GetOpts().Name)
 	})
 
 	return result

@@ -1,8 +1,10 @@
 package operatorrules
 
 import (
+	"cmp"
+	"slices"
+
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"sort"
 )
 
 var operatorRegistry = newRegistry()
@@ -23,7 +25,8 @@ func newRegistry() operatorRegisterer {
 func RegisterRecordingRules(recordingRules ...[]RecordingRule) error {
 	for _, recordingRuleList := range recordingRules {
 		for _, recordingRule := range recordingRuleList {
-			operatorRegistry.registeredRecordingRules[recordingRule.MetricsOpts.Name] = recordingRule
+			key := recordingRule.MetricsOpts.Name + ":" + recordingRule.Expr.String()
+			operatorRegistry.registeredRecordingRules[key] = recordingRule
 		}
 	}
 
@@ -48,8 +51,11 @@ func ListRecordingRules() []RecordingRule {
 		rules = append(rules, rule)
 	}
 
-	sort.Slice(rules, func(i, j int) bool {
-		return rules[i].GetOpts().Name < rules[j].GetOpts().Name
+	slices.SortFunc(rules, func(a, b RecordingRule) int {
+		aKey := a.GetOpts().Name + ":" + a.Expr.String()
+		bKey := b.GetOpts().Name + ":" + b.Expr.String()
+
+		return cmp.Compare(aKey, bKey)
 	})
 
 	return rules
@@ -62,8 +68,8 @@ func ListAlerts() []promv1.Rule {
 		alerts = append(alerts, alert)
 	}
 
-	sort.Slice(alerts, func(i, j int) bool {
-		return alerts[i].Alert < alerts[j].Alert
+	slices.SortFunc(alerts, func(a, b promv1.Rule) int {
+		return cmp.Compare(a.Alert, b.Alert)
 	})
 
 	return alerts
