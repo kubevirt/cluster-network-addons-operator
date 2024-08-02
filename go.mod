@@ -315,6 +315,7 @@ replace (
 	kubevirt.io/api => kubevirt.io/api v1.0.0
 	kubevirt.io/client-go => kubevirt.io/client-go v1.0.0
 	kubevirt.io/containerized-data-importer-api => kubevirt.io/containerized-data-importer-api v1.57.0
+	kubevirt.io/kubevirt => kubevirt.io/kubevirt v1.0.0
 )
 
 // Aligning with https://github.com/kubevirt/containerized-data-importer-api/blob/release-v1.41.1
