@@ -23,7 +23,7 @@ set -e
 linter_image_tag="v0.0.1"
 
 PROJECT_ROOT="$(readlink -e "$(dirname "${BASH_SOURCE[0]}")"/../)"
-export METRICS_COLLECTOR_PATH="${METRICS_COLLECTOR_PATH:-${PROJECT_ROOT}/tools/prom-metrics-collector}"
+export METRICS_COLLECTOR_PATH="${METRICS_COLLECTOR_PATH:-${PROJECT_ROOT}/tools/cmd/prom-metrics-collector}"
 
 if [[ ! -d "$METRICS_COLLECTOR_PATH" ]]; then
     echo "Invalid METRICS_COLLECTOR_PATH: $METRICS_COLLECTOR_PATH is not a valid directory path"
@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Get the metrics list
-go build -o _out/prom-metrics-collector "$METRICS_COLLECTOR_PATH/..."
+go build -C ./tools -o ${PWD}/_out/prom-metrics-collector "$METRICS_COLLECTOR_PATH/..."
 json_output=$(_out/prom-metrics-collector 2>/dev/null)
 
 # Run the linter by using the prom-metrics-linter Docker container
