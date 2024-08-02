@@ -4,64 +4,6 @@ go 1.22.0
 
 toolchain go1.22.5
 
-// Pinned to kubernetes-0.26.3
-replace (
-	k8s.io/api => k8s.io/api v0.26.3
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.26.3
-	k8s.io/apimachinery => k8s.io/apimachinery v0.26.3
-	k8s.io/apiserver => k8s.io/apiserver v0.26.3
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.26.3
-	k8s.io/client-go => k8s.io/client-go v0.26.3
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.26.3
-	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.26.3
-	k8s.io/code-generator => k8s.io/code-generator v0.26.3
-	k8s.io/component-base => k8s.io/component-base v0.26.3
-	k8s.io/component-helpers => k8s.io/component-helpers v0.26.3
-	k8s.io/controller-manager => k8s.io/controller-manager v0.26.3
-	k8s.io/cri-api => k8s.io/cri-api v0.26.3
-	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.26.3
-	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.26.3
-	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.26.3
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
-	k8s.io/kube-proxy => k8s.io/kube-proxy v0.26.3
-	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.26.3
-	k8s.io/kubectl => k8s.io/kubectl v0.26.3
-	k8s.io/kubelet => k8s.io/kubelet v0.26.3
-	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.26.3
-	k8s.io/metrics => k8s.io/metrics v0.26.3
-	k8s.io/mount-utils => k8s.io/mount-utils v0.26.3
-	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.26.3
-)
-
-replace (
-	bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
-	github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
-	github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
-	github.com/containerd/containerd => github.com/containerd/containerd v1.5.18
-	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
-	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
-	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
-	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
-	github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.2
-	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
-	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.11.1
-	sigs.k8s.io/kustomize/kyaml => sigs.k8s.io/kustomize/kyaml v0.13.3
-)
-
-replace (
-	kubevirt.io/api => kubevirt.io/api v1.0.0
-	kubevirt.io/client-go => kubevirt.io/client-go v1.0.0
-	kubevirt.io/containerized-data-importer-api => kubevirt.io/containerized-data-importer-api v1.57.0
-)
-
-// Aligning with https://github.com/kubevirt/containerized-data-importer-api/blob/release-v1.41.1
-replace (
-	github.com/openshift/api => github.com/openshift/api v0.0.0-20220315184754-d7c10d0b647e
-	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200521150516-05eb9880269c
-	github.com/openshift/library-go => github.com/mhenriks/library-go v0.0.0-20200804184258-4fc3a5379c7a
-	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v1.0.2
-)
-
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/machadovilaca/operator-observability v0.0.21
@@ -144,3 +86,62 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+// Pinned to kubernetes-0.26.3
+replace (
+	k8s.io/api => k8s.io/api v0.26.3
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.26.3
+	k8s.io/apimachinery => k8s.io/apimachinery v0.26.3
+	k8s.io/apiserver => k8s.io/apiserver v0.26.3
+	k8s.io/cli-runtime => k8s.io/cli-runtime v0.26.3
+	k8s.io/client-go => k8s.io/client-go v0.26.3
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.26.3
+	k8s.io/cluster-bootstrap => k8s.io/cluster-bootstrap v0.26.3
+	k8s.io/code-generator => k8s.io/code-generator v0.26.3
+	k8s.io/component-base => k8s.io/component-base v0.26.3
+	k8s.io/component-helpers => k8s.io/component-helpers v0.26.3
+	k8s.io/controller-manager => k8s.io/controller-manager v0.26.3
+	k8s.io/cri-api => k8s.io/cri-api v0.26.3
+	k8s.io/csi-translation-lib => k8s.io/csi-translation-lib v0.26.3
+	k8s.io/kube-aggregator => k8s.io/kube-aggregator v0.26.3
+	k8s.io/kube-controller-manager => k8s.io/kube-controller-manager v0.26.3
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
+	k8s.io/kube-proxy => k8s.io/kube-proxy v0.26.3
+	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.26.3
+	k8s.io/kubectl => k8s.io/kubectl v0.26.3
+	k8s.io/kubelet => k8s.io/kubelet v0.26.3
+	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.26.3
+	k8s.io/metrics => k8s.io/metrics v0.26.3
+	k8s.io/mount-utils => k8s.io/mount-utils v0.26.3
+	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.26.3
+)
+
+replace (
+	bitbucket.org/ww/goautoneg => github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
+	github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
+	github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
+	github.com/containerd/containerd => github.com/containerd/containerd v1.5.18
+	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
+	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
+	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
+	github.com/opencontainers/image-spec => github.com/opencontainers/image-spec v1.0.2
+	github.com/openshift/custom-resource-status => github.com/openshift/custom-resource-status v1.1.2
+	sigs.k8s.io/kustomize/api => sigs.k8s.io/kustomize/api v0.11.1
+	sigs.k8s.io/kustomize/kyaml => sigs.k8s.io/kustomize/kyaml v0.13.3
+)
+
+replace (
+	kubevirt.io/api => kubevirt.io/api v1.0.0
+	kubevirt.io/client-go => kubevirt.io/client-go v1.0.0
+	kubevirt.io/containerized-data-importer-api => kubevirt.io/containerized-data-importer-api v1.57.0
+)
+
+// Aligning with https://github.com/kubevirt/containerized-data-importer-api/blob/release-v1.41.1
+replace (
+	github.com/openshift/api => github.com/openshift/api v0.0.0-20220315184754-d7c10d0b647e
+	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200521150516-05eb9880269c
+	github.com/openshift/library-go => github.com/mhenriks/library-go v0.0.0-20200804184258-4fc3a5379c7a
+	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v1.0.2
+)
+
