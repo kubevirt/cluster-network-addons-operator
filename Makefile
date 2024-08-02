@@ -57,13 +57,13 @@ $(GO):
 	hack/install-go.sh $(BIN_DIR)
 
 $(OPERATOR_SDK): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./tools/vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
 
 $(GITHUB_RELEASE): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./tools/vendor/github.com/github-release/github-release
 
 $(CONTROLLER_GEN): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./tools/vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -78,7 +78,7 @@ apis_sources=$(call rwildcard,pkg/apis,*.go)
 fmt: whitespace goimports
 
 goimports: $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
+	$(GO) run ./tools/vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
 	touch $@
 
 whitespace: $(all_sources)
@@ -97,7 +97,7 @@ vet: $(GO) $(cmd_sources) $(pkg_sources)
 	touch $@
 
 goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
+	$(GO) run ./tools/vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
 	touch $@
 
 test/unit: $(GO)
@@ -204,6 +204,8 @@ release: $(GITHUB_RELEASE)
 vendor: $(GO)
 	$(GO) mod tidy -compat=$(GO_VERSION)
 	$(GO) mod vendor
+	pushd tools && $(GO) mod tidy -compat=$(GO_VERSION)
+	pushd tools && $(GO) mod vendor
 
 auto-bumper: $(GO)
 	PUSH_IMAGES=true $(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}

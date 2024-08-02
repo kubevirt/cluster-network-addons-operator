@@ -12,10 +12,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"gopkg.in/yaml.v2"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
