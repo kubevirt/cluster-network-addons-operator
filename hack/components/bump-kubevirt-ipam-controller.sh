@@ -148,7 +148,7 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
 
 echo 'Copy manifests'
 shopt -s extglob
-rm -rf data/kubevirt-ipam-controller/!(002-rbac.yaml)
+rm -rf data/kubevirt-ipam-controller/!(002-rbac.yaml|004-primary-udn-kubevirt-binding-networkattachdef.yaml)
 
 # CRD
 crd_manifest="https://raw.githubusercontent.com/k8snetworkplumbingwg/ipamclaims/${IPAMCLAIMS_CRD_VERSION}/artifacts/k8s.cni.cncf.io_ipamclaims.yaml"

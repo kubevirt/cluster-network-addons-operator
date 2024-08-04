@@ -91,9 +91,10 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			Entry(
 				KubevirtIpamController.ComponentName,
 				cnao.NetworkAddonsConfigSpec{
+					Multus:                 &cnao.Multus{},
 					KubevirtIpamController: &cnao.KubevirtIpamController{},
 				},
-				[]Component{KubevirtIpamController},
+				[]Component{MultusComponent, KubevirtIpamController},
 			),
 		)
 		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {

@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
 	securityapi "github.com/openshift/origin/pkg/security/apis/security"
@@ -346,6 +347,10 @@ func checkForComponent(component *Component) error {
 		errsAppend(checkForPrometheusRule(component.PrometheusRule))
 	}
 
+	if component.NetworkAttachmentDefinition != "" {
+		errsAppend(checkForNetworkAttachmentDefinition(component.NetworkAttachmentDefinition))
+	}
+
 	return errsToErr(errs)
 }
 
@@ -387,6 +392,10 @@ func checkForComponentRemoval(component *Component) error {
 
 	if component.PrometheusRule != "" {
 		errsAppend(checkForPrometheusRuleRemoval(component.PrometheusRule))
+	}
+
+	if component.NetworkAttachmentDefinition != "" {
+		errsAppend(checkForNetworkAttachmentDefinitionRemoval(component.NetworkAttachmentDefinition))
 	}
 
 	return errsToErr(errs)
@@ -649,6 +658,21 @@ func checkForPrometheusRule(name string) error {
 	return nil
 }
 
+func checkForNetworkAttachmentDefinition(name string) error {
+	networkAttachmentDefinition := k8snetworkplumbingwgv1.NetworkAttachmentDefinition{}
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault}, &networkAttachmentDefinition)
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(networkAttachmentDefinition.GetLabels(), "NetworkAttachmentDefinition", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func checkRelationshipLabels(labels map[string]string, kind, name string) error {
 	expectedValues := map[string]string{
 		names.COMPONENT_LABEL_KEY:  names.COMPONENT_LABEL_DEFAULT_VALUE,
@@ -706,6 +730,14 @@ func checkForServiceMonitorRemoval(name string) error {
 func checkForPrometheusRuleRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.PrometheusRule{})
 	return isNotFound("PrometheusRule", name, err)
+}
+
+func checkForNetworkAttachmentDefinitionRemoval(name string) error {
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault}, &k8snetworkplumbingwgv1.NetworkAttachmentDefinition{})
+	if isKindNotFound(err) {
+		return nil
+	}
+	return isNotFound("NetworkAttachmentDefinition", name, err)
 }
 
 func getMonitoringEndpoint() (*corev1.Endpoints, error) {
@@ -810,6 +842,10 @@ func describeAll() string {
 
 func isNotSupportedKind(err error) bool {
 	return strings.Contains(err.Error(), "no kind is registered for the type")
+}
+
+func isKindNotFound(err error) bool {
+	return strings.Contains(err.Error(), "no matches for kind")
 }
 
 func configToYaml(gvk schema.GroupVersionKind) string {
