@@ -26,6 +26,6 @@ until ./cluster/kubectl.sh -n kubevirt get kv kubevirt; do
     sleep 1
 done
 
-./cluster/kubectl.sh wait -n kubevirt kv kubevirt --for condition=Available --timeout 360s || (echo "KubeVirt not ready in time" && exit 1)
+./cluster/kubectl.sh wait -n kubevirt kv kubevirt --for condition=Available --timeout 15m || (echo "KubeVirt not ready in time" && exit 1)
 
 echo "basename -- $0 done"
