@@ -62,20 +62,20 @@ kind: NetworkAddonsConfig
 metadata:
   name: cluster
 spec:
-  linuxBridge: {}
   kubeMacPool:
    rangeStart: "02:00:00:00:00:00"
    rangeEnd: "02:00:00:00:00:0F"
-  ovs: {}
-  macvtap: {}
-  kubeSecondaryDNS: {}
   kubevirtIpamController: {}
   imagePullPolicy: Always
 EOF
 
   if [[ $USE_KUBEVIRTCI == true ]]; then
+    echo "  linuxBridge: {}" >> cr.yaml
     echo "  multus: {}" >> cr.yaml
     echo "  multusDynamicNetworks: {}" >> cr.yaml
+    echo "  ovs: {}" >> cr.yaml
+    echo "  macvtap: {}" >> cr.yaml
+    echo "  kubeSecondaryDNS: {}" >> cr.yaml
   fi
 
   cluster/kubectl.sh apply -f cr.yaml
