@@ -20,6 +20,7 @@ type Component struct {
 	Service                      string
 	ServiceMonitor               string
 	PrometheusRule               string
+	NetworkAttachmentDefinition  string
 }
 
 var (
@@ -87,11 +88,12 @@ var (
 		Deployments:        []string{"secondary-dns"},
 	}
 	KubevirtIpamController = Component{
-		ComponentName:      "KubevirtIpamController",
-		ClusterRole:        "kubevirt-ipam-controller-manager-role",
-		ClusterRoleBinding: "kubevirt-ipam-controller-manager-rolebinding",
-		Deployments:        []string{"kubevirt-ipam-controller-manager"},
-		DaemonSets:         []string{"passt-binding-cni"},
+		ComponentName:               "KubevirtIpamController",
+		ClusterRole:                 "kubevirt-ipam-controller-manager-role",
+		ClusterRoleBinding:          "kubevirt-ipam-controller-manager-rolebinding",
+		Deployments:                 []string{"kubevirt-ipam-controller-manager"},
+		DaemonSets:                  []string{"passt-binding-cni"},
+		NetworkAttachmentDefinition: "primary-udn-kubevirt-binding",
 	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,
