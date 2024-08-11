@@ -734,7 +734,7 @@ func checkForPrometheusRuleRemoval(name string) error {
 
 func checkForNetworkAttachmentDefinitionRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault}, &k8snetworkplumbingwgv1.NetworkAttachmentDefinition{})
-	if isKindNotFound(err) {
+	if err != nil && isKindNotFound(err) {
 		return nil
 	}
 	return isNotFound("NetworkAttachmentDefinition", name, err)
