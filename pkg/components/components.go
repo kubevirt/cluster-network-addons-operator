@@ -614,6 +614,18 @@ func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 			},
 			{
 				APIGroups: []string{
+					"kubevirt.io",
+				},
+				Resources: []string{
+					"virtualmachines/finalizers",
+					"virtualmachineinstances/finalizers",
+				},
+				Verbs: []string{
+					"update",
+				},
+			},
+			{
+				APIGroups: []string{
 					"apps",
 				},
 				Resources: []string{
