@@ -10,7 +10,7 @@ spec:
   "name": "primary-udn-kubevirt-binding",
   "plugins": [
     {
-      "type": "cni-passt-binding-plugin"
+      "type": "network-passt-binding"
     }
   ]
 }'
