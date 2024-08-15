@@ -3,25 +3,25 @@ components:
     url: https://github.com/kubevirt/bridge-marker
     commit: 6f184fa033208faf897a8fbd3aecc85811dca8bb
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: 0.11.2
   kube-secondary-dns:
     url: https://github.com/kubevirt/kubesecondarydns
     commit: 3815007442f21ca39c7c93ead6ce4addeb9e4d29
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.0.15
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: 98d8b8233b860598ee9dd5a7ba159971e5e99be2
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.44.0
   kubevirt-ipam-controller:
     url: https://github.com/kubevirt/ipam-extensions
     commit: 31dd1cd2aabc10645bbd99cb5cb7544944226d3e
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.1.5-alpha
   linux-bridge:
     url: https://github.com/containernetworking/plugins
@@ -33,23 +33,23 @@ components:
     url: https://github.com/kubevirt/macvtap-cni
     commit: 85b07ce03e83963c0f94f37d541ff45cf499e99e
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.11.1
   multus:
     url: https://github.com/k8snetworkplumbingwg/multus-cni
     commit: f03765681fe81ee1e0633ee1734bf48ab3bccf2b
     branch: master
-    update-policy: tagged
+    update-policy: static
     metadata: v4.0.2
   multus-dynamic-networks:
     url: https://github.com/k8snetworkplumbingwg/multus-dynamic-networks-controller
     commit: 489cb557d9a7b706a42a3fd233fb1977767bf2be
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.3.3
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: 44e6a7bcfbfede374283eaf6a22eb6396f57367a
     branch: main
-    update-policy: tagged
+    update-policy: static
     metadata: v0.34.2
