@@ -21,6 +21,7 @@ jobs:
           - release-0.89
           - release-0.91
           - release-0.93
+          - release-0.95
     steps:
       - name: Login to Quay
         run: docker login -u="kubevirt+network" -p="${{ secrets.QUAY_ROBOT_TOKEN }}" quay.io
