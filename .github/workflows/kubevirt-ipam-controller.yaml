@@ -1,10 +1,5 @@
 name: Kubevirt IPAM controller Tests
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+on: [push, pull_request]
 jobs:
   e2e:
     runs-on: ubuntu-latest
