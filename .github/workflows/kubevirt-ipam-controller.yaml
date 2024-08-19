@@ -27,3 +27,10 @@ jobs:
       env:
         KIND_ALLOW_SYSTEM_WRITES: true
       run: automation/check-patch.e2e-kubevirt-ipam-controller-functests.sh
+
+    - name: Upload logs as artifacts
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-logs
+        path: ./test/e2e/.output/*.log

@@ -32,3 +32,5 @@ whitespace-check
 .idea/
 # VS Code IDE folder
 .vscode/
+
+.output
