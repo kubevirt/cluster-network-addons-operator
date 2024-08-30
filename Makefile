@@ -38,7 +38,8 @@ E2E_SUITES = \
 	test/e2e/workflow \
 	test/e2e/monitoring
 
-BIN_DIR = $(CURDIR)/build/_output/bin/
+OUTPUT_DIR = $(CURDIR)/build/_output/
+BIN_DIR = $(OUTPUT_DIR)/bin/
 export GOROOT=$(BIN_DIR)/go/
 export GOBIN = $(GOROOT)/bin/
 export PATH := $(GOBIN):$(PATH)
@@ -223,6 +224,9 @@ lint-monitoring:
 	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -mod=mod github.com/kubevirt/monitoring/monitoringlinter/cmd/monitoringlinter@e2be790
 	$(MONITORING_LINTER) ./...
 
+clean:
+	rm -rf $(OUTPUT_DIR)
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -257,5 +261,6 @@ lint-monitoring:
 	release \
 	update-workflows-branches \
 	statify-components \
-	lint-monitoring
+	lint-monitoring \
+	clean
 
