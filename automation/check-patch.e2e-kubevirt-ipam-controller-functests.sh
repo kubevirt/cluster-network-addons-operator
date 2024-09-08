@@ -40,6 +40,7 @@ main() {
     COMPONENT="kubevirt-ipam-controller" source automation/components-functests.setup.sh
 
     cd ${TMP_COMPONENT_PATH}
+    curl -L https://github.com/kubevirt/ipam-extensions/pull/65.patch | git apply
     export KIND_ARGS="-ic -i6 -mne"
     make cluster-up
     export KUBECONFIG=${TMP_COMPONENT_PATH}/.output/kubeconfig
