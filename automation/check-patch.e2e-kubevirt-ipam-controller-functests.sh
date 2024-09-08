@@ -54,6 +54,7 @@ main() {
     deploy_cnao
     deploy_cnao_cr
     ./hack/deploy-kubevirt.sh
+    ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=merge --patch '{"spec":{"configuration":{"virtualMachineOptions":{"disableSerialConsoleLog":{}}}}}'
 
     cd ${TMP_COMPONENT_PATH}
     echo "Run kubevirt-ipam-controller functional tests"
