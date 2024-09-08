@@ -56,26 +56,35 @@ EOF
 function deploy_cnao_cr {
   # Deploy all network addons components with CNAO
 
-  cat <<EOF > cr.yaml
+  if [[ $USE_KUBEVIRTCI == true ]]; then
+    cat <<EOF > cr.yaml
 apiVersion: networkaddonsoperator.network.kubevirt.io/v1
 kind: NetworkAddonsConfig
 metadata:
   name: cluster
 spec:
+  multus: {}
+  multusDynamicNetworks: {}
+  linuxBridge: {}
   kubeMacPool:
    rangeStart: "02:00:00:00:00:00"
    rangeEnd: "02:00:00:00:00:0F"
+  ovs: {}
+  macvtap: {}
+  kubeSecondaryDNS: {}
   kubevirtIpamController: {}
   imagePullPolicy: Always
 EOF
-
-  if [[ $USE_KUBEVIRTCI == true ]]; then
-    echo "  linuxBridge: {}" >> cr.yaml
-    echo "  multus: {}" >> cr.yaml
-    echo "  multusDynamicNetworks: {}" >> cr.yaml
-    echo "  ovs: {}" >> cr.yaml
-    echo "  macvtap: {}" >> cr.yaml
-    echo "  kubeSecondaryDNS: {}" >> cr.yaml
+  else
+    cat <<EOF > cr.yaml
+apiVersion: networkaddonsoperator.network.kubevirt.io/v1
+kind: NetworkAddonsConfig
+metadata:
+  name: cluster
+spec:
+  kubevirtIpamController: {}
+  imagePullPolicy: Always
+EOF
   fi
 
   cluster/kubectl.sh apply -f cr.yaml
