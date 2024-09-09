@@ -40,9 +40,9 @@ main() {
     COMPONENT="kubevirt-ipam-controller" source automation/components-functests.setup.sh
 
     cd ${TMP_COMPONENT_PATH}
+    export KUBECONFIG=${TMP_COMPONENT_PATH}/.output/kubeconfig
     export KIND_ARGS="-ic -i6 -mne"
     make cluster-up
-    export KUBECONFIG=${TMP_COMPONENT_PATH}/.output/kubeconfig
 
     trap teardown EXIT
 
