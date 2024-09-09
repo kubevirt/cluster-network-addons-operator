@@ -34,3 +34,4 @@ whitespace-check
 .vscode/
 
 .output
+_output
