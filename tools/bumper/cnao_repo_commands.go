@@ -136,7 +136,7 @@ func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, lat
 
 	// if one of the tags is in vtag format (e.g 0.39.0-32-g1fcbe815), and not equal, then always bump
 	if isVtagFormat(currentReleaseVersion) || isVtagFormat(latestReleaseVersion) {
-		return currentReleaseVersion == latestReleaseVersion, nil
+		return currentReleaseVersion != latestReleaseVersion, nil
 	}
 
 	currentVersion, err := canonicalizeVersion(currentReleaseVersion)
@@ -378,7 +378,7 @@ func canonicalizeVersion(version string) (*semver.Version, error) {
 
 // check vtag format (example: 0.39.0-32-g1fcbe815)
 func isVtagFormat(tagVersion string) bool {
-	var vtagSyntax = regexp.MustCompile(`^[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{7}`)
+	var vtagSyntax = regexp.MustCompile(`^v[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{8}`)
 	return vtagSyntax.MatchString(tagVersion)
 }
 

@@ -189,7 +189,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			expectedResult: false,
 		}),
 		Entry("When using vtag version format, Should recognize as vtag format", isVtagFormatParams{
-			version:        "0.39.0-32-g1fcbe815",
+			version:        "v0.39.0-32-g1fcbe815",
 			expectedResult: true,
 		}),
 	)
@@ -228,20 +228,12 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			isBumpExpected:        false,
 			isValid:               true,
 		}),
-		Entry("Should not bump since there is updatePolicy static (vtag-format)", isComponentBumpNeededParams{
-			currentReleaseVersion: "v0.11.0-3-g1be91ab",
-			latestReleaseVersion:  "v0.11.0-4-g1ar46a5",
+		Entry("Should bump when latestReleaseVersion is in vtag-format", isComponentBumpNeededParams{
+			currentReleaseVersion: "v0.20.9",
+			latestReleaseVersion:  "v0.20.9-1-g4cd31235",
 			updatePolicy:          "latest",
 			prTitle:               dummyPRTitle,
 			isBumpExpected:        true,
-			isValid:               true,
-		}),
-		Entry("Should not bump since latest version is the same as current", isComponentBumpNeededParams{
-			currentReleaseVersion: "v3.6.2",
-			latestReleaseVersion:  "v3.6.2",
-			updatePolicy:          "tagged",
-			prTitle:               dummyPRTitle,
-			isBumpExpected:        false,
 			isValid:               true,
 		}),
 		Entry("Should not bump since latest version is not bigger than current", isComponentBumpNeededParams{
@@ -268,14 +260,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			isBumpExpected:        true,
 			isValid:               true,
 		}),
-		Entry("Should bump since latest is in vtag-format and different than current", isComponentBumpNeededParams{
-			currentReleaseVersion: "v0.11.0-3-g1be91ab",
-			latestReleaseVersion:  "v0.11.0-4-g1ar46a5",
-			updatePolicy:          "latest",
-			prTitle:               dummyPRTitle,
-			isBumpExpected:        true,
-			isValid:               true,
-		}),
 		Entry("Should return error since current is not in correct semver version format", isComponentBumpNeededParams{
 			currentReleaseVersion: "ver1.2.3",
 			latestReleaseVersion:  "v3.6.2",
@@ -291,6 +275,30 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               false,
+		}),
+		Entry("Should bump when currentReleaseVersion is in vtag-format", isComponentBumpNeededParams{
+			currentReleaseVersion: "v0.44.1-4-g4cd33665",
+			latestReleaseVersion:  "v0.43.1",
+			updatePolicy:          "latest",
+			prTitle:               dummyPRTitle,
+			isBumpExpected:        true,
+			isValid:               true,
+		}),
+		Entry("Should not bump when currentReleaseVersion is in vtag-format and equals latestReleaseVersion", isComponentBumpNeededParams{
+			currentReleaseVersion: "v0.36.2-5-g4cd4566",
+			latestReleaseVersion:  "v0.36.2-5-g4cd4566",
+			updatePolicy:          "latest",
+			prTitle:               dummyPRTitle,
+			isBumpExpected:        false,
+			isValid:               true,
+		}),
+		Entry("Should not bump since latest version is the same as current", isComponentBumpNeededParams{
+			currentReleaseVersion: "v3.6.2",
+			latestReleaseVersion:  "v3.6.2",
+			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
+			isBumpExpected:        false,
+			isValid:               true,
 		}),
 	)
 
