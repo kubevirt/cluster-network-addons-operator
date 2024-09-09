@@ -27,7 +27,7 @@ export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 GO_VERSION = $(shell hack/go-version.sh)
 
-WHAT ?= ./pkg/... ./cmd/... ./tools/...
+WHAT ?= ./pkg/... ./cmd/...
 
 export E2E_TEST_TIMEOUT ?= 3h
 
@@ -57,13 +57,13 @@ $(GO):
 	hack/install-go.sh $(BIN_DIR)
 
 $(OPERATOR_SDK): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -C ./tools ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
 
 $(GITHUB_RELEASE): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -C ./tools ./vendor/github.com/github-release/github-release
 
 $(CONTROLLER_GEN): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -C ./tools ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -73,12 +73,13 @@ directories := $(filter-out ./ ./vendor/ ,$(sort $(dir $(wildcard ./*/))))
 all_sources=$(call rwildcard,$(directories),*) $(filter-out $(TARGETS), $(wildcard *))
 cmd_sources=$(call rwildcard,cmd/,*.go)
 pkg_sources=$(call rwildcard,pkg/,*.go)
+tools_sources=$(call rwildcard,tools/,*.go)
 apis_sources=$(call rwildcard,pkg/apis,*.go)
 
 fmt: whitespace goimports
 
-goimports: $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
+goimports: $(cmd_sources) $(pkg_sources) $(tools_sources)
+	$(GO) run -C ./tools ./vendor/golang.org/x/tools/cmd/goimports -w ../pkg ../cmd ../test/ ./
 	touch $@
 
 whitespace: $(all_sources)
@@ -92,22 +93,24 @@ whitespace-check: $(all_sources)
 	./hack/whitespace.sh
 	touch $@
 
-vet: $(GO) $(cmd_sources) $(pkg_sources)
-	$(GO) vet ./pkg/... ./cmd/... ./test/... ./tools/...
+vet: $(GO) $(cmd_sources) $(pkg_sources) $(tools_sources)
+	$(GO) vet ./pkg/... ./cmd/... ./test/...
+	$(GO) vet -C ./tools ./cmd/...
 	touch $@
 
-goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
+goimports-check: $(GO) $(cmd_sources) $(pkg_sources) $(tools_sources)
+	$(GO) run -C ./tools ./vendor/golang.org/x/tools/cmd/goimports -d ../pkg ../cmd
 	touch $@
 
 test/unit: $(GO)
 	$(GO) test $(WHAT)
+	$(GO) test -C ./tools ./cmd/...
 
 manager: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./cmd/...
 
 manifest-templator: $(GO)
-	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./tools/manifest-templator/...
+	CGO_ENABLED=0 GOOS=linux $(GO) build -C ./tools -o $(BIN_DIR)/$@ ./cmd/manifest-templator/...
 
 docker-build: docker-build-operator docker-build-registry
 
@@ -126,7 +129,7 @@ docker-push-registry:
 	$(OCI_BIN) push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
 prom-rules-verify:
-	go run ./tools/prom-rule-ci $(OCI_BIN) ./tools/prom-rule-ci/tmp_prom_rules.yaml ./tools/prom-rule-ci/prom-rules-tests.yaml
+	go run -C ./tools ./cmd/prom-rule-ci $(OCI_BIN) ./cmd/prom-rule-ci/tmp_prom_rules.yaml ./cmd/prom-rule-ci/prom-rules-tests.yaml
 
 cluster-up:
 	./cluster/up.sh
@@ -204,9 +207,11 @@ release: $(GITHUB_RELEASE)
 vendor: $(GO)
 	$(GO) mod tidy -compat=$(GO_VERSION)
 	$(GO) mod vendor
+	cd tools && $(GO) mod tidy -compat=$(GO_VERSION)
+	cd tools && $(GO) mod vendor
 
 auto-bumper: $(GO)
-	PUSH_IMAGES=true $(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
+	PUSH_IMAGES=true $(GO) run -C ./tools $(shell ls cmd/bumper/*.go | grep -v test) ${ARGS}
 
 bump-%:
 	CNAO_VERSION=${VERSION} ./hack/components/bump-$*.sh
@@ -214,7 +219,7 @@ bump-all:
 	set -e && for f in hack/components/bump*.*; do x=$${f%%.sh}; make $${x##*/}; done
 
 generate-doc:
-	go run ./tools/metricsdocs > docs/metrics.md
+	go run -C ./tools ./cmd/metricsdocs > docs/metrics.md
 
 lint-metrics:
 	./hack/prom_metric_linter.sh --operator-name="kubevirt" --sub-operator-name="cnao"
