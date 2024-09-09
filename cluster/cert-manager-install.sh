@@ -22,5 +22,5 @@ if [[ $DEPLOY_CERT_MANAGER == true ]]; then
 	CERT_MANAGER_VERSION="v1.14.4"
 	echo "Installing cert-manager..."
 	manifest="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
-	./cluster/kubectl.sh apply -f "$manifest"
+	kubectl apply -f "$manifest" --validate=false
 fi
