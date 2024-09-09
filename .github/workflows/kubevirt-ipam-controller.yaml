@@ -33,4 +33,4 @@ jobs:
       if: failure()
       with:
         name: test-logs
-        path: ./test/e2e/.output/*.log
+        path: ./test/e2e/_output/*.log

@@ -5,7 +5,7 @@ set -xeuE
 # automation/check-patch.e2e-kubevirt-ipam-controller-functests.sh
 
 GITHUB_ACTIONS=${GITHUB_ACTIONS:-false}
-LOGS_DIR=test/e2e/.output
+LOGS_DIR=test/e2e/_output
 WORK_DIR=$(pwd)
 
 teardown() {
