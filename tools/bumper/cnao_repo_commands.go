@@ -376,9 +376,9 @@ func canonicalizeVersion(version string) (*semver.Version, error) {
 	return semver.NewVersion(version)
 }
 
-// check vtag format (example: 0.39.0-32-g1fcbe815)
+// check vtag format (example: 0.39.0-32-g1fbe815)
 func isVtagFormat(tagVersion string) bool {
-	var vtagSyntax = regexp.MustCompile(`^v[0-9]\.[0-9]+\.*[0-9]*-[0-9]+-g[0-9,a-f]{8}`)
+	var vtagSyntax = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+-g[a-zA-Z0-9]{5,}$`)
 	return vtagSyntax.MatchString(tagVersion)
 }
 

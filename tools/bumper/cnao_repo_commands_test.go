@@ -188,8 +188,16 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			version:        "version1.2.3",
 			expectedResult: false,
 		}),
-		Entry("When using vtag version format, Should recognize as vtag format", isVtagFormatParams{
-			version:        "v0.39.0-32-g1fcbe815",
+		Entry("When using vtag version format with 4 sha character, Should not recognize as vtag format", isVtagFormatParams{
+			version:        "v0.39.0-32-g1fbe",
+			expectedResult: false,
+		}),
+		Entry("When using vtag version format with 5 sha character, Should recognize as vtag format", isVtagFormatParams{
+			version:        "v0.39.0-32-g1fbe8",
+			expectedResult: true,
+		}),
+		Entry("When using vtag version format with 7 sha character (default), Should recognize as vtag format", isVtagFormatParams{
+			version:        "v0.39.0-32-g1fbe845",
 			expectedResult: true,
 		}),
 	)
@@ -230,7 +238,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		}),
 		Entry("Should bump when latestReleaseVersion is in vtag-format", isComponentBumpNeededParams{
 			currentReleaseVersion: "v0.20.9",
-			latestReleaseVersion:  "v0.20.9-1-g4cd31235",
+			latestReleaseVersion:  "v0.20.9-1-g4cd3135",
 			updatePolicy:          "latest",
 			prTitle:               dummyPRTitle,
 			isBumpExpected:        true,
@@ -277,7 +285,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			isValid:               false,
 		}),
 		Entry("Should bump when currentReleaseVersion is in vtag-format", isComponentBumpNeededParams{
-			currentReleaseVersion: "v0.44.1-4-g4cd33665",
+			currentReleaseVersion: "v0.44.1-4-g4d33665",
 			latestReleaseVersion:  "v0.43.1",
 			updatePolicy:          "latest",
 			prTitle:               dummyPRTitle,
@@ -285,8 +293,8 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			isValid:               true,
 		}),
 		Entry("Should not bump when currentReleaseVersion is in vtag-format and equals latestReleaseVersion", isComponentBumpNeededParams{
-			currentReleaseVersion: "v0.36.2-5-g4cd4566",
-			latestReleaseVersion:  "v0.36.2-5-g4cd4566",
+			currentReleaseVersion: "v0.36.2-5-g4d4566",
+			latestReleaseVersion:  "v0.36.2-5-g4d4566",
 			updatePolicy:          "latest",
 			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
