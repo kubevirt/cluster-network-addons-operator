@@ -125,7 +125,7 @@ docker-push-operator:
 docker-push-registry:
 	$(OCI_BIN) push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
 
-prom-rules-verify:
+prom-rules-verify: $(all_sources)
 	go run ./tools/prom-rule-ci $(OCI_BIN) ./tools/prom-rule-ci/tmp_prom_rules.yaml ./tools/prom-rule-ci/prom-rules-tests.yaml
 
 cluster-up:
