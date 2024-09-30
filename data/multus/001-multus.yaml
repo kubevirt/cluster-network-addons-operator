@@ -61,7 +61,9 @@ rules:
       - pods/status
     verbs:
       - get
+      - list
       - update
+      - watch
   - apiGroups:
       - ""
       - events.k8s.io
@@ -103,13 +105,13 @@ data:
   daemon-config.json: |
     {
         "chrootDir": "/hostroot",
-        "confDir": "/host/etc/cni/net.d",
-        "logLevel": "verbose",
-        "socketDir": "/host/run/multus/",
         "cniVersion": "0.3.1",
+        "logLevel": "verbose",
+        "logToStderr": true,
         "cniConfigDir": "/host/etc/cni/net.d",
+        "multusAutoconfigDir": "/host/etc/cni/net.d",
         "multusConfigFile": "auto",
-        "multusAutoconfigDir": "/host/etc/cni/net.d"
+        "socketDir": "/host/run/multus/"
     }
 ---
 apiVersion: apps/v1
@@ -148,15 +150,22 @@ spec:
               memory: "15Mi"
           securityContext:
             privileged: true
+          terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
             - name: cni
               mountPath: /host/etc/cni/net.d
+            # multus-daemon expects that cnibin path must be identical between pod and container host.
+            # e.g. if the cni bin is in /opt/cni/bin on the container host side, then it should be mount to /opt/cni/bin in multus-daemon,
+            # not to any other directory, like /opt/bin or /usr/bin.
+            - name: cnibin
+              mountPath: /opt/cni/bin
             - name: host-run
               mountPath: /host/run
             - name: host-var-lib-cni-multus
               mountPath: /var/lib/cni/multus
             - name: host-var-lib-kubelet
               mountPath: /var/lib/kubelet
+              mountPropagation: HostToContainer
             - name: host-run-k8s-cni-cncf-io
               mountPath: /run/k8s.cni.cncf.io
             - name: host-run-netns
@@ -168,6 +177,11 @@ spec:
             - name: hostroot
               mountPath: /hostroot
               mountPropagation: HostToContainer
+          env:
+            - name: MULTUS_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           imagePullPolicy: {{ .ImagePullPolicy }}
           lifecycle:
             preStop:
@@ -186,6 +200,7 @@ spec:
               memory: "15Mi"
           securityContext:
             privileged: true
+          terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
             - name: cnibin
               mountPath: /host/opt/cni/bin
