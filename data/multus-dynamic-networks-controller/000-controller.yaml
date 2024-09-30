@@ -55,7 +55,6 @@ metadata:
 data:
   dynamic-networks-config.json: |
     {
-        "criType": "crio",
         "criSocketPath": "/host/run/crio/crio.sock",
         "multusSocketPath": "/host/run/multus/multus.sock"
     }
