@@ -8,7 +8,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules"
 )
 
-const promImage = "quay.io/prometheus/prometheus:v2.15.2"
+const promImage = "quay.io/prometheus/prometheus:v2.25.2"
 
 func main() {
 	if len(os.Args) != 4 {
