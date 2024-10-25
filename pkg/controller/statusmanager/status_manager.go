@@ -159,7 +159,11 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 		)
 	} else if reachedAvailableLevel {
 		// If successfully deployed all components and is not failing on anything, mark as Available
-		status.eventEmitter.EmitAvailableForConfig()
+		if conditionsv1.IsStatusConditionFalse(config.Status.Conditions, conditionsv1.ConditionAvailable) {
+			// Emit event only if conditions changes from false to true to
+			// so we don't duplicate events
+			status.eventEmitter.EmitAvailableForConfig()
+		}
 		conditionsv1.SetStatusConditionNoHeartbeat(&config.Status.Conditions,
 			conditionsv1.Condition{
 				Type:   conditionsv1.ConditionAvailable,
