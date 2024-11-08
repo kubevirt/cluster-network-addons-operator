@@ -12,9 +12,6 @@
 _kubevirtci
 
 # No need for source code is already compiled
-pkg
-cmd
-tools
 vendor
 docs
 

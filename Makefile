@@ -13,6 +13,15 @@ OPERATOR_IMAGE ?= cluster-network-addons-operator
 REGISTRY_IMAGE ?= cluster-network-addons-registry
 export OCI_BIN ?= $(shell if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
 TLS_SETTING := $(if $(filter $(OCI_BIN),podman),--tls-verify=false,)
+PLATFORMS ?= linux/amd64
+# Set the platforms for building a multi-platform supported image.
+# Example:
+# PLATFORMS ?= linux/amd64,linux/arm64,linux/s390x
+# Alternatively, you can export the PLATFORMS variable like this:
+# export PLATFORMS=linux/arm64,linux/s390x,linux/amd64
+ARCH := $(shell uname -m | sed 's/x86_64/amd64/')
+DOCKER_BUILDER ?= cnao-docker-builder
+OPERATOR_IMAGE_TAGGED := $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
 
 TARGETS = \
 	gen-k8s \
@@ -26,7 +35,6 @@ TARGETS = \
 export GOFLAGS=-mod=vendor
 export GO111MODULE=on
 GO_VERSION = $(shell hack/go-version.sh)
-
 WHAT ?= ./pkg/... ./cmd/... ./tools/...
 
 export E2E_TEST_TIMEOUT ?= 3h
@@ -112,8 +120,14 @@ manifest-templator: $(GO)
 
 docker-build: docker-build-operator docker-build-registry
 
-docker-build-operator: manager manifest-templator
-	$(OCI_BIN) build -f build/operator/Dockerfile -t $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG) .
+docker-build-operator:
+ifeq ($(OCI_BIN),podman)
+	$(MAKE) build-multiarch-operator-podman
+else ifeq ($(OCI_BIN),docker)
+	$(MAKE) build-multiarch-operator-docker
+else
+	$(error Unsupported OCI_BIN value: $(OCI_BIN))
+endif
 
 docker-build-registry:
 	$(OCI_BIN) build -f build/registry/Dockerfile -t $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG) .
@@ -121,7 +135,9 @@ docker-build-registry:
 docker-push: docker-push-operator docker-push-registry
 
 docker-push-operator:
-	$(OCI_BIN) push ${TLS_SETTING} $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
+ifeq ($(OCI_BIN),podman)
+	podman manifest push ${TLS_SETTING} ${OPERATOR_IMAGE_TAGGED} ${OPERATOR_IMAGE_TAGGED}
+endif
 
 docker-push-registry:
 	$(OCI_BIN) push $(IMAGE_REGISTRY)/$(REGISTRY_IMAGE):$(IMAGE_TAG)
@@ -227,9 +243,17 @@ lint-monitoring:
 clean:
 	rm -rf $(OUTPUT_DIR)
 
+build-multiarch-operator-docker:
+	ARCH=$(ARCH) PLATFORMS=$(PLATFORMS) OPERATOR_IMAGE_TAGGED=$(OPERATOR_IMAGE_TAGGED) DOCKER_BUILDER=$(DOCKER_BUILDER) ./hack/build-operator-docker.sh
+
+build-multiarch-operator-podman:
+	ARCH=$(ARCH) PLATFORMS=$(PLATFORMS) OPERATOR_IMAGE_TAGGED=$(OPERATOR_IMAGE_TAGGED) ./hack/build-operator-podman.sh
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
+	build-multiarch-operator-docker \
+	build-multiarch-operator-podman \
 	check \
 	cluster-clean \
 	cluster-down \
