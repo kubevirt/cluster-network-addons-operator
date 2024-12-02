@@ -6,7 +6,8 @@ check_buildx() {
   if ! docker buildx > /dev/null 2>&1; then
      mkdir -p ~/.docker/cli-plugins
      BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | jq -r .tag_name)
-     curl -L https://github.com/docker/buildx/releases/download/"${BUILDX_VERSION}"/buildx-"${BUILDX_VERSION}".linux-amd64 --output ~/.docker/cli-plugins/docker-buildx
+     ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+     curl -L https://github.com/docker/buildx/releases/download/"${BUILDX_VERSION}"/buildx-"${BUILDX_VERSION}".linux-"${ARCH}" --output ~/.docker/cli-plugins/docker-buildx
      chmod a+x ~/.docker/cli-plugins/docker-buildx
   fi
 }
@@ -20,7 +21,7 @@ create_or_use_buildx_builder() {
 
   check_buildx
 
-  current_builder="$(docker buildx inspect "${builder_name}")"
+  current_builder="$(docker buildx inspect "${builder_name}" 2>/dev/null)" || echo "Builder '${builder_name}' not found"
 
   if ! grep -q "^Driver: docker$" <<<"${current_builder}" && \
      grep -q "linux/amd64" <<<"${current_builder}" && \
