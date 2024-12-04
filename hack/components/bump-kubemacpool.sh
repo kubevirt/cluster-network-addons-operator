@@ -69,6 +69,9 @@ metadata:
   namespace: system
 spec:
   template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: "restricted-v2"
     spec:
       containers:
       - image: "{{ .KubeMacPoolImage }}"
@@ -95,6 +98,9 @@ metadata:
   namespace: system
 spec:
   template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: "restricted-v2"
     spec:
       containers:
       - image: "{{ .KubeMacPoolImage }}"
