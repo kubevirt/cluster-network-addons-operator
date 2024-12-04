@@ -23,6 +23,9 @@ spec:
         app: passt-binding-cni
       annotations:
         description: passt-binding-cni installs passt binding CNI on cluster nodes
+{{ if .EnableSCC }}
+        openshift.io/required-scc: "passt-binding-cni"
+{{ end }}
     spec:
       priorityClassName: system-cluster-critical
 {{ if .EnableSCC }}

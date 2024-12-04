@@ -172,6 +172,9 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
+{{ if .IsOpenshift }}
+        openshift.io/required-scc: "restricted-v2"
+{{ end }}
       labels:
         app: ipam-virt-workloads
         control-plane: manager
