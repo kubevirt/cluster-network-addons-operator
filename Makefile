@@ -13,13 +13,16 @@ OPERATOR_IMAGE ?= cluster-network-addons-operator
 REGISTRY_IMAGE ?= cluster-network-addons-registry
 export OCI_BIN ?= $(shell if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
 TLS_SETTING := $(if $(filter $(OCI_BIN),podman),--tls-verify=false,)
-PLATFORMS ?= linux/amd64
+PLATFORM_LIST ?= linux/amd64,linux/s390x,linux/arm64
+ARCH := $(shell uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+PLATFORMS ?= linux/${ARCH}
+PLATFORMS := $(if $(filter all,$(PLATFORMS)),$(PLATFORM_LIST),$(PLATFORMS))
 # Set the platforms for building a multi-platform supported image.
 # Example:
 # PLATFORMS ?= linux/amd64,linux/arm64,linux/s390x
 # Alternatively, you can export the PLATFORMS variable like this:
 # export PLATFORMS=linux/arm64,linux/s390x,linux/amd64
-ARCH := $(shell uname -m | sed 's/x86_64/amd64/')
+# or export PLATFORMS=all to automatically include all supported platforms.
 DOCKER_BUILDER ?= cnao-docker-builder
 OPERATOR_IMAGE_TAGGED := $(IMAGE_REGISTRY)/$(OPERATOR_IMAGE):$(IMAGE_TAG)
 

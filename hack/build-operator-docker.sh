@@ -14,4 +14,5 @@ if [ ${#PLATFORM_LIST[@]} -eq 1 ]; then
 else
     ./hack/init-buildx.sh "$DOCKER_BUILDER"
     docker buildx build --platform "$PLATFORMS" $BUILD_ARGS
+    docker buildx rm "$DOCKER_BUILDER" 2>/dev/null || echo "Builder ${DOCKER_BUILDER} not found or already removed, skipping."
 fi

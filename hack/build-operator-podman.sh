@@ -8,14 +8,13 @@ fi
 IFS=',' read -r -a PLATFORM_LIST <<< "$PLATFORMS"
 
 # Remove any existing manifest and image
-podman manifest rm "${OPERATOR_IMAGE_TAGGED}" || true
-podman rmi "${OPERATOR_IMAGE_TAGGED}" || true
+podman manifest rm "${OPERATOR_IMAGE_TAGGED}" 2>/dev/null || true
+podman rmi "${OPERATOR_IMAGE_TAGGED}" 2>/dev/null || true
 
 podman manifest create "${OPERATOR_IMAGE_TAGGED}"
 
 for platform in "${PLATFORM_LIST[@]}"; do
     podman build \
-        --no-cache \
         --build-arg BUILD_ARCH="$ARCH" \
         --platform "$platform" \
         --manifest "${OPERATOR_IMAGE_TAGGED}" \
