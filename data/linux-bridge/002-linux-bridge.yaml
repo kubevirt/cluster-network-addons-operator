@@ -21,8 +21,14 @@ spec:
         name: kube-cni-linux-bridge-plugin
         tier: node
         app: cni-plugins
+{{ if .EnableSCC }}
+      annotations:
+        openshift.io/required-scc: "linux-bridge"
+        description: LinuxBridge installs 'bridge' CNI on cluster nodes, so it can be later used to attach Pods/VMs to Linux bridges
+{{ else }}
       annotations:
         description: LinuxBridge installs 'bridge' CNI on cluster nodes, so it can be later used to attach Pods/VMs to Linux bridges
+{{ end }}
     spec:
 {{ if .EnableSCC }}
       serviceAccountName: linux-bridge
