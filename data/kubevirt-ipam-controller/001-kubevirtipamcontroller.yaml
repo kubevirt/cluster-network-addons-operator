@@ -217,6 +217,7 @@ spec:
               name: cert
               readOnly: true
           imagePullPolicy: {{ .ImagePullPolicy }}
+      priorityClassName: system-cluster-critical
       securityContext:
         runAsNonRoot: true
         seccompProfile:
