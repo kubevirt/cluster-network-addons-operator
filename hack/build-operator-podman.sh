@@ -10,6 +10,7 @@ IFS=',' read -r -a PLATFORM_LIST <<< "$PLATFORMS"
 # Remove any existing manifest and image
 podman manifest rm "${OPERATOR_IMAGE_TAGGED}" 2>/dev/null || true
 podman rmi "${OPERATOR_IMAGE_TAGGED}" 2>/dev/null || true
+podman rmi $(podman images --filter "dangling=true" -q) 2>/dev/null || true
 
 podman manifest create "${OPERATOR_IMAGE_TAGGED}"
 
