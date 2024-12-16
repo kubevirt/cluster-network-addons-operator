@@ -1,7 +1,6 @@
 package env
 
 import (
-	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	. "github.com/onsi/gomega"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
@@ -39,8 +38,6 @@ func Start() {
 	err = cnaov1alpha1.AddToScheme(scheme.Scheme)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 	err = monitoringv1.AddToScheme(scheme.Scheme)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred())
-	err = k8snetworkplumbingwgv1.AddToScheme(scheme.Scheme)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
