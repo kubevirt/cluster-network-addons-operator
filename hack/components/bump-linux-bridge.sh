@@ -44,11 +44,28 @@ create_dockerfile() {
 FROM --platform=\$BUILDPLATFORM registry.access.redhat.com/ubi8/ubi-minimal AS builder
 ARG TARGETOS
 ARG TARGETARCH
-RUN microdnf install -y golang git
+ARG BUILDOS
+ARG BUILDARCH
+ENV BUILDOS=${BUILDOS:-linux}
+ENV BUILDARCH=${BUILDARCH:-amd64}
+
+RUN microdnf install -y git tar wget
 RUN \
     git clone https://${LINUX_BRIDGE_REPO} ${LINUX_BRIDGE_PATH} && \
     cd ${LINUX_BRIDGE_PATH} && \
     git checkout ${LINUX_BRIDGE_TAG}
+
+RUN GO_VERSION=$(sed -En 's/^go +(.*)$/\1/p' ${LINUX_BRIDGE_PATH}/go.mod) && \
+    if [[ "\$GO_VERSION" =~ ^1\.[0-9]+\.[0-9]+$ ]]; then \
+        VERSION_WITH_PATCH="\go\${GO_VERSION}.\${BUILDOS}-\${BUILDARCH}\.tar.gz"; \
+    else \
+        VERSION_WITH_PATCH="\$(curl -s https://go.dev/dl/ | grep -oP "go\${GO_VERSION}\.[0-9]+\.\${BUILDOS}-\${BUILDARCH}\.tar\.gz" | sort -V | tail -n 1 )"; \
+    fi && \
+    wget -q https://dl.google.com/go/\${VERSION_WITH_PATCH} && \
+    tar -C /usr/local -xzf \${VERSION_WITH_PATCH} && \
+    rm \${VERSION_WITH_PATCH}
+
+ENV PATH=/usr/local/go/bin:$PATH
 WORKDIR ${LINUX_BRIDGE_PATH}
 RUN GOFLAGS=-mod=vendor GOARCH=\${TARGETARCH} GOOS=\${TARGETOS} ./build_linux.sh
 
