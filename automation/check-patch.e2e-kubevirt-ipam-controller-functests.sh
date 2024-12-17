@@ -19,6 +19,21 @@ teardown() {
     rm -rf "${TMP_COMPONENT_PATH}"
 }
 
+increase_ulimit() {
+    if [ -z "${OCI_BIN}" ];then
+      export OCI_BIN=$(if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; else echo "Neither podman nor docker is available." >&2; exit 1; fi)
+    fi
+
+    for node in $(./cluster/kubectl.sh get node --no-headers  -o custom-columns=":metadata.name"); do
+      $OCI_BIN exec -t $node bash -c "echo 'fs.inotify.max_user_watches=1048576' >> /etc/sysctl.conf"
+      $OCI_BIN exec -t $node bash -c "echo 'fs.inotify.max_user_instances=512' >> /etc/sysctl.conf"
+      $OCI_BIN exec -i $node bash -c "sysctl -p /etc/sysctl.conf"
+      if [[ "${node}" =~ worker ]]; then
+          ./cluster/kubectl.sh label nodes $node node-role.kubernetes.io/worker="" --overwrite=true
+      fi
+    done
+}
+
 main() {
     if [ "$GITHUB_ACTIONS" == "true" ]; then
         ARCH="amd64"
@@ -46,6 +61,7 @@ main() {
 
     trap teardown EXIT
 
+    increase_ulimit
     cd ${TMP_PROJECT_PATH}
     export KUBEVIRT_PROVIDER=external
     export DEV_IMAGE_REGISTRY=localhost:5000
