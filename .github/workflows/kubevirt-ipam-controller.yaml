@@ -2,7 +2,7 @@ name: Kubevirt IPAM controller Tests
 on: [pull_request]
 jobs:
   e2e:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
 
     - uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
           azure-cli aspnetcore-* dotnet-* ghc-* firefox \
           google-chrome-stable \
           llvm-* microsoft-edge-stable mono-* \
-          msbuild mysql-server-core-* php-* php7* \
+          mysql-server-core-* php-* php7* \
           powershell temurin-* zulu-*
 
     - name: Run e2e tests
