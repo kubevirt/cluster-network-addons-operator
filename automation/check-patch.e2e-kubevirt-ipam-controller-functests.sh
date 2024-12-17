@@ -56,7 +56,7 @@ main() {
 
     cd ${TMP_COMPONENT_PATH}
     export KUBECONFIG=${TMP_COMPONENT_PATH}/.output/kubeconfig
-    export KIND_ARGS="-ic -i6 -mne"
+    export KIND_ARGS="-ic -i6 -mne -nse"
     make cluster-up
 
     trap teardown EXIT
