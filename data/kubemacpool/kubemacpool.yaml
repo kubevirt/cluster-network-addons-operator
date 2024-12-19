@@ -145,6 +145,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
       labels:
         app: kubemacpool
         control-plane: cert-manager
@@ -235,6 +237,7 @@ spec:
     metadata:
       annotations:
         description: KubeMacPool manages MAC allocation to Pods and VMs
+        openshift.io/required-scc: restricted-v2
       labels:
         app: kubemacpool
         control-plane: mac-controller-manager
