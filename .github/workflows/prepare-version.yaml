@@ -29,6 +29,7 @@ on:
           - release-0.91
           - release-0.93
           - release-0.95
+          - release-0.97
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
