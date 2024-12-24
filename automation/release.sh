@@ -11,4 +11,6 @@ git config credential.helper '!f() { sleep 1; echo "username=${GITHUB_USER}"; ec
 
 source automation/check-patch.setup.sh
 cd ${TMP_PROJECT_PATH}
+# Set the PLATFORMS to "all" to build an image that supports multiple platforms
+export PLATFORMS=all
 make release
