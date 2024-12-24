@@ -25,10 +25,10 @@ components:
     metadata: v0.1.9-alpha
   linux-bridge:
     url: https://github.com/containernetworking/plugins
-    commit: 14bdce598f9d332303c375c35719c4a158f1e7db
+    commit: fec2d62676cbe4f2fd587b4840c7fc021bead3f9
     branch: main
-    update-policy: static
-    metadata: ""
+    update-policy: tagged
+    metadata:  v1.6.0
   macvtap-cni:
     url: https://github.com/kubevirt/macvtap-cni
     commit: 85b07ce03e83963c0f94f37d541ff45cf499e99e
