@@ -43,13 +43,15 @@ func newCelMetrics() *CelMetrics {
 			Namespace:      namespace,
 			Subsystem:      subsystem,
 			Name:           "compilation_duration_seconds",
-			StabilityLevel: metrics.ALPHA,
+			Help:           "CEL compilation time in seconds.",
+			StabilityLevel: metrics.BETA,
 		}),
 		evaluationTime: metrics.NewHistogram(&metrics.HistogramOpts{
 			Namespace:      namespace,
 			Subsystem:      subsystem,
 			Name:           "evaluation_duration_seconds",
-			StabilityLevel: metrics.ALPHA,
+			Help:           "CEL evaluation time in seconds.",
+			StabilityLevel: metrics.BETA,
 		}),
 	}
 

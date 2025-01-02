@@ -79,7 +79,7 @@ func buildAlertsDocs(alerts []promv1.Rule) []alertDocs {
 		alertsDocs[i] = alertDocs{
 			Name:        alert.Alert,
 			Expr:        alert.Expr.String(),
-			For:         string(alert.For),
+			For:         string(*alert.For),
 			Annotations: alert.Annotations,
 			Labels:      alert.Labels,
 		}

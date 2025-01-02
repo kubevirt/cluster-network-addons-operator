@@ -17,9 +17,7 @@ import (
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	v1 "kubevirt.io/api/core/v1"
-	kvtests "kubevirt.io/kubevirt/tests"
-	"kubevirt.io/kubevirt/tests/libvmi"
-	kvtutil "kubevirt.io/kubevirt/tests/util"
+	"kubevirt.io/kubevirt/pkg/libvmi"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -160,14 +158,14 @@ var _ = Context("Prometheus Alerts", func() {
 
 			AfterEach(func() {
 				By("deleting test namespace")
-				err = testenv.Client.Delete(context.Background(), &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: kvtutil.NamespaceTestDefault}})
+				err = testenv.Client.Delete(context.Background(), &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: testsuite.NamespaceTestDefault}})
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			BeforeEach(func() {
 				By("creating test namespace that is not managed by kubemacpool (opted-out)")
 				namespace := &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{
-					Name: kvtutil.NamespaceTestDefault,
+					Name: testsuite.NamespaceTestDefault,
 					Labels: map[string]string{
 						"mutatevirtualmachines.kubemacpool.io": "ignore",
 					},
@@ -182,7 +180,7 @@ var _ = Context("Prometheus Alerts", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("cleaning namespace labels, returning the namespace to managed by kubemacpool")
-				err = cleanNamespaceLabels(kvtutil.NamespaceTestDefault)
+				err = cleanNamespaceLabels(testsuite.NamespaceTestDefault)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("restaring kubemacpool pods")
@@ -205,7 +203,7 @@ func newRandomVMI() *v1.VirtualMachineInstance {
 		libvmi.WithInterface(libvmi.InterfaceDeviceWithMasqueradeBinding()),
 		libvmi.WithNetwork(v1.DefaultPodNetwork()),
 	)
-	vmi.ObjectMeta.Namespace = kvtutil.NamespaceTestDefault
+	vmi.ObjectMeta.Namespace = testsuite.NamespaceTestDefault
 	vmi.Spec.Domain.Resources.Requests = k8sv1.ResourceList{}
 
 	if checks.IsARM64(testsuite.Arch) {
@@ -220,7 +218,7 @@ func newRandomVMI() *v1.VirtualMachineInstance {
 
 func createVirtualMachineWithPrimaryInterfaceMacAddress(macAddress string) error {
 	vmi := newRandomVMI()
-	vm := kvtests.NewRandomVirtualMachine(vmi, true)
+	vm := libvmi.NewVirtualMachine(vmi, libvmi.WithRunStrategy(v1.RunStrategyAlways))
 
 	vm.Spec.Template.Spec.Domain.Devices.Interfaces[0].MacAddress = macAddress
 	err := testenv.Client.Create(context.Background(), vm)

@@ -16,7 +16,7 @@ import (
 	"kubevirt.io/kubevirt/pkg/config"
 	"kubevirt.io/kubevirt/pkg/hooks"
 	hostdisk "kubevirt.io/kubevirt/pkg/host-disk"
-	"kubevirt.io/kubevirt/pkg/network/sriov"
+	"kubevirt.io/kubevirt/pkg/network/downwardapi"
 	"kubevirt.io/kubevirt/pkg/storage/types"
 	"kubevirt.io/kubevirt/pkg/util"
 	"kubevirt.io/kubevirt/pkg/virtiofs"
@@ -159,7 +159,9 @@ func withVMIVolumes(pvcStore cache.Store, vmiSpecVolumes []v1.Volume, vmiVolumeS
 			}
 
 			if volume.Sysprep != nil {
-				renderer.handleSysprep(volume)
+				if err := renderer.handleSysprep(volume); err != nil {
+					return err
+				}
 			}
 
 			if volume.CloudInitConfigDrive != nil {
@@ -264,13 +266,13 @@ func (vr *VolumeRenderer) handleCloudInitConfigDrive(volume v1.Volume) {
 	}
 }
 
-func (vr *VolumeRenderer) handleSysprep(volume v1.Volume) {
+func (vr *VolumeRenderer) handleSysprep(volume v1.Volume) error {
 	if volume.Sysprep != nil {
 		var volumeSource k8sv1.VolumeSource
 		// attach a Secret or ConfigMap referenced by the user
 		volumeSource, err := sysprepVolumeSource(*volume.Sysprep)
 		if err != nil {
-			//return nil, err
+			return err
 		}
 		vr.podVolumes = append(vr.podVolumes, k8sv1.Volume{
 			Name:         volume.Name,
@@ -282,6 +284,7 @@ func (vr *VolumeRenderer) handleSysprep(volume v1.Volume) {
 			ReadOnly:  true,
 		})
 	}
+	return nil
 }
 
 func hotplugVolumes(vmiVolumeStatus []v1.VolumeStatus, vmiSpecVolumes []v1.Volume) map[string]struct{} {
@@ -332,57 +335,94 @@ func withAccessCredentials(accessCredentials []v1.AccessCredential) VolumeRender
 	}
 }
 
-func withTPM(vmi *v1.VirtualMachineInstance) VolumeRendererOption {
-	return func(renderer *VolumeRenderer) error {
-		if backendstorage.HasPersistentTPMDevice(&vmi.Spec) {
-			volumeName := vmi.Name + "-tpm"
-			pvcName := backendstorage.PVCForVMI(vmi)
-			renderer.podVolumes = append(renderer.podVolumes, k8sv1.Volume{
-				Name: volumeName,
-				VolumeSource: k8sv1.VolumeSource{
-					PersistentVolumeClaim: &k8sv1.PersistentVolumeClaimVolumeSource{
-						ClaimName: pvcName,
-						ReadOnly:  false,
-					},
-				},
-			})
+func PathForSwtpm(vmi *v1.VirtualMachineInstance) string {
+	swtpmPath := "/var/lib/libvirt/swtpm"
+	if util.IsNonRootVMI(vmi) {
+		swtpmPath = filepath.Join(util.VirtPrivateDir, "libvirt", "qemu", "swtpm")
+	}
 
-			swtpmPath := "/var/lib/libvirt/swtpm"
-			localCaPath := "/var/lib/swtpm-localca"
-			if util.IsNonRootVMI(vmi) {
-				// For non-root VMIs, the TPM state lives under /var/run/kubevirt-private/libvirt/qemu/swtpm
-				// To persist it, we need the persistent PVC to be mounted under that location.
-				// /var/run/kubevirt-private is an emptyDir, and k8s would automatically create the right sub-directories under it.
-				// However, the sub-directories would get created as root:<fsGroup>, with a mode like 0755 (drwxr-xr-x), preventing write access to them.
-				// Depending on the storage class used, the SELinux label of the sub-directories can also be problematic (like nfs_t for nfs-csi).
-				// Creating emptydirs for each intermediate directory (+ setting fsGroup to 107) solves both issues.
-				// The only viable alternative would be to use an init container to `mkdir -p /var/run/kubevirt-private/libvirt/qemu/swtpm`,
-				//   but init containers are expensive, and emptyDirs were deemed to be the least undesirable approach.
-				renderer.podVolumes = append(renderer.podVolumes,
-					emptyDirVolume("private-libvirt"),
-					emptyDirVolume("private-libvirt-qemu"))
-				renderer.podVolumeMounts = append(renderer.podVolumeMounts, k8sv1.VolumeMount{
-					Name:      "private-libvirt",
-					MountPath: filepath.Join(util.VirtPrivateDir, "libvirt"),
-				}, k8sv1.VolumeMount{
-					Name:      "private-libvirt-qemu",
-					MountPath: filepath.Join(util.VirtPrivateDir, "libvirt", "qemu"),
-				})
-				swtpmPath = filepath.Join(util.VirtPrivateDir, "libvirt", "qemu", "swtpm")
-				localCaPath = filepath.Join(util.VirtPrivateDir, "var", "lib", "swtpm-localca")
-			}
+	return swtpmPath
+}
+
+func PathForSwtpmLocalca(vmi *v1.VirtualMachineInstance) string {
+	localCaPath := "/var/lib/swtpm-localca"
+	if util.IsNonRootVMI(vmi) {
+		localCaPath = filepath.Join(util.VirtPrivateDir, "var", "lib", "swtpm-localca")
+	}
+
+	return localCaPath
+}
+
+func PathForNVram(vmi *v1.VirtualMachineInstance) string {
+	nvramPath := "/var/lib/libvirt/qemu/nvram"
+	if util.IsNonRootVMI(vmi) {
+		nvramPath = filepath.Join(util.VirtPrivateDir, "libvirt", "qemu", "nvram")
+	}
+
+	return nvramPath
+}
+
+func withBackendStorage(vmi *v1.VirtualMachineInstance, backendStoragePVCName string) VolumeRendererOption {
+	return func(renderer *VolumeRenderer) error {
+		if !backendstorage.IsBackendStorageNeededForVMI(&vmi.Spec) {
+			return nil
+		}
+
+		volumeName := "vm-state"
+		renderer.podVolumes = append(renderer.podVolumes, k8sv1.Volume{
+			Name: volumeName,
+			VolumeSource: k8sv1.VolumeSource{
+				PersistentVolumeClaim: &k8sv1.PersistentVolumeClaimVolumeSource{
+					ClaimName: backendStoragePVCName,
+					ReadOnly:  false,
+				},
+			},
+		})
+
+		if util.IsNonRootVMI(vmi) {
+			// For non-root VMIs, the TPM state lives under /var/run/kubevirt-private/libvirt/qemu/swtpm
+			// To persist it, we need the persistent PVC to be mounted under that location.
+			// /var/run/kubevirt-private is an emptyDir, and k8s would automatically create the right sub-directories under it.
+			// However, the sub-directories would get created as root:<fsGroup>, with a mode like 0755 (drwxr-xr-x), preventing write access to them.
+			// Depending on the storage class used, the SELinux label of the sub-directories can also be problematic (like nfs_t for nfs-csi).
+			// Creating emptydirs for each intermediate directory (+ setting fsGroup to 107) solves both issues.
+			// The only viable alternative would be to use an init container to `mkdir -p /var/run/kubevirt-private/libvirt/qemu/swtpm`,
+			//   but init containers are expensive, and emptyDirs were deemed to be the least undesirable approach.
+			renderer.podVolumes = append(renderer.podVolumes,
+				emptyDirVolume("private-libvirt"),
+				emptyDirVolume("private-libvirt-qemu"))
+			renderer.podVolumeMounts = append(renderer.podVolumeMounts, k8sv1.VolumeMount{
+				Name:      "private-libvirt",
+				MountPath: filepath.Join(util.VirtPrivateDir, "libvirt"),
+			}, k8sv1.VolumeMount{
+				Name:      "private-libvirt-qemu",
+				MountPath: filepath.Join(util.VirtPrivateDir, "libvirt", "qemu"),
+			})
+		}
+
+		if backendstorage.HasPersistentTPMDevice(&vmi.Spec) {
 			renderer.podVolumeMounts = append(renderer.podVolumeMounts, k8sv1.VolumeMount{
 				Name:      volumeName,
 				ReadOnly:  false,
-				MountPath: swtpmPath,
+				MountPath: PathForSwtpm(vmi),
 				SubPath:   "swtpm",
 			}, k8sv1.VolumeMount{
 				Name:      volumeName,
 				ReadOnly:  false,
-				MountPath: localCaPath,
+				MountPath: PathForSwtpmLocalca(vmi),
 				SubPath:   "swtpm-localca",
 			})
 		}
+
+		if backendstorage.HasPersistentEFI(&vmi.Spec) {
+			renderer.podVolumeMounts = append(renderer.podVolumeMounts, k8sv1.VolumeMount{
+				Name:      volumeName,
+				ReadOnly:  false,
+				MountPath: PathForNVram(vmi),
+				SubPath:   "nvram",
+			})
+		}
+
 		return nil
 	}
 }
@@ -452,12 +492,11 @@ func withHotplugSupport(hotplugDiskDir string) VolumeRendererOption {
 	}
 }
 
-func withSRIOVPciMapAnnotation() VolumeRendererOption {
+func withNetworkDeviceInfoMapAnnotation() VolumeRendererOption {
 	return func(renderer *VolumeRenderer) error {
-		renderer.podVolumeMounts = append(renderer.podVolumeMounts, mountPath(sriov.VolumeName, sriov.MountPath))
 		renderer.podVolumes = append(renderer.podVolumes,
 			downwardAPIDirVolume(
-				sriov.VolumeName, sriov.VolumePath, fmt.Sprintf("metadata.annotations['%s']", sriov.NetworkPCIMapAnnot)),
+				downwardapi.NetworkInfoVolumeName, downwardapi.NetworkInfoVolumePath, fmt.Sprintf("metadata.annotations['%s']", downwardapi.NetworkInfoAnnot)),
 		)
 		return nil
 	}

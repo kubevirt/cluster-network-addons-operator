@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -27,10 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -133,45 +130,87 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 	// Create custom predicate for NetworkAddonsConfig watcher. This makes sure that Status field
 	// updates will not trigger reconciling of the object. Reconciliation is trigger only if
 	// Spec fields differ.
-	pred := predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
-			if err != nil {
-				log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
-				return false
-			}
-			newConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
-			if err != nil {
-				log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
-				return false
-			}
-			return !reflect.DeepEqual(oldConfig.Spec, newConfig.Spec)
-		},
-	}
+	//pred := predicate.Funcs{
+	//	UpdateFunc: func(e event.UpdateEvent) bool {
+	//		oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
+	//		if err != nil {
+	//			log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
+	//			return false
+	//		}
+	//		newConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
+	//		if err != nil {
+	//			log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
+	//			return false
+	//		}
+	//		return !reflect.DeepEqual(oldConfig.Spec, newConfig.Spec)
+	//	},
+	//}
 
+	//networkAddonsConfigPredicates := predicate.NewTypedPredicateFuncs(*cnaov1alpha1.NetworkAddonsConfig, )
+	//networkAddonsConfigPredicates.Create()
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&cnaov1alpha1.NetworkAddonsConfig{},
+			&handler.TypedEnqueueRequestForObject[*cnaov1alpha1.NetworkAddonsConfig]{},
+			//networkAddonsConfigPredicates,
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1alpha1: %w", err)
+	}
 	// Watch for changes to primary resource NetworkAddonsConfig
-	if err := c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
-		return err
-	}
 
-	// Create a new controller for Pod resources, this will be used to track state of deployed components
-	c, err = controller.New("pod-controller", mgr, controller.Options{Reconciler: r.podReconciler})
-	if err != nil {
-		return err
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&cnaov1.NetworkAddonsConfig{},
+			&handler.TypedEnqueueRequestForObject[*cnaov1.NetworkAddonsConfig]{},
+			//networkAddonsConfigPredicates,
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1: %w", err)
 	}
+	//if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
+	//	return err
+	//}
+	//
+	//// Create a new controller for Pod resources, this will be used to track state of deployed components
+	//c, err = controller.New("pod-controller", mgr, controller.Options{Reconciler: r.podReconciler})
+	//if err != nil {
+	//	return err
+	//}
+	//
 
-	// Watch for changes on DaemonSet and Deployment resources
-	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&appsv1.DaemonSet{},
+			&handler.TypedEnqueueRequestForObject[*appsv1.DaemonSet]{},
+			//networkAddonsConfigPredicates,
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1: %w", err)
 	}
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
+	//// Watch for changes on DaemonSet and Deployment resources
+	//err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForObject{})
+	//if err != nil {
+	//	return err
+	//}
+
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&appsv1.Deployment{},
+			&handler.TypedEnqueueRequestForObject[*appsv1.Deployment]{},
+			//networkAddonsConfigPredicates,
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1: %w", err)
 	}
+	//err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForObject{})
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
