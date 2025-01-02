@@ -107,7 +107,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new ReconcileNetworkAddonsConfig
 func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.ClusterInfo) *ReconcileNetworkAddonsConfig {
-	// Status manager is shared between both reconcilers and it is used to update conditions of
+	// Status manager is shared between both reconcilers, and it is used to update conditions of
 	// NetworkAddonsConfig.State. NetworkAddonsConfig reconciler updates it with progress of rendering
 	// and applying of manifests. Pods reconciler updates it with progress of deployed pods.
 	statusManager := statusmanager.New(mgr, names.OPERATOR_CONFIG)
@@ -122,39 +122,51 @@ func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.C
 	}
 }
 
+type ctrlPredicate[T metav1.Object] struct {
+	predicate.TypedFuncs[T]
+}
+
+func (p ctrlPredicate[T]) Update(e event.TypedUpdateEvent[T]) bool {
+	oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
+	if err != nil {
+		log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig (old): %v", err)
+		return false
+	}
+	newConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
+	if err != nil {
+		log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig (new): %v", err)
+		return false
+	}
+	return !reflect.DeepEqual(oldConfig.Spec, newConfig.Spec)
+}
+
 // add adds a new Controller to mgr with r as the ReconcileNetworkAddonsConfig
 func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
-	// Create a new controller for operator's NetworkAddonsConfig resource
 	c, err := controller.New("networkaddonsconfig-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Create custom predicate for NetworkAddonsConfig watcher. This makes sure that Status field
-	// updates will not trigger reconciling of the object. Reconciliation is trigger only if
-	// Spec fields differ.
-	pred := predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
-			if err != nil {
-				log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
-				return false
-			}
-			newConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
-			if err != nil {
-				log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig: %v", err)
-				return false
-			}
-			return !reflect.DeepEqual(oldConfig.Spec, newConfig.Spec)
-		},
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&cnaov1alpha1.NetworkAddonsConfig{},
+			&handler.TypedEnqueueRequestForObject[*cnaov1alpha1.NetworkAddonsConfig]{},
+			&ctrlPredicate[*cnaov1alpha1.NetworkAddonsConfig]{},
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1alpha1: %w", err)
 	}
 
-	// Watch for changes to primary resource NetworkAddonsConfig
-	if err := c.Watch(&source.Kind{Type: &cnaov1alpha1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
-		return err
-	}
-	if err := c.Watch(&source.Kind{Type: &cnaov1.NetworkAddonsConfig{}}, &handler.EnqueueRequestForObject{}, pred); err != nil {
-		return err
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&cnaov1.NetworkAddonsConfig{},
+			&handler.TypedEnqueueRequestForObject[*cnaov1.NetworkAddonsConfig]{},
+			&ctrlPredicate[*cnaov1.NetworkAddonsConfig]{},
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1: %w", err)
 	}
 
 	// Create a new controller for Pod resources, this will be used to track state of deployed components
@@ -163,14 +175,24 @@ func add(mgr manager.Manager, r *ReconcileNetworkAddonsConfig) error {
 		return err
 	}
 
-	// Watch for changes on DaemonSet and Deployment resources
-	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&appsv1.DaemonSet{},
+			&handler.TypedEnqueueRequestForObject[*appsv1.DaemonSet]{},
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1: %w", err)
 	}
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
+
+	if err := c.Watch(
+		source.Kind(
+			mgr.GetCache(),
+			&appsv1.Deployment{},
+			&handler.TypedEnqueueRequestForObject[*appsv1.Deployment]{},
+		),
+	); err != nil {
+		return fmt.Errorf("unable to watch NetworkAddonsConfig v1: %w", err)
 	}
 
 	return nil
@@ -645,14 +667,12 @@ func isResourceAvailable(kubeClient kubernetes.Interface, name string, group str
 	return true, nil
 }
 
-func runtimeObjectToNetworkAddonsConfig(obj runtime.Object) (*cnao.NetworkAddonsConfig, error) {
-	// convert the runtime.Object to unstructured.Unstructured
+func runtimeObjectToNetworkAddonsConfig(obj interface{}) (*cnao.NetworkAddonsConfig, error) {
 	unstructuredObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return nil, err
 	}
 
-	// convert unstructured.Unstructured to a NetworkAddonsConfig
 	networkAddonsConfig := &cnao.NetworkAddonsConfig{}
 	if err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredObj, networkAddonsConfig); err != nil {
 		return nil, err

@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	v1 "kubevirt.io/api/core/v1"
-	generatedscheme "kubevirt.io/client-go/generated/kubevirt/clientset/versioned/scheme"
+	generatedscheme "kubevirt.io/client-go/kubevirt/scheme"
 	"kubevirt.io/client-go/log"
 )
 
@@ -27,15 +27,17 @@ const (
 	HostRootMount                             = "/proc/1/root/"
 	CPUManagerOS3Path                         = HostRootMount + "var/lib/origin/openshift.local.volumes/cpu_manager_state"
 	CPUManagerPath                            = HostRootMount + "var/lib/kubelet/cpu_manager_state"
+
+	// Alphanums is the list of alphanumeric characters used to create a securely generated random string
+	Alphanums = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+	NonRootUID         = 107
+	NonRootUserString  = "qemu"
+	RootUser           = 0
+	memoryDumpOverhead = 100 * 1024 * 1024
+
+	UnprivilegedContainerSELinuxLabel = "system_u:object_r:container_file_t:s0"
 )
-
-// Alphanums is the list of alphanumeric characters used to create a securely generated random string
-const Alphanums = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-
-const NonRootUID = 107
-const NonRootUserString = "qemu"
-const RootUser = 0
-const memoryDumpOverhead = 100 * 1024 * 1024
 
 func IsNonRootVMI(vmi *v1.VirtualMachineInstance) bool {
 	_, ok := vmi.Annotations[v1.DeprecatedNonRootVMIAnnotation]
@@ -90,16 +92,6 @@ func IsVFIOVMI(vmi *v1.VirtualMachineInstance) bool {
 	return false
 }
 
-// Check if the VMI includes passt network interface(s)
-func IsPasstVMI(vmi *v1.VirtualMachineInstance) bool {
-	for _, net := range vmi.Spec.Domain.Devices.Interfaces {
-		if net.Passt != nil {
-			return true
-		}
-	}
-	return false
-}
-
 // Check if a VMI spec requests AMD SEV
 func IsSEVVMI(vmi *v1.VirtualMachineInstance) bool {
 	return vmi.Spec.Domain.LaunchSecurity != nil && vmi.Spec.Domain.LaunchSecurity.SEV != nil
@@ -110,7 +102,26 @@ func IsSEVESVMI(vmi *v1.VirtualMachineInstance) bool {
 	return IsSEVVMI(vmi) &&
 		vmi.Spec.Domain.LaunchSecurity.SEV.Policy != nil &&
 		vmi.Spec.Domain.LaunchSecurity.SEV.Policy.EncryptedState != nil &&
-		*vmi.Spec.Domain.LaunchSecurity.SEV.Policy.EncryptedState == true
+		*vmi.Spec.Domain.LaunchSecurity.SEV.Policy.EncryptedState
+}
+
+// Check if a VMI spec requests SEV with attestation
+func IsSEVAttestationRequested(vmi *v1.VirtualMachineInstance) bool {
+	return IsSEVVMI(vmi) && vmi.Spec.Domain.LaunchSecurity.SEV.Attestation != nil
+}
+
+func IsAMD64VMI(vmi *v1.VirtualMachineInstance) bool {
+	return vmi.Spec.Architecture == "amd64"
+}
+
+func IsARM64VMI(vmi *v1.VirtualMachineInstance) bool {
+	return vmi.Spec.Architecture == "arm64"
+}
+
+func IsEFIVMI(vmi *v1.VirtualMachineInstance) bool {
+	return vmi.Spec.Domain.Firmware != nil &&
+		vmi.Spec.Domain.Firmware.Bootloader != nil &&
+		vmi.Spec.Domain.Firmware.Bootloader.EFI != nil
 }
 
 func IsVmiUsingHyperVReenlightenment(vmi *v1.VirtualMachineInstance) bool {
@@ -144,7 +155,7 @@ func NeedVirtioNetDevice(vmi *v1.VirtualMachineInstance, allowEmulation bool) bo
 func NeedTunDevice(vmi *v1.VirtualMachineInstance) bool {
 	return (len(vmi.Spec.Domain.Devices.Interfaces) > 0) ||
 		(vmi.Spec.Domain.Devices.AutoattachPodInterface == nil) ||
-		(*vmi.Spec.Domain.Devices.AutoattachPodInterface == true)
+		(*vmi.Spec.Domain.Devices.AutoattachPodInterface)
 }
 
 func IsAutoAttachVSOCK(vmi *v1.VirtualMachineInstance) bool {
@@ -194,7 +205,7 @@ func HasHugePages(vmi *v1.VirtualMachineInstance) bool {
 }
 
 func IsReadOnlyDisk(disk *v1.Disk) bool {
-	isReadOnlyCDRom := disk.CDRom != nil && (disk.CDRom.ReadOnly == nil || *disk.CDRom.ReadOnly == true)
+	isReadOnlyCDRom := disk.CDRom != nil && (disk.CDRom.ReadOnly == nil || *disk.CDRom.ReadOnly)
 
 	return isReadOnlyCDRom
 }
@@ -212,7 +223,7 @@ func AlignImageSizeTo1MiB(size int64, logger *log.FilteredLogger) int64 {
 			if newSize == 0 {
 				logger.Errorf("disks must be at least 1MiB, %d bytes is too small", size)
 			} else {
-				logger.Warningf("disk size is not 1MiB-aligned. Adjusting from %d down to %d.", size, newSize)
+				logger.V(4).Infof("disk size is not 1MiB-aligned. Adjusting from %d down to %d.", size, newSize)
 			}
 		}
 		return newSize
@@ -255,7 +266,7 @@ func CalcExpectedMemoryDumpSize(vmi *v1.VirtualMachineInstance) *resource.Quanti
 	return expectedPvcSize
 }
 
-// GenerateRandomString creates a securely generated random string using crypto/rand
+// GenerateSecureRandomString creates a securely generated random string using crypto/rand
 func GenerateSecureRandomString(n int) (string, error) {
 	ret := make([]byte, n)
 	for i := range ret {
@@ -281,4 +292,25 @@ func GenerateKubeVirtGroupVersionKind(obj runtime.Object) (runtime.Object, error
 	objCopy.GetObjectKind().SetGroupVersionKind(gvks[0])
 
 	return objCopy, nil
+}
+
+/*
+TranslateBuildArch translates the build_arch to arch
+
+	case1:
+	  build_arch is crossbuild-s390x, which will be translated to s390x arch
+	case2:
+	  build_arch is s390x, which will be translated to s390x arch
+*/
+func TranslateBuildArch() string {
+	buildArch := os.Getenv("BUILD_ARCH")
+
+	if buildArch == "" {
+		return ""
+	}
+	archElements := strings.Split(buildArch, "-")
+	if len(archElements) == 2 {
+		return archElements[1]
+	}
+	return archElements[0]
 }
