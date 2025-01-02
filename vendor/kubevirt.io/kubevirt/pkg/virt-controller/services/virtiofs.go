@@ -5,8 +5,9 @@ import (
 
 	k8sv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/pointer"
 	v1 "kubevirt.io/api/core/v1"
+
+	"kubevirt.io/kubevirt/pkg/pointer"
 
 	"kubevirt.io/kubevirt/pkg/config"
 
@@ -27,8 +28,8 @@ func generateVirtioFSContainers(vmi *v1.VirtualMachineInstance, image string, co
 	containers := []k8sv1.Container{}
 	for _, volume := range vmi.Spec.Volumes {
 		if _, isPassthroughFSVolume := passthroughFSVolumes[volume.Name]; isPassthroughFSVolume {
-
-			container := generateContainerFromVolume(&volume, image, config)
+			resources := resourcesForVirtioFSContainer(vmi.IsCPUDedicated(), vmi.IsCPUDedicated() || vmi.WantsToHaveQOSGuaranteed(), config)
+			container := generateContainerFromVolume(config, &volume, image, resources)
 			containers = append(containers, container)
 
 		}
@@ -126,8 +127,8 @@ func securityContextVirtioFS(profile securityProfile) *k8sv1.SecurityContext {
 	return &k8sv1.SecurityContext{
 		RunAsUser:                credential,
 		RunAsGroup:               credential,
-		RunAsNonRoot:             pointer.Bool(isRestricted(profile)),
-		AllowPrivilegeEscalation: pointer.Bool(isPrivileged(profile)),
+		RunAsNonRoot:             pointer.P(isRestricted(profile)),
+		AllowPrivilegeEscalation: pointer.P(isPrivileged(profile)),
 		Capabilities:             virtiofsCapabilities(profile),
 	}
 }
@@ -153,8 +154,7 @@ func virtioFSMountPoint(volume *v1.Volume) string {
 	return volumeMountPoint
 }
 
-func generateContainerFromVolume(volume *v1.Volume, image string, config *virtconfig.ClusterConfig) k8sv1.Container {
-	resources := resourcesForVirtioFSContainer(false, false, config)
+func generateContainerFromVolume(config *virtconfig.ClusterConfig, volume *v1.Volume, image string, resources k8sv1.ResourceRequirements) k8sv1.Container {
 
 	socketPathArg := fmt.Sprintf("--socket-path=%s", virtiofs.VirtioFSSocketPath(volume.Name))
 	sourceArg := fmt.Sprintf("--shared-dir=%s", virtioFSMountPoint(volume))
@@ -162,7 +162,7 @@ func generateContainerFromVolume(volume *v1.Volume, image string, config *virtco
 
 	securityProfile := restricted
 	sandbox := "none"
-	if virtiofs.RequiresRootPrivileges(volume) {
+	if virtiofs.CanRunWithPrivileges(config, volume) {
 		securityProfile = privileged
 		sandbox = "chroot"
 		args = append(args, "--xattr")

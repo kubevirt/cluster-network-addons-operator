@@ -379,11 +379,6 @@ const (
 	// Paused represents a DataVolumePhase of Paused
 	Paused DataVolumePhase = "Paused"
 
-	// PrepClaimInProgress represents a data volume with a current phase of PrepClaimInProgress
-	PrepClaimInProgress DataVolumePhase = "PrepClaimInProgress"
-	// RebindInProgress represents a data volume with a current phase of RebindInProgress
-	RebindInProgress DataVolumePhase = "RebindInProgress"
-
 	// DataVolumeReady is the condition that indicates if the data volume is ready to be consumed.
 	DataVolumeReady DataVolumeConditionType = "Ready"
 	// DataVolumeBound is the condition that indicates if the underlying PVC is bound or not.
@@ -419,8 +414,6 @@ type StorageProfileSpec struct {
 	CloneStrategy *CDICloneStrategy `json:"cloneStrategy,omitempty"`
 	// ClaimPropertySets is a provided set of properties applicable to PVC
 	ClaimPropertySets []ClaimPropertySet `json:"claimPropertySets,omitempty"`
-	// DataImportCronSourceFormat defines the format of the DataImportCron-created disk image sources
-	DataImportCronSourceFormat *DataImportCronSourceFormat `json:"dataImportCronSourceFormat,omitempty"`
 }
 
 // StorageProfileStatus provides the most recently observed status of the StorageProfile
@@ -433,8 +426,6 @@ type StorageProfileStatus struct {
 	CloneStrategy *CDICloneStrategy `json:"cloneStrategy,omitempty"`
 	// ClaimPropertySets computed from the spec and detected in the system
 	ClaimPropertySets []ClaimPropertySet `json:"claimPropertySets,omitempty"`
-	// DataImportCronSourceFormat defines the format of the DataImportCron-created disk image sources
-	DataImportCronSourceFormat *DataImportCronSourceFormat `json:"dataImportCronSourceFormat,omitempty"`
 }
 
 // ClaimPropertySet is a set of properties applicable to PVC
@@ -843,17 +834,6 @@ const (
 	CloneStrategyCsiClone CDICloneStrategy = "csi-clone"
 )
 
-// DataImportCronSourceFormat defines the format of the DataImportCron-created disk image sources
-type DataImportCronSourceFormat string
-
-const (
-	// DataImportCronSourceFormatSnapshot implies using a VolumeSnapshot as the resulting DataImportCron disk image source
-	DataImportCronSourceFormatSnapshot DataImportCronSourceFormat = "snapshot"
-
-	// DataImportCronSourceFormatPvc implies using a PVC as the resulting DataImportCron disk image source
-	DataImportCronSourceFormatPvc DataImportCronSourceFormat = "pvc"
-)
-
 // CDIUninstallStrategy defines the state to leave CDI on uninstall
 type CDIUninstallStrategy string
 
@@ -933,7 +913,7 @@ type CDIConfigSpec struct {
 	Preallocation *bool `json:"preallocation,omitempty"`
 	// InsecureRegistries is a list of TLS disabled registries
 	InsecureRegistries []string `json:"insecureRegistries,omitempty"`
-	// DataVolumeTTLSeconds is the time in seconds after DataVolume completion it can be garbage collected. Disabled by default.
+	// DataVolumeTTLSeconds is the time in seconds after DataVolume completion it can be garbage collected. The default is 0 sec. To disable GC use -1.
 	// +optional
 	DataVolumeTTLSeconds *int32 `json:"dataVolumeTTLSeconds,omitempty"`
 	// TLSSecurityProfile is used by operators to apply cluster-wide TLS security settings to operands.

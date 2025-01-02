@@ -63,3 +63,15 @@ func Convert_v1beta1_DevicePreferences_To_v1alpha1_DevicePreferences(in *v1beta1
 func Convert_v1beta1_MemoryInstancetype_To_v1alpha1_MemoryInstancetype(in *v1beta1.MemoryInstancetype, out *MemoryInstancetype, s conversion.Scope) error {
 	return autoConvert_v1beta1_MemoryInstancetype_To_v1alpha1_MemoryInstancetype(in, out, s)
 }
+
+func Convert_v1beta1_VirtualMachineInstancetypeSpec_To_v1alpha1_VirtualMachineInstancetypeSpec(in *v1beta1.VirtualMachineInstancetypeSpec, out *VirtualMachineInstancetypeSpec, s conversion.Scope) error {
+	return autoConvert_v1beta1_VirtualMachineInstancetypeSpec_To_v1alpha1_VirtualMachineInstancetypeSpec(in, out, s)
+}
+
+func Convert_v1beta1_CPUInstancetype_To_v1alpha1_CPUInstancetype(in *v1beta1.CPUInstancetype, out *CPUInstancetype, s conversion.Scope) error {
+	return autoConvert_v1beta1_CPUInstancetype_To_v1alpha1_CPUInstancetype(in, out, s)
+}
+
+func Convert_v1beta1_FirmwarePreferences_To_v1alpha1_FirmwarePreferences(in *v1beta1.FirmwarePreferences, out *FirmwarePreferences, s conversion.Scope) error {
+	return autoConvert_v1beta1_FirmwarePreferences_To_v1alpha1_FirmwarePreferences(in, out, s)
+}
