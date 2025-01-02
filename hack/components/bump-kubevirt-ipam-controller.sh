@@ -125,6 +125,10 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
     service.beta.openshift.io/serving-cert-secret-name: kubevirt-ipam-controller-webhook-service\
 {{ end }}' Service_kubevirt-ipam-controller-webhook-service.yaml
 
+  sed -i '/        kubectl.kubernetes.io\/default-container: manager/a\{{ if .IsOpenshift }}\
+        openshift.io/required-scc: "restricted-v2"\
+{{ end }}' Deployment_kubevirt-ipam-controller-manager.yaml
+
   echo 'rejoin sub-manifests to a final manifest'
   cat Namespace_kubevirt-ipam-controller-system.yaml \
       ServiceAccount_kubevirt-ipam-controller-manager.yaml \
@@ -143,6 +147,10 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
 
   sed -i '/containers:/i\{{ if .EnableSCC }}\
       serviceAccountName: passt-binding-cni\
+{{ end }}' 003-passtbindingcni.yaml
+
+  sed -i '/        description: passt-binding-cni installs passt binding CNI on cluster nodes/a\{{ if .EnableSCC }}\
+        openshift.io/required-scc: "passt-binding-cni"\
 {{ end }}' 003-passtbindingcni.yaml
 )
 

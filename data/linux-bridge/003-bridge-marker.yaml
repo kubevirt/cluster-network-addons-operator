@@ -23,6 +23,7 @@ spec:
         name: bridge-marker
       annotations:
         description: Bridge marker exposes network bridges available on nodes as node resources
+        openshift.io/required-scc: "bridge-marker"
     spec:
       serviceAccountName: bridge-marker
       hostNetwork: true
