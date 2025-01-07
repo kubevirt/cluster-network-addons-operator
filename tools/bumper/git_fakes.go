@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -345,7 +344,7 @@ func createCommit(w *git.Worktree, repoDir, fileName, branchName string) plumbin
 	w.Checkout(&git.CheckoutOptions{Branch: plumbing.NewBranchReferenceName(branchName)})
 
 	fileWithPath := filepath.Join(repoDir, fileName)
-	err := ioutil.WriteFile(fileWithPath, []byte(""), 0644)
+	err := os.WriteFile(fileWithPath, []byte(""), 0644)
 	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed creating file %s", fileName))
 
 	_, err = w.Add(fileName)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -21,7 +20,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 	expectedTagCommitMap := make(map[string]string)
 
 	BeforeEach(func() {
-		tempDir, err := ioutil.TempDir("/tmp", "cnao-repo-commands-test")
+		tempDir, err := os.MkdirTemp("/tmp", "cnao-repo-commands-test")
 		Expect(err).ToNot(HaveOccurred(), "Should create temp dir for CNAO repo")
 
 		repoDir = filepath.Join(tempDir, "testOwner", "testRepo")

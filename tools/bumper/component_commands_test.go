@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -18,7 +17,7 @@ var _ = Describe("Testing internal git component", func() {
 	expectedTagCommitMap := make(map[string]string)
 
 	BeforeEach(func() {
-		tempDir, err := ioutil.TempDir("/tmp", "component-commands-test")
+		tempDir, err := os.MkdirTemp("/tmp", "component-commands-test")
 		Expect(err).ToNot(HaveOccurred(), "Should create temp dir for component")
 
 		repoDir = filepath.Join(tempDir, "testOwner", "testRepo")
