@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -18,11 +17,11 @@ var _ = Describe("Testing internal git component", func() {
 	expectedTagCommitMap := make(map[string]string)
 
 	BeforeEach(func() {
-		tempDir, err := ioutil.TempDir("/tmp", "component-commands-test")
+		tempDir, err := os.MkdirTemp("/tmp", "component-commands-test")
 		Expect(err).ToNot(HaveOccurred(), "Should create temp dir for component")
 
 		repoDir = filepath.Join(tempDir, "testOwner", "testRepo")
-		os.MkdirAll(repoDir, 0777)
+		Expect(os.MkdirAll(repoDir, 0777)).To(Succeed())
 		githubApi = newFakeGithubApi(repoDir)
 
 		gitComponent = newFakeGitComponent(githubApi, repoDir, &component{}, expectedTagCommitMap)
@@ -33,7 +32,9 @@ var _ = Describe("Testing internal git component", func() {
 	}
 	DescribeTable("getVirtualTag function",
 		func(r getVirtualTagParams) {
-			defer os.RemoveAll(gitComponent.gitRepo.localDir)
+			defer func(path string) {
+				Expect(os.RemoveAll(path)).To(Succeed())
+			}(gitComponent.gitRepo.localDir)
 
 			By("Running api to get the current virtual tag")
 			commitTested := expectedTagCommitMap[r.TagKey]
@@ -71,7 +72,9 @@ var _ = Describe("Testing internal git component", func() {
 	}
 	DescribeTable("getCurrentReleaseTag function",
 		func(r currentReleaseParams) {
-			defer os.RemoveAll(gitComponent.gitRepo.localDir)
+			defer func(path string) {
+				Expect(os.RemoveAll(path)).To(Succeed())
+			}(gitComponent.gitRepo.localDir)
 
 			// update test params since you cant do it in the Entry context
 			gitComponent.configParams.Url = repoDir
@@ -129,7 +132,9 @@ var _ = Describe("Testing internal git component", func() {
 	}
 	DescribeTable("getUpdatedReleaseInfo function",
 		func(r updatedReleaseParams) {
-			defer os.RemoveAll(gitComponent.gitRepo.localDir)
+			defer func(path string) {
+				Expect(os.RemoveAll(path)).To(Succeed())
+			}(gitComponent.gitRepo.localDir)
 
 			// update test params since you cant do it in the Entry context
 			gitComponent.configParams = r.comp
