@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,12 +13,13 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/pkg/errors"
+	"github.com/thanhpk/randstr"
+
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/google/go-github/v32/github"
-	"github.com/pkg/errors"
-	"github.com/thanhpk/randstr"
 )
 
 type mockGithubApi struct {
@@ -288,20 +288,17 @@ func newFakeGitCnaoRepo(api *mockGithubApi, repoDir string, componentParams *com
 	return gitComponent
 }
 
-func setBranchAsHead(repo *git.Repository, branchName string) error {
-	h := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.NewBranchReferenceName(branchName))
-	if err := repo.Storer.SetReference(h); err != nil {
-		return err
-	}
-	return nil
-}
-
 func newLocalGitRepo(repoDir string, tagCommitMap map[string]string) *gitRepo {
 	By(fmt.Sprintf("creating new repository on directory: %s", repoDir))
-	repo, err := git.PlainInit(repoDir, false)
+	repo, err := git.PlainInitWithOptions(
+		repoDir,
+		&git.PlainInitOptions{
+			Bare: false,
+			InitOptions: git.InitOptions{
+				DefaultBranch: plumbing.Main,
+			},
+		})
 	Expect(err).ToNot(HaveOccurred(), "Should succeed cloning git repo")
-
-	setBranchAsHead(repo, "main")
 
 	initializeRepo(repo, repoDir, tagCommitMap)
 
@@ -315,37 +312,34 @@ func initializeRepo(repo *git.Repository, repoDir string, tagCommitMap map[strin
 	w, err := repo.Worktree()
 	Expect(err).ToNot(HaveOccurred(), "Should succeed getting repo Worktree")
 
-	createCommitWithoutTag(w, tagCommitMap, repoDir, "static", "main", false)
-	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated", "v0.0.1", "main")
-	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight", "v0.0.2", "main")
+	createCommitWithoutTag(w, tagCommitMap, repoDir, "static", plumbing.Main, false)
+	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated", "v0.0.1")
+	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight", "v0.0.2")
 	createCommitWithoutTag(w, tagCommitMap, repoDir, "latest_main", "main", true)
-	createBranch(repo, "release-v1.0.0")
-	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch", "v1.0.0", "release-v1.0.0")
-	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight_branch", "v1.0.1", "release-v1.0.0")
+	createBranch(w, plumbing.NewBranchReferenceName("release-v1.0.0"))
+	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch", "v1.0.0")
+	createCommitWithLightweightTag(w, repo, tagCommitMap, repoDir, "tagged_lightweight_branch", "v1.0.1")
 	// we want the last tag to be annotated, to make sure the tag is retrieved in the commit-sha form (and not the annotated tag sha).
-	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch", "v1.0.2", "release-v1.0.0")
+	createCommitWithAnnotatedTag(w, repo, tagCommitMap, repoDir, "tagged_annotated_branch_cont", "v1.0.2")
 	createCommitWithoutTag(w, tagCommitMap, repoDir, "latest_branch", "release-v1.0.0", true)
 	// adding a non-existing commit to check negative scenarios
 	tagCommitMap["dummy_false_commit"] = randstr.Hex(40)
 }
 
-func createBranch(repo *git.Repository, branchName string) {
-	By(fmt.Sprintf("adding a new branch %s from Head", branchName))
-	headRef, err := repo.Head()
-	Expect(err).ToNot(HaveOccurred(), "Should succeed getting current Head ref")
+func createBranch(w *git.Worktree, branchName plumbing.ReferenceName) {
+	By(fmt.Sprintf("adding a new branch %s from Head", branchName.String()))
+	Expect(w.Checkout(
+		&git.CheckoutOptions{
+			Branch: branchName,
+			Create: true,
+		})).To(Succeed())
 
-	ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branchName), headRef.Hash())
-
-	err = repo.Storer.SetReference(ref)
-	Expect(err).ToNot(HaveOccurred(), "Should succeed setting the branch ref")
 }
 
-func createCommit(w *git.Worktree, repoDir, fileName, branchName string) plumbing.Hash {
-	By(fmt.Sprintf("committing a new file %s on %s branch", fileName, branchName))
-	w.Checkout(&git.CheckoutOptions{Branch: plumbing.NewBranchReferenceName(branchName)})
-
+func createCommit(w *git.Worktree, repoDir, fileName string) plumbing.Hash {
+	By(fmt.Sprintf("committing a new file %q", fileName))
 	fileWithPath := filepath.Join(repoDir, fileName)
-	err := ioutil.WriteFile(fileWithPath, []byte(""), 0644)
+	err := os.WriteFile(fileWithPath, []byte(""), 0644)
 	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed creating file %s", fileName))
 
 	_, err = w.Add(fileName)
@@ -363,12 +357,11 @@ func createCommit(w *git.Worktree, repoDir, fileName, branchName string) plumbin
 	return commitHash
 }
 
-func createCommitWithoutTag(w *git.Worktree, tagCommitMap map[string]string, repoDir, fileName, branchName string, addDummy bool) {
-	By(fmt.Sprintf("committing a new file on %s branch with any tag", branchName))
-	commitHash := createCommit(w, repoDir, fileName, branchName)
+func createCommitWithoutTag(w *git.Worktree, tagCommitMap map[string]string, repoDir, fileName string, branchName plumbing.ReferenceName, addDummy bool) {
+	commitHash := createCommit(w, repoDir, fileName)
 
 	if addDummy {
-		fakeDummyTag := "dummy_tag_latest_" + branchName
+		fakeDummyTag := "dummy_tag_latest_" + branchName.String()
 		By(fmt.Sprintf("Adding a dummy tag: %s for commit %s", fakeDummyTag, commitHash.String()))
 		tagCommitMap[fakeDummyTag] = commitHash.String()
 	}
@@ -381,9 +374,9 @@ func createCommitWithoutTag(w *git.Worktree, tagCommitMap map[string]string, rep
 // tag keys to be the semver version tagged (which is alphabetically+chronologically
 // ordered by default). For example, chronologically tagging v0.0.1 and then v0.0.2
 // will produce an ordered tag list: ["v0.0.1", "v0.0.2"].
-func createCommitWithAnnotatedTag(w *git.Worktree, repo *git.Repository, tagCommitMap map[string]string, repoDir, fileName, tagName, branchName string) {
-	By(fmt.Sprintf("committing a new file on %s branch with annotated tag", branchName))
-	commitHash := createCommit(w, repoDir, fileName, branchName)
+func createCommitWithAnnotatedTag(w *git.Worktree, repo *git.Repository, tagCommitMap map[string]string, repoDir, fileName, tagName string) {
+	By(fmt.Sprintf("committing a new file with annotated tag"))
+	commitHash := createCommit(w, repoDir, fileName)
 
 	_, err := repo.CreateTag(tagName, commitHash, &git.CreateTagOptions{
 		Tagger: &object.Signature{
@@ -398,9 +391,9 @@ func createCommitWithAnnotatedTag(w *git.Worktree, repo *git.Repository, tagComm
 	tagCommitMap[tagName] = commitHash.String()
 }
 
-func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCommitMap map[string]string, repoDir, fileName, tagName, branchName string) {
-	By(fmt.Sprintf("committing a new file on %s branch with lightweight tag", branchName))
-	commitHash := createCommit(w, repoDir, fileName, branchName)
+func createCommitWithLightweightTag(w *git.Worktree, repo *git.Repository, tagCommitMap map[string]string, repoDir, fileName, tagName string) {
+	By(fmt.Sprintf("committing a new file with lightweight tag"))
+	commitHash := createCommit(w, repoDir, fileName)
 
 	_, err := repo.CreateTag(tagName, commitHash, nil)
 	Expect(err).ToNot(HaveOccurred(), fmt.Sprintf("Should succeed adding %s tag to commit Hash %s", tagName, commitHash))
