@@ -13,7 +13,7 @@
 # limitations under the License.
 
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.30'}
-export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2409241245-d93dec16}
+export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2412171619-fbd31717}
 
 KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
 # The CLUSTER_PATH var is used in cluster folder and points to the _kubevirtci where the cluster is deployed from.
@@ -28,9 +28,8 @@ function cluster::_get_tag() {
 }
 
 function cluster::install() {
-    # Remove cloned kubevirtci repository if it does not match the requested one
     if [ -d ${CLUSTER_PATH} ]; then
-        if [ $(cluster::_get_repo) != ${KUBEVIRTCI_REPO} -o $(cluster::_get_tag) != ${KUBEVIRTCI_TAG} ]; then
+        if [[ $(cluster::_get_repo) != ${KUBEVIRTCI_REPO} || $(cluster::_get_tag) != ${KUBEVIRTCI_TAG} ]]; then
             rm -rf ${CLUSTER_PATH}
         fi
     fi

@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"time"
 
-	"kubevirt.io/kubevirt/tests/framework/kubevirt"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -34,14 +32,15 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/utils/pointer"
 
 	v1 "kubevirt.io/api/core/v1"
 
+	"kubevirt.io/kubevirt/pkg/pointer"
 	"kubevirt.io/kubevirt/pkg/util/net/ip"
-	"kubevirt.io/kubevirt/tests/flags"
 	"kubevirt.io/kubevirt/tests/framework/cleanup"
+	"kubevirt.io/kubevirt/tests/framework/kubevirt"
 	"kubevirt.io/kubevirt/tests/libnode"
+	"kubevirt.io/kubevirt/tests/libregistry"
 	"kubevirt.io/kubevirt/tests/util"
 )
 
@@ -52,7 +51,7 @@ const (
 
 func RenderPodWithPVC(name string, cmd []string, args []string, pvc *k8sv1.PersistentVolumeClaim) *k8sv1.Pod {
 	volumeName := "disk0"
-	nonRootUser := int64(1042)
+	nonRootUser := int64(107)
 
 	// Change to 'pod := RenderPod(name, cmd, args)' once we have a libpod package
 	pod := &k8sv1.Pod{
@@ -68,17 +67,17 @@ func RenderPodWithPVC(name string, cmd []string, args []string, pvc *k8sv1.Persi
 			Containers: []k8sv1.Container{
 				{
 					Name:    name,
-					Image:   fmt.Sprintf("%s/vm-killer:%s", flags.KubeVirtUtilityRepoPrefix, flags.KubeVirtUtilityVersionTag),
+					Image:   libregistry.GetUtilityImageFromRegistry("vm-killer"),
 					Command: cmd,
 					Args:    args,
 					SecurityContext: &k8sv1.SecurityContext{
 						Capabilities: &k8sv1.Capabilities{
 							Drop: []k8sv1.Capability{"ALL"},
 						},
-						Privileged:               pointer.Bool(false),
+						Privileged:               pointer.P(false),
 						RunAsUser:                &nonRootUser,
-						RunAsNonRoot:             pointer.Bool(true),
-						AllowPrivilegeEscalation: pointer.Bool(false),
+						RunAsNonRoot:             pointer.P(true),
+						AllowPrivilegeEscalation: pointer.P(false),
 						SeccompProfile: &k8sv1.SeccompProfile{
 							Type: k8sv1.SeccompProfileTypeRuntimeDefault,
 						},
@@ -102,6 +101,10 @@ func RenderPodWithPVC(name string, cmd []string, args []string, pvc *k8sv1.Persi
 	if volumeMode != nil && *volumeMode == k8sv1.PersistentVolumeBlock {
 		pod.Spec.Containers[0].VolumeDevices = addVolumeDevices(volumeName)
 	} else {
+		if pod.Spec.SecurityContext == nil {
+			pod.Spec.SecurityContext = &k8sv1.PodSecurityContext{}
+		}
+		pod.Spec.SecurityContext.FSGroup = &nonRootUser
 		pod.Spec.Containers[0].VolumeMounts = addVolumeMounts(volumeName)
 	}
 
@@ -138,7 +141,7 @@ func NewPVC(name, size, storageClass string) *k8sv1.PersistentVolumeClaim {
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Spec: k8sv1.PersistentVolumeClaimSpec{
 			AccessModes: []k8sv1.PersistentVolumeAccessMode{k8sv1.ReadWriteOnce},
-			Resources: k8sv1.ResourceRequirements{
+			Resources: k8sv1.VolumeResourceRequirements{
 				Requests: k8sv1.ResourceList{
 					"storage": quantity,
 				},
@@ -272,7 +275,7 @@ func createSeparateDeviceHostPathPv(osName, namespace, nodeName string) {
 						{
 							MatchExpressions: []k8sv1.NodeSelectorRequirement{
 								{
-									Key:      util.KubernetesIoHostName,
+									Key:      k8sv1.LabelHostname,
 									Operator: k8sv1.NodeSelectorOpIn,
 									Values:   []string{nodeName},
 								},
@@ -335,7 +338,7 @@ func CreateHostPathPvWithSizeAndStorageClass(osName, namespace, hostPath, size, 
 						{
 							MatchExpressions: []k8sv1.NodeSelectorRequirement{
 								{
-									Key:      util.KubernetesIoHostName,
+									Key:      k8sv1.LabelHostname,
 									Operator: k8sv1.NodeSelectorOpIn,
 									Values:   []string{libnode.SchedulableNode},
 								},
@@ -440,7 +443,7 @@ func newNFSPVC(name string, namespace string, size string, os string) *k8sv1.Per
 		},
 		Spec: k8sv1.PersistentVolumeClaimSpec{
 			AccessModes: []k8sv1.PersistentVolumeAccessMode{k8sv1.ReadWriteMany},
-			Resources: k8sv1.ResourceRequirements{
+			Resources: k8sv1.VolumeResourceRequirements{
 				Requests: k8sv1.ResourceList{
 					"storage": quantity,
 				},
