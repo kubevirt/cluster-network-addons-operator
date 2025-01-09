@@ -1,8 +1,9 @@
 package operatorrules
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -10,8 +11,8 @@ import (
 )
 
 // BuildPrometheusRule builds a PrometheusRule object from the registered recording rules and alerts.
-func BuildPrometheusRule(name, namespace string, labels map[string]string) (*promv1.PrometheusRule, error) {
-	spec, err := buildPrometheusRuleSpec()
+func (r *Registry) BuildPrometheusRule(name, namespace string, labels map[string]string) (*promv1.PrometheusRule, error) {
+	spec, err := r.buildPrometheusRuleSpec()
 	if err != nil {
 		return nil, err
 	}
@@ -30,20 +31,20 @@ func BuildPrometheusRule(name, namespace string, labels map[string]string) (*pro
 	}, nil
 }
 
-func buildPrometheusRuleSpec() (*promv1.PrometheusRuleSpec, error) {
+func (r *Registry) buildPrometheusRuleSpec() (*promv1.PrometheusRuleSpec, error) {
 	var groups []promv1.RuleGroup
 
-	if len(operatorRegistry.registeredRecordingRules) != 0 {
+	if len(r.registeredRecordingRules) != 0 {
 		groups = append(groups, promv1.RuleGroup{
 			Name:  "recordingRules.rules",
-			Rules: buildRecordingRulesRules(),
+			Rules: r.buildRecordingRulesRules(),
 		})
 	}
 
-	if len(operatorRegistry.registeredAlerts) != 0 {
+	if len(r.registeredAlerts) != 0 {
 		groups = append(groups, promv1.RuleGroup{
 			Name:  "alerts.rules",
-			Rules: ListAlerts(),
+			Rules: r.ListAlerts(),
 		})
 	}
 
@@ -54,10 +55,10 @@ func buildPrometheusRuleSpec() (*promv1.PrometheusRuleSpec, error) {
 	return &promv1.PrometheusRuleSpec{Groups: groups}, nil
 }
 
-func buildRecordingRulesRules() []promv1.Rule {
+func (r *Registry) buildRecordingRulesRules() []promv1.Rule {
 	var rules []promv1.Rule
 
-	for _, recordingRule := range operatorRegistry.registeredRecordingRules {
+	for _, recordingRule := range r.registeredRecordingRules {
 		rules = append(rules, promv1.Rule{
 			Record: recordingRule.MetricsOpts.Name,
 			Expr:   recordingRule.Expr,
@@ -65,8 +66,10 @@ func buildRecordingRulesRules() []promv1.Rule {
 		})
 	}
 
-	sort.Slice(rules, func(i, j int) bool {
-		return rules[i].Record < rules[j].Record
+	slices.SortFunc(rules, func(a, b promv1.Rule) int {
+		aKey := a.Record + ":" + a.Expr.String()
+		bKey := b.Record + ":" + b.Expr.String()
+		return cmp.Compare(aKey, bKey)
 	})
 
 	return rules

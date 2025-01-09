@@ -19,39 +19,29 @@
 
 package virtconfig
 
+import "kubevirt.io/kubevirt/pkg/virt-config/deprecation"
+
 /*
  This module is intended for determining whether an optional feature is enabled or not at the cluster-level.
 */
 
 const (
-	ExpandDisksGate   = "ExpandDisks"
-	CPUManager        = "CPUManager"
-	NUMAFeatureGate   = "NUMA"
-	IgnitionGate      = "ExperimentalIgnitionSupport"
-	LiveMigrationGate = "LiveMigration"
-	// SRIOVLiveMigrationGate enables Live Migration for VM's with network SR-IOV interfaces.
-	SRIOVLiveMigrationGate     = "SRIOVLiveMigration"
-	CPUNodeDiscoveryGate       = "CPUNodeDiscovery"
-	HypervStrictCheckGate      = "HypervStrictCheck"
-	SidecarGate                = "Sidecar"
-	GPUGate                    = "GPU"
-	HostDevicesGate            = "HostDevices"
-	SnapshotGate               = "Snapshot"
-	VMExportGate               = "VMExport"
-	HotplugVolumesGate         = "HotplugVolumes"
-	HostDiskGate               = "HostDisk"
-	VirtIOFSGate               = "ExperimentalVirtiofsSupport"
-	MacvtapGate                = "Macvtap"
-	PasstGate                  = "Passt"
+	ExpandDisksGate       = "ExpandDisks"
+	CPUManager            = "CPUManager"
+	IgnitionGate          = "ExperimentalIgnitionSupport"
+	HypervStrictCheckGate = "HypervStrictCheck"
+	SidecarGate           = "Sidecar"
+	HostDevicesGate       = "HostDevices"
+	SnapshotGate          = "Snapshot"
+	VMExportGate          = "VMExport"
+	HotplugVolumesGate    = "HotplugVolumes"
+	HostDiskGate          = "HostDisk"
+	VirtIOFSGate          = "ExperimentalVirtiofsSupport"
+
 	DownwardMetricsFeatureGate = "DownwardMetrics"
-	NonRootDeprecated          = "NonRootExperimental"
-	NonRoot                    = "NonRoot"
 	Root                       = "Root"
 	ClusterProfiler            = "ClusterProfiler"
 	WorkloadEncryptionSEV      = "WorkloadEncryptionSEV"
-	// DockerSELinuxMCSWorkaround sets the SELinux level of all the non-compute virt-launcher containers to "s0".
-	DockerSELinuxMCSWorkaround = "DockerSELinuxMCSWorkaround"
-	PSA                        = "PSA"
 	VSOCKGate                  = "VSOCK"
 	// DisableCustomSELinuxPolicy disables the installation of the custom SELinux policy for virt-launcher
 	DisableCustomSELinuxPolicy = "DisableCustomSELinuxPolicy"
@@ -61,29 +51,47 @@ const (
 	// DisableMediatedDevicesHandling disables the handling of mediated
 	// devices, its creation and deletion
 	DisableMediatedDevicesHandling = "DisableMDEVConfiguration"
-	// HotplugNetworkIfacesGate enables the virtio network interface hotplug feature
-	HotplugNetworkIfacesGate = "HotplugNICs"
 	// PersistentReservation enables the use of the SCSI persistent reservation with the pr-helper daemon
 	PersistentReservation = "PersistentReservation"
 	// VMPersistentState enables persisting backend state files of VMs, such as the contents of the vTPM
 	VMPersistentState = "VMPersistentState"
-	Multiarchitecture = "MultiArchitecture"
-	// VMLiveUpdateFeaturesGate allows updating ceratin VM fields, such as CPU sockets to enable hot-plug functionality.
+	MultiArchitecture = "MultiArchitecture"
+	// VMLiveUpdateFeaturesGate allows updating certain VM fields, such as CPU sockets to enable hot-plug functionality.
 	VMLiveUpdateFeaturesGate = "VMLiveUpdateFeatures"
+	// NetworkBindingPlugingsGate enables using a plugin to bind the pod and the VM network
+	// Alpha: v1.1.0
+	// Beta:  v1.4.0
+	NetworkBindingPlugingsGate = "NetworkBindingPlugins"
+	// AutoResourceLimitsGate enables automatic setting of vmi limits if there is a ResourceQuota with limits associated with the vmi namespace.
+	AutoResourceLimitsGate = "AutoResourceLimitsGate"
+
+	// AlignCPUsGate allows emulator thread to assign two extra CPUs if needed to complete even parity.
+	AlignCPUsGate = "AlignCPUs"
+
+	// VolumesUpdateStrategy enables to specify the strategy on the volume updates.
+	VolumesUpdateStrategy = "VolumesUpdateStrategy"
+	// VolumeMigration enables to migrate the storage. It depends on the VolumesUpdateStrategy feature.
+	VolumeMigration = "VolumeMigration"
+	// Owner: @xpivarc
+	// Alpha: v1.3.0
+	//
+	// NodeRestriction enables Kubelet's like NodeRestriction but for Kubevirt's virt-handler.
+	// This feature requires following Kubernetes feature gate "ServiceAccountTokenPodNodeInfo". The feature gate is available
+	// in Kubernetes 1.30 as Beta.
+	NodeRestrictionGate = "NodeRestriction"
+	// DynamicPodInterfaceNaming enables a mechanism to dynamically determine the primary pod interface for KuveVirt virtual machines.
+	DynamicPodInterfaceNamingGate = "DynamicPodInterfaceNaming"
+	// Owner: @lyarwood
+	// Alpha: v1.4.0
+	//
+	// InstancetypeReferencePolicy allows a cluster admin to control how a VirtualMachine references instance types and preferences
+	// through the kv.spec.configuration.instancetype.referencePolicy configurable.
+	InstancetypeReferencePolicy = "InstancetypeReferencePolicy"
 )
 
-var deprecatedFeatureGates = [...]string{
-	LiveMigrationGate,
-	SRIOVLiveMigrationGate,
-	NonRoot,
-	NonRootDeprecated,
-	PSA,
-}
-
 func (config *ClusterConfig) isFeatureGateEnabled(featureGate string) bool {
-	if config.IsFeatureGateDeprecated(featureGate) {
-		// Deprecated feature gates are considered enabled and no-op.
-		// For more info about deprecation policy: https://github.com/kubevirt/kubevirt/blob/main/docs/deprecation.md
+	deprecatedFeature := deprecation.FeatureGateInfo(featureGate)
+	if deprecatedFeature != nil && deprecatedFeature.State == deprecation.GA {
 		return true
 	}
 
@@ -92,16 +100,6 @@ func (config *ClusterConfig) isFeatureGateEnabled(featureGate string) bool {
 			return true
 		}
 	}
-	return false
-}
-
-func (config *ClusterConfig) IsFeatureGateDeprecated(featureGate string) bool {
-	for _, deprecatedFeatureGate := range deprecatedFeatureGates {
-		if featureGate == deprecatedFeatureGate {
-			return true
-		}
-	}
-
 	return false
 }
 
@@ -114,7 +112,7 @@ func (config *ClusterConfig) CPUManagerEnabled() bool {
 }
 
 func (config *ClusterConfig) NUMAEnabled() bool {
-	return config.isFeatureGateEnabled(NUMAFeatureGate)
+	return config.isFeatureGateEnabled(deprecation.NUMAFeatureGate)
 }
 
 func (config *ClusterConfig) DownwardMetricsEnabled() bool {
@@ -126,11 +124,11 @@ func (config *ClusterConfig) IgnitionEnabled() bool {
 }
 
 func (config *ClusterConfig) LiveMigrationEnabled() bool {
-	return config.isFeatureGateEnabled(LiveMigrationGate)
+	return config.isFeatureGateEnabled(deprecation.LiveMigrationGate)
 }
 
 func (config *ClusterConfig) SRIOVLiveMigrationEnabled() bool {
-	return config.isFeatureGateEnabled(SRIOVLiveMigrationGate)
+	return config.isFeatureGateEnabled(deprecation.SRIOVLiveMigrationGate)
 }
 
 func (config *ClusterConfig) HypervStrictCheckEnabled() bool {
@@ -138,7 +136,7 @@ func (config *ClusterConfig) HypervStrictCheckEnabled() bool {
 }
 
 func (config *ClusterConfig) CPUNodeDiscoveryEnabled() bool {
-	return config.isFeatureGateEnabled(CPUNodeDiscoveryGate)
+	return config.isFeatureGateEnabled(deprecation.CPUNodeDiscoveryGate)
 }
 
 func (config *ClusterConfig) SidecarEnabled() bool {
@@ -146,7 +144,7 @@ func (config *ClusterConfig) SidecarEnabled() bool {
 }
 
 func (config *ClusterConfig) GPUPassthroughEnabled() bool {
-	return config.isFeatureGateEnabled(GPUGate)
+	return config.isFeatureGateEnabled(deprecation.GPUGate)
 }
 
 func (config *ClusterConfig) SnapshotEnabled() bool {
@@ -170,11 +168,11 @@ func (config *ClusterConfig) VirtiofsEnabled() bool {
 }
 
 func (config *ClusterConfig) MacvtapEnabled() bool {
-	return config.isFeatureGateEnabled(MacvtapGate)
+	return config.isFeatureGateEnabled(deprecation.MacvtapGate)
 }
 
 func (config *ClusterConfig) PasstEnabled() bool {
-	return config.isFeatureGateEnabled(PasstGate)
+	return config.isFeatureGateEnabled(deprecation.PasstGate)
 }
 
 func (config *ClusterConfig) HostDevicesPassthroughEnabled() bool {
@@ -194,7 +192,7 @@ func (config *ClusterConfig) WorkloadEncryptionSEVEnabled() bool {
 }
 
 func (config *ClusterConfig) DockerSELinuxMCSWorkaroundEnabled() bool {
-	return config.isFeatureGateEnabled(DockerSELinuxMCSWorkaround)
+	return config.isFeatureGateEnabled(deprecation.DockerSELinuxMCSWorkaround)
 }
 
 func (config *ClusterConfig) VSOCKEnabled() bool {
@@ -214,7 +212,7 @@ func (config *ClusterConfig) KubevirtSeccompProfileEnabled() bool {
 }
 
 func (config *ClusterConfig) HotplugNetworkInterfacesEnabled() bool {
-	return config.isFeatureGateEnabled(HotplugNetworkIfacesGate)
+	return config.isFeatureGateEnabled(deprecation.HotplugNetworkIfacesGate)
 }
 
 func (config *ClusterConfig) PersistentReservationEnabled() bool {
@@ -224,9 +222,39 @@ func (config *ClusterConfig) PersistentReservationEnabled() bool {
 func (config *ClusterConfig) VMPersistentStateEnabled() bool {
 	return config.isFeatureGateEnabled(VMPersistentState)
 }
+
 func (config *ClusterConfig) MultiArchitectureEnabled() bool {
-	return config.isFeatureGateEnabled(Multiarchitecture)
+	return config.isFeatureGateEnabled(MultiArchitecture)
 }
+
 func (config *ClusterConfig) VMLiveUpdateFeaturesEnabled() bool {
 	return config.isFeatureGateEnabled(VMLiveUpdateFeaturesGate)
+}
+
+func (config *ClusterConfig) NetworkBindingPlugingsEnabled() bool {
+	return config.isFeatureGateEnabled(NetworkBindingPlugingsGate)
+}
+
+func (config *ClusterConfig) AutoResourceLimitsEnabled() bool {
+	return config.isFeatureGateEnabled(AutoResourceLimitsGate)
+}
+
+func (config *ClusterConfig) AlignCPUsEnabled() bool {
+	return config.isFeatureGateEnabled(AlignCPUsGate)
+}
+
+func (config *ClusterConfig) VolumesUpdateStrategyEnabled() bool {
+	return config.isFeatureGateEnabled(VolumesUpdateStrategy)
+}
+
+func (config *ClusterConfig) VolumeMigrationEnabled() bool {
+	return config.isFeatureGateEnabled(VolumeMigration)
+}
+
+func (config *ClusterConfig) NodeRestrictionEnabled() bool {
+	return config.isFeatureGateEnabled(NodeRestrictionGate)
+}
+
+func (config *ClusterConfig) DynamicPodInterfaceNamingEnabled() bool {
+	return config.isFeatureGateEnabled(DynamicPodInterfaceNamingGate)
 }

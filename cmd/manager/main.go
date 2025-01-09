@@ -3,8 +3,15 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"os"
 	"runtime"
+
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/machadovilaca/operator-observability/pkg/operatormetrics"
 	osv1 "github.com/openshift/api/operator/v1"
@@ -50,7 +57,7 @@ func main() {
 
 	printVersion()
 
-	namespace, err := k8s.GetWatchNamespace()
+	watchNamespace, err := k8s.GetWatchNamespace()
 	if err != nil {
 		log.Printf("failed to get watch namespace: %v", err)
 		os.Exit(1)
@@ -65,10 +72,18 @@ func main() {
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
-		Scheme:             scheme,
-		Namespace:          namespace,
-		MetricsBindAddress: controllerruntimemetrics.DefaultBindAddress,
-		MapperProvider:     k8s.NewDynamicRESTMapper,
+		Scheme: scheme,
+		Cache: cache.Options{
+			DefaultNamespaces: map[string]cache.Config{
+				watchNamespace: {},
+			},
+		},
+		Metrics: metricsserver.Options{
+			BindAddress: metricsserver.DefaultBindAddress,
+		},
+		MapperProvider: func(c *rest.Config, httpClient *http.Client) (meta.RESTMapper, error) {
+			return apiutil.NewDynamicRESTMapper(c, httpClient)
+		},
 	})
 	if err != nil {
 		log.Printf("failed to instantiate new operator manager: %v", err)
