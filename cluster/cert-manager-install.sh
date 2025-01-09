@@ -23,4 +23,7 @@ if [[ $DEPLOY_CERT_MANAGER == true ]]; then
 	echo "Installing cert-manager..."
 	manifest="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
 	./cluster/kubectl.sh apply -f "$manifest"
+	./cluster/kubectl.sh wait --namespace cert-manager --for=condition=Available deployment/cert-manager --timeout=5m
+	./cluster/kubectl.sh wait --namespace cert-manager --for=condition=Available deployment/cert-manager-cainjector --timeout=5m
+	./cluster/kubectl.sh wait --namespace cert-manager --for=condition=Available deployment/cert-manager-webhook --timeout=5m
 fi
