@@ -8,6 +8,8 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // A route allows developers to expose services through an HTTP(S) aware load balancing and proxy
 // layer via a public DNS entry. The route may further specify TLS options and a certificate, or
@@ -38,7 +40,10 @@ import (
 // Compatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).
 // +openshift:compatibility-gen:level=1
 type Route struct {
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta `json:",inline"`
+
+	// metadata is the standard object's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// spec is the desired state of the route
@@ -56,6 +61,9 @@ type Route struct {
 // +openshift:compatibility-gen:level=1
 type RouteList struct {
 	metav1.TypeMeta `json:",inline"`
+
+	// metadata is the standard list's metadata.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	// items is a list of routes
@@ -82,7 +90,10 @@ type RouteSpec struct {
 	// If not specified a route name will typically be automatically
 	// chosen.
 	// Must follow DNS952 subdomain conventions.
+	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=253
+	// +kubebuilder:validation:Pattern=`^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$`
 	Host string `json:"host,omitempty" protobuf:"bytes,1,opt,name=host"`
 	// subdomain is a DNS subdomain that is requested within the ingress controller's
 	// domain (as a subdomain). If host is set this field is ignored. An ingress
@@ -98,9 +109,14 @@ type RouteSpec struct {
 	// `apps.mycluster.com` to have a full hostname `frontend.apps.mycluster.com`.
 	//
 	// +optional
+	// +kubebuilder:validation:MaxLength=253
+	// +kubebuilder:validation:Pattern=`^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$`
 	Subdomain string `json:"subdomain,omitempty" protobuf:"bytes,8,opt,name=subdomain"`
 
 	// path that the router watches for, to route traffic for to the service. Optional
+	//
+	// +optional
+	// +kubebuilder:validation:Pattern=`^/`
 	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"`
 
 	// to is an object the route should use as the primary backend. Only the Service kind
@@ -111,6 +127,8 @@ type RouteSpec struct {
 	// alternateBackends allows up to 3 additional backends to be assigned to the route.
 	// Only the Service kind is allowed, and it will be defaulted to Service.
 	// Use the weight field in RouteTargetReference object to specify relative preference.
+	//
+	// +kubebuilder:validation:MaxItems=3
 	AlternateBackends []RouteTargetReference `json:"alternateBackends,omitempty" protobuf:"bytes,4,rep,name=alternateBackends"`
 
 	// If specified, the port to be used by the router. Most routers will use all
@@ -123,6 +141,9 @@ type RouteSpec struct {
 
 	// Wildcard policy if any for the route.
 	// Currently only 'Subdomain' or 'None' is allowed.
+	//
+	// +kubebuilder:validation:Enum=None;Subdomain;""
+	// +kubebuilder:default=None
 	WildcardPolicy WildcardPolicyType `json:"wildcardPolicy,omitempty" protobuf:"bytes,7,opt,name=wildcardPolicy"`
 }
 
@@ -130,14 +151,23 @@ type RouteSpec struct {
 // kind is allowed. Use 'weight' field to emphasize one over others.
 type RouteTargetReference struct {
 	// The kind of target that the route is referring to. Currently, only 'Service' is allowed
+	//
+	// +kubebuilder:validation:Enum=Service;""
+	// +kubebuilder:default=Service
 	Kind string `json:"kind" protobuf:"bytes,1,opt,name=kind"`
 
 	// name of the service/target that is being referred to. e.g. name of the service
+	//
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name" protobuf:"bytes,2,opt,name=name"`
 
 	// weight as an integer between 0 and 256, default 100, that specifies the target's relative weight
 	// against other target reference objects. 0 suppresses requests to this backend.
+	//
 	// +optional
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=256
+	// +kubebuilder:default=100
 	Weight *int32 `json:"weight" protobuf:"varint,3,opt,name=weight"`
 }
 
@@ -205,7 +235,7 @@ type RouteIngressCondition struct {
 // generate host names and routing table entries when a routing shard is
 // allocated for a specific route.
 // Caveat: This is WIP and will likely undergo modifications when sharding
-//         support is added.
+// support is added.
 type RouterShard struct {
 	// shardName uniquely identifies a router shard in the "set" of
 	// routers used for routing traffic to the services.
@@ -216,12 +246,17 @@ type RouterShard struct {
 }
 
 // TLSConfig defines config used to secure a route and provide termination
+//
+// +kubebuilder:validation:XValidation:rule="has(self.termination) && has(self.insecureEdgeTerminationPolicy) ? !((self.termination=='passthrough') && (self.insecureEdgeTerminationPolicy=='Allow')) : true", message="cannot have both spec.tls.termination: passthrough and spec.tls.insecureEdgeTerminationPolicy: Allow"
+// +openshift:validation:FeatureSetAwareXValidation:featureSet=TechPreviewNoUpgrade;CustomNoUpgrade,rule="!(has(self.certificate) && has(self.externalCertificate))", message="cannot have both spec.tls.certificate and spec.tls.externalCertificate"
 type TLSConfig struct {
 	// termination indicates termination type.
 	//
 	// * edge - TLS termination is done by the router and http is used to communicate with the backend (default)
 	// * passthrough - Traffic is sent straight to the destination without the router providing TLS termination
 	// * reencrypt - TLS termination is done by the router and https is used to communicate with the backend
+	//
+	// +kubebuilder:validation:Enum=edge;reencrypt;passthrough
 	Termination TLSTerminationType `json:"termination" protobuf:"bytes,1,opt,name=termination,casttype=TLSTerminationType"`
 
 	// certificate provides certificate contents. This should be a single serving certificate, not a certificate
@@ -244,10 +279,32 @@ type TLSConfig struct {
 	// insecureEdgeTerminationPolicy indicates the desired behavior for insecure connections to a route. While
 	// each router may make its own decisions on which ports to expose, this is normally port 80.
 	//
-	// * Allow - traffic is sent to the server on the insecure port (default)
-	// * Disable - no traffic is allowed on the insecure port.
+	// * Allow - traffic is sent to the server on the insecure port (edge/reencrypt terminations only) (default).
+	// * None - no traffic is allowed on the insecure port.
 	// * Redirect - clients are redirected to the secure port.
+	//
+	// +kubebuilder:validation:Enum=Allow;None;Redirect;""
 	InsecureEdgeTerminationPolicy InsecureEdgeTerminationPolicyType `json:"insecureEdgeTerminationPolicy,omitempty" protobuf:"bytes,6,opt,name=insecureEdgeTerminationPolicy,casttype=InsecureEdgeTerminationPolicyType"`
+
+	// externalCertificate provides certificate contents as a secret reference.
+	// This should be a single serving certificate, not a certificate
+	// chain. Do not include a CA certificate. The secret referenced should
+	// be present in the same namespace as that of the Route.
+	// Forbidden when `certificate` is set.
+	//
+	// +openshift:enable:FeatureSets=CustomNoUpgrade;TechPreviewNoUpgrade
+	// +optional
+	ExternalCertificate LocalObjectReference `json:"externalCertificate,omitempty" protobuf:"bytes,7,opt,name=externalCertificate"`
+}
+
+// LocalObjectReference contains enough information to let you locate the
+// referenced object inside the same namespace.
+// +structType=atomic
+type LocalObjectReference struct {
+	// name of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	// +optional
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"`
 }
 
 // TLSTerminationType dictates where the secure communication will stop
