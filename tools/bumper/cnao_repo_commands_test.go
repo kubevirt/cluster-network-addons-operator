@@ -30,7 +30,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		gitCnaoRepo = newFakeGitCnaoRepo(githubApi, repoDir, &component{}, expectedTagCommitMap)
 
 		DeferCleanup(func() {
-			Expect(os.RemoveAll(gitCnaoRepo.gitRepo.localDir)).To(Succeed())
+			Expect(os.RemoveAll(tempDir)).To(Succeed())
 		})
 	})
 
