@@ -28,6 +28,7 @@ var _ = Describe("Testing internal git component", func() {
 
 		DeferCleanup(func() {
 			Expect(os.RemoveAll(gitComponent.gitRepo.localDir)).To(Succeed())
+			Expect(os.RemoveAll(tempDir)).To(Succeed())
 		})
 	})
 
