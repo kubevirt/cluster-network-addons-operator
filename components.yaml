@@ -43,10 +43,10 @@ components:
     metadata: v4.1.4
   multus-dynamic-networks:
     url: https://github.com/k8snetworkplumbingwg/multus-dynamic-networks-controller
-    commit: e328aeb727e70165a8c7275aafa7035c963a8e22
+    commit: dbbb88bfa4ccde4dbd462b18859a6a74f03fefcc
     branch: main
     update-policy: tagged
-    metadata: v0.3.4
+    metadata: v0.3.6
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
     commit: dbf2164547421c44f958abc58ac8e141d841739e
