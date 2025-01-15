@@ -27,7 +27,7 @@ LINUX_BRIDGE_TAR_CONTAINER_DIR=/usr/src/github.com/containernetworking/plugins/b
 LINUX_BRIDGE_IMAGE=quay.io/kubevirt/cni-default-plugins
 LINUX_BRIDGE_IMAGE_TAGGED=${LINUX_BRIDGE_IMAGE}:${LINUX_BRIDGE_TAG}
 DOCKER_BUILDER="${DOCKER_BUILDER:-linux-bridge-docker-builder}"
-# By default, the build will target all supported platforms(i.e PLATFORM_LIST).
+# By default, the build will target host architecture.
 # To build for specific platforms, you can:
 # 1. Specify individual platforms:
 #    export PLATFORMS=linux/amd64
@@ -35,8 +35,7 @@ DOCKER_BUILDER="${DOCKER_BUILDER:-linux-bridge-docker-builder}"
 #    export PLATFORMS=linux/amd64,linux/arm64
 PLATFORM_LIST="linux/amd64,linux/s390x,linux/arm64"
 ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-PLATFORMS="${PLATFORMS:-all}"
-[ "$PLATFORMS" == "all" ] && PLATFORMS="${PLATFORM_LIST}"
+[ "$PLATFORMS" == "all" ] && PLATFORMS="$PLATFORM_LIST" || PLATFORMS="linux/${ARCH}"
 IFS=',' read -r -a PLATFORM_LIST <<< "$PLATFORMS"
 
 create_dockerfile() {
