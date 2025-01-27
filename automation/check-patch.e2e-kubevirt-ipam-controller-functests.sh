@@ -70,7 +70,7 @@ main() {
     deploy_cnao_cr
     ./hack/deploy-kubevirt.sh
     ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=json --patch '[{"op":"add","path":"/spec/configuration/developerConfiguration","value":{"featureGates":[]}},{"op":"add","path":"/spec/configuration/developerConfiguration/featureGates/-","value":"NetworkBindingPlugins"},{"op":"add","path":"/spec/configuration/developerConfiguration/featureGates/-","value":"DynamicPodInterfaceNaming"}]'
-    ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=json --patch '[{"op":"add","path":"/spec/configuration/network","value":{"binding":{"managedTap":{"domainAttachmentType":"managedTap","migration":{}}}}}]'
+    ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=json --patch '[{"op":"add","path":"/spec/configuration/network","value":{"binding":{"l2bridge":{"domainAttachmentType":"managedTap","migration":{}}}}}]'
     ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=merge --patch '{"spec":{"configuration":{"virtualMachineOptions":{"disableSerialConsoleLog":{}}}}}'
 
     cd ${TMP_COMPONENT_PATH}
