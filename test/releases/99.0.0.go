@@ -18,7 +18,7 @@ func init() {
 				ParentName: "dynamic-networks-controller-ds",
 				ParentKind: "DaemonSet",
 				Name:       "dynamic-networks-controller",
-				Image:      "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:0bdf7dc9c15bdf7e5760955f05077c23868f3421141e8e623d75cf6b8cf36247",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:8061bd1276ff022fe52a0b07bc6fa8d27e5f6f20cf3bf764e76d347d2e3c929b",
 			},
 			{
 				ParentName: "multus",
