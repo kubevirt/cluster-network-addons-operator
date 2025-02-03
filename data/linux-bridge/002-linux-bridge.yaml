@@ -22,6 +22,9 @@ spec:
         tier: node
         app: cni-plugins
       annotations:
+{{ if .EnableSCC }}
+        openshift.io/required-scc: "linux-bridge"
+{{ end }}
         description: LinuxBridge installs 'bridge' CNI on cluster nodes, so it can be later used to attach Pods/VMs to Linux bridges
     spec:
 {{ if .EnableSCC }}
