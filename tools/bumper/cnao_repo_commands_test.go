@@ -28,6 +28,10 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		githubApi = newFakeGithubApi(repoDir)
 
 		gitCnaoRepo = newFakeGitCnaoRepo(githubApi, repoDir, &component{}, expectedTagCommitMap)
+
+		DeferCleanup(func() {
+			Expect(os.RemoveAll(tempDir)).To(Succeed())
+		})
 	})
 
 	Context("Creating fake PRs", func() {
@@ -55,10 +59,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 
 		DescribeTable("and checking isPrAlreadyOpened function",
 			func(r isPrAlreadyOpenedParams) {
-				defer func(path string) {
-					Expect(os.RemoveAll(path)).To(Succeed())
-				}(gitCnaoRepo.gitRepo.localDir)
-
 				gitCnaoRepo.configParams.Url = repoDir
 				gitCnaoRepo.configParams.Branch = r.branch
 
@@ -114,10 +114,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 	}
 	DescribeTable("canonicalizeVersion function",
 		func(v canonicalizeVersionParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitCnaoRepo.gitRepo.localDir)
-
 			By("Parsing the version string")
 			formattedVersion, err := canonicalizeVersion(v.version)
 
@@ -164,8 +160,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 	}
 	DescribeTable("isVtagFormat function",
 		func(p isVtagFormatParams) {
-			defer os.RemoveAll(gitCnaoRepo.gitRepo.localDir)
-
 			By("Checking if the version string of vtag format")
 			isVtag := isVtagFormat(p.version)
 
@@ -217,9 +211,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 	dummyPRTitle := "dummy new PR title"
 	DescribeTable("isComponentBumpNeeded function",
 		func(b isComponentBumpNeededParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitCnaoRepo.gitRepo.localDir)
 			gitCnaoRepo.configParams.Url = repoDir
 
 			By("Checking if bump is needed")
@@ -324,9 +315,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 
 	DescribeTable("resetInAllowedList function",
 		func(r resetInAllowedListParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitCnaoRepo.gitRepo.localDir)
 			worktree, err := gitCnaoRepo.gitRepo.repo.Worktree()
 
 			By("Modifying files in the Repo")
@@ -389,10 +377,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 
 	DescribeTable("fileInGlobList function",
 		func(r fileInGlobListParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitCnaoRepo.gitRepo.localDir)
-
 			By("Running fileInGlobList on given input")
 			result := fileInGlobList(r.fileName, r.globList)
 
@@ -431,10 +415,6 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 
 	DescribeTable("collectModifiedToTreeList function",
 		func(r collectModifiedToTreeListParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitCnaoRepo.gitRepo.localDir)
-
 			if len(r.files) != 0 {
 				By("Modifying files in the Repo")
 				modifyFiles(gitCnaoRepo.gitRepo.localDir, r.files)

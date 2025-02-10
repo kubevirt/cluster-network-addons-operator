@@ -25,6 +25,11 @@ var _ = Describe("Testing internal git component", func() {
 		githubApi = newFakeGithubApi(repoDir)
 
 		gitComponent = newFakeGitComponent(githubApi, repoDir, &component{}, expectedTagCommitMap)
+
+		DeferCleanup(func() {
+			Expect(os.RemoveAll(gitComponent.gitRepo.localDir)).To(Succeed())
+			Expect(os.RemoveAll(tempDir)).To(Succeed())
+		})
 	})
 
 	type getVirtualTagParams struct {
@@ -32,10 +37,6 @@ var _ = Describe("Testing internal git component", func() {
 	}
 	DescribeTable("getVirtualTag function",
 		func(r getVirtualTagParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitComponent.gitRepo.localDir)
-
 			By("Running api to get the current virtual tag")
 			commitTested := expectedTagCommitMap[r.TagKey]
 			currentReleaseTag, err := gitComponent.getVirtualTag(commitTested)
@@ -72,10 +73,6 @@ var _ = Describe("Testing internal git component", func() {
 	}
 	DescribeTable("getCurrentReleaseTag function",
 		func(r currentReleaseParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitComponent.gitRepo.localDir)
-
 			// update test params since you cant do it in the Entry context
 			gitComponent.configParams.Url = repoDir
 			gitComponent.configParams.Commit = expectedTagCommitMap[r.TagKey]
@@ -132,10 +129,6 @@ var _ = Describe("Testing internal git component", func() {
 	}
 	DescribeTable("getUpdatedReleaseInfo function",
 		func(r updatedReleaseParams) {
-			defer func(path string) {
-				Expect(os.RemoveAll(path)).To(Succeed())
-			}(gitComponent.gitRepo.localDir)
-
 			// update test params since you cant do it in the Entry context
 			gitComponent.configParams = r.comp
 			gitComponent.configParams.Url = repoDir
