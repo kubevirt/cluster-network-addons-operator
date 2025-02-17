@@ -240,7 +240,7 @@ lint-metrics:
 	./hack/prom_metric_linter.sh --operator-name="kubevirt" --sub-operator-name="cnao"
 
 lint-monitoring:
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -mod=mod github.com/kubevirt/monitoring/monitoringlinter/cmd/monitoringlinter@e2be790
+	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install -mod=mod github.com/kubevirt/monitoring/monitoringlinter/cmd/monitoringlinter@v0.0.8
 	$(MONITORING_LINTER) ./...
 
 clean:
