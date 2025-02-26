@@ -7,33 +7,9 @@ import (
 )
 
 func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
-	var nodeNotNReadyTolerationInSeconds int64 = 60
 	return cnao.PlacementConfiguration{
 		Infra: &cnao.Placement{
-			Tolerations: []corev1.Toleration{
-				corev1.Toleration{
-					Key:      "node-role.kubernetes.io/control-plane",
-					Operator: corev1.TolerationOpExists,
-					Effect:   corev1.TaintEffectNoSchedule,
-				},
-				corev1.Toleration{
-					Key:      "node-role.kubernetes.io/master",
-					Operator: corev1.TolerationOpExists,
-					Effect:   corev1.TaintEffectNoSchedule,
-				},
-				corev1.Toleration{
-					Key:               "node.kubernetes.io/unreachable",
-					Operator:          corev1.TolerationOpExists,
-					Effect:            corev1.TaintEffectNoExecute,
-					TolerationSeconds: &nodeNotNReadyTolerationInSeconds,
-				},
-				corev1.Toleration{
-					Key:               "node.kubernetes.io/not-ready",
-					Operator:          corev1.TolerationOpExists,
-					Effect:            corev1.TaintEffectNoExecute,
-					TolerationSeconds: &nodeNotNReadyTolerationInSeconds,
-				},
-			},
+			Tolerations: []corev1.Toleration{},
 			Affinity: corev1.Affinity{
 				NodeAffinity: &corev1.NodeAffinity{
 					PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
