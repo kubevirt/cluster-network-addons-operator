@@ -41,10 +41,11 @@ func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
 		},
 		Workloads: &cnao.Placement{
 			NodeSelector: map[string]string{
-				"kubernetes.io/os": "linux",
+				corev1.LabelOSStable: "linux",
 			},
 			Tolerations: []corev1.Toleration{
 				corev1.Toleration{
+					Key:      corev1.TaintNodeUnschedulable,
 					Operator: corev1.TolerationOpExists,
 					Effect:   corev1.TaintEffectNoSchedule,
 				},
