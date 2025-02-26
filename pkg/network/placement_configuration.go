@@ -9,7 +9,6 @@ import (
 func GetDefaultPlacementConfiguration() cnao.PlacementConfiguration {
 	return cnao.PlacementConfiguration{
 		Infra: &cnao.Placement{
-			Tolerations: []corev1.Toleration{},
 			Affinity: corev1.Affinity{
 				NodeAffinity: &corev1.NodeAffinity{
 					PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{

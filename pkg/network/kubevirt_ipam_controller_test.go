@@ -14,7 +14,10 @@ import (
 
 var _ = Describe("Testing kubevirt ipam controller", func() {
 	Context("Render KubevirtIpamController", func() {
-		conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, KubevirtIpamController: &cnao.KubevirtIpamController{}, PlacementConfiguration: &cnao.PlacementConfiguration{Workloads: &cnao.Placement{}}}
+		conf := &cnao.NetworkAddonsConfigSpec{ImagePullPolicy: v1.PullAlways, Multus: &cnao.Multus{}, KubevirtIpamController: &cnao.KubevirtIpamController{}, PlacementConfiguration: &cnao.PlacementConfiguration{
+			Infra:     &cnao.Placement{},
+			Workloads: &cnao.Placement{},
+		}}
 		manifestDir := "../../data"
 		openshiftNetworkConf := &osv1.Network{}
 		clusterInfo := &ClusterInfo{}

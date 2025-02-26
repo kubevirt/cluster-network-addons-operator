@@ -21,7 +21,7 @@ func renderKubeSecondaryDNS(conf *cnao.NetworkAddonsConfigSpec, manifestDir stri
 	data := render.MakeRenderData()
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
-	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
+	data.Data["Placement"] = conf.PlacementConfiguration.Infra
 	data.Data["Domain"] = conf.KubeSecondaryDNS.Domain
 	data.Data["NameServerIp"] = conf.KubeSecondaryDNS.NameServerIP
 	data.Data["KubeSecondaryDNSImage"] = os.Getenv("KUBE_SECONDARY_DNS_IMAGE")
