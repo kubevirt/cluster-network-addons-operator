@@ -75,9 +75,9 @@ function __parametize_passt_binding_cni() {
   f=003-passtbindingcni.yaml
 
   yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-  yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
-  yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
-  yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+  yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .PlacementPasst.NodeSelector | nindent 8 }}'
+  yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .PlacementPasst.Affinity | nindent 8 }}'
+  yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .PlacementPasst.Tolerations | nindent 8 }}'
   yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .PasstBindingCNIImage }}'
   yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
   yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path '{{ .CNIBinDir }}'

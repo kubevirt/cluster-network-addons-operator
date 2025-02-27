@@ -29,7 +29,8 @@ func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 	data := render.MakeRenderData()
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
-	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
+	data.Data["Placement"] = conf.PlacementConfiguration.Infra
+	data.Data["PlacementPasst"] = conf.PlacementConfiguration.Workloads
 	data.Data["KubevirtIpamControllerImage"] = os.Getenv("KUBEVIRT_IPAM_CONTROLLER_IMAGE")
 	data.Data["PasstBindingCNIImage"] = os.Getenv("PASST_BINDING_CNI_IMAGE")
 
