@@ -52,6 +52,6 @@ spec:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
-      nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
-      affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
-      tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
+      nodeSelector: {{ toYaml .PlacementPasst.NodeSelector | nindent 8 }}
+      affinity: {{ toYaml .PlacementPasst.Affinity | nindent 8 }}
+      tolerations: {{ toYaml .PlacementPasst.Tolerations | nindent 8 }}
