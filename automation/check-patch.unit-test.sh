@@ -13,6 +13,7 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
     make bump-all
+    make vendor
     make check
     verify_metrics_docs_updated
     make lint-metrics
