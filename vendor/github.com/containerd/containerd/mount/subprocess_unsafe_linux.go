@@ -1,6 +1,3 @@
-//go:build linux || solaris
-// +build linux solaris
-
 /*
    Copyright The containerd Authors.
 
@@ -17,29 +14,17 @@
    limitations under the License.
 */
 
-package sys
+package mount
 
 import (
-	"syscall"
-	"time"
+	_ "unsafe" // required for go:linkname.
 )
 
-// StatAtime returns the Atim
-func StatAtime(st *syscall.Stat_t) syscall.Timespec {
-	return st.Atim
-}
+//go:linkname beforeFork syscall.runtime_BeforeFork
+func beforeFork()
 
-// StatCtime returns the Ctim
-func StatCtime(st *syscall.Stat_t) syscall.Timespec {
-	return st.Ctim
-}
+//go:linkname afterFork syscall.runtime_AfterFork
+func afterFork()
 
-// StatMtime returns the Mtim
-func StatMtime(st *syscall.Stat_t) syscall.Timespec {
-	return st.Mtim
-}
-
-// StatATimeAsTime returns st.Atim as a time.Time
-func StatATimeAsTime(st *syscall.Stat_t) time.Time {
-	return time.Unix(int64(st.Atim.Sec), int64(st.Atim.Nsec)) // nolint: unconvert
-}
+//go:linkname afterForkInChild syscall.runtime_AfterForkInChild
+func afterForkInChild()
