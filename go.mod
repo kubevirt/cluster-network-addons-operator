@@ -41,7 +41,7 @@ require (
 	k8s.io/kubectl v0.29.0
 	kubevirt.io/api v0.0.0-20230706190111-5527663af491
 	kubevirt.io/client-go v1.0.0
-	kubevirt.io/kubevirt v1.0.0
+	kubevirt.io/kubevirt v1.2.1
 	sigs.k8s.io/controller-runtime v0.14.6
 	sigs.k8s.io/controller-tools v0.6.0
 )
