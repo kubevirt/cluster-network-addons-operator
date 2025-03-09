@@ -300,7 +300,7 @@ replace (
 	github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
 	github.com/Microsoft/go-winio => github.com/Microsoft/go-winio v0.4.17
 	github.com/containerd/containerd => github.com/containerd/containerd v1.5.18
-	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
+	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.10.0
 	github.com/onsi/ginkgo/v2 => github.com/onsi/ginkgo/v2 v2.1.3
