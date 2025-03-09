@@ -46,7 +46,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/prometheus/client_model v0.4.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.9.4 // indirect
+	helm.sh/helm/v3 v3.14.2 // indirect
 	kubevirt.io/client-go v0.58.0
 	kubevirt.io/kubevirt v0.58.0
 	rsc.io/letsencrypt v0.0.3 // indirect
