@@ -15,7 +15,7 @@ require (
 	github.com/go-git/go-git/v5 v5.3.0
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/kevinburke/rest v0.0.0-20210506044642-5611499aa33c // indirect
@@ -247,7 +247,7 @@ require (
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
-	github.com/golang/glog v1.1.0 // indirect
+	github.com/golang/glog v1.2.4 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v0.0.0-20191119172530-79f836b90111 // indirect
@@ -306,4 +306,4 @@ replace (
 
 replace github.com/Masterminds/goutils => github.com/Masterminds/goutils v1.1.1
 
-replace github.com/golang/glog => github.com/golang/glog v1.0.0
+replace github.com/golang/glog => github.com/golang/glog v1.2.4
