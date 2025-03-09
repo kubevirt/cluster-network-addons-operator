@@ -14,17 +14,8 @@
    limitations under the License.
 */
 
-package sys
+package images
 
-import (
-	_ "unsafe" // required for go:linkname.
+const (
+	ConvertedDockerSchema1LabelKey = "io.containerd.image/converted-docker-schema1"
 )
-
-//go:linkname beforeFork syscall.runtime_BeforeFork
-func beforeFork()
-
-//go:linkname afterFork syscall.runtime_AfterFork
-func afterFork()
-
-//go:linkname afterForkInChild syscall.runtime_AfterForkInChild
-func afterForkInChild()
