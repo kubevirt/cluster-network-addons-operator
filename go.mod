@@ -48,7 +48,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.9.4 // indirect
 	kubevirt.io/client-go v0.58.0
-	kubevirt.io/kubevirt v0.58.0
+	kubevirt.io/kubevirt v1.2.1
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27 // indirect
 )
