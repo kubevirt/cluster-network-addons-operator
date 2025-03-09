@@ -228,7 +228,7 @@ require (
 	k8s.io/cli-runtime v0.24.2 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220627174259-011e075b9cb8 // indirect
-	k8s.io/kubernetes v1.13.0 // indirect
+	k8s.io/kubernetes v1.31.6 // indirect
 	kubevirt.io/client-go v0.59.1
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.27 // indirect
@@ -281,7 +281,7 @@ replace (
 	k8s.io/kube-scheduler => k8s.io/kube-scheduler v0.23.1
 	k8s.io/kubectl => k8s.io/kubectl v0.23.1
 	k8s.io/kubelet => k8s.io/kubelet v0.23.1
-	k8s.io/kubernetes => k8s.io/kubernetes v1.23.1
+	k8s.io/kubernetes => k8s.io/kubernetes v1.31.6
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.23.1
 	k8s.io/metrics => k8s.io/metrics v0.23.1
 	k8s.io/mount-utils => k8s.io/mount-utils v0.23.1
