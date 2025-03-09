@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/go-git/go-billy/v5"
@@ -24,11 +25,12 @@ import (
 )
 
 var (
-	ErrWorktreeNotClean     = errors.New("worktree is not clean")
-	ErrSubmoduleNotFound    = errors.New("submodule not found")
-	ErrUnstagedChanges      = errors.New("worktree contains unstaged changes")
-	ErrGitModulesSymlink    = errors.New(gitmodulesFile + " is a symlink")
-	ErrNonFastForwardUpdate = errors.New("non-fast-forward update")
+	ErrWorktreeNotClean                = errors.New("worktree is not clean")
+	ErrSubmoduleNotFound               = errors.New("submodule not found")
+	ErrUnstagedChanges                 = errors.New("worktree contains unstaged changes")
+	ErrGitModulesSymlink               = errors.New(gitmodulesFile + " is a symlink")
+	ErrNonFastForwardUpdate            = errors.New("non-fast-forward update")
+	ErrRestoreWorktreeOnlyNotSupported = errors.New("worktree only is not supported")
 )
 
 // Worktree represents a git worktree.
@@ -78,6 +80,7 @@ func (w *Worktree) PullContext(ctx context.Context, o *PullOptions) error {
 		Force:           o.Force,
 		InsecureSkipTLS: o.InsecureSkipTLS,
 		CABundle:        o.CABundle,
+		ProxyOptions:    o.ProxyOptions,
 	})
 
 	updated := true
@@ -94,7 +97,15 @@ func (w *Worktree) PullContext(ctx context.Context, o *PullOptions) error {
 
 	head, err := w.r.Head()
 	if err == nil {
-		headAheadOfRef, err := isFastForward(w.r.Storer, ref.Hash(), head.Hash())
+		// if we don't have a shallows list, just ignore it
+		shallowList, _ := w.r.Storer.Shallow()
+
+		var earliestShallow *plumbing.Hash
+		if len(shallowList) > 0 {
+			earliestShallow = &shallowList[0]
+		}
+
+		headAheadOfRef, err := isFastForward(w.r.Storer, ref.Hash(), head.Hash(), earliestShallow)
 		if err != nil {
 			return err
 		}
@@ -103,7 +114,7 @@ func (w *Worktree) PullContext(ctx context.Context, o *PullOptions) error {
 			return NoErrAlreadyUpToDate
 		}
 
-		ff, err := isFastForward(w.r.Storer, head.Hash(), ref.Hash())
+		ff, err := isFastForward(w.r.Storer, head.Hash(), ref.Hash(), earliestShallow)
 		if err != nil {
 			return err
 		}
@@ -129,7 +140,7 @@ func (w *Worktree) PullContext(ctx context.Context, o *PullOptions) error {
 	}
 
 	if o.RecurseSubmodules != NoRecurseSubmodules {
-		return w.updateSubmodules(&SubmoduleUpdateOptions{
+		return w.updateSubmodules(ctx, &SubmoduleUpdateOptions{
 			RecurseSubmodules: o.RecurseSubmodules,
 			Auth:              o.Auth,
 		})
@@ -138,13 +149,13 @@ func (w *Worktree) PullContext(ctx context.Context, o *PullOptions) error {
 	return nil
 }
 
-func (w *Worktree) updateSubmodules(o *SubmoduleUpdateOptions) error {
+func (w *Worktree) updateSubmodules(ctx context.Context, o *SubmoduleUpdateOptions) error {
 	s, err := w.Submodules()
 	if err != nil {
 		return err
 	}
 	o.Init = true
-	return s.Update(o)
+	return s.UpdateContext(ctx, o)
 }
 
 // Checkout switch branches or restore working tree files.
@@ -187,7 +198,12 @@ func (w *Worktree) Checkout(opts *CheckoutOptions) error {
 
 	return w.Reset(ro)
 }
+
 func (w *Worktree) createBranch(opts *CheckoutOptions) error {
+	if err := opts.Branch.Validate(); err != nil {
+		return err
+	}
+
 	_, err := w.r.Storer.Reference(opts.Branch)
 	if err == nil {
 		return fmt.Errorf("a branch named %q already exists", opts.Branch)
@@ -212,20 +228,17 @@ func (w *Worktree) createBranch(opts *CheckoutOptions) error {
 }
 
 func (w *Worktree) getCommitFromCheckoutOptions(opts *CheckoutOptions) (plumbing.Hash, error) {
-	if !opts.Hash.IsZero() {
-		return opts.Hash, nil
+	hash := opts.Hash
+	if hash.IsZero() {
+		b, err := w.r.Reference(opts.Branch, true)
+		if err != nil {
+			return plumbing.ZeroHash, err
+		}
+
+		hash = b.Hash()
 	}
 
-	b, err := w.r.Reference(opts.Branch, true)
-	if err != nil {
-		return plumbing.ZeroHash, err
-	}
-
-	if !b.Name().IsTag() {
-		return b.Hash(), nil
-	}
-
-	o, err := w.r.Object(plumbing.AnyObject, b.Hash())
+	o, err := w.r.Object(plumbing.AnyObject, hash)
 	if err != nil {
 		return plumbing.ZeroHash, err
 	}
@@ -233,7 +246,7 @@ func (w *Worktree) getCommitFromCheckoutOptions(opts *CheckoutOptions) (plumbing
 	switch o := o.(type) {
 	case *object.Tag:
 		if o.TargetType != plumbing.CommitObject {
-			return plumbing.ZeroHash, fmt.Errorf("unsupported tag object target %q", o.TargetType)
+			return plumbing.ZeroHash, fmt.Errorf("%w: tag target %q", object.ErrUnsupportedObject, o.TargetType)
 		}
 
 		return o.Target, nil
@@ -241,7 +254,7 @@ func (w *Worktree) getCommitFromCheckoutOptions(opts *CheckoutOptions) (plumbing
 		return o.Hash, nil
 	}
 
-	return plumbing.ZeroHash, fmt.Errorf("unsupported tag target %q", o.Type())
+	return plumbing.ZeroHash, fmt.Errorf("%w: %q", object.ErrUnsupportedObject, o.Type())
 }
 
 func (w *Worktree) setHEADToCommit(commit plumbing.Hash) error {
@@ -295,13 +308,13 @@ func (w *Worktree) ResetSparsely(opts *ResetOptions, dirs []string) error {
 	}
 
 	if opts.Mode == MixedReset || opts.Mode == MergeReset || opts.Mode == HardReset {
-		if err := w.resetIndex(t, dirs); err != nil {
+		if err := w.resetIndex(t, dirs, opts.Files); err != nil {
 			return err
 		}
 	}
 
 	if opts.Mode == MergeReset || opts.Mode == HardReset {
-		if err := w.resetWorktree(t); err != nil {
+		if err := w.resetWorktree(t, opts.Files); err != nil {
 			return err
 		}
 	}
@@ -309,20 +322,52 @@ func (w *Worktree) ResetSparsely(opts *ResetOptions, dirs []string) error {
 	return nil
 }
 
+// Restore restores specified files in the working tree or stage with contents from
+// a restore source. If a path is tracked but does not exist in the restore,
+// source, it will be removed to match the source.
+//
+// If Staged and Worktree are true, then the restore source will be the index.
+// If only Staged is true, then the restore source will be HEAD.
+// If only Worktree is true or neither Staged nor Worktree are true, will
+// result in ErrRestoreWorktreeOnlyNotSupported because restoring the working
+// tree while leaving the stage untouched is not currently supported.
+//
+// Restore with no files specified will return ErrNoRestorePaths.
+func (w *Worktree) Restore(o *RestoreOptions) error {
+	if err := o.Validate(); err != nil {
+		return err
+	}
+
+	if o.Staged {
+		opts := &ResetOptions{
+			Files: o.Files,
+		}
+
+		if o.Worktree {
+			// If we are doing both Worktree and Staging then it is a hard reset
+			opts.Mode = HardReset
+		} else {
+			// If we are doing just staging then it is a mixed reset
+			opts.Mode = MixedReset
+		}
+
+		return w.Reset(opts)
+	}
+
+	return ErrRestoreWorktreeOnlyNotSupported
+}
+
 // Reset the worktree to a specified state.
 func (w *Worktree) Reset(opts *ResetOptions) error {
 	return w.ResetSparsely(opts, nil)
 }
 
-func (w *Worktree) resetIndex(t *object.Tree, dirs []string) error {
+func (w *Worktree) resetIndex(t *object.Tree, dirs []string, files []string) error {
 	idx, err := w.r.Storer.Index()
-	if len(dirs) > 0 {
-		idx.SkipUnless(dirs)
-	}
-
 	if err != nil {
 		return err
 	}
+
 	b := newIndexBuilder(idx)
 
 	changes, err := w.diffTreeWithStaging(t, true)
@@ -350,6 +395,13 @@ func (w *Worktree) resetIndex(t *object.Tree, dirs []string) error {
 			name = ch.From.String()
 		}
 
+		if len(files) > 0 {
+			contains := inFiles(files, name)
+			if !contains {
+				continue
+			}
+		}
+
 		b.Remove(name)
 		if e == nil {
 			continue
@@ -364,11 +416,26 @@ func (w *Worktree) resetIndex(t *object.Tree, dirs []string) error {
 	}
 
 	b.Write(idx)
+
+	if len(dirs) > 0 {
+		idx.SkipUnless(dirs)
+	}
+
 	return w.r.Storer.SetIndex(idx)
 }
 
-func (w *Worktree) resetWorktree(t *object.Tree) error {
-	changes, err := w.diffStagingWithWorktree(true)
+func inFiles(files []string, v string) bool {
+	for _, s := range files {
+		if s == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (w *Worktree) resetWorktree(t *object.Tree, files []string) error {
+	changes, err := w.diffStagingWithWorktree(true, false)
 	if err != nil {
 		return err
 	}
@@ -380,6 +447,28 @@ func (w *Worktree) resetWorktree(t *object.Tree) error {
 	b := newIndexBuilder(idx)
 
 	for _, ch := range changes {
+		if err := w.validChange(ch); err != nil {
+			return err
+		}
+
+		if len(files) > 0 {
+			file := ""
+			if ch.From != nil {
+				file = ch.From.String()
+			} else if ch.To != nil {
+				file = ch.To.String()
+			}
+
+			if file == "" {
+				continue
+			}
+
+			contains := inFiles(files, file)
+			if !contains {
+				continue
+			}
+		}
+
 		if err := w.checkoutChange(ch, t, b); err != nil {
 			return err
 		}
@@ -387,6 +476,108 @@ func (w *Worktree) resetWorktree(t *object.Tree) error {
 
 	b.Write(idx)
 	return w.r.Storer.SetIndex(idx)
+}
+
+// worktreeDeny is a list of paths that are not allowed
+// to be used when resetting the worktree.
+var worktreeDeny = map[string]struct{}{
+	// .git
+	GitDirName: {},
+
+	// For other historical reasons, file names that do not conform to the 8.3
+	// format (up to eight characters for the basename, three for the file
+	// extension, certain characters not allowed such as `+`, etc) are associated
+	// with a so-called "short name", at least on the `C:` drive by default.
+	// Which means that `git~1/` is a valid way to refer to `.git/`.
+	"git~1": {},
+}
+
+// validPath checks whether paths are valid.
+// The rules around invalid paths could differ from upstream based on how
+// filesystems are managed within go-git, but they are largely the same.
+//
+// For upstream rules:
+// https://github.com/git/git/blob/564d0252ca632e0264ed670534a51d18a689ef5d/read-cache.c#L946
+// https://github.com/git/git/blob/564d0252ca632e0264ed670534a51d18a689ef5d/path.c#L1383
+func validPath(paths ...string) error {
+	for _, p := range paths {
+		parts := strings.FieldsFunc(p, func(r rune) bool { return (r == '\\' || r == '/') })
+		if len(parts) == 0 {
+			return fmt.Errorf("invalid path: %q", p)
+		}
+
+		if _, denied := worktreeDeny[strings.ToLower(parts[0])]; denied {
+			return fmt.Errorf("invalid path prefix: %q", p)
+		}
+
+		if runtime.GOOS == "windows" {
+			// Volume names are not supported, in both formats: \\ and <DRIVE_LETTER>:.
+			if vol := filepath.VolumeName(p); vol != "" {
+				return fmt.Errorf("invalid path: %q", p)
+			}
+
+			if !windowsValidPath(parts[0]) {
+				return fmt.Errorf("invalid path: %q", p)
+			}
+		}
+
+		for _, part := range parts {
+			if part == ".." {
+				return fmt.Errorf("invalid path %q: cannot use '..'", p)
+			}
+		}
+	}
+	return nil
+}
+
+// windowsPathReplacer defines the chars that need to be replaced
+// as part of windowsValidPath.
+var windowsPathReplacer *strings.Replacer
+
+func init() {
+	windowsPathReplacer = strings.NewReplacer(" ", "", ".", "")
+}
+
+func windowsValidPath(part string) bool {
+	if len(part) > 3 && strings.EqualFold(part[:4], GitDirName) {
+		// For historical reasons, file names that end in spaces or periods are
+		// automatically trimmed. Therefore, `.git . . ./` is a valid way to refer
+		// to `.git/`.
+		if windowsPathReplacer.Replace(part[4:]) == "" {
+			return false
+		}
+
+		// For yet other historical reasons, NTFS supports so-called "Alternate Data
+		// Streams", i.e. metadata associated with a given file, referred to via
+		// `<filename>:<stream-name>:<stream-type>`. There exists a default stream
+		// type for directories, allowing `.git/` to be accessed via
+		// `.git::$INDEX_ALLOCATION/`.
+		//
+		// For performance reasons, _all_ Alternate Data Streams of `.git/` are
+		// forbidden, not just `::$INDEX_ALLOCATION`.
+		if len(part) > 4 && part[4:5] == ":" {
+			return false
+		}
+	}
+	return true
+}
+
+func (w *Worktree) validChange(ch merkletrie.Change) error {
+	action, err := ch.Action()
+	if err != nil {
+		return nil
+	}
+
+	switch action {
+	case merkletrie.Delete:
+		return validPath(ch.From.String())
+	case merkletrie.Insert:
+		return validPath(ch.To.String())
+	case merkletrie.Modify:
+		return validPath(ch.From.String(), ch.To.String())
+	}
+
+	return nil
 }
 
 func (w *Worktree) checkoutChange(ch merkletrie.Change, t *object.Tree, idx *indexBuilder) error {
@@ -420,7 +611,7 @@ func (w *Worktree) checkoutChange(ch merkletrie.Change, t *object.Tree, idx *ind
 }
 
 func (w *Worktree) containsUnstagedChanges() (bool, error) {
-	ch, err := w.diffStagingWithWorktree(false)
+	ch, err := w.diffStagingWithWorktree(false, true)
 	if err != nil {
 		return false, err
 	}
@@ -525,7 +716,7 @@ func (w *Worktree) checkoutChangeRegularFile(name string,
 			return err
 		}
 
-		return w.addIndexFromFile(name, e.Hash, idx)
+		return w.addIndexFromFile(name, e.Hash, f.Mode, idx)
 	}
 
 	return nil
@@ -561,6 +752,11 @@ func (w *Worktree) checkoutFile(f *object.File) (err error) {
 }
 
 func (w *Worktree) checkoutFileSymlink(f *object.File) (err error) {
+	// https://github.com/git/git/commit/10ecfa76491e4923988337b2e2243b05376b40de
+	if strings.EqualFold(f.Name, gitmodulesFile) {
+		return ErrGitModulesSymlink
+	}
+
 	from, err := f.Reader()
 	if err != nil {
 		return
@@ -603,14 +799,9 @@ func (w *Worktree) addIndexFromTreeEntry(name string, f *object.TreeEntry, idx *
 	return nil
 }
 
-func (w *Worktree) addIndexFromFile(name string, h plumbing.Hash, idx *indexBuilder) error {
+func (w *Worktree) addIndexFromFile(name string, h plumbing.Hash, mode filemode.FileMode, idx *indexBuilder) error {
 	idx.Remove(name)
 	fi, err := w.Filesystem.Lstat(name)
-	if err != nil {
-		return err
-	}
-
-	mode, err := filemode.NewFromOSFileMode(fi.Mode())
 	if err != nil {
 		return err
 	}
@@ -936,7 +1127,7 @@ func rmFileAndDirsIfEmpty(fs billy.Filesystem, name string) error {
 	dir := filepath.Dir(name)
 	for {
 		removed, err := removeDirIfEmpty(fs, dir)
-		if err != nil {
+		if err != nil && !os.IsNotExist(err) {
 			return err
 		}
 

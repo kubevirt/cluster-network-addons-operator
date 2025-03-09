@@ -11,7 +11,7 @@ package merkletrie
 // corresponding changes and move the iterators further over both
 // trees.
 //
-// The table bellow show all the possible comparison results, along
+// The table below shows all the possible comparison results, along
 // with what changes should we produce and how to advance the
 // iterators.
 //
@@ -55,7 +55,7 @@ package merkletrie
 // Here is a full list of all the cases that are similar and how to
 // merge them together into more general cases.  Each general case
 // is labeled with an uppercase letter for further reference, and it
-// is followed by the pseudocode of the checks you have to perfrom
+// is followed by the pseudocode of the checks you have to perform
 // on both noders to see if you are in such a case, the actions to
 // perform (i.e. what changes to output) and how to advance the
 // iterators of each tree to continue the comparison process.

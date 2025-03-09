@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/internal/common"
-	"github.com/skeema/knownhosts"
 
 	"github.com/kevinburke/ssh_config"
 	"golang.org/x/crypto/ssh"
@@ -49,7 +48,9 @@ type runner struct {
 func (r *runner) Command(cmd string, ep *transport.Endpoint, auth transport.AuthMethod) (common.Command, error) {
 	c := &command{command: cmd, endpoint: ep, config: r.config}
 	if auth != nil {
-		c.setAuth(auth)
+		if err := c.setAuth(auth); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := c.connect(); err != nil {
@@ -125,17 +126,25 @@ func (c *command) connect() error {
 	}
 	hostWithPort := c.getHostWithPort()
 	if config.HostKeyCallback == nil {
-		kh, err := newKnownHosts()
+		db, err := newKnownHostsDb()
 		if err != nil {
 			return err
 		}
-		config.HostKeyCallback = kh.HostKeyCallback()
-		config.HostKeyAlgorithms = kh.HostKeyAlgorithms(hostWithPort)
+
+		config.HostKeyCallback = db.HostKeyCallback()
+		config.HostKeyAlgorithms = db.HostKeyAlgorithms(hostWithPort)
 	} else if len(config.HostKeyAlgorithms) == 0 {
 		// Set the HostKeyAlgorithms based on HostKeyCallback.
 		// For background see https://github.com/go-git/go-git/issues/411 as well as
 		// https://github.com/golang/go/issues/29286 for root cause.
-		config.HostKeyAlgorithms = knownhosts.HostKeyAlgorithms(config.HostKeyCallback, hostWithPort)
+		db, err := newKnownHostsDb()
+		if err != nil {
+			return err
+		}
+
+		// Note that the knownhost database is used, as it provides additional functionality
+		// to handle ssh cert-authorities.
+		config.HostKeyAlgorithms = db.HostKeyAlgorithms(hostWithPort)
 	}
 
 	overrideConfig(c.config, config)
@@ -168,7 +177,7 @@ func dial(network, addr string, proxyOpts transport.ProxyOptions, config *ssh.Cl
 	defer cancel()
 
 	var conn net.Conn
-	var err error
+	var dialErr error
 
 	if proxyOpts.URL != "" {
 		proxyUrl, err := proxyOpts.FullURL()
@@ -186,12 +195,12 @@ func dial(network, addr string, proxyOpts transport.ProxyOptions, config *ssh.Cl
 			return nil, fmt.Errorf("expected ssh proxy dialer to be of type %s; got %s",
 				reflect.TypeOf(ctxDialer), reflect.TypeOf(dialer))
 		}
-		conn, err = ctxDialer.DialContext(ctx, "tcp", addr)
+		conn, dialErr = ctxDialer.DialContext(ctx, "tcp", addr)
 	} else {
-		conn, err = proxy.Dial(ctx, network, addr)
+		conn, dialErr = proxy.Dial(ctx, network, addr)
 	}
-	if err != nil {
-		return nil, err
+	if dialErr != nil {
+		return nil, dialErr
 	}
 
 	c, chans, reqs, err := ssh.NewClientConn(conn, addr, config)

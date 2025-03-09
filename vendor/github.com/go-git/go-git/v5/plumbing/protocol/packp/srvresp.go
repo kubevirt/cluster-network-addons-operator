@@ -101,12 +101,14 @@ func (r *ServerResponse) decodeLine(line []byte) error {
 		return fmt.Errorf("unexpected flush")
 	}
 
-	if bytes.Equal(line[0:3], ack) {
-		return r.decodeACKLine(line)
-	}
+	if len(line) >= 3 {
+		if bytes.Equal(line[0:3], ack) {
+			return r.decodeACKLine(line)
+		}
 
-	if bytes.Equal(line[0:3], nak) {
-		return nil
+		if bytes.Equal(line[0:3], nak) {
+			return nil
+		}
 	}
 
 	return fmt.Errorf("unexpected content %q", string(line))
@@ -118,6 +120,9 @@ func (r *ServerResponse) decodeACKLine(line []byte) error {
 	}
 
 	sp := bytes.Index(line, []byte(" "))
+	if sp+41 > len(line) {
+		return fmt.Errorf("malformed ACK %q", line)
+	}
 	h := plumbing.NewHash(string(line[sp+1 : sp+41]))
 	r.ACKs = append(r.ACKs, h)
 	return nil
