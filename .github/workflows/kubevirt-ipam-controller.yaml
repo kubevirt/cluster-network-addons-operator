@@ -25,7 +25,7 @@ jobs:
           azure-cli aspnetcore-* dotnet-* ghc-* firefox \
           google-chrome-stable \
           llvm-* microsoft-edge-stable mono-* \
-          msbuild mysql-server-core-* php-* php7* \
+          mysql-server-core-* php-* php7* \
           powershell temurin-* zulu-*
 
     - name: Run e2e tests
