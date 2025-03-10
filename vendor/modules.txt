@@ -2038,7 +2038,7 @@ k8s.io/kubectl/pkg/util/slice
 k8s.io/kubectl/pkg/util/templates
 k8s.io/kubectl/pkg/util/term
 k8s.io/kubectl/pkg/validation
-# k8s.io/kubernetes v1.31.0
+# k8s.io/kubernetes v1.31.6
 ## explicit; go 1.22.0
 k8s.io/kubernetes/pkg/apis/core
 # k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
