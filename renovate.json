@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "baseBranches": ["release-0.97", "release-0.95", "release-0.93", "release-0.91", "release-0.89", "release-0.79", "main"],
+  "baseBranches": ["main"],
   "prConcurrentLimit": 3,
   "lockFileMaintenance": {
     "enabled": false
