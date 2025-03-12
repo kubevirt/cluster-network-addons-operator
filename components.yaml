@@ -1,10 +1,10 @@
 components:
   bridge-marker:
     url: https://github.com/kubevirt/bridge-marker
-    commit: 6f184fa033208faf897a8fbd3aecc85811dca8bb
+    commit: 5fb005a5aa5e2d9d5bec2814e680545d3ad67332
     branch: main
     update-policy: static
-    metadata: 0.11.2
+    metadata: 0.12.1
   kube-secondary-dns:
     url: https://github.com/kubevirt/kubesecondarydns
     commit: 3815007442f21ca39c7c93ead6ce4addeb9e4d29
