@@ -14,7 +14,7 @@ RELEASES=()
 GOMOD=()
 
 REPO+=("https://raw.githubusercontent.com/kubevirt/cluster-network-addons-operator")
-RELEASES+=("main release-0.89 release-0.85 release-0.79")
+RELEASES+=("main release-0.97 release-0.95 release-0.93 release-0.91 release-0.89 release-0.79")
 GOMOD+=("go.mod")
 
 REPO+=("https://raw.githubusercontent.com/containernetworking/plugins")
@@ -26,11 +26,11 @@ RELEASES+=("main")
 GOMOD+=("go.mod")
 
 REPO+=("https://raw.githubusercontent.com/k8snetworkplumbingwg/ovs-cni")
-RELEASES+=("main release-0.31 release-0.29")
+RELEASES+=("main release-0.36 release-0.34 release-0.32 release-0.31 release-0.29")
 GOMOD+=("go.mod")
 
 REPO+=("https://raw.githubusercontent.com/k8snetworkplumbingwg/kubemacpool")
-RELEASES+=("main release-0.41 release-0.40 release-0.39")
+RELEASES+=("main release-0.45 release-0.44 release-0.43 release-0.42 release-0.41 release-0.39")
 GOMOD+=("go.mod")
 
 REPO+=("https://raw.githubusercontent.com/kubevirt/kubesecondarydns")
