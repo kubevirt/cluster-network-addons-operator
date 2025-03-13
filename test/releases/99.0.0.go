@@ -37,7 +37,7 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:84cfbfb4e361a9ab39f16db0b51b6b7fdf4171c325fb6efb1274bf92ead23586",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:943165a3acddc307dc44d02a8aa77c9f5e921966e1bcd93cfc0aaa4f158509e2",
 			},
 			{
 				ParentName: "kubemacpool-mac-controller-manager",
@@ -49,7 +49,7 @@ func init() {
 				ParentName: "kubemacpool-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:84cfbfb4e361a9ab39f16db0b51b6b7fdf4171c325fb6efb1274bf92ead23586",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:943165a3acddc307dc44d02a8aa77c9f5e921966e1bcd93cfc0aaa4f158509e2",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
