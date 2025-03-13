@@ -7,10 +7,10 @@ components:
     metadata: 0.11.1
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
-    commit: e9530c4e70d515c3e2b9c0c231762736801242f8
+    commit: 655e1126f843d309bde9d1cfc120d37564066d79
     branch: release-0.39
     update-policy: tagged
-    metadata: v0.39.3
+    metadata: v0.39.4
   linux-bridge:
     url: https://github.com/containernetworking/plugins
     commit: c10af01dfb619b37ad631a84b823f99510151ee3
