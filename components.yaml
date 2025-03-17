@@ -13,10 +13,10 @@ components:
     metadata: v0.0.16
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
-    commit: 65a48a99deb5b8b1452927709de3efb2d32d8dbd
+    commit: 819b2c884399d2d87a5ecbad0d6eec2626891930
     branch: release-0.45
     update-policy: latest
-    metadata: v0.45.1
+    metadata: v0.45.1-1-g819b2c8
   kubevirt-ipam-controller:
     url: https://github.com/kubevirt/ipam-extensions
     commit: a1ee313f0ee9653190bf6dc1f850bdfc7cb209b5
