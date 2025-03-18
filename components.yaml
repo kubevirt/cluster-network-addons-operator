@@ -15,7 +15,7 @@ components:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: 9be6f3e0b82b8b9796fe039d501668daa22d261f
     branch: main
-    update-policy: tagged
+    update-policy: latest
     metadata: v0.46.0
   kubevirt-ipam-controller:
     url: https://github.com/kubevirt/ipam-extensions
