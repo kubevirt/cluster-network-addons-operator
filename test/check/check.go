@@ -71,7 +71,7 @@ func CheckComponentsRemoval(components []Component) {
 		By(fmt.Sprintf("Checking that component %s has been removed", component.ComponentName))
 		Eventually(func() error {
 			return checkForComponentRemoval(&component)
-		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout\ncluster Info:\n%v", component.ComponentName, gatherClusterInfo()))
+		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout", component.ComponentName))
 	}
 }
 
@@ -83,13 +83,13 @@ func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
+		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition"))
 	} else {
-		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
+		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state"))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
+		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value"))
 	}
 }
 
@@ -175,13 +175,13 @@ func CheckConfigVersions(gvk schema.GroupVersionKind, operatorVersion, observedV
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
+		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions"))
 	} else {
-		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
+		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state"))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
+		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values"))
 	}
 }
 
@@ -495,7 +495,7 @@ func CheckForGenericDeployment(name, namespace string, checkVersionLabels, check
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v\ncluster Info:\n%v", namespace, name, string(manifest), gatherClusterInfo())
+		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v", namespace, name, string(manifest))
 	}
 
 	return nil
@@ -812,7 +812,7 @@ func checkConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 			if condition.Status == corev1.ConditionStatus(conditionStatus) {
 				return nil
 			}
-			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q, obtained config:\n%vcluster Info:\n%v", conditionType, conditionStatus, condition.Status, configToYaml(gvk), gatherClusterInfo())
+			return fmt.Errorf("condition %q is not in expected state %q, obtained state %q", conditionType, conditionStatus, condition.Status)
 		}
 	}
 
@@ -824,37 +824,12 @@ func checkConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 	return fmt.Errorf("condition %q has not been found in the config", conditionType)
 }
 
-func gatherClusterInfo() string {
-	podsStatus := cnaoPodsStatus()
-	describeAll := describeAll()
-	return strings.Join([]string{podsStatus, describeAll}, "\n")
-}
-
-func cnaoPodsStatus() string {
-	podsStatus, stderr, err := Kubectl("-n", components.Namespace, "get", "pods")
-	return fmt.Sprintf("CNAO pods Status:\n%v\nerror:\n%v", podsStatus+stderr, err)
-}
-
-func describeAll() string {
-	description, stderr, err := Kubectl("-n", components.Namespace, "describe", "all")
-	return fmt.Sprintf("describe all CNAO components:\n%v\nerror:\n%v", description+stderr, err)
-}
-
 func isNotSupportedKind(err error) bool {
 	return strings.Contains(err.Error(), "no kind is registered for the type")
 }
 
 func isKindNotFound(err error) bool {
 	return strings.Contains(err.Error(), "no matches for kind")
-}
-
-func configToYaml(gvk schema.GroupVersionKind) string {
-	config := GetConfig(gvk)
-	manifest, err := yaml.Marshal(config)
-	if err != nil {
-		panic(err)
-	}
-	return string(manifest)
 }
 
 // CheckUnicast return an error in case that the given addresses support multicast or is invalid.
