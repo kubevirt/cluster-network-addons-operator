@@ -41,7 +41,6 @@ const (
 	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:c79a41a65884c03406cb993005d6258c2c33215d4d55299aaeacda444e27280f"
 	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
 	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:fd7c38e129ea4ed8a86d1801c9e1ca387802376fc4abc0b0d228d4278f448ecd"
-	PasstBindingCNIImageDefault        = "ghcr.io/kubevirt/passt-binding-cni@sha256:f3fea2ec66a26850489197edf7c85d074eb78bbac52916b10016ac0de8ef7c14"
 )
 
 type AddonsImages struct {
@@ -56,7 +55,6 @@ type AddonsImages struct {
 	KubeSecondaryDNS       string
 	CoreDNS                string
 	KubevirtIpamController string
-	PasstBindingCNI        string
 }
 
 type RelatedImage struct {
@@ -114,9 +112,6 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.KubevirtIpamController == "" {
 		ai.KubevirtIpamController = KubevirtIpamControllerImageDefault
 	}
-	if ai.PasstBindingCNI == "" {
-		ai.PasstBindingCNI = PasstBindingCNIImageDefault
-	}
 	return ai
 }
 
@@ -133,7 +128,6 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.KubeSecondaryDNS,
 		ai.CoreDNS,
 		ai.KubevirtIpamController,
-		ai.PasstBindingCNI,
 	)
 }
 
@@ -254,10 +248,6 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "KUBEVIRT_IPAM_CONTROLLER_IMAGE",
 									Value: addonsImages.KubevirtIpamController,
-								},
-								{
-									Name:  "PASST_BINDING_CNI_IMAGE",
-									Value: addonsImages.PasstBindingCNI,
 								},
 								{
 									Name:  "OPERATOR_IMAGE",

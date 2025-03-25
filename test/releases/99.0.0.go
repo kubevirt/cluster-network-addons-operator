@@ -86,12 +86,6 @@ func init() {
 				Name:       "manager",
 				Image:      "ghcr.io/kubevirt/ipam-controller@sha256:fd7c38e129ea4ed8a86d1801c9e1ca387802376fc4abc0b0d228d4278f448ecd",
 			},
-			{
-				ParentName: "passt-binding-cni",
-				ParentKind: "DaemonSet",
-				Name:       "installer",
-				Image:      "ghcr.io/kubevirt/passt-binding-cni@sha256:f3fea2ec66a26850489197edf7c85d074eb78bbac52916b10016ac0de8ef7c14",
-			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
 			KubeMacPool:            &cnao.KubeMacPool{},
