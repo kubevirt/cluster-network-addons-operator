@@ -92,7 +92,6 @@ var (
 		ClusterRole:        "kubevirt-ipam-controller-manager-role",
 		ClusterRoleBinding: "kubevirt-ipam-controller-manager-rolebinding",
 		Deployments:        []string{"kubevirt-ipam-controller-manager"},
-		DaemonSets:         []string{"passt-binding-cni"},
 	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,

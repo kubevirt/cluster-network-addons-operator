@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -103,8 +104,11 @@ func DeleteOwnedObject(ctx context.Context, client k8sclient.Client, obj *uns.Un
 	existing.SetGroupVersionKind(gvk)
 	err := client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, existing)
 	if err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(err, "could not retrieve existing %s", objDesc)
+		// Fail only if the error is not one of the followings:
+		// - not found (nothing to do since it's already gone)
+		// - the type does not exist (if the resource type does not exist then there is no resource at all)
+		if !apierrors.IsNotFound(err) && !apimeta.IsNoMatchError(err) {
+			return errors.Wrapf(err, "failed retrieving owned %s", objDesc)
 		}
 		return nil
 	}
@@ -114,7 +118,7 @@ func DeleteOwnedObject(ctx context.Context, client k8sclient.Client, obj *uns.Un
 	}
 	log.Printf("Handling deletion of %s", objDesc)
 	if err := client.Delete(ctx, existing); err != nil {
-		return errors.Wrapf(err, "could not delete %s", objDesc)
+		return errors.Wrapf(err, "failed deleting owned %s", objDesc)
 	}
 
 	return nil

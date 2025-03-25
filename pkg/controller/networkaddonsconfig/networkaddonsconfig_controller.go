@@ -425,7 +425,7 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 
 // Generate the removal object list
 func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *cnao.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *cnao.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
-	objsToRemove, err := network.RenderObjsToRemove(prev, &networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
+	objsToRemove, err := network.RenderObjsToRemove(r.scheme, prev, &networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
 		log.Printf("failed to render for removal: %v", err)
 		err = errors.Wrapf(err, "failed to render for removal")

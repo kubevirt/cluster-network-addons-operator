@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 
+	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
+
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
@@ -19,7 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/kubectl/pkg/scheme"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -182,7 +183,7 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 }
 
 // RenderObjsToRemove creates list of components to be removed
-func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	log.Print("starting rendering objects to delete phase")
 	objsToRemove := []*unstructured.Unstructured{}
 
@@ -278,11 +279,18 @@ func RenderObjsToRemove(prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir st
 	objsToRemove = objsToRemoveWithoutCRDs
 
 	// Remove old CNAO managed kubernetes-nmstate
-	oldKNMStateObjects, err := cnaoKNMStateObjects(operandNamespace)
+	oldKNMStateObjects, err := cnaoKNMStateObjects(scheme, operandNamespace)
 	if err != nil {
 		return nil, err
 	}
 	objsToRemove = append(objsToRemove, oldKNMStateObjects...)
+
+	// Remove old IPAM controller daemonset that was installing passt
+	oldIPAMControllerPasstObjects, err := cnaoIPAMControllerPasstObjects(scheme, operandNamespace)
+	if err != nil {
+		return nil, err
+	}
+	objsToRemove = append(objsToRemove, oldIPAMControllerPasstObjects...)
 
 	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemove))
 	return objsToRemove, nil
@@ -335,7 +343,7 @@ func cleanUpNamespaceLabels(ctx context.Context, client k8sclient.Client) []erro
 	return []error{}
 }
 
-func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured, error) {
+func cnaoKNMStateObjects(scheme *runtime.Scheme, operandNamespace string) ([]*unstructured.Unstructured, error) {
 	objects := []runtime.Object{
 		&v1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "nmstate-handler"},
@@ -374,10 +382,25 @@ func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured,
 			ObjectMeta: metav1.ObjectMeta{Name: "nmstate"},
 		},
 	}
+	return convertStructuredToUnstructured(scheme, objects)
+}
 
+func cnaoIPAMControllerPasstObjects(scheme *runtime.Scheme, operandNamespace string) ([]*unstructured.Unstructured, error) {
+	objects := []runtime.Object{
+		&appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{Namespace: operandNamespace, Name: "passt-binding-cni"},
+		},
+		&k8snetworkplumbingwgv1.NetworkAttachmentDefinition{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "primary-udn-kubevirt-binding"},
+		},
+	}
+	return convertStructuredToUnstructured(scheme, objects)
+}
+
+func convertStructuredToUnstructured(scheme *runtime.Scheme, objects []runtime.Object) ([]*unstructured.Unstructured, error) {
 	convertedObjects := []*unstructured.Unstructured{}
 	for _, object := range objects {
-		err := addTypeInformationToObject(object)
+		err := addTypeInformationToObject(scheme, object)
 		if err != nil {
 			return nil, err
 		}
@@ -392,8 +415,8 @@ func cnaoKNMStateObjects(operandNamespace string) ([]*unstructured.Unstructured,
 
 // addTypeInformationToObject adds TypeMeta information to a runtime.Object based upon the loaded scheme.Scheme
 // Related to issue https://github.com/kubernetes/kubernetes/issues/3030
-func addTypeInformationToObject(obj runtime.Object) error {
-	gvks, _, err := scheme.Scheme.ObjectKinds(obj)
+func addTypeInformationToObject(scheme *runtime.Scheme, obj runtime.Object) error {
+	gvks, _, err := scheme.ObjectKinds(obj)
 	if err != nil {
 		return fmt.Errorf("missing apiVersion or kind and cannot assign it; %w", err)
 	}

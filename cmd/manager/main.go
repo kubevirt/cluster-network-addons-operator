@@ -13,6 +13,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
+	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
+
 	"github.com/machadovilaca/operator-observability/pkg/operatormetrics"
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/spf13/pflag"
@@ -41,6 +43,7 @@ func init() {
 
 	utilruntime.Must(cnaov1.AddToScheme(scheme))
 	utilruntime.Must(cnaov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(k8snetworkplumbingwgv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
