@@ -60,13 +60,13 @@ func init() {
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:54be8fcacee50af64deafa9e99f3fe079033630c00c4ed9f74d17b0d91009f10",
+				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:2ec5294e18b7d843d763b992c2a26a50253a186e91bc9e7f53f74c741cba17aa",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:54be8fcacee50af64deafa9e99f3fe079033630c00c4ed9f74d17b0d91009f10",
+				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:2ec5294e18b7d843d763b992c2a26a50253a186e91bc9e7f53f74c741cba17aa",
 			},
 			{
 				ParentName: "secondary-dns",
