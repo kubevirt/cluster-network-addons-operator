@@ -369,6 +369,14 @@ func checkForComponentRemoval(component *Component) error {
 		errsAppend(checkForSecurityContextConstraintsRemoval(component.SecurityContextConstraints))
 	}
 
+	for _, daemonSet := range component.DaemonSets {
+		errsAppend(checkForDaemonSetRemoval(daemonSet))
+	}
+
+	for _, deployment := range component.Deployments {
+		errsAppend(checkForDeploymentRemoval(deployment))
+	}
+
 	if component.Secret != "" {
 		errsAppend(checkForSecretRemoval(component.Secret))
 	}
@@ -681,6 +689,16 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 		return nil
 	}
 	return isNotFound("SecurityContextConstraints", name, err)
+}
+
+func checkForDaemonSetRemoval(name string) error {
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &appsv1.DaemonSet{})
+	return isNotFound("DaemonSets", name, err)
+}
+
+func checkForDeploymentRemoval(name string) error {
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &appsv1.Deployment{})
+	return isNotFound("Deployments", name, err)
 }
 
 func checkForSecretRemoval(name string) error {
