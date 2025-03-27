@@ -31,7 +31,7 @@ components:
     metadata: v3.9.1
   ovs-cni:
     url: https://github.com/k8snetworkplumbingwg/ovs-cni
-    commit: 7374ab88a4e9a16d44b824d214bcceeeaa275275
+    commit: d13943fca13120ee1414edcdb2319c8b971344ba
     branch: release-0.29
     update-policy: tagged
-    metadata: v0.29.5
+    metadata: v0.29.6
