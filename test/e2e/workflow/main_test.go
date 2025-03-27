@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -16,11 +17,17 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
+	"github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
 var operatorVersion string
 
+var cnaoReporter *reporter.KubernetesCNAOReporter
+
 func TestE2E(t *testing.T) {
+	cnaoReporter = reporter.New("_out/e2e/workflow/", components.Namespace)
+	cnaoReporter.Cleanup()
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "workflow Test Suite")
 }
@@ -40,6 +47,13 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	CheckOperatorPodStability(time.Minute)
+})
+
+var _ = JustAfterEach(func() {
+	if CurrentSpecReport().Failed() {
+		failureCount := cnaoReporter.DumpLogs()
+		By(fmt.Sprintf("Test failed, collected logs and artifacts, failure count %d", failureCount))
+	}
 })
 
 var _ = AfterEach(func() {

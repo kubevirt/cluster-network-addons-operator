@@ -1,66 +1,76 @@
 package reporter
 
 import (
-	"context"
 	"fmt"
-	"io"
-	"io/ioutil"
+	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
+	"os"
 	"strings"
-	"time"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 )
 
-func writePodsLogs(writer io.Writer, namespace string, sinceTime time.Time) {
-	podLogOpts := corev1.PodLogOptions{}
-	podLogOpts.SinceTime = &metav1.Time{Time: sinceTime}
-	podList := &corev1.PodList{}
-	err := testenv.Client.List(context.TODO(), podList, &dynclient.ListOptions{Namespace: namespace})
-	Expect(err).ToNot(HaveOccurred())
-	podsClientset := testenv.KubeClient.CoreV1().Pods(namespace)
-
-	for _, pod := range podList.Items {
-		for _, container := range pod.Spec.Containers {
-			podLogOpts.Container = container.Name
-			req := podsClientset.GetLogs(pod.Name, &podLogOpts)
-			podLogs, err := req.Stream(context.TODO())
-			if err != nil {
-				io.WriteString(GinkgoWriter, fmt.Sprintf("error in opening stream: %v\n", err))
-				continue
-			}
-			defer podLogs.Close()
-			rawLogs, err := ioutil.ReadAll(podLogs)
-			if err != nil {
-				io.WriteString(GinkgoWriter, fmt.Sprintf("error reading CNAO logs: %v\n", err))
-				continue
-			}
-			formattedLogs := strings.Replace(string(rawLogs), "\\n", "\n", -1)
-			io.WriteString(writer, formattedLogs)
+// Cleanup cleans up the current content of the artifactsDir
+func (r *KubernetesCNAOReporter) Cleanup() {
+	// clean up artifacts from previous run
+	if r.artifactsDir != "" {
+		relativeDir := getRootRelativePath(r.artifactsDir)
+		if err := os.RemoveAll(relativeDir); err != nil {
+			panic(err)
+		}
+		if err := os.MkdirAll(relativeDir, 0755); err != nil {
+			panic(fmt.Sprintf("Error creating directory: %v", err))
 		}
 	}
 }
 
-func podLogsWriter(namespace string, sinceTime time.Time) func(io.Writer) {
-	return func(w io.Writer) {
-		writePodsLogs(w, namespace, sinceTime)
+func (r *KubernetesCNAOReporter) logCommand(args []string, topic string) {
+	stdout, stderr, err := kubectl.Kubectl(args...)
+	if err != nil {
+		fmt.Printf("Error running command kubectl %v, err %v, stderr %s\n", args, err, stderr)
+		return
+	}
+
+	fileName := fmt.Sprintf(r.artifactsDir+"%d_%s.log", r.failureCount, topic)
+	file, err := os.Create(fileName)
+	if err != nil {
+		fmt.Printf("Error running command %v, err %v\n", args, err)
+		return
+	}
+	defer file.Close()
+
+	if _, err = fmt.Fprint(file, fmt.Sprintf("kubectl %s\n%s\n", strings.Join(args, " "), stdout)); err != nil {
+		fmt.Printf("Error writing log %s to file, err %v\n", fileName, err)
 	}
 }
 
-func writeString(writer io.Writer, message string) {
-	writer.Write([]byte(message))
+func (r *KubernetesCNAOReporter) logNamespacePods() {
+	args := []string{"get", "pods", "-n", r.namespace, "--no-headers", "-o=custom-columns=NAME:.metadata.name"}
+	cnaoPods, stderr, err := kubectl.Kubectl(args...)
+	if err != nil {
+		fmt.Printf("Error running command kubectl %v, stderr %s, err %v\n", args, stderr, err)
+		return
+	}
+
+	for _, podName := range strings.Split(cnaoPods, "\n") {
+		if podName == "" {
+			continue
+		}
+		args = []string{"get", "pod", podName, "-n", r.namespace, "--no-headers", "-o=jsonpath='{.spec.containers[*].name}'"}
+
+		podContainers, stderr, err := kubectl.Kubectl(args...)
+		if err != nil {
+			fmt.Printf("Error running command kubectl %v, stderr %s, err %v\n", args, stderr, err)
+			return
+		}
+		podContainers = strings.Trim(podContainers, "'")
+		for _, containerName := range strings.Split(podContainers, " ") {
+			r.logCommand([]string{"logs", "-n", r.namespace, podName, "-c", containerName}, podName+"_"+containerName)
+		}
+	}
 }
 
-func writeMessage(writer io.Writer, message string, args ...string) {
-	formattedMessage := message
-	if len(args) > 0 {
-		formattedMessage = fmt.Sprintf(formattedMessage, args)
+func getRootRelativePath(artifactsDir string) string {
+	rootDepth := strings.Count(artifactsDir, "/")
+	for i := 0; i < rootDepth; i++ {
+		artifactsDir = "../" + artifactsDir
 	}
-	writeString(writer, formattedMessage)
+	return artifactsDir
 }

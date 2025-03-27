@@ -5,7 +5,6 @@ _out
 build/operator/_output
 build/operator/_test
 build/_output
-test_logs
 
 # Temporary local cluster files
 _kubevirtci/
