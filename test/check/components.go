@@ -88,12 +88,10 @@ var (
 		Deployments:        []string{"secondary-dns"},
 	}
 	KubevirtIpamController = Component{
-		ComponentName:               "KubevirtIpamController",
-		ClusterRole:                 "kubevirt-ipam-controller-manager-role",
-		ClusterRoleBinding:          "kubevirt-ipam-controller-manager-rolebinding",
-		Deployments:                 []string{"kubevirt-ipam-controller-manager"},
-		DaemonSets:                  []string{"passt-binding-cni"},
-		NetworkAttachmentDefinition: "primary-udn-kubevirt-binding",
+		ComponentName:      "KubevirtIpamController",
+		ClusterRole:        "kubevirt-ipam-controller-manager-role",
+		ClusterRoleBinding: "kubevirt-ipam-controller-manager-rolebinding",
+		Deployments:        []string{"kubevirt-ipam-controller-manager"},
 	}
 	AllComponents = []Component{
 		KubeMacPoolComponent,

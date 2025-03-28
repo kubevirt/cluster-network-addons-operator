@@ -252,7 +252,6 @@ func main() {
 	multusDynamicNetworksImage := flag.String("multus-dynamic-networks-image", components.MultusDynamicNetworksImageDefault, "The multus dynamic networks controller image managed by CNA")
 	kubeSecondaryDNSImage := flag.String("kube-secondary-dns-image", components.KubeSecondaryDNSImageDefault, "The kubesecondarydns-image managed by CNA")
 	kubevirtIpamControllerImage := flag.String("kubevirt-ipam-controller-image", components.KubevirtIpamControllerImageDefault, "The kubevirtipamcontroller-image managed by CNA")
-	passtBindingCNIImage := flag.String("passt-binding-cni-image", components.PasstBindingCNIImageDefault, "The passt binding cni image managed by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -280,7 +279,6 @@ func main() {
 			KubeSecondaryDNS:       *kubeSecondaryDNSImage,
 			KubevirtIpamController: *kubevirtIpamControllerImage,
 			CoreDNS:                *coreDNSImage,
-			PasstBindingCNI:        *passtBindingCNIImage,
 		}).FillDefaults(),
 	}
 
