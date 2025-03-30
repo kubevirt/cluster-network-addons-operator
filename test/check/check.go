@@ -75,6 +75,58 @@ func CheckComponentsRemoval(components []Component) {
 	}
 }
 
+func getConfigComponentsMap(gvk schema.GroupVersionKind) (map[string]struct{}, error) {
+	config := GetConfig(gvk)
+	if config == nil {
+		return nil, fmt.Errorf("config not found")
+	}
+	configV1 := ConvertToConfigV1(config)
+	existingComponentsMap := map[string]struct{}{}
+
+	existingComponentsMap[MonitoringComponent.ComponentName] = struct{}{}
+
+	if configV1.Spec.KubeMacPool != nil {
+		existingComponentsMap[KubeMacPoolComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.KubevirtIpamController != nil {
+		existingComponentsMap[KubevirtIpamController.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.KubeSecondaryDNS != nil {
+		existingComponentsMap[KubeSecondaryDNSComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.LinuxBridge != nil {
+		existingComponentsMap[LinuxBridgeComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.MacvtapCni != nil {
+		existingComponentsMap[MacvtapComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.Ovs != nil {
+		existingComponentsMap[OvsComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.Multus != nil {
+		existingComponentsMap[MultusComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.MultusDynamicNetworks != nil {
+		existingComponentsMap[MultusDynamicNetworks.ComponentName] = struct{}{}
+	}
+	return existingComponentsMap, nil
+}
+
+func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) {
+	Eventually(func() error {
+		deployedComponents, err := getConfigComponentsMap(gvk)
+		if err != nil {
+			return err
+		}
+		for _, component := range components {
+			if _, exist := deployedComponents[component.ComponentName]; !exist {
+				return fmt.Errorf("component %s is not updated in config", component.ComponentName)
+			}
+		}
+		return nil
+	}).WithPolling(10 * time.Millisecond).WithTimeout(5 * time.Minute).Should(Succeed())
+}
+
 func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
