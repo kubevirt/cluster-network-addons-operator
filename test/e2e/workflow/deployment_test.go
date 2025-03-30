@@ -468,6 +468,7 @@ func testConfigUpdate(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddons
 // available on operator-sdk test framework:
 // https://github.com/operator-framework/operator-sdk/issues/2655
 func checkConfigChange(gvk schema.GroupVersionKind, components []Component, while func()) {
+	conditionTimestampsBeforeChange := CaptureConditionTimestamps(gvk)
 
 	// Start the function with a little delay to give the Progressing check a better chance
 	// of catching the event
@@ -479,13 +480,13 @@ func checkConfigChange(gvk schema.GroupVersionKind, components []Component, whil
 	if len(components) == 0 {
 		// Wait until Available condition is reported. Should be fast when no components are
 		// being deployed
-		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 5*time.Minute, CheckDoNotRepeat)
+		CheckConfigConditionChangedAfter(gvk, ConditionAvailable, ConditionTrue, conditionTimestampsBeforeChange, 5*time.Minute, CheckDoNotRepeat)
 	} else {
 		CheckConfigComponents(gvk, components)
 		// Wait until Available condition is reported. It may take a few minutes the first time
 		// we are pulling component images to the Node
-		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-		CheckConfigCondition(gvk, ConditionProgressing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+		CheckConfigConditionChangedAfter(gvk, ConditionAvailable, ConditionTrue, conditionTimestampsBeforeChange, 15*time.Minute, CheckDoNotRepeat)
+		CheckConfigConditionChangedAfter(gvk, ConditionProgressing, ConditionFalse, conditionTimestampsBeforeChange, CheckImmediately, CheckDoNotRepeat)
 
 		// Check that all requested components have been deployed
 		CheckComponentsDeployment(components)
