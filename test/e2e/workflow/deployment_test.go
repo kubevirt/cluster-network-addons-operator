@@ -129,48 +129,48 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			configSpec := cnao.NetworkAddonsConfigSpec{}
 			components := []Component{}
 
-			// Deploy initial empty config
+			By("Deploy initial empty config")
 			testConfigCreate(gvk, configSpec, components)
 
-			// Deploy Multus component
+			By("Add Multus component")
 			configSpec.Multus = &cnao.Multus{}
 			components = append(components, MultusComponent)
 			testConfigUpdate(gvk, configSpec, components)
 			CheckModifiedEvent(gvk)
 			CheckProgressingEvent(gvk)
 
-			// Add Linux bridge component
+			By("Add Linux-bridge component")
 			configSpec.LinuxBridge = &cnao.LinuxBridge{}
 			components = append(components, LinuxBridgeComponent)
 			testConfigUpdate(gvk, configSpec, components)
 
-			// Add KubeMacPool component
+			By("Add KubeMacPool component")
 			configSpec.KubeMacPool = &cnao.KubeMacPool{}
 			components = append(components, KubeMacPoolComponent)
 			testConfigUpdate(gvk, configSpec, components)
 
-			// Add Ovs component
+			By("Add OVS-CNI component")
 			configSpec.Ovs = &cnao.Ovs{}
 			components = append(components, OvsComponent)
 			testConfigUpdate(gvk, configSpec, components)
 
-			// Add Macvtap component
+			By("Add Macvtap component")
 			configSpec.MacvtapCni = &cnao.MacvtapCni{}
 			components = append(components, MacvtapComponent)
 			testConfigUpdate(gvk, configSpec, components)
 
-			// Add Multus Dynamic Networks component (requires multus ...)
+			By("Add Multus Dynamic Networks component (requires multus ...)")
 			configSpec.Multus = &cnao.Multus{}
 			configSpec.MultusDynamicNetworks = &cnao.MultusDynamicNetworks{}
 			components = append(components, MultusComponent, MultusDynamicNetworks)
 			testConfigUpdate(gvk, configSpec, components)
 
-			// Add KubeSecondaryDNS component
+			By("Add KubeSecondaryDNS component")
 			configSpec.KubeSecondaryDNS = &cnao.KubeSecondaryDNS{}
 			components = append(components, KubeSecondaryDNSComponent)
 			testConfigUpdate(gvk, configSpec, components)
 
-			// Add KubevirtIpamController component
+			By("Add KubevirtIpamController component")
 			configSpec.KubevirtIpamController = &cnao.KubevirtIpamController{}
 			components = append(components, KubevirtIpamController)
 			testConfigUpdate(gvk, configSpec, components)
