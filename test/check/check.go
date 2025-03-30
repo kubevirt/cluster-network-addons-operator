@@ -145,6 +145,76 @@ func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 	}
 }
 
+func CheckConfigConditionChangedAfter(
+	gvk schema.GroupVersionKind,
+	conditionType ConditionType,
+	expectedStatus ConditionStatus,
+	checkCondTimestampMap map[conditionsv1.ConditionType]time.Time,
+	timeout, duration time.Duration,
+) {
+	By(fmt.Sprintf("Checking that condition %q status is %q and changed after previous transition time", conditionType, expectedStatus))
+
+	getAndCheck := func() error {
+		return checkConfigConditionChangedAfter(gvk, conditionsv1.ConditionType(conditionType), corev1.ConditionStatus(expectedStatus), checkCondTimestampMap)
+	}
+
+	if timeout != CheckImmediately {
+		Eventually(getAndCheck, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for condition %q to change", conditionType))
+	} else {
+		Expect(getAndCheck()).NotTo(HaveOccurred(), fmt.Sprintf("Condition %q is not in expected state or hasn't changed", conditionType))
+	}
+
+	if duration != CheckDoNotRepeat {
+		Consistently(getAndCheck, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition %q prematurely changed again", conditionType))
+	}
+}
+
+func checkConfigConditionChangedAfter(
+	gvk schema.GroupVersionKind,
+	conditionType conditionsv1.ConditionType,
+	expectedStatus corev1.ConditionStatus,
+	checkCondTimestampMap map[conditionsv1.ConditionType]time.Time,
+) error {
+	confStatus := GetConfigStatus(gvk)
+	if confStatus == nil {
+		return fmt.Errorf("Config Status not found")
+	}
+
+	for _, cond := range confStatus.Conditions {
+		if cond.Type == conditionType {
+			if cond.Status != expectedStatus {
+				return fmt.Errorf("condition %q is in state %q, expected %q", conditionType, cond.Status, expectedStatus)
+			}
+
+			oldTime, found := checkCondTimestampMap[conditionType]
+			if found && !cond.LastTransitionTime.Time.After(oldTime) {
+				return fmt.Errorf("condition %q has not changed since %s", conditionType, oldTime.Format(time.RFC3339))
+			}
+
+			// If not found, treat as new condition
+			return nil
+		}
+	}
+
+	// If expected status is False, it's okay to be missing
+	if expectedStatus == corev1.ConditionFalse {
+		return nil
+	}
+
+	return fmt.Errorf("condition %q not found", conditionType)
+}
+
+func CaptureConditionTimestamps(gvk schema.GroupVersionKind) map[conditionsv1.ConditionType]time.Time {
+	confStatus := GetConfigStatus(gvk)
+	ts := make(map[conditionsv1.ConditionType]time.Time)
+	if confStatus != nil {
+		for _, cond := range confStatus.Conditions {
+			ts[cond.Type] = cond.LastTransitionTime.Time
+		}
+	}
+	return ts
+}
+
 func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement, error) {
 	placementList := []cnao.Placement{}
 	for _, daemonSetName := range component.DaemonSets {
