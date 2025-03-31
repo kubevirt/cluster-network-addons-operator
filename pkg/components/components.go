@@ -30,7 +30,7 @@ var (
 )
 
 const (
-	MultusImageDefault                 = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:16030e8320088cf74dc5fbc7dccfea40169f09722dfad15765fa28bceb8de439"
+	MultusImageDefault                 = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:42ccc54689ea3003d3b6c7decadd85b4e296c15d3ad736da48d7e0c768d1f538"
 	MultusDynamicNetworksImageDefault  = "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:8061bd1276ff022fe52a0b07bc6fa8d27e5f6f20cf3bf764e76d347d2e3c929b"
 	LinuxBridgeCniImageDefault         = "quay.io/kubevirt/cni-default-plugins@sha256:976a24392c2a096c38c2663d234b2d3131f5c24558889196d30b9ac1b6716788"
 	LinuxBridgeMarkerImageDefault      = "quay.io/kubevirt/bridge-marker@sha256:ca7fcc798603d9d4de02da00dbda6b0637e72bf1670d531aff070138fded01b4"
