@@ -35,7 +35,7 @@ const (
 	LinuxBridgeCniImageDefault         = "quay.io/kubevirt/cni-default-plugins@sha256:0c354fa9d695b8cab97b459e8afea2f7662407a987e83f6f6f1a8af4b45726be"
 	LinuxBridgeMarkerImageDefault      = "quay.io/kubevirt/bridge-marker@sha256:ca7fcc798603d9d4de02da00dbda6b0637e72bf1670d531aff070138fded01b4"
 	KubeMacPoolImageDefault            = "quay.io/kubevirt/kubemacpool@sha256:4990649b523f65a4b6a562af74260f4b147c04950eb196bd703bd9cfe7ce3120"
-	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:516791acf430bc747f01366e2b748ac76c0b5e39ad8592be2b3dcc809429fa1e"
+	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:d710de816e5f835af28709a92ff30c5ade559e99e16780aefd45f9c9747147cd"
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:850b89343ace7c7ea6b18dd8e11964613974e9d1f7377af03854d407fb15230a"
 	KubeRbacProxyImageDefault          = "quay.io/brancz/kube-rbac-proxy@sha256:e6a323504999b2a4d2a6bf94f8580a050378eba0900fd31335cf9df5787d9a9b"
 	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:8273cdbc438e06864eaa8e47947bea18fa5118a97cdaddc41b5dfa6e13474c79"
