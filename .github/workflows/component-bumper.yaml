@@ -14,10 +14,7 @@ jobs:
       matrix:
         branch:
           - main
-          - release-0.65
-          - release-0.76
           - release-0.79
-          - release-0.85
           - release-0.89
           - release-0.91
           - release-0.93
