@@ -19,10 +19,10 @@ components:
     metadata: v0.46.0-11-g548852c
   kubevirt-ipam-controller:
     url: https://github.com/kubevirt/ipam-extensions
-    commit: fe75b0015384ceff77a8e1b7fa9dcd01463c5dbf
+    commit: 60d7be853bd9b003dd4ad608735f6dbc9662d98e
     branch: main
     update-policy: tagged
-    metadata: v0.2.3
+    metadata: v0.2.4
   linux-bridge:
     url: https://github.com/containernetworking/plugins
     commit: c29dc79f96cd50452a247a4591443d2aac033429
