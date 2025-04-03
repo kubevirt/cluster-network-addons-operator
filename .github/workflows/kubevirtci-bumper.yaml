@@ -1,0 +1,61 @@
+name: Bump KubevirtCI
+
+on:
+  schedule:
+    - cron: '0 0 1 1,4,7,10 *'  # every 3 months (00:00 UTC on the 1st of Jan, Apr, Jul, Oct)
+  workflow_dispatch:
+
+jobs:
+  bump-kubevirtci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git config
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump KubevirtCI to latest tag
+        run: |
+          ./hack/bump-kubevirtci.sh
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet cluster/cluster.sh; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract new tag from cluster.sh
+        if: steps.changes.outputs.changed == 'true'
+        id: extract
+        run: |
+          NEW_TAG=$(grep -oP 'KUBEVIRTCI_TAG:-\K[^}]+' cluster/cluster.sh)
+          echo "Detected new tag: $NEW_TAG"
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.KUBEVIRT_BOT_TOKEN }}
+          committer: GitHub <noreply@github.com>
+          commit-message: "Bump KubevirtCI"
+          title: "cluster: Bump KubevirtCI"
+          signoff: true
+          branch: bump_kubevirtci_${{ github.run_id }}
+          body: |
+            **What this PR does / why we need it**:
+            This PR updates relevant KubevirtCI components to latest available.
+
+            ```release-note
+            NONE
+            ```
