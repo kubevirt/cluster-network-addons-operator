@@ -8,8 +8,6 @@ VERSION_REPLACES ?= 0.95.1
 DEPLOY_DIR ?= manifests
 
 MAX_GO_VERSION=1.22
-CURRENT_GO_VERSION=$(shell awk '/^go [0-9]+\./ {print $$2}' go.mod | awk -F. '{print $$1"."$$2}')
-TOOLCHAIN_VERSION=$(shell grep '^toolchain' go.mod | awk '{print $$2}' | sed 's/go//' | awk -F. '{print $$1"."$$2}' || echo "")
 
 IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
@@ -205,17 +203,17 @@ release: $(GITHUB_RELEASE)
 	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
 	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
-check-go-version:
-	@if [ "$(CURRENT_GO_VERSION)" != "$(MAX_GO_VERSION)" ]; then \
-		echo "Error: go.mod version $(CURRENT_GO_VERSION) exceeds max allowed version $(MAX_GO_VERSION)"; exit 1; \
-	fi
-	@if [ -n "$(TOOLCHAIN_VERSION)" ] && [ "$(TOOLCHAIN_VERSION)" != "$(MAX_GO_VERSION)" ]; then \
-		echo "Error: Go toolchain version $(TOOLCHAIN_VERSION) exceeds max allowed version $(MAX_GO_VERSION)"; exit 1; \
-	fi
-
-vendor: $(GO) check-go-version
+vendor: $(GO)
 	$(GO) mod tidy -compat=$(GO_VERSION)
 	$(GO) mod vendor
+	@CURRENT_GO_VERSION=$$(awk '/^go [0-9]+\./ {print $$2}' go.mod | awk -F. '{print $$1"."$$2}'); \
+	TOOLCHAIN_VERSION=$$(grep '^toolchain' go.mod | awk '{print $$2}' | sed 's/go//' | awk -F. '{print $$1"."$$2}' || echo ""); \
+	if [ "$$CURRENT_GO_VERSION" != "$(MAX_GO_VERSION)" ]; then \
+		echo "Error: go.mod version $$CURRENT_GO_VERSION exceeds max allowed version $(MAX_GO_VERSION)"; exit 1; \
+	fi; \
+	if [ -n "$$TOOLCHAIN_VERSION" ] && [ "$$TOOLCHAIN_VERSION" != "$(MAX_GO_VERSION)" ]; then \
+		echo "Error: Go toolchain version $$TOOLCHAIN_VERSION exceeds max allowed version $(MAX_GO_VERSION)"; exit 1; \
+	fi
 
 auto-bumper: $(GO)
 	PUSH_IMAGES=true $(GO) run $(shell ls tools/bumper/*.go | grep -v test) ${ARGS}
