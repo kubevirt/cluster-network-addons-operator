@@ -2,7 +2,7 @@ module github.com/kubevirt/cluster-network-addons-operator
 
 go 1.21
 
-toolchain go1.22.1
+toolchain go1.21.13
 
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
