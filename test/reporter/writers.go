@@ -62,7 +62,13 @@ func (r *KubernetesCNAOReporter) logNamespacePods() {
 		}
 		podContainers = strings.Trim(podContainers, "'")
 		for _, containerName := range strings.Split(podContainers, " ") {
-			r.logCommand([]string{"logs", "-n", r.namespace, podName, "-c", containerName}, podName+"_"+containerName)
+			args = []string{"logs", "-n", r.namespace, podName, "-c", containerName}
+			r.logCommand(args, podName+"_"+containerName)
+
+			argsPrev := append(args, "-p")
+			if _, _, err := kubectl.Kubectl(argsPrev...); err != nil {
+				r.logCommand(argsPrev, "prev_"+podName+"_"+containerName)
+			}
 		}
 	}
 }
