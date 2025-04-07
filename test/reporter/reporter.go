@@ -22,6 +22,9 @@ func (r *KubernetesCNAOReporter) DumpLogs() int {
 	r.logCommand([]string{"get", "daemonset", "-n", r.namespace, "-o", "yaml"}, "daemonsets")
 	r.logCommand([]string{"get", "deployment", "-n", r.namespace, "-o", "yaml"}, "deployments")
 	r.logCommand([]string{"get", "pod", "-n", r.namespace, "-o", "yaml"}, "pods")
+	r.logCommand([]string{"get", "clusterrole", "-n", r.namespace, "-o", "yaml"}, "clusterroles")
+	r.logCommand([]string{"get", "role", "-n", r.namespace, "-o", "yaml"}, "roles")
+	r.logCommand([]string{"get", "clusterrolebinding", "-n", r.namespace, "-o", "yaml"}, "clusterrolebindings")
 	r.logNamespacePods()
 
 	return r.failureCount
