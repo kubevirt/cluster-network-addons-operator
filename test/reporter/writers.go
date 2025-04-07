@@ -69,6 +69,9 @@ func (r *KubernetesCNAOReporter) logNamespacePods() {
 			if _, _, err := kubectl.Kubectl(argsPrev...); err != nil {
 				r.logCommand(argsPrev, "prev_"+podName+"_"+containerName)
 			}
+
+			args = []string{"get", "events", "-n", r.namespace, "--field-selector", "involvedObject.kind=Pod,involvedObject.name=" + podName}
+			r.logCommand(args, podName+"_events")
 		}
 	}
 }
