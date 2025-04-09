@@ -28,7 +28,14 @@ main() {
         export E2E_TEST_TIMEOUT=4h
     else
         # Don't run all upgrade tests in regular PRs, stick to those released under HCO
-        export RELEASES_SELECTOR="{0.89.3,0.91.1,0.93.0,0.95.0,99.0.0}"
+        case "$(go env GOARCH)" in
+            s390x)
+                export RELEASES_SELECTOR="{0.98.2,99.0.0}"
+                ;;
+            *)
+                export RELEASES_SELECTOR="{0.89.3,0.91.1,0.93.0,0.95.0,99.0.0}"
+                ;;
+        esac
     fi
 
     make cluster-down
