@@ -18,8 +18,8 @@ require (
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.3.0
 	github.com/kubevirt/monitoring/pkg/metrics/parser v0.0.0-20231024120544-6a3ba1a680b4
 	github.com/machadovilaca/operator-observability v0.0.22
-	github.com/onsi/ginkgo/v2 v2.19.0
-	github.com/onsi/gomega v1.34.1
+	github.com/onsi/ginkgo/v2 v2.21.0
+	github.com/onsi/gomega v1.35.1
 	github.com/openshift/api v0.0.1
 	github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
 	github.com/openshift/custom-resource-status v1.1.2
@@ -48,6 +48,7 @@ require (
 )
 
 require (
+	cel.dev/expr v0.18.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
@@ -57,7 +58,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/Masterminds/squirrel v1.5.4 // indirect
-	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
@@ -76,7 +77,7 @@ require (
 	github.com/containerd/containerd v1.7.24 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/containerd/ttrpc v1.2.2 // indirect
+	github.com/containerd/ttrpc v1.2.5 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -117,7 +118,7 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/cel-go v0.20.1 // indirect
+	github.com/google/cel-go v0.22.0 // indirect
 	github.com/google/certificate-transparency-go v1.0.21 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -169,7 +170,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.5.0 // indirect
-	github.com/moby/sys/mountinfo v0.7.1 // indirect
+	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -220,7 +221,7 @@ require (
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/zmap/zcrypto v0.0.0-20200911161511-43ff0ea04f21 // indirect
 	github.com/zmap/zlint/v2 v2.2.1 // indirect
-	go.etcd.io/bbolt v1.3.9 // indirect
+	go.etcd.io/bbolt v1.3.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
@@ -241,7 +242,7 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240826202546-f6391c0de4c7 // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
@@ -258,12 +259,12 @@ require (
 	k8s.io/kube-aggregator v0.31.0 // indirect
 	k8s.io/kube-openapi v0.31.0 // indirect
 	k8s.io/kubectl v0.32.2 // indirect
-	k8s.io/kubernetes v1.31.6 // indirect
+	k8s.io/kubernetes v1.32.4 // indirect
 	kubevirt.io/containerized-data-importer-api v1.57.0-alpha1 // indirect
 	kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90 // indirect
 	oras.land/oras-go v1.2.5 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
-	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.30.3 // indirect
+	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
 	sigs.k8s.io/kubebuilder/v3 v3.0.0-alpha.0.0.20210803185103-51e4a9aa5055 // indirect
 	sigs.k8s.io/kustomize/api v0.18.0 // indirect

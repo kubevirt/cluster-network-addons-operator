@@ -1,3 +1,6 @@
+# cel.dev/expr v0.18.0
+## explicit; go 1.21.1
+cel.dev/expr
 # dario.cat/mergo v1.0.1
 ## explicit; go 1.13
 dario.cat/mergo
@@ -30,7 +33,7 @@ github.com/Masterminds/sprig/v3
 # github.com/Masterminds/squirrel v1.5.4
 ## explicit; go 1.14
 github.com/Masterminds/squirrel
-# github.com/Microsoft/go-winio v0.6.1 => github.com/Microsoft/go-winio v0.4.17
+# github.com/Microsoft/go-winio v0.6.2 => github.com/Microsoft/go-winio v0.4.17
 ## explicit; go 1.12
 github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/backuptar
@@ -203,8 +206,8 @@ github.com/containerd/continuity/sysx
 # github.com/containerd/log v0.1.0
 ## explicit; go 1.20
 github.com/containerd/log
-# github.com/containerd/ttrpc v1.2.2
-## explicit; go 1.13
+# github.com/containerd/ttrpc v1.2.5
+## explicit; go 1.19
 github.com/containerd/ttrpc
 # github.com/coreos/go-semver v0.3.1
 ## explicit; go 1.8
@@ -449,8 +452,8 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/btree v1.0.1
 ## explicit; go 1.12
 github.com/google/btree
-# github.com/google/cel-go v0.20.1
-## explicit; go 1.18
+# github.com/google/cel-go v0.22.0
+## explicit; go 1.21.1
 github.com/google/cel-go/cel
 github.com/google/cel-go/checker
 github.com/google/cel-go/checker/decls
@@ -688,8 +691,8 @@ github.com/moby/locker
 ## explicit; go 1.13
 github.com/moby/spdystream
 github.com/moby/spdystream/spdy
-# github.com/moby/sys/mountinfo v0.7.1
-## explicit; go 1.16
+# github.com/moby/sys/mountinfo v0.7.2
+## explicit; go 1.17
 github.com/moby/sys/mountinfo
 # github.com/moby/term v0.5.0
 ## explicit; go 1.18
@@ -713,7 +716,7 @@ github.com/mwitkow/go-conntrack
 # github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f
 ## explicit
 github.com/mxk/go-flowrate/flowrate
-# github.com/onsi/ginkgo/v2 v2.19.0 => github.com/onsi/ginkgo/v2 v2.1.3
+# github.com/onsi/ginkgo/v2 v2.21.0 => github.com/onsi/ginkgo/v2 v2.1.3
 ## explicit; go 1.16
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -725,8 +728,8 @@ github.com/onsi/ginkgo/v2/internal/parallel_support
 github.com/onsi/ginkgo/v2/internal/testingtproxy
 github.com/onsi/ginkgo/v2/reporters
 github.com/onsi/ginkgo/v2/types
-# github.com/onsi/gomega v1.34.1
-## explicit; go 1.20
+# github.com/onsi/gomega v1.35.1
+## explicit; go 1.22
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/gstruct
@@ -1040,8 +1043,8 @@ github.com/zmap/zlint/v2/lints/etsi
 github.com/zmap/zlint/v2/lints/mozilla
 github.com/zmap/zlint/v2/lints/rfc
 github.com/zmap/zlint/v2/util
-# go.etcd.io/bbolt v1.3.9
-## explicit; go 1.17
+# go.etcd.io/bbolt v1.3.11
+## explicit; go 1.22
 go.etcd.io/bbolt
 # go.opencensus.io v0.24.0
 ## explicit; go 1.13
@@ -1224,7 +1227,6 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-golang.org/x/text/width
 # golang.org/x/time v0.7.0
 ## explicit; go 1.18
 golang.org/x/time/rate
@@ -1255,8 +1257,8 @@ golang.org/x/tools/internal/versions
 # gomodules.xyz/jsonpatch/v2 v2.4.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
-# google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157
-## explicit; go 1.20
+# google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7
+## explicit; go 1.21
 google.golang.org/genproto/googleapis/api/expr/v1alpha1
 google.golang.org/genproto/googleapis/api/httpbody
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20240826202546-f6391c0de4c7
@@ -2025,8 +2027,8 @@ k8s.io/kubectl/pkg/util/slice
 k8s.io/kubectl/pkg/util/templates
 k8s.io/kubectl/pkg/util/term
 k8s.io/kubectl/pkg/validation
-# k8s.io/kubernetes v1.31.6
-## explicit; go 1.22.0
+# k8s.io/kubernetes v1.32.4
+## explicit; go 1.23.0
 k8s.io/kubernetes/pkg/apis/core
 # k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 ## explicit; go 1.18
@@ -2255,7 +2257,7 @@ oras.land/oras-go/pkg/registry/remote/internal/syncutil
 oras.land/oras-go/pkg/target
 # rsc.io/letsencrypt v0.0.3
 ## explicit
-# sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.30.3
+# sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.0
 ## explicit; go 1.21
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client/pkg/client
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client/pkg/client/metrics
