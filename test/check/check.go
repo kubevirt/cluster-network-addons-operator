@@ -73,6 +73,11 @@ func CheckComponentsRemoval(components []Component) {
 			return checkForComponentRemoval(&component)
 		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout", component.ComponentName))
 	}
+
+	By(fmt.Sprintf("Checking the %s configmap has been removed", names.AppliedPrefix+names.OperatorConfig))
+	Eventually(func() error {
+		return checkForConfigMapRemoval(names.AppliedPrefix + names.OperatorConfig)
+	}, 5*time.Minute, time.Second).Should(Succeed())
 }
 
 func getConfigComponentsMap(gvk schema.GroupVersionKind) (map[string]struct{}, error) {
@@ -878,6 +883,11 @@ func checkForNetworkAttachmentDefinitionRemoval(name string) error {
 		return nil
 	}
 	return isNotFound("NetworkAttachmentDefinition", name, err)
+}
+
+func checkForConfigMapRemoval(name string) error {
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.ConfigMap{})
+	return isNotFound("ConfigMap", name, err)
 }
 
 func getMonitoringEndpoint() (*corev1.Endpoints, error) {
