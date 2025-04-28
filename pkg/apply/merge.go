@@ -108,7 +108,7 @@ func MergeServiceAccountForUpdate(current, updated *unstructured.Unstructured) e
 		}
 
 		if ok {
-			unstructured.SetNestedField(updated.Object, curSecrets, "secrets")
+			return unstructured.SetNestedField(updated.Object, curSecrets, "secrets")
 		}
 	}
 	return nil
