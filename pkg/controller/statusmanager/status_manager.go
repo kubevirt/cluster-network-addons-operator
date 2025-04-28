@@ -190,7 +190,7 @@ func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...condi
 	// Patch NetworkAddonsConfig's status
 	err = status.client.Status().Patch(context.TODO(), config, patch)
 	if err != nil {
-		return fmt.Errorf("Failed to patch NetworkAddonsConfig %q Status: %v", config.Name, err)
+		return fmt.Errorf("failed to patch NetworkAddonsConfig %q Status: %v", config.Name, err)
 	}
 	return nil
 }
