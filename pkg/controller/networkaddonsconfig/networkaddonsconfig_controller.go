@@ -546,9 +546,6 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 
 			appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
 			labels = updateLabelsFromCR(labels, crLabels, appLabelKeys)
-			if err != nil {
-				return err
-			}
 
 			templateLabelKeys := append(appLabelKeys, names.PROMETHEUS_LABEL_KEY, names.MANAGED_BY_LABEL_KEY)
 			err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)

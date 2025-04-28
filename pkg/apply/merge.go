@@ -9,7 +9,7 @@ import (
 // MergeMetadataForUpdate merges the read-only fields of metadata.
 // This is to be able to do a a meaningful comparison in apply,
 // since objects created on runtime do not have these fields populated.
-func MergeMetadataForUpdate(current, updated *unstructured.Unstructured) error {
+func MergeMetadataForUpdate(current, updated *unstructured.Unstructured) {
 	updated.SetCreationTimestamp(current.GetCreationTimestamp())
 	updated.SetSelfLink(current.GetSelfLink())
 	updated.SetGeneration(current.GetGeneration())
@@ -18,8 +18,6 @@ func MergeMetadataForUpdate(current, updated *unstructured.Unstructured) error {
 
 	mergeAnnotations(current, updated)
 	mergeLabels(current, updated)
-
-	return nil
 }
 
 // MergeObjectForUpdate prepares a "desired" object to be updated.
@@ -110,7 +108,7 @@ func MergeServiceAccountForUpdate(current, updated *unstructured.Unstructured) e
 		}
 
 		if ok {
-			unstructured.SetNestedField(updated.Object, curSecrets, "secrets")
+			return unstructured.SetNestedField(updated.Object, curSecrets, "secrets")
 		}
 	}
 	return nil
