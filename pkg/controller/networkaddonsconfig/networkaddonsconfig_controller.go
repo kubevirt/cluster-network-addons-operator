@@ -344,7 +344,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	return reconcile.Result{RequeueAfter: time.Minute}, nil
 }
 
-// Convert NetworkAddonsConfig to shared type
+// ConvertNetworkAddonsConfigV1ToShared converts NetworkAddonsConfig to shared type
 func (r *ReconcileNetworkAddonsConfig) ConvertNetworkAddonsConfigV1ToShared(networkAddonsConfig *cnaov1.NetworkAddonsConfig) (*cnao.NetworkAddonsConfig, error) {
 	return &cnao.NetworkAddonsConfig{
 		TypeMeta:   networkAddonsConfig.TypeMeta,
@@ -635,7 +635,7 @@ func isSCCAvailable(c kubernetes.Interface) (bool, error) {
 	return isResourceAvailable(c, "securitycontextconstraints", "security.openshift.io", "v1")
 }
 
-// isMonitoringAvailable checks if we can deploy the monitoring component
+// IsMonitoringAvailable checks if we can deploy the monitoring component
 func IsMonitoringAvailable(c kubernetes.Interface) (bool, error) {
 	prometheusRuleResourceAvailable, err := isResourceAvailable(c, "customresourcedefinitions/prometheusrules.monitoring.coreos.com", "apiextensions.k8s.io", "v1")
 	if err != nil {

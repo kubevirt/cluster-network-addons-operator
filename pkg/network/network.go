@@ -72,7 +72,7 @@ func FillDefaults(conf, previous *cnao.NetworkAddonsConfigSpec) error {
 	return nil
 }
 
-// specialCleanUp checks if there are any specific outdated objects or ones that are no longer compatible and deletes them.
+// SpecialCleanUp checks if there are any specific outdated objects or ones that are no longer compatible and deletes them.
 func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client, clusterInfo *ClusterInfo) error {
 	errs := []error{}
 	ctx := context.TODO()

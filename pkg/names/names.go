@@ -1,6 +1,6 @@
 package names
 
-// OperatorConfig is the name of the CRD that defines the complete
+// OPERATOR_CONFIG is the name of the CRD that defines the complete
 // operator configuration
 const OPERATOR_CONFIG = "cluster"
 
@@ -17,6 +17,7 @@ const PROMETHEUS_LABEL_KEY = "prometheus.cnao.io"
 const PROMETHEUS_LABEL_VALUE = "true"
 
 // Relationship labels
+
 const COMPONENT_LABEL_KEY = "app.kubernetes.io/component"
 const PART_OF_LABEL_KEY = "app.kubernetes.io/part-of"
 const VERSION_LABEL_KEY = "app.kubernetes.io/version"
