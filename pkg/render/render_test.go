@@ -38,6 +38,7 @@ var _ = Describe("RenderTemplate", func() {
 					Containers: []apiv1.Container{
 						{
 							Image: "busybox",
+							Name:  "busybox",
 						},
 					},
 				},
@@ -110,6 +111,7 @@ var _ = Describe("RenderTemplate", func() {
 						Containers: []apiv1.Container{
 							{
 								Image: "busybox",
+								Name:  "busybox",
 							},
 						},
 					},
