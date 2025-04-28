@@ -20,7 +20,7 @@ func init() {
 	}
 }
 
-// Make given string label-compatible
+// StringToLabel makes given string label-compatible
 func StringToLabel(s string) string {
 	// We need to remove characters that are not allowed
 	s = labelAntiSelector.ReplaceAllString(s, "_")

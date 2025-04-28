@@ -8,7 +8,8 @@
 	"spec": {
 		"containers": [
 			{
-  				"image": "busybox"
+  				"image": "busybox",
+				"name": "busybox"
 			}
 		]
 	}

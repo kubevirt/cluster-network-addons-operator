@@ -6,6 +6,7 @@ metadata:
 spec:
   containers:
   - image: busybox
+    name: busybox
 
 ---
 
@@ -30,4 +31,4 @@ metadata:
   name: cm
   namespace: ns
 data:
-  key: val
+  key: "val"
