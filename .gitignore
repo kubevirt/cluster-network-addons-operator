@@ -1,36 +1,37 @@
 # Temporary generated files
-_out
+/_out
+/tools/_out
 
 # Temporary build files
-build/operator/_output
-build/operator/_test
-build/_output
+/build/operator/_output
+/build/operator/_test
+/build/_output
 
 # Temporary local cluster files
-_kubevirtci/
+/_kubevirtci/
 
 # Temporary components update files
-_components/
+/_components/
 
 # Temporary test files
-deploy/test/
+/deploy/test/
 
 # Cover file
-cover.out
+/cover.out
 
 # Makefile fake targets
-gen-k8s
-gen-k8s-check
-goimports
-goimports-check
-vet
-whitespace
-whitespace-check
+/gen-k8s
+/gen-k8s-check
+/goimports
+/goimports-check
+/vet
+/whitespace
+/whitespace-check
 
 # Goland IDE folder
-.idea/
+/.idea/
 # VS Code IDE folder
-.vscode/
+/.vscode/
 
-.output
-_output
+/.output
+/_output
