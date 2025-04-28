@@ -453,8 +453,7 @@ metadata:
   name: foo`)
 
 		It("should merge metadate from current to updated", func() {
-			err := apply.MergeMetadataForUpdate(current, updated)
-			Expect(err).ToNot(HaveOccurred())
+			apply.MergeMetadataForUpdate(current, updated)
 			Expect(updated.GetCreationTimestamp()).To(Equal(current.GetCreationTimestamp()))
 			Expect(updated.GetGeneration()).To(Equal(current.GetGeneration()))
 			Expect(updated.GetResourceVersion()).To(Equal(current.GetResourceVersion()))
