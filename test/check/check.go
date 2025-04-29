@@ -75,6 +75,58 @@ func CheckComponentsRemoval(components []Component) {
 	}
 }
 
+func getConfigComponentsMap(gvk schema.GroupVersionKind) (map[string]struct{}, error) {
+	config := GetConfig(gvk)
+	if config == nil {
+		return nil, fmt.Errorf("config not found")
+	}
+	configV1 := ConvertToConfigV1(config)
+	existingComponentsMap := map[string]struct{}{}
+
+	existingComponentsMap[MonitoringComponent.ComponentName] = struct{}{}
+
+	if configV1.Spec.KubeMacPool != nil {
+		existingComponentsMap[KubeMacPoolComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.KubevirtIpamController != nil {
+		existingComponentsMap[KubevirtIpamController.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.KubeSecondaryDNS != nil {
+		existingComponentsMap[KubeSecondaryDNSComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.LinuxBridge != nil {
+		existingComponentsMap[LinuxBridgeComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.MacvtapCni != nil {
+		existingComponentsMap[MacvtapComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.Ovs != nil {
+		existingComponentsMap[OvsComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.Multus != nil {
+		existingComponentsMap[MultusComponent.ComponentName] = struct{}{}
+	}
+	if configV1.Spec.MultusDynamicNetworks != nil {
+		existingComponentsMap[MultusDynamicNetworks.ComponentName] = struct{}{}
+	}
+	return existingComponentsMap, nil
+}
+
+func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) {
+	Eventually(func() error {
+		deployedComponents, err := getConfigComponentsMap(gvk)
+		if err != nil {
+			return err
+		}
+		for _, component := range components {
+			if _, exist := deployedComponents[component.ComponentName]; !exist {
+				return fmt.Errorf("component %s is not updated in config", component.ComponentName)
+			}
+		}
+		return nil
+	}).WithPolling(10 * time.Millisecond).WithTimeout(5 * time.Minute).Should(Succeed())
+}
+
 func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
@@ -91,6 +143,76 @@ func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 	if duration != CheckDoNotRepeat {
 		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value, current config:\n%v\ncluster Info:\n%v", configToYaml(gvk), gatherClusterInfo()))
 	}
+}
+
+func CheckConfigConditionChangedAfter(
+	gvk schema.GroupVersionKind,
+	conditionType ConditionType,
+	expectedStatus ConditionStatus,
+	checkCondTimestampMap map[conditionsv1.ConditionType]time.Time,
+	timeout, duration time.Duration,
+) {
+	By(fmt.Sprintf("Checking that condition %q status is %q and changed after previous transition time", conditionType, expectedStatus))
+
+	getAndCheck := func() error {
+		return checkConfigConditionChangedAfter(gvk, conditionsv1.ConditionType(conditionType), corev1.ConditionStatus(expectedStatus), checkCondTimestampMap)
+	}
+
+	if timeout != CheckImmediately {
+		Eventually(getAndCheck, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for condition %q to change", conditionType))
+	} else {
+		Expect(getAndCheck()).NotTo(HaveOccurred(), fmt.Sprintf("Condition %q is not in expected state or hasn't changed", conditionType))
+	}
+
+	if duration != CheckDoNotRepeat {
+		Consistently(getAndCheck, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition %q prematurely changed again", conditionType))
+	}
+}
+
+func checkConfigConditionChangedAfter(
+	gvk schema.GroupVersionKind,
+	conditionType conditionsv1.ConditionType,
+	expectedStatus corev1.ConditionStatus,
+	checkCondTimestampMap map[conditionsv1.ConditionType]time.Time,
+) error {
+	confStatus := GetConfigStatus(gvk)
+	if confStatus == nil {
+		return fmt.Errorf("Config Status not found")
+	}
+
+	for _, cond := range confStatus.Conditions {
+		if cond.Type == conditionType {
+			if cond.Status != expectedStatus {
+				return fmt.Errorf("condition %q is in state %q, expected %q", conditionType, cond.Status, expectedStatus)
+			}
+
+			oldTime, found := checkCondTimestampMap[conditionType]
+			if found && !cond.LastTransitionTime.Time.After(oldTime) {
+				return fmt.Errorf("condition %q has not changed since %s", conditionType, oldTime.Format(time.RFC3339))
+			}
+
+			// If not found, treat as new condition
+			return nil
+		}
+	}
+
+	// If expected status is False, it's okay to be missing
+	if expectedStatus == corev1.ConditionFalse {
+		return nil
+	}
+
+	return fmt.Errorf("condition %q not found", conditionType)
+}
+
+func CaptureConditionTimestamps(gvk schema.GroupVersionKind) map[conditionsv1.ConditionType]time.Time {
+	confStatus := GetConfigStatus(gvk)
+	ts := make(map[conditionsv1.ConditionType]time.Time)
+	if confStatus != nil {
+		for _, cond := range confStatus.Conditions {
+			ts[cond.Type] = cond.LastTransitionTime.Time
+		}
+	}
+	return ts
 }
 
 func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement, error) {
