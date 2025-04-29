@@ -33,6 +33,8 @@ main() {
     make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.xml" test/e2e/workflow
 
     # functional test passed: publish latest nightly build
+    cnao_bucket="kubevirt-prow/devel/nightly/release/kubevirt/cluster-network-addons-operator"
+
     echo "${build_date}" > build-date
     gsutil cp ./build-date gs://${cnao_bucket}/latest
 
@@ -40,7 +42,6 @@ main() {
     CNAO_VERSION=$(hack/version.sh)
     SRC_DIR="./_out/cluster-network-addons/${CNAO_VERSION}"
     DEST="gs://${cnao_bucket}/${build_date}"
-    cnao_bucket="kubevirt-prow/devel/nightly/release/kubevirt/cluster-network-addons-operator"
     gsutil cp "${SRC_DIR}/namespace.yaml" "${DEST}"
     gsutil cp "${SRC_DIR}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml" "${DEST}"
     gsutil cp "${SRC_DIR}/network-addons-config.crd.yaml" "${DEST}"
