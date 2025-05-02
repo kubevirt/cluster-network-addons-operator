@@ -42,11 +42,11 @@ main() {
     CNAO_VERSION=$(hack/version.sh)
     SRC_DIR="./_out/cluster-network-addons/${CNAO_VERSION}"
     DEST="gs://${cnao_bucket}/${build_date}"
-    gsutil cp "${SRC_DIR}/namespace.yaml" "${DEST}"
-    gsutil cp "${SRC_DIR}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml" "${DEST}"
-    gsutil cp "${SRC_DIR}/network-addons-config.crd.yaml" "${DEST}"
-    gsutil cp "${SRC_DIR}/operator.yaml" "${DEST}"
-    gsutil cp "${SRC_DIR}/network-addons-config-example.cr.yaml" "${DEST}"
+    gsutil cp "${SRC_DIR}/namespace.yaml" "${DEST}/namespace.yaml"
+    gsutil cp "${SRC_DIR}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml" "${DEST}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml"
+    gsutil cp "${SRC_DIR}/network-addons-config.crd.yaml" "${DEST}/network-addons-config.crd.yaml"
+    gsutil cp "${SRC_DIR}/operator.yaml" "${DEST}/operator.yaml"
+    gsutil cp "${SRC_DIR}/network-addons-config-example.cr.yaml" "${DEST}/network-addons-config-example.cr.yaml"
 }
 
 main
