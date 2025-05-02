@@ -35,9 +35,6 @@ main() {
     # functional test passed: publish latest nightly build
     cnao_bucket="kubevirt-prow/devel/nightly/release/kubevirt/cluster-network-addons-operator"
 
-    echo "${build_date}" > build-date
-    gsutil cp ./build-date gs://${cnao_bucket}/latest
-
     # publish the nightly build manifests
     CNAO_VERSION=$(hack/version.sh)
     SRC_DIR="./_out/cluster-network-addons/${CNAO_VERSION}"
@@ -47,6 +44,9 @@ main() {
     gsutil cp "${SRC_DIR}/network-addons-config.crd.yaml" "${DEST}/network-addons-config.crd.yaml"
     gsutil cp "${SRC_DIR}/operator.yaml" "${DEST}/operator.yaml"
     gsutil cp "${SRC_DIR}/network-addons-config-example.cr.yaml" "${DEST}/network-addons-config-example.cr.yaml"
+
+    echo "${build_date}" > build-date
+    gsutil cp ./build-date gs://${cnao_bucket}/latest
 }
 
 main
