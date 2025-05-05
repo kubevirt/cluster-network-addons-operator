@@ -110,7 +110,7 @@ func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.C
 	// Status manager is shared between both reconcilers, and it is used to update conditions of
 	// NetworkAddonsConfig.State. NetworkAddonsConfig reconciler updates it with progress of rendering
 	// and applying of manifests. Pods reconciler updates it with progress of deployed pods.
-	statusManager := statusmanager.New(mgr, names.OPERATOR_CONFIG)
+	statusManager := statusmanager.New(mgr, names.OperatorConfig)
 	return &ReconcileNetworkAddonsConfig{
 		client:        mgr.GetClient(),
 		scheme:        mgr.GetScheme(),
@@ -219,7 +219,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	log.Print("reconciling NetworkAddonsConfig")
 
 	// We won't create more than one network addons instance
-	if request.Name != names.OPERATOR_CONFIG {
+	if request.Name != names.OperatorConfig {
 		log.Print("ignoring NetworkAddonsConfig without default name")
 		return reconcile.Result{}, nil
 	}

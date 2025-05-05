@@ -1,8 +1,8 @@
 package names
 
-// OPERATOR_CONFIG is the name of the CRD that defines the complete
+// OperatorConfig is the name of the CRD that defines the complete
 // operator configuration
-const OPERATOR_CONFIG = "cluster"
+const OperatorConfig = "cluster"
 
 // APPLIED_PREFIX is the prefix applied to the config maps
 // where we store previously applied configuration
