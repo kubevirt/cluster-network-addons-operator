@@ -8,10 +8,10 @@ const OperatorConfig = "cluster"
 // where we store previously applied configuration
 const AppliedPrefix = "cluster-networks-addons-operator-applied-"
 
-// REJECT_OWNER_ANNOTATION can be set on objects under data/ that should not be
+// RejectOwnerAnnotation can be set on objects under data/ that should not be
 // assigned with NetworkAddonsConfig as their owner. This can be used to prevent
 // garbage collection deletion upon NetworkAddonsConfig removal.
-const REJECT_OWNER_ANNOTATION = "networkaddonsoperator.network.kubevirt.io/rejectOwner"
+const RejectOwnerAnnotation = "networkaddonsoperator.network.kubevirt.io/rejectOwner"
 
 const PROMETHEUS_LABEL_KEY = "prometheus.cnao.io"
 const PROMETHEUS_LABEL_VALUE = "true"

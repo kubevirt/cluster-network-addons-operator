@@ -444,7 +444,7 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 		// Don't set owner reference on CRDs, they should survive removal of the operator
 		// Don't set owner reference on objects that explicitly rejected an owner
 		isCRD := obj.GetKind() == "CustomResourceDefinition"
-		_, isRejectingOwner := obj.GetAnnotations()[names.REJECT_OWNER_ANNOTATION]
+		_, isRejectingOwner := obj.GetAnnotations()[names.RejectOwnerAnnotation]
 		if !isCRD && !isOperatorNamespace(obj) && !isRejectingOwner {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
 				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
