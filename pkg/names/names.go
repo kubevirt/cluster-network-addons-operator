@@ -13,8 +13,8 @@ const AppliedPrefix = "cluster-networks-addons-operator-applied-"
 // garbage collection deletion upon NetworkAddonsConfig removal.
 const RejectOwnerAnnotation = "networkaddonsoperator.network.kubevirt.io/rejectOwner"
 
-const PROMETHEUS_LABEL_KEY = "prometheus.cnao.io"
-const PROMETHEUS_LABEL_VALUE = "true"
+const PrometheusLabelKey = "prometheus.cnao.io"
+const PrometheusLabelValue = "true"
 
 // Relationship labels
 

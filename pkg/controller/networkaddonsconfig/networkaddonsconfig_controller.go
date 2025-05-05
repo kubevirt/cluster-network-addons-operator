@@ -541,13 +541,13 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 		if !isOperatorNamespace(obj) {
 			// Label objects with version of the operator they were created by
 			labels[cnaov1.GroupVersion.Group+"/version"] = operatorVersionLabel
-			labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
+			labels[names.PrometheusLabelKey] = names.PrometheusLabelValue
 			labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
 
 			appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
 			labels = updateLabelsFromCR(labels, crLabels, appLabelKeys)
 
-			templateLabelKeys := append(appLabelKeys, names.PROMETHEUS_LABEL_KEY, names.MANAGED_BY_LABEL_KEY)
+			templateLabelKeys := append(appLabelKeys, names.PrometheusLabelKey, names.MANAGED_BY_LABEL_KEY)
 			err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)
 			if err != nil {
 				return err
