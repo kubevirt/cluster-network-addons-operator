@@ -4,9 +4,9 @@ package names
 // operator configuration
 const OperatorConfig = "cluster"
 
-// APPLIED_PREFIX is the prefix applied to the config maps
+// AppliedPrefix is the prefix applied to the config maps
 // where we store previously applied configuration
-const APPLIED_PREFIX = "cluster-networks-addons-operator-applied-"
+const AppliedPrefix = "cluster-networks-addons-operator-applied-"
 
 // REJECT_OWNER_ANNOTATION can be set on objects under data/ that should not be
 // assigned with NetworkAddonsConfig as their owner. This can be used to prevent

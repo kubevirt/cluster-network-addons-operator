@@ -997,7 +997,7 @@ func retrieveRange() (string, string) {
 	Eventually(func() error {
 
 		return testenv.Client.Get(context.TODO(),
-			types.NamespacedName{Namespace: components.Namespace, Name: names.APPLIED_PREFIX + names.OperatorConfig}, configMap)
+			types.NamespacedName{Namespace: components.Namespace, Name: names.AppliedPrefix + names.OperatorConfig}, configMap)
 
 	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())
 
