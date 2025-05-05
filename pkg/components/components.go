@@ -5,13 +5,28 @@ import (
 	"os"
 	"regexp"
 
-	ocpv1 "github.com/openshift/api/config/v1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	authenticationv1 "k8s.io/api/authentication/v1"
+	authorizationv1 "k8s.io/api/authorization/v1"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
+	eventsv1 "k8s.io/api/events/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	ocpv1 "github.com/openshift/api/config/v1"
+	ocpoperatorv1 "github.com/openshift/api/operator/v1"
+	ocpsecurityv1 "github.com/openshift/api/security/v1"
+
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring"
+
+	cnicncf "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io"
+
+	kvcore "kubevirt.io/api/core"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
@@ -359,16 +374,15 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 
 func GetRole(namespace string) *rbacv1.Role {
 	rules := []rbacv1.PolicyRule{
-		newPolicyRule([]string{"apps"}, []string{"daemonsets"}, []string{"get", "create", "update", "delete"}),
-		newPolicyRule([]string{""}, []string{"configmaps"}, []string{"get", "create", "update"}),
-		newPolicyRule([]string{"apps"}, []string{"deployments"}, []string{"delete"}),
-		newPolicyRule([]string{""}, []string{"namespaces"}, []string{"update", "get", "patch"}),
-		newPolicyRule([]string{""}, []string{"serviceaccounts"}, []string{"get", "create", "update", "delete"}),
-		newPolicyRule([]string{"monitoring.coreos.com"}, []string{"prometheusrules", "servicemonitors"}, []string{"get", "create", "update", "delete"}),
-		newPolicyRule([]string{"rbac.authorization.k8s.io"}, []string{"roles", "rolebindings"}, []string{"get", "create", "update", "delete"}),
-		newPolicyRule([]string{"policy"}, []string{"poddisruptionbudgets"}, []string{"get", "delete"}),
-		newPolicyRule([]string{""}, []string{"configmaps"}, []string{"patch"}),
-		newPolicyRule([]string{"coordination.k8s.io"}, []string{"leases"}, []string{"get", "list", "watch", "create", "update", "patch", "delete"}),
+		newPolicyRule([]string{appsv1.GroupName}, []string{"daemonsets"}, []string{"get", "create", "update", "delete"}),
+		newPolicyRule([]string{appsv1.GroupName}, []string{"deployments"}, []string{"delete"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"configmaps"}, []string{"get", "create", "update", "patch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"namespaces"}, []string{"update", "get", "patch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"serviceaccounts"}, []string{"get", "create", "update", "delete"}),
+		newPolicyRule([]string{monitoringv1.GroupName}, []string{"prometheusrules", "servicemonitors"}, []string{"get", "create", "update", "delete"}),
+		newPolicyRule([]string{rbacv1.GroupName}, []string{"roles", "rolebindings"}, []string{"get", "create", "update", "delete"}),
+		newPolicyRule([]string{policyv1.GroupName}, []string{"poddisruptionbudgets"}, []string{"get", "delete"}),
+		newPolicyRule([]string{coordinationv1.GroupName}, []string{"leases"}, []string{"get", "list", "watch", "create", "update", "patch", "delete"}),
 		newPolicyRule([]string{"cert-manager.io"}, []string{"certificates", "issuers"}, []string{"get", "create", "update", "delete"}),
 	}
 
@@ -391,21 +405,21 @@ func GetRole(namespace string) *rbacv1.Role {
 
 func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 	rules := []rbacv1.PolicyRule{
-		newPolicyRule([]string{"operator.openshift.io"}, []string{"networks"}, []string{"list", "watch"}),
-		newPolicyRule([]string{"security.openshift.io"}, []string{"securitycontextconstraints"}, []string{"get", "list", "create", "update"}),
-		newPolicyRule([]string{"apiextensions.k8s.io"}, []string{"customresourcedefinitions"}, []string{"get", "create", "update"}),
 		newPolicyRule([]string{"networkaddonsoperator.network.kubevirt.io"}, []string{"networkaddonsconfigs"}, []string{"list", "watch"}),
 		newPolicyRule([]string{"networkaddonsoperator.network.kubevirt.io"}, []string{"networkaddonsconfigs/status"}, []string{"patch"}),
 		newPolicyRule([]string{"networkaddonsoperator.network.kubevirt.io"}, []string{"networkaddonsconfigs/finalizers"}, []string{"update"}),
-		newPolicyRule([]string{"apps"}, []string{"deployments", "daemonsets"}, []string{"list", "watch"}),
-		newPolicyRule([]string{"kubevirt.io"}, []string{"virtualmachines/finalizers", "virtualmachineinstances/finalizers"}, []string{"update"}),
-		newPolicyRule([]string{""}, []string{"configmaps", "namespaces"}, []string{"list", "watch"}),
-		newPolicyRule([]string{"rbac.authorization.k8s.io"}, []string{"clusterroles"}, []string{"get", "create", "update", "bind", "delete"}),
-		newPolicyRule([]string{"rbac.authorization.k8s.io"}, []string{"clusterrolebindings"}, []string{"get", "create", "update", "delete"}),
-		newPolicyRule([]string{""}, []string{"events"}, []string{"create", "patch"}),
-		newPolicyRule([]string{"admissionregistration.k8s.io"}, []string{"mutatingwebhookconfigurations"}, []string{"get", "create", "update", "delete"}),
-		newPolicyRule([]string{"config.openshift.io"}, []string{"infrastructures"}, []string{"list", "watch"}),
-		newPolicyRule([]string{""}, []string{"services"}, []string{"delete"}),
+		newPolicyRule([]string{ocpoperatorv1.GroupName}, []string{"networks"}, []string{"list", "watch"}),
+		newPolicyRule([]string{ocpsecurityv1.GroupName}, []string{"securitycontextconstraints"}, []string{"get", "list", "create", "update"}),
+		newPolicyRule([]string{extv1.GroupName}, []string{"customresourcedefinitions"}, []string{"get", "create", "update"}),
+		newPolicyRule([]string{appsv1.GroupName}, []string{"deployments", "daemonsets"}, []string{"list", "watch"}),
+		newPolicyRule([]string{kvcore.GroupName}, []string{"virtualmachines/finalizers", "virtualmachineinstances/finalizers"}, []string{"update"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"configmaps", "namespaces"}, []string{"list", "watch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"events"}, []string{"create", "patch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"services"}, []string{"delete"}),
+		newPolicyRule([]string{authenticationv1.GroupName}, []string{"clusterroles"}, []string{"get", "create", "update", "bind", "delete"}),
+		newPolicyRule([]string{authorizationv1.GroupName}, []string{"clusterrolebindings"}, []string{"get", "create", "update", "delete"}),
+		newPolicyRule([]string{admissionregistrationv1.GroupName}, []string{"mutatingwebhookconfigurations"}, []string{"get", "create", "update", "delete"}),
+		newPolicyRule([]string{ocpv1.GroupName}, []string{"infrastructures"}, []string{"list", "watch"}),
 	}
 
 	role := &rbacv1.ClusterRole{
@@ -432,22 +446,22 @@ func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 
 func componentsClusterRoles() []rbacv1.PolicyRule {
 	rules := []rbacv1.PolicyRule{
-		newPolicyRule([]string{""}, []string{"events"}, []string{"update"}),
-		newPolicyRule([]string{""}, []string{"pods", "pods/status"}, []string{"get", "update", "list", "watch"}),
-		newPolicyRule([]string{"events.k8s.io"}, []string{"events"}, []string{"create", "patch", "update"}),
-		newPolicyRule([]string{""}, []string{"nodes", "nodes/status"}, []string{"get", "update", "patch"}),
-		newPolicyRule([]string{""}, []string{"configmaps"}, []string{"get", "delete"}),
-		newPolicyRule([]string{""}, []string{"secrets"}, []string{"list", "watch", "create", "update"}),
-		newPolicyRule([]string{"admissionregistration.k8s.io"}, []string{"validatingwebhookconfigurations", "mutatingwebhookconfigurations"}, []string{"list", "watch"}),
-		newPolicyRule([]string{""}, []string{"services"}, []string{"get", "create", "update", "list", "watch"}),
-		newPolicyRule([]string{"kubevirt.io"}, []string{"virtualmachines"}, []string{"get", "list", "watch", "update"}),
-		newPolicyRule([]string{"authentication.k8s.io"}, []string{"tokenreviews"}, []string{"create"}),
-		newPolicyRule([]string{"authorization.k8s.io"}, []string{"subjectaccessreviews"}, []string{"create"}),
-		newPolicyRule([]string{"apps"}, []string{"deployments"}, []string{"get", "create", "update"}),
-		newPolicyRule([]string{"kubevirt.io"}, []string{"virtualmachineinstances"}, []string{"get", "list", "watch"}),
-		newPolicyRule([]string{""}, []string{"endpoints"}, []string{"get", "list", "watch"}),
-		newPolicyRule([]string{"k8s.cni.cncf.io"}, []string{"ipamclaims"}, []string{"get", "list", "watch", "create", "update"}),
-		newPolicyRule([]string{"k8s.cni.cncf.io"}, []string{"network-attachment-definitions"}, []string{"get", "list", "watch", "create", "delete", "update"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"events"}, []string{"update"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"pods", "pods/status"}, []string{"get", "update", "list", "watch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"nodes", "nodes/status"}, []string{"get", "update", "patch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"configmaps"}, []string{"get", "delete"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"secrets"}, []string{"list", "watch", "create", "update"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"services"}, []string{"get", "create", "update", "list", "watch"}),
+		newPolicyRule([]string{corev1.GroupName}, []string{"endpoints"}, []string{"get", "list", "watch"}),
+		newPolicyRule([]string{appsv1.GroupName}, []string{"deployments"}, []string{"get", "create", "update"}),
+		newPolicyRule([]string{eventsv1.GroupName}, []string{"events"}, []string{"create", "patch", "update"}),
+		newPolicyRule([]string{admissionregistrationv1.GroupName}, []string{"validatingwebhookconfigurations", "mutatingwebhookconfigurations"}, []string{"list", "watch"}),
+		newPolicyRule([]string{authenticationv1.GroupName}, []string{"tokenreviews"}, []string{"create"}),
+		newPolicyRule([]string{authorizationv1.GroupName}, []string{"subjectaccessreviews"}, []string{"create"}),
+		newPolicyRule([]string{kvcore.GroupName}, []string{"virtualmachines"}, []string{"get", "list", "watch", "update"}),
+		newPolicyRule([]string{kvcore.GroupName}, []string{"virtualmachineinstances"}, []string{"get", "list", "watch"}),
+		newPolicyRule([]string{cnicncf.GroupName}, []string{"ipamclaims"}, []string{"get", "list", "watch", "create", "update"}),
+		newPolicyRule([]string{cnicncf.GroupName}, []string{"network-attachment-definitions"}, []string{"get", "list", "watch", "create", "delete", "update"}),
 	}
 	return rules
 }
@@ -457,7 +471,7 @@ func componentsClusterRoles() []rbacv1.PolicyRule {
 // highly privileged cluster-wide RBAC with CNAO.
 func multusClusterRoles() []rbacv1.PolicyRule {
 	return []rbacv1.PolicyRule{
-		newPolicyRule([]string{"k8s.cni.cncf.io"}, []string{"*"}, []string{"*"}),
+		newPolicyRule([]string{cnicncf.GroupName}, []string{"*"}, []string{"*"}),
 	}
 }
 
