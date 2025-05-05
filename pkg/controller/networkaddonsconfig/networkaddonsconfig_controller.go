@@ -553,7 +553,7 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 				return err
 			}
 		} else {
-			delete(labels, names.KUBEMACPOOL_CONTROL_PLANE_KEY)
+			delete(labels, names.KubemacpoolControlPlaneKey)
 		}
 
 		obj.SetLabels(labels)

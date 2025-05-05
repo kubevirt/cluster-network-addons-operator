@@ -48,7 +48,7 @@ func RemovedLabels() []string {
 	labels := RelationLabels()
 	labels = append(labels, []string{
 		names.PrometheusLabelKey,
-		names.KUBEMACPOOL_CONTROL_PLANE_KEY,
+		names.KubemacpoolControlPlaneKey,
 		cnaov1.GroupVersion.Group + "/version"}...)
 	return labels
 }

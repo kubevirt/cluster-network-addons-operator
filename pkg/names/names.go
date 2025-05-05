@@ -25,4 +25,4 @@ const ManagedByLabelKey = "app.kubernetes.io/managed-by"
 const ComponentLabelDefaultValue = "network"
 const ManagedByLabelDefaultValue = "cnao-operator"
 
-const KUBEMACPOOL_CONTROL_PLANE_KEY = "control-plane"
+const KubemacpoolControlPlaneKey = "control-plane"
