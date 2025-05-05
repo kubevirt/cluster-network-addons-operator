@@ -36,10 +36,10 @@ func StringToLabel(s string) string {
 // RelationLabels returns the list of the relationship labels
 func RelationLabels() []string {
 	return []string{
-		names.COMPONENT_LABEL_KEY,
-		names.PART_OF_LABEL_KEY,
-		names.VERSION_LABEL_KEY,
-		names.MANAGED_BY_LABEL_KEY,
+		names.ComponentLabelKey,
+		names.PartOfLabelKey,
+		names.VersionLabelKey,
+		names.ManagedByLabelKey,
 	}
 }
 

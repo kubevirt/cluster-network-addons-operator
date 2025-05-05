@@ -18,11 +18,11 @@ const PrometheusLabelValue = "true"
 
 // Relationship labels
 
-const COMPONENT_LABEL_KEY = "app.kubernetes.io/component"
-const PART_OF_LABEL_KEY = "app.kubernetes.io/part-of"
-const VERSION_LABEL_KEY = "app.kubernetes.io/version"
-const MANAGED_BY_LABEL_KEY = "app.kubernetes.io/managed-by"
-const COMPONENT_LABEL_DEFAULT_VALUE = "network"
-const MANAGED_BY_LABEL_DEFAULT_VALUE = "cnao-operator"
+const ComponentLabelKey = "app.kubernetes.io/component"
+const PartOfLabelKey = "app.kubernetes.io/part-of"
+const VersionLabelKey = "app.kubernetes.io/version"
+const ManagedByLabelKey = "app.kubernetes.io/managed-by"
+const ComponentLabelDefaultValue = "network"
+const ManagedByLabelDefaultValue = "cnao-operator"
 
 const KUBEMACPOOL_CONTROL_PLANE_KEY = "control-plane"

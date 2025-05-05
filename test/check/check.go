@@ -805,8 +805,8 @@ func checkForNetworkAttachmentDefinition(name string) error {
 
 func checkRelationshipLabels(labels map[string]string, kind, name string) error {
 	expectedValues := map[string]string{
-		names.COMPONENT_LABEL_KEY:  names.COMPONENT_LABEL_DEFAULT_VALUE,
-		names.MANAGED_BY_LABEL_KEY: names.MANAGED_BY_LABEL_DEFAULT_VALUE,
+		names.ComponentLabelKey: names.ComponentLabelDefaultValue,
+		names.ManagedByLabelKey: names.ManagedByLabelDefaultValue,
 	}
 
 	for key, expectedValue := range expectedValues {

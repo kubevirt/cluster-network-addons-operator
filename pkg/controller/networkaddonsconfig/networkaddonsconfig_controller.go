@@ -542,12 +542,12 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 			// Label objects with version of the operator they were created by
 			labels[cnaov1.GroupVersion.Group+"/version"] = operatorVersionLabel
 			labels[names.PrometheusLabelKey] = names.PrometheusLabelValue
-			labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
+			labels[names.ManagedByLabelKey] = names.ManagedByLabelDefaultValue
 
-			appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
+			appLabelKeys := []string{names.ComponentLabelKey, names.PartOfLabelKey, names.VersionLabelKey}
 			labels = updateLabelsFromCR(labels, crLabels, appLabelKeys)
 
-			templateLabelKeys := append(appLabelKeys, names.PrometheusLabelKey, names.MANAGED_BY_LABEL_KEY)
+			templateLabelKeys := append(appLabelKeys, names.PrometheusLabelKey, names.ManagedByLabelKey)
 			err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)
 			if err != nil {
 				return err
@@ -563,7 +563,7 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 }
 
 func updateLabelsFromCR(labels, crLabels map[string]string, appLabelKeys []string) map[string]string {
-	labels[names.COMPONENT_LABEL_KEY] = names.COMPONENT_LABEL_DEFAULT_VALUE
+	labels[names.ComponentLabelKey] = names.ComponentLabelDefaultValue
 	for _, key := range appLabelKeys {
 		if value, exist := crLabels[key]; exist == true {
 			labels[key] = value
