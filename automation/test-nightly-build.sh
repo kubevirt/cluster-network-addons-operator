@@ -45,7 +45,7 @@ main() {
     gsutil cp "${SRC_DIR}/operator.yaml" "${DEST}/operator.yaml"
     gsutil cp "${SRC_DIR}/network-addons-config-example.cr.yaml" "${DEST}/network-addons-config-example.cr.yaml"
 
-    git show -s --format=%H > .${SRC_DIR}/commit
+    git show -s --format=%H > ${SRC_DIR}/commit
     gsutil cp ${SRC_DIR}/commit "${DEST}/commit"
 
     echo "${build_date}" > build-date
