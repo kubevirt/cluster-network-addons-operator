@@ -38,22 +38,22 @@ var _ = Describe("Networkaddonsconfig", func() {
 		It("Should find only default relationship labels", func() {
 			appLabelKeys := []checkUnit{
 				{
-					key:           names.COMPONENT_LABEL_KEY,
+					key:           names.ComponentLabelKey,
 					shouldExist:   true,
-					expectedValue: names.COMPONENT_LABEL_DEFAULT_VALUE,
+					expectedValue: names.ComponentLabelDefaultValue,
 				},
 				{
-					key:           names.MANAGED_BY_LABEL_KEY,
+					key:           names.ManagedByLabelKey,
 					shouldExist:   true,
-					expectedValue: names.MANAGED_BY_LABEL_DEFAULT_VALUE,
+					expectedValue: names.ManagedByLabelDefaultValue,
 				},
 				{
-					key:           names.PART_OF_LABEL_KEY,
+					key:           names.PartOfLabelKey,
 					shouldExist:   false,
 					expectedValue: "Invalid",
 				},
 				{
-					key:           names.VERSION_LABEL_KEY,
+					key:           names.VersionLabelKey,
 					shouldExist:   false,
 					expectedValue: "Invalid",
 				},
@@ -77,10 +77,10 @@ var _ = Describe("Networkaddonsconfig", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			crLabels = map[string]string{}
-			crLabels[names.COMPONENT_LABEL_KEY] = componentCrLabelValue
-			crLabels[names.MANAGED_BY_LABEL_KEY] = managedByCrLabelValue
-			crLabels[names.PART_OF_LABEL_KEY] = partOfCrLabelValue
-			crLabels[names.VERSION_LABEL_KEY] = versionCrLabelValue
+			crLabels[names.ComponentLabelKey] = componentCrLabelValue
+			crLabels[names.ManagedByLabelKey] = managedByCrLabelValue
+			crLabels[names.PartOfLabelKey] = partOfCrLabelValue
+			crLabels[names.VersionLabelKey] = versionCrLabelValue
 			err = updateObjectsLabels(crLabels, objs)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -88,22 +88,22 @@ var _ = Describe("Networkaddonsconfig", func() {
 		It("Should find all labels overridden by CR labels except managed-by that should keep original", func() {
 			expectedAppLabelKeys := []checkUnit{
 				{
-					key:           names.COMPONENT_LABEL_KEY,
+					key:           names.ComponentLabelKey,
 					shouldExist:   true,
 					expectedValue: componentCrLabelValue,
 				},
 				{
-					key:           names.MANAGED_BY_LABEL_KEY,
+					key:           names.ManagedByLabelKey,
 					shouldExist:   true,
-					expectedValue: names.MANAGED_BY_LABEL_DEFAULT_VALUE,
+					expectedValue: names.ManagedByLabelDefaultValue,
 				},
 				{
-					key:           names.PART_OF_LABEL_KEY,
+					key:           names.PartOfLabelKey,
 					shouldExist:   true,
 					expectedValue: partOfCrLabelValue,
 				},
 				{
-					key:           names.VERSION_LABEL_KEY,
+					key:           names.VersionLabelKey,
 					shouldExist:   true,
 					expectedValue: versionCrLabelValue,
 				},
@@ -117,22 +117,22 @@ var _ = Describe("Networkaddonsconfig", func() {
 func checkObjectsRelationshipLabels(objs []*unstructured.Unstructured, appLabelKeys []checkUnit) {
 	appLabelsNotExists := []checkUnit{
 		{
-			key:           names.COMPONENT_LABEL_KEY,
+			key:           names.ComponentLabelKey,
 			shouldExist:   false,
 			expectedValue: "Invalid",
 		},
 		{
-			key:           names.MANAGED_BY_LABEL_KEY,
+			key:           names.ManagedByLabelKey,
 			shouldExist:   false,
 			expectedValue: "Invalid",
 		},
 		{
-			key:           names.PART_OF_LABEL_KEY,
+			key:           names.PartOfLabelKey,
 			shouldExist:   false,
 			expectedValue: "Invalid",
 		},
 		{
-			key:           names.VERSION_LABEL_KEY,
+			key:           names.VersionLabelKey,
 			shouldExist:   false,
 			expectedValue: "Invalid",
 		},

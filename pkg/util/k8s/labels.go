@@ -36,10 +36,10 @@ func StringToLabel(s string) string {
 // RelationLabels returns the list of the relationship labels
 func RelationLabels() []string {
 	return []string{
-		names.COMPONENT_LABEL_KEY,
-		names.PART_OF_LABEL_KEY,
-		names.VERSION_LABEL_KEY,
-		names.MANAGED_BY_LABEL_KEY,
+		names.ComponentLabelKey,
+		names.PartOfLabelKey,
+		names.VersionLabelKey,
+		names.ManagedByLabelKey,
 	}
 }
 
@@ -47,8 +47,8 @@ func RelationLabels() []string {
 func RemovedLabels() []string {
 	labels := RelationLabels()
 	labels = append(labels, []string{
-		names.PROMETHEUS_LABEL_KEY,
-		names.KUBEMACPOOL_CONTROL_PLANE_KEY,
+		names.PrometheusLabelKey,
+		names.KubemacpoolControlPlaneKey,
 		cnaov1.GroupVersion.Group + "/version"}...)
 	return labels
 }

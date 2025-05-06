@@ -27,7 +27,7 @@ import (
 func GetConfig(gvk schema.GroupVersionKind) *unstructured.Unstructured {
 	config := &unstructured.Unstructured{}
 	config.SetGroupVersionKind(gvk)
-	err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+	err := testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OperatorConfig}, config)
 	if apierrors.IsNotFound(err) {
 		return nil
 	}
@@ -40,7 +40,7 @@ func CreateConfig(gvk schema.GroupVersionKind, configSpec cnao.NetworkAddonsConf
 
 	config := &unstructured.Unstructured{}
 	config.SetGroupVersionKind(gvk)
-	config.SetName(names.OPERATOR_CONFIG)
+	config.SetName(names.OperatorConfig)
 
 	unstructuredConfigSpec, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&configSpec)
 	Expect(err).NotTo(HaveOccurred(), "Failed to convert config spec to unstructured")
@@ -67,14 +67,14 @@ func DeleteConfig(gvk schema.GroupVersionKind) {
 
 	config := &unstructured.Unstructured{}
 	config.SetGroupVersionKind(gvk)
-	config.SetName(names.OPERATOR_CONFIG)
+	config.SetName(names.OperatorConfig)
 
 	err := testenv.Client.Delete(context.TODO(), config)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to remove the Config")
 
 	// Wait until the config is deleted
 	EventuallyWithOffset(1, func() error {
-		return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+		return testenv.Client.Get(context.TODO(), types.NamespacedName{Name: names.OperatorConfig}, config)
 	}, 60*time.Second, 1*time.Second).Should(SatisfyAll(HaveOccurred(), WithTransform(apierrors.IsNotFound, BeTrue())), fmt.Sprintf("should successfuly delete config '%s'", config.GetName()))
 
 }

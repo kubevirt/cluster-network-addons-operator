@@ -20,7 +20,7 @@ import (
 // Returns nil with no error if no previous configuration was observed.
 func getAppliedConfiguration(ctx context.Context, client k8sclient.Client, name string, namespace string) (*cnao.NetworkAddonsConfigSpec, error) {
 	cm := &corev1.ConfigMap{}
-	err := client.Get(ctx, types.NamespacedName{Name: names.APPLIED_PREFIX + name, Namespace: namespace}, cm)
+	err := client.Get(ctx, types.NamespacedName{Name: names.AppliedPrefix + name, Namespace: namespace}, cm)
 	if err != nil && apierrors.IsNotFound(err) {
 		return nil, nil
 	} else if err != nil {
@@ -48,7 +48,7 @@ func appliedConfiguration(applied *cnao.NetworkAddonsConfig, namespace string) (
 			Kind:       "ConfigMap",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      names.APPLIED_PREFIX + applied.Name,
+			Name:      names.AppliedPrefix + applied.Name,
 			Namespace: namespace,
 		},
 		Data: map[string]string{

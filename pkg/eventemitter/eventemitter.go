@@ -54,7 +54,7 @@ func New(mgr manager.Manager) EventEmitter {
 }
 
 func (ee *eventEmitter) Init(mgr manager.Manager) {
-	ee.recorder = mgr.GetEventRecorderFor(names.OPERATOR_CONFIG)
+	ee.recorder = mgr.GetEventRecorderFor(names.OperatorConfig)
 }
 
 func (ee eventEmitter) EmitEventForConfig(config *cnaov1.NetworkAddonsConfig, eventType, reason, msg string) {
@@ -85,7 +85,7 @@ func (ee eventEmitter) EmitModifiedForConfig() {
 
 func (ee eventEmitter) getConfigForEmitter() *cnaov1.NetworkAddonsConfig {
 	config := &cnaov1.NetworkAddonsConfig{}
-	err := ee.client.Get(context.TODO(), types.NamespacedName{Name: names.OPERATOR_CONFIG}, config)
+	err := ee.client.Get(context.TODO(), types.NamespacedName{Name: names.OperatorConfig}, config)
 	if err != nil {
 		log.Printf("Failed to get NetworkAddonsConfig in order emit event. %v", err)
 

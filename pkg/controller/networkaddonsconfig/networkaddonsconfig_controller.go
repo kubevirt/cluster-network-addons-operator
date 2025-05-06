@@ -110,7 +110,7 @@ func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.C
 	// Status manager is shared between both reconcilers, and it is used to update conditions of
 	// NetworkAddonsConfig.State. NetworkAddonsConfig reconciler updates it with progress of rendering
 	// and applying of manifests. Pods reconciler updates it with progress of deployed pods.
-	statusManager := statusmanager.New(mgr, names.OPERATOR_CONFIG)
+	statusManager := statusmanager.New(mgr, names.OperatorConfig)
 	return &ReconcileNetworkAddonsConfig{
 		client:        mgr.GetClient(),
 		scheme:        mgr.GetScheme(),
@@ -219,7 +219,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	log.Print("reconciling NetworkAddonsConfig")
 
 	// We won't create more than one network addons instance
-	if request.Name != names.OPERATOR_CONFIG {
+	if request.Name != names.OperatorConfig {
 		log.Print("ignoring NetworkAddonsConfig without default name")
 		return reconcile.Result{}, nil
 	}
@@ -444,7 +444,7 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 		// Don't set owner reference on CRDs, they should survive removal of the operator
 		// Don't set owner reference on objects that explicitly rejected an owner
 		isCRD := obj.GetKind() == "CustomResourceDefinition"
-		_, isRejectingOwner := obj.GetAnnotations()[names.REJECT_OWNER_ANNOTATION]
+		_, isRejectingOwner := obj.GetAnnotations()[names.RejectOwnerAnnotation]
 		if !isCRD && !isOperatorNamespace(obj) && !isRejectingOwner {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
 				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
@@ -541,19 +541,19 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 		if !isOperatorNamespace(obj) {
 			// Label objects with version of the operator they were created by
 			labels[cnaov1.GroupVersion.Group+"/version"] = operatorVersionLabel
-			labels[names.PROMETHEUS_LABEL_KEY] = names.PROMETHEUS_LABEL_VALUE
-			labels[names.MANAGED_BY_LABEL_KEY] = names.MANAGED_BY_LABEL_DEFAULT_VALUE
+			labels[names.PrometheusLabelKey] = names.PrometheusLabelValue
+			labels[names.ManagedByLabelKey] = names.ManagedByLabelDefaultValue
 
-			appLabelKeys := []string{names.COMPONENT_LABEL_KEY, names.PART_OF_LABEL_KEY, names.VERSION_LABEL_KEY}
+			appLabelKeys := []string{names.ComponentLabelKey, names.PartOfLabelKey, names.VersionLabelKey}
 			labels = updateLabelsFromCR(labels, crLabels, appLabelKeys)
 
-			templateLabelKeys := append(appLabelKeys, names.PROMETHEUS_LABEL_KEY, names.MANAGED_BY_LABEL_KEY)
+			templateLabelKeys := append(appLabelKeys, names.PrometheusLabelKey, names.ManagedByLabelKey)
 			err = updateObjectTemplateLabels(obj, labels, templateLabelKeys)
 			if err != nil {
 				return err
 			}
 		} else {
-			delete(labels, names.KUBEMACPOOL_CONTROL_PLANE_KEY)
+			delete(labels, names.KubemacpoolControlPlaneKey)
 		}
 
 		obj.SetLabels(labels)
@@ -563,7 +563,7 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 }
 
 func updateLabelsFromCR(labels, crLabels map[string]string, appLabelKeys []string) map[string]string {
-	labels[names.COMPONENT_LABEL_KEY] = names.COMPONENT_LABEL_DEFAULT_VALUE
+	labels[names.ComponentLabelKey] = names.ComponentLabelDefaultValue
 	for _, key := range appLabelKeys {
 		if value, exist := crLabels[key]; exist == true {
 			labels[key] = value
