@@ -308,6 +308,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 									Drop: []corev1.Capability{corev1.Capability("ALL")},
 								},
 							},
+							TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 						},
 						{
 							Name:            "kube-rbac-proxy",
