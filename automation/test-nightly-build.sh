@@ -24,9 +24,21 @@ main() {
     build_date="$(date +%Y%m%d)"
     export IMAGE_REGISTRY=quay.io/kubevirtci
     export IMAGE_TAG="nb_${build_date}_$(git show -s --format=%h)"
+    export VERSION=${IMAGE_TAG}
+    export DEPLOY_DIR=_out
 
-    # build CNAO operator
-    make cluster-operator-push
+     # build and push CNAO operator image
+     make docker-build-operator docker-push-operator
+
+    # generate manifests
+    rm -rf ${DEPLOY_DIR}
+    make gen-manifests
+
+    # Create NS and deploy the CRD
+    ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/namespace.yaml
+    ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/network-addons-config.crd.yaml
+
+    # Deploy the operator
     make cluster-operator-install
 
     # run functest
@@ -36,8 +48,7 @@ main() {
     cnao_bucket="kubevirt-prow/devel/nightly/release/kubevirt/cluster-network-addons-operator"
 
     # publish the nightly build manifests
-    CNAO_VERSION=$(hack/version.sh)
-    SRC_DIR="./_out/cluster-network-addons/${CNAO_VERSION}"
+    SRC_DIR="./_out/cluster-network-addons/${VERSION}"
     DEST="gs://${cnao_bucket}/${build_date}"
     gsutil cp "${SRC_DIR}/namespace.yaml" "${DEST}/namespace.yaml"
     gsutil cp "${SRC_DIR}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml" "${DEST}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml"
