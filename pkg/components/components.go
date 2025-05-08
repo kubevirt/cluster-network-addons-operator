@@ -638,6 +638,7 @@ func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 				Verbs: []string{
 					"list",
 					"watch",
+					"get",
 				},
 			},
 			{
