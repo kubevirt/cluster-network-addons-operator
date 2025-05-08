@@ -478,6 +478,10 @@ func checkForComponent(component *Component) error {
 		errsAppend(checkForNetworkAttachmentDefinition(component.NetworkAttachmentDefinition))
 	}
 
+	if component.ConfigMap != "" {
+		errsAppend(checkForConfigMap(component.ConfigMap))
+	}
+
 	return errsToErr(errs)
 }
 
@@ -531,6 +535,10 @@ func checkForComponentRemoval(component *Component) error {
 
 	if component.NetworkAttachmentDefinition != "" {
 		errsAppend(checkForNetworkAttachmentDefinitionRemoval(component.NetworkAttachmentDefinition))
+	}
+
+	if component.ConfigMap != "" {
+		errsAppend(checkForConfigMapRemoval(component.ConfigMap))
 	}
 
 	return errsToErr(errs)
@@ -801,6 +809,21 @@ func checkForNetworkAttachmentDefinition(name string) error {
 	}
 
 	err = checkRelationshipLabels(networkAttachmentDefinition.GetLabels(), "NetworkAttachmentDefinition", name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkForConfigMap(name string) error {
+	configMap := corev1.ConfigMap{}
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &configMap)
+	if err != nil {
+		return err
+	}
+
+	err = checkRelationshipLabels(configMap.GetLabels(), "ConfigMap", name)
 	if err != nil {
 		return err
 	}
