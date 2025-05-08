@@ -13,6 +13,10 @@ teardown() {
 }
 
 main() {
+    source hack/components/docker-utils.sh
+    export OCI_BIN=${OCI_BIN:-$(docker-utils::determine_cri_bin)}
+    cat "${QUAY_PASSWORD}" | ${OCI_BIN} login --username $(cat "${QUAY_USER}") --password-stdin=true quay.io
+
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
