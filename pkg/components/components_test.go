@@ -109,4 +109,19 @@ var _ = Describe("Components", func() {
 			}
 		})
 	})
+
+	Context("When Deploying CNAO operator", func() {
+		It("should have TerminationMessagePolicy", func() {
+			var ciphers = GetCrd().Spec.Versions[0].Schema.OpenAPIV3Schema.Properties["spec"].Properties["tlsSecurityProfile"].Properties["custom"].Properties["ciphers"].Items.Schema.Enum
+			var stringCiphers = make([]string, len(ciphers))
+			for i, c := range ciphers {
+				stringCiphers[i] = string(c.Raw[:])
+			}
+			for i, vi := range stringCiphers {
+				for j := i + 1; j < len(stringCiphers); j++ {
+					Expect(vi).ToNot(Equal(stringCiphers[j]))
+				}
+			}
+		})
+	})
 })

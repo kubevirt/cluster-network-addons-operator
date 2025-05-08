@@ -1113,3 +1113,11 @@ func getPrometheusToken() (string, error) {
 
 	return stdout, nil
 }
+
+func GetAllNamespacePods(namespace string) ([]corev1.Pod, error) {
+	listOptions := client.ListOptions{}
+	listOptions.Namespace = namespace
+	podsList := &corev1.PodList{}
+	err := testenv.Client.List(context.Background(), podsList, &listOptions)
+	return podsList.Items, err
+}
