@@ -21,6 +21,7 @@ type Component struct {
 	ServiceMonitor               string
 	PrometheusRule               string
 	NetworkAttachmentDefinition  string
+	ConfigMap                    string
 }
 
 var (
@@ -30,6 +31,7 @@ var (
 		ClusterRoleBinding:           "kubemacpool-manager-rolebinding",
 		Deployments:                  []string{"kubemacpool-mac-controller-manager", "kubemacpool-cert-manager"},
 		MutatingWebhookConfiguration: "kubemacpool-mutator",
+		ConfigMap:                    "kubemacpool-mac-range-config",
 	}
 	LinuxBridgeComponent = Component{
 		ComponentName:              "Linux Bridge",
