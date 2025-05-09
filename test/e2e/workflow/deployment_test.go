@@ -100,6 +100,32 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {
 			testConfigCreate(gvk, cnao.NetworkAddonsConfigSpec{MacvtapCni: &cnao.MacvtapCni{}}, []Component{MacvtapComponent, MonitoringComponent})
 		})
+		FIt("should deploy all pods with TerminationMessagePolicy=FallbackToLogsOnError configuration", func() {
+			configSpec := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool:            &cnao.KubeMacPool{},
+				LinuxBridge:            &cnao.LinuxBridge{},
+				Multus:                 &cnao.Multus{},
+				Ovs:                    &cnao.Ovs{},
+				MacvtapCni:             &cnao.MacvtapCni{},
+				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
+				KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
+				KubevirtIpamController: &cnao.KubevirtIpamController{},
+			}
+			testConfigCreate(gvk, configSpec, AllComponents)
+			pods, err := GetAllNamespacePods(components.Namespace)
+			Expect(err).ToNot(HaveOccurred())
+
+			var podsInvalidTerminationMessagePolicy []string
+			for _, pod := range pods {
+				for _, container := range pod.Spec.Containers {
+					if container.TerminationMessagePolicy != corev1.TerminationMessageFallbackToLogsOnError {
+						podsInvalidTerminationMessagePolicy = append(podsInvalidTerminationMessagePolicy, fmt.Sprintf("%s[%s]", pod.Name, container.Name))
+					}
+				}
+			}
+
+			Expect(podsInvalidTerminationMessagePolicy).To(BeEmpty())
+		})
 		//2264
 		It("should be able to deploy all components at once", func() {
 			components := []Component{

@@ -99,7 +99,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify
+check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify best-practice-check
 	./hack/check.sh
 
 whitespace-check: $(all_sources)
@@ -261,6 +261,9 @@ build-multiarch-operator-docker:
 build-multiarch-operator-podman:
 	ARCH=$(ARCH) PLATFORMS=$(PLATFORMS) OPERATOR_IMAGE_TAGGED=$(OPERATOR_IMAGE_TAGGED) ./hack/build-operator-podman.sh
 
+best-practice-check:
+	hack/best-practice-check.sh
+
 .PHONY: \
 	$(E2E_SUITES) \
 	all \
@@ -298,5 +301,6 @@ build-multiarch-operator-podman:
 	update-workflows-branches \
 	statify-components \
 	lint-monitoring \
-	clean
+	clean \
+	best-practice-check
 
