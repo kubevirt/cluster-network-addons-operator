@@ -46,6 +46,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          terminationMessagePolicy: FallbackToLogsOnError
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 ---
 kind: ClusterRole
