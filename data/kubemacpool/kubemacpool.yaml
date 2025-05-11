@@ -207,6 +207,7 @@ spec:
           capabilities:
             drop:
             - ALL
+        terminationMessagePolicy: FallbackToLogsOnError
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always
@@ -303,6 +304,7 @@ spec:
           capabilities:
             drop:
             - ALL
+        terminationMessagePolicy: FallbackToLogsOnError
         volumeMounts:
         - mountPath: /tmp/k8s-webhook-server/serving-certs/
           name: tls-key-pair
