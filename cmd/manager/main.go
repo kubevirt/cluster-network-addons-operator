@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -23,12 +24,14 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 	controllerruntimemetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	cnaov1alpha1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1alpha1"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
@@ -87,6 +90,7 @@ func main() {
 		MapperProvider: func(c *rest.Config, httpClient *http.Client) (meta.RESTMapper, error) {
 			return apiutil.NewDynamicRESTMapper(c, httpClient)
 		},
+		HealthProbeBindAddress: fmt.Sprintf(":%d", components.HealthProbePort),
 	})
 	if err != nil {
 		log.Printf("failed to instantiate new operator manager: %v", err)
@@ -105,6 +109,16 @@ func main() {
 
 	if err := osv1.Install(mgr.GetScheme()); err != nil {
 		log.Printf("failed adding openshift scheme to the client: %v", err)
+		os.Exit(1)
+	}
+
+	log.Print("Add readiness and liveness probes")
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		log.Printf("unable to set up health check: %v", err)
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		log.Printf("unable to set up ready check: %v", err)
 		os.Exit(1)
 	}
 
