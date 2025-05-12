@@ -65,6 +65,8 @@ CONTROLLER_GEN ?= $(BIN_DIR)/controller-gen
 
 MONITORING_LINTER ?= $(BIN_DIR)/monitoringlinter
 
+GOLANGCI_LINT_VERSION ?= v1.64.8
+
 GO := $(GOBIN)/go
 
 $(GO):
@@ -99,7 +101,7 @@ whitespace: $(all_sources)
 	./hack/whitespace.sh --fix
 	touch $@
 
-check: whitespace-check vet goimports-check gen-k8s-check test/unit prom-rules-verify
+check: whitespace-check vet goimports-check gen-k8s-check lint test/unit prom-rules-verify
 	./hack/check.sh
 
 whitespace-check: $(all_sources)
@@ -245,6 +247,11 @@ bump-all:
 generate-doc:
 	go run ./tools/metricsdocs > docs/metrics.md
 
+lint:
+	GOTOOLCHAIN=$$(grep '^toolchain' go.mod | awk '{print $$2}' | sed 's/go//' | awk -F. '{print $$1"."$$2}' || echo ""); \
+	GOFLAGS= $(GO) run -mod=mod \
+    github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION} run --verbose test/check/...
+
 lint-metrics:
 	./hack/prom_metric_linter.sh --operator-name="kubevirt" --sub-operator-name="cnao"
 
@@ -298,5 +305,6 @@ build-multiarch-operator-podman:
 	update-workflows-branches \
 	statify-components \
 	lint-monitoring \
-	clean
+	clean \
+	lint
 
