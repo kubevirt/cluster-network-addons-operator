@@ -20,6 +20,8 @@ main() {
     make cluster-down
     make cluster-up
     trap teardown EXIT SIGINT SIGTERM SIGSTOP
+
+    ./hack/deploy-kubevirt.sh
     make cluster-operator-push
     make cluster-operator-install
     make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
