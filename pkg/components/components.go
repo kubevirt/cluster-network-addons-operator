@@ -12,6 +12,7 @@ import (
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
@@ -21,8 +22,9 @@ import (
 )
 
 const (
-	Name      = "cluster-network-addons-operator"
-	Namespace = "cluster-network-addons"
+	Name            = "cluster-network-addons-operator"
+	Namespace       = "cluster-network-addons"
+	HealthProbePort = 8081
 )
 
 var (
@@ -309,6 +311,30 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								},
 							},
 							TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/healthz",
+										Port: intstr.FromString("healthprobe"),
+									},
+								},
+								InitialDelaySeconds: 15,
+								PeriodSeconds:       20,
+							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/readyz",
+										Port: intstr.FromString("healthprobe"),
+									},
+								},
+								InitialDelaySeconds: 5,
+								PeriodSeconds:       10,
+							},
+							Ports: []corev1.ContainerPort{{
+								ContainerPort: HealthProbePort,
+								Name:          "healthprobe",
+							}},
 						},
 						{
 							Name:            "kube-rbac-proxy",
