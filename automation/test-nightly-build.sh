@@ -55,7 +55,7 @@ main() {
     SRC_DIR="./_out/cluster-network-addons/${VERSION}"
     DEST="gs://${cnao_bucket}/${build_date}"
     gsutil cp "${SRC_DIR}/namespace.yaml" "${DEST}/namespace.yaml"
-    gsutil cp "${SRC_DIR}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml" "${DEST}/cluster-network-addons-operator.${CNAO_VERSION}.clusterserviceversion.yaml"
+    gsutil cp "${SRC_DIR}/cluster-network-addons-operator.${VERSION}.clusterserviceversion.yaml" "${DEST}/cluster-network-addons-operator.${VERSION}.clusterserviceversion.yaml"
     gsutil cp "${SRC_DIR}/network-addons-config.crd.yaml" "${DEST}/network-addons-config.crd.yaml"
     gsutil cp "${SRC_DIR}/operator.yaml" "${DEST}/operator.yaml"
     gsutil cp "${SRC_DIR}/network-addons-config-example.cr.yaml" "${DEST}/network-addons-config-example.cr.yaml"
@@ -63,8 +63,8 @@ main() {
     git show -s --format=%H > ${SRC_DIR}/commit
     gsutil cp ${SRC_DIR}/commit "${DEST}/commit"
 
-    echo "${build_date}" > build-date
-    gsutil cp ./build-date gs://${cnao_bucket}/latest
+    echo "${build_date}" > "${SRC_DIR}/build-date"
+    gsutil cp "${SRC_DIR}/build-date" gs://${cnao_bucket}/latest
 }
 
 main
