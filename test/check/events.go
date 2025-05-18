@@ -106,9 +106,7 @@ func (w *ObjectEventWatcher) SinceResourceVersion(rv string) *ObjectEventWatcher
 }
 
 func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessFunc, watchedDescription string) {
-	Expect(w.startType).ToNot(Equal(invalidWatch))
 	resourceVersion := ""
-
 	switch w.startType {
 	case watchSinceNow:
 		resourceVersion = ""
@@ -118,6 +116,9 @@ func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessF
 		var err error
 		resourceVersion, err = meta.NewAccessor().ResourceVersion(w.object)
 		Expect(err).ToNot(HaveOccurred())
+	case invalidWatch:
+	default:
+		Fail(fmt.Sprintf("Unsupported watch type: %s", w.startType))
 	}
 
 	cli := testenv.KubeClient
