@@ -92,7 +92,7 @@ linters:
     - rowserrcheck
     - unparam
     - unused
-#    - whitespace
+    - whitespace
 #    - exhaustive
 #    - gocritic
 #    - gocyclo

@@ -135,7 +135,6 @@ func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) 
 func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
-
 		return checkConfigCondition(gvk, conditionType, conditionStatus)
 	}
 
@@ -1028,10 +1027,8 @@ func checkUnicast(mac net.HardwareAddr) {
 func retrieveRange() (string, string) {
 	configMap := &corev1.ConfigMap{}
 	Eventually(func() error {
-
 		return testenv.Client.Get(context.TODO(),
 			types.NamespacedName{Namespace: components.Namespace, Name: names.AppliedPrefix + names.OperatorConfig}, configMap)
-
 	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())
 
 	appliedData, exist := configMap.Data["applied"]
