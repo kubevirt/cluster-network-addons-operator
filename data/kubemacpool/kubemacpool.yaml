@@ -280,6 +280,16 @@ spec:
           value: v1
         image: '{{ .KubeMacPoolImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
+        livenessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Content-Type
+              value: application/json
+            path: /healthz
+            port: webhook-server
+            scheme: HTTPS
+          initialDelaySeconds: 15
+          periodSeconds: 20
         name: manager
         ports:
         - containerPort: 8000
@@ -313,13 +323,31 @@ spec:
         - --logtostderr
         - --secure-listen-address=:8443
         - --upstream=http://127.0.0.1:8080
+        - --proxy-endpoints-port=8643
         image: '{{ .KubeRbacProxyImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
+        livenessProbe:
+          httpGet:
+            path: healthz
+            port: proxy
+            scheme: HTTPS
+          initialDelaySeconds: 15
+          periodSeconds: 20
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
           name: metrics
           protocol: TCP
+        - containerPort: 8643
+          name: proxy
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: healthz
+            port: proxy
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 10
         resources:
           requests:
             cpu: 10m
