@@ -132,7 +132,7 @@ func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) 
 	}).WithPolling(10 * time.Millisecond).WithTimeout(5 * time.Minute).Should(Succeed())
 }
 
-func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout time.Duration, duration time.Duration) {
+func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
 		return checkConfigCondition(gvk, conditionType, conditionStatus)
@@ -401,7 +401,7 @@ func CheckForLeftoverLabels() {
 	}
 }
 
-func KeepCheckingWhile(check func(), while func()) {
+func KeepCheckingWhile(check, while func()) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	done := make(chan bool)
@@ -657,9 +657,7 @@ func checkWorkloadRelationshipLabels(labelMapList []map[string]string, kind, nam
 func CheckOperatorPodStability(continuesDuration time.Duration) {
 	By("Checking that cnao operator pod hasn't performed any resets")
 	if continuesDuration != CheckImmediately {
-		Consistently(func() error {
-			return CalculateOperatorPodStability()
-		}, continuesDuration, time.Second).ShouldNot(HaveOccurred(), "CNAO operator pod should not restart consistently")
+		Consistently(CalculateOperatorPodStability()).WithTimeout(continuesDuration).WithPolling(time.Second).ShouldNot(HaveOccurred(), "CNAO operator pod should not restart consistently")
 	} else {
 		Expect(CalculateOperatorPodStability()).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
@@ -955,7 +953,7 @@ func GetMonitoringEndpoint() (*corev1.EndpointAddress, int32, error) {
 	return nil, 0, errors.New("no endpoint target ref name matches CNAO component")
 }
 
-func FindMetric(metrics string, expectedMetric string) string {
+func FindMetric(metrics, expectedMetric string) string {
 	for _, line := range strings.Split(metrics, "\n") {
 		if strings.HasPrefix(line, expectedMetric+" ") {
 			return line
@@ -964,7 +962,7 @@ func FindMetric(metrics string, expectedMetric string) string {
 	return ""
 }
 
-func isNotFound(componentType string, componentName string, clientGetOutput error) error {
+func isNotFound(componentType, componentName string, clientGetOutput error) error {
 	if clientGetOutput != nil {
 		if apierrors.IsNotFound(clientGetOutput) {
 			return nil
@@ -1005,8 +1003,8 @@ func isKindNotFound(err error) bool {
 }
 
 // CheckUnicast return an error in case that the given addresses support multicast or is invalid.
-func CheckUnicastAndValidity() (string, string) {
-	rangeStart, rangeEnd := retrieveRange()
+func CheckUnicastAndValidity() (rangeStart, rangeEnd string) {
+	rangeStart, rangeEnd = retrieveRange()
 	parsedRangeStart, err := net.ParseMAC(rangeStart)
 	Expect(err).ToNot(HaveOccurred())
 	checkUnicast(parsedRangeStart)
@@ -1024,7 +1022,7 @@ func checkUnicast(mac net.HardwareAddr) {
 	Expect(multicastBit).ToNot(BeNumerically("==", 1), "invalid mac address. Multicast addressing is not supported. Unicast addressing must be used. The first octet is %#0X", mac[0])
 }
 
-func retrieveRange() (string, string) {
+func retrieveRange() (rangeStart, rangeEnd string) {
 	configMap := &corev1.ConfigMap{}
 	Eventually(func() error {
 		return testenv.Client.Get(context.TODO(),
@@ -1040,8 +1038,8 @@ func retrieveRange() (string, string) {
 
 	Expect(appliedConfig.KubeMacPool).ToNot(BeNil(), "kubemacpool config doesn't exist")
 
-	rangeStart := appliedConfig.KubeMacPool.RangeStart
-	rangeEnd := appliedConfig.KubeMacPool.RangeEnd
+	rangeStart = appliedConfig.KubeMacPool.RangeStart
+	rangeEnd = appliedConfig.KubeMacPool.RangeEnd
 	return rangeStart, rangeEnd
 }
 

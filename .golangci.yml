@@ -94,7 +94,7 @@ linters:
     - unused
     - whitespace
     - exhaustive
-#    - gocritic
+    - gocritic
 #    - gocyclo
 #    - gosec
 #    - gosimple
