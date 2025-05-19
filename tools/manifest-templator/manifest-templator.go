@@ -52,16 +52,17 @@ type operatorData struct {
 }
 
 type templateData struct {
-	Version         string
-	VersionReplaces string
-	OperatorVersion string
-	Namespace       string
-	ContainerPrefix string
-	ImageName       string
-	ContainerTag    string
-	ImagePullPolicy string
-	CNA             *operatorData
-	AddonsImages    *components.AddonsImages
+	Version             string
+	VersionReplaces     string
+	OperatorVersion     string
+	Namespace           string
+	ContainerPrefix     string
+	ImageName           string
+	ContainerTag        string
+	ImagePullPolicy     string
+	CNA                 *operatorData
+	AddonsImages        *components.AddonsImages
+	ClusterDNSPlacement components.ClusterDNSPlacement
 }
 
 func check(err error) {
@@ -254,6 +255,9 @@ func main() {
 	kubevirtIpamControllerImage := flag.String("kubevirt-ipam-controller-image", components.KubevirtIpamControllerImageDefault, "The kubevirtipamcontroller-image managed by CNA")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
+	clusterDNSNamespace := flag.String("cluster-dns-namespace", "kube-system", "The namespace name where the cluster DNS endpoint reside")
+	clusterDNSLabelKey := flag.String("cluster-dns-label-key", "k8s-app", "The cluster DNS pods labels key, which can be used by a label selector")
+	clusterDNSLabelValue := flag.String("cluster-dns-label-value", "kube-dns", "The cluster DNS pods labels value, which can be used by a label selector")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.CommandLine.ParseErrorsWhitelist.UnknownFlags = true
 	pflag.Parse()
@@ -267,6 +271,11 @@ func main() {
 		ImageName:       *imageName,
 		ContainerTag:    *containerTag,
 		ImagePullPolicy: *imagePullPolicy,
+		ClusterDNSPlacement: components.ClusterDNSPlacement{
+			Namespace:  *clusterDNSNamespace,
+			LabelKey:   *clusterDNSLabelKey,
+			LabelValue: *clusterDNSLabelValue,
+		},
 		AddonsImages: (&components.AddonsImages{
 			Multus:                 *multusImage,
 			LinuxBridgeCni:         *linuxBridgeCniImage,
