@@ -97,7 +97,7 @@ linters:
     - gocritic
     - gocyclo
     - gosec
-#    - gosimple
+    - gosimple
 #    - lll
 #    - mnd
 #    - depguard

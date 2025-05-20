@@ -139,13 +139,13 @@ func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the condition"))
+		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), "Timed out waiting for the condition")
 	} else {
-		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), fmt.Sprintf("Condition is not in the expected state"))
+		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), "Condition is not in the expected state")
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition prematurely changed its value"))
+		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), "Condition prematurely changed its value")
 	}
 }
 
@@ -301,13 +301,13 @@ func CheckConfigVersions(gvk schema.GroupVersionKind, operatorVersion, observedV
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the expected versions"))
+		Eventually(getAndCheckVersions, timeout, time.Second).ShouldNot(HaveOccurred(), "Timed out waiting for the expected versions")
 	} else {
-		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), fmt.Sprintf("Versions are not in the expected state"))
+		Expect(getAndCheckVersions()).NotTo(HaveOccurred(), "Versions are not in the expected state")
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Versions prematurely changed their values"))
+		Consistently(getAndCheckVersions, duration, time.Second).ShouldNot(HaveOccurred(), "Versions prematurely changed their values")
 	}
 }
 
@@ -316,7 +316,7 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	if timeout != CheckImmediately {
 		Eventually(func() error {
 			return checkForDeployment(components.Name, false, false)
-		}, timeout, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for the operator to become ready"))
+		}, timeout, time.Second).ShouldNot(HaveOccurred(), "Timed out waiting for the operator to become ready")
 	} else {
 		Expect(checkForDeployment(components.Name, false, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
@@ -667,7 +667,6 @@ func PrintOperatorPodStability() {
 	if err := CalculateOperatorPodStability(); err != nil {
 		fmt.Fprintln(GinkgoWriter, "WARNING: CNAO operator pod is not stable: "+err.Error())
 	}
-	return
 }
 
 func CalculateOperatorPodStability() error {
