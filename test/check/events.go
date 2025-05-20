@@ -140,7 +140,8 @@ func (w *ObjectEventWatcher) wrapProcessFunc(processFunc ProcessFunc) ProcessFun
 			} else {
 				log.Printf("%s", msg)
 			}
-			ExpectWithOffset(1, event.Type).NotTo(Equal(string(WarningEvent)), "Unexpected Warning event received: %s,%s: %s", event.InvolvedObject.Name, event.InvolvedObject.UID, event.Message)
+			ExpectWithOffset(1, event.Type).NotTo(Equal(string(WarningEvent)),
+				"Unexpected Warning event received: %s,%s: %s", event.InvolvedObject.Name, event.InvolvedObject.UID, event.Message)
 			return processFunc(event)
 		}
 	} else {

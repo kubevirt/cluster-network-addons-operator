@@ -71,7 +71,8 @@ func CheckComponentsRemoval(components []Component) {
 		By(fmt.Sprintf("Checking that component %s has been removed", component.ComponentName))
 		Eventually(func() error {
 			return checkForComponentRemoval(&component)
-		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(), fmt.Sprintf("%s component has not been fully removed within the given timeout", component.ComponentName))
+		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(),
+			fmt.Sprintf("%s component has not been fully removed within the given timeout", component.ComponentName))
 	}
 
 	By(fmt.Sprintf("Checking the %s configmap has been removed", names.AppliedPrefix+names.OperatorConfig))
@@ -132,20 +133,24 @@ func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) 
 	}).WithPolling(10 * time.Millisecond).WithTimeout(5 * time.Minute).Should(Succeed())
 }
 
-func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus, timeout, duration time.Duration) {
+func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus,
+	timeout, duration time.Duration) {
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
 		return checkConfigCondition(gvk, conditionType, conditionStatus)
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), "Timed out waiting for the condition")
+		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+			"Timed out waiting for the condition")
 	} else {
-		Expect(getAndCheckCondition()).NotTo(HaveOccurred(), "Condition is not in the expected state")
+		Expect(getAndCheckCondition()).NotTo(HaveOccurred(),
+			"Condition is not in the expected state")
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), "Condition prematurely changed its value")
+		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+			"Condition prematurely changed its value")
 	}
 }
 
@@ -159,17 +164,21 @@ func CheckConfigConditionChangedAfter(
 	By(fmt.Sprintf("Checking that condition %q status is %q and changed after previous transition time", conditionType, expectedStatus))
 
 	getAndCheck := func() error {
-		return checkConfigConditionChangedAfter(gvk, conditionsv1.ConditionType(conditionType), corev1.ConditionStatus(expectedStatus), checkCondTimestampMap)
+		return checkConfigConditionChangedAfter(gvk, conditionsv1.ConditionType(conditionType),
+			corev1.ConditionStatus(expectedStatus), checkCondTimestampMap)
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheck, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Timed out waiting for condition %q to change", conditionType))
+		Eventually(getAndCheck, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+			fmt.Sprintf("Timed out waiting for condition %q to change", conditionType))
 	} else {
-		Expect(getAndCheck()).NotTo(HaveOccurred(), fmt.Sprintf("Condition %q is not in expected state or hasn't changed", conditionType))
+		Expect(getAndCheck()).NotTo(HaveOccurred(),
+			fmt.Sprintf("Condition %q is not in expected state or hasn't changed", conditionType))
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheck, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(), fmt.Sprintf("Condition %q prematurely changed again", conditionType))
+		Consistently(getAndCheck, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+			fmt.Sprintf("Condition %q prematurely changed again", conditionType))
 	}
 }
 
@@ -273,8 +282,10 @@ func GetEnvVarsFromDeployment(deploymentName string) ([]corev1.EnvVar, error) {
 	return envVars, nil
 }
 
-func CheckConfigVersions(gvk schema.GroupVersionKind, operatorVersion, observedVersion, targetVersion string, timeout, duration time.Duration) {
-	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q", operatorVersion, observedVersion, targetVersion))
+func CheckConfigVersions(gvk schema.GroupVersionKind, operatorVersion, observedVersion, targetVersion string,
+	timeout, duration time.Duration) {
+	By(fmt.Sprintf("Checking that status contains expected versions Operator: %q, Observed: %q, Target: %q",
+		operatorVersion, observedVersion, targetVersion))
 	getAndCheckVersions := func() error {
 		configStatus := GetConfigStatus(gvk)
 
@@ -626,7 +637,10 @@ func CheckForGenericDeployment(name, namespace string, checkVersionLabels, check
 	}
 
 	if checkRelationshipLabels {
-		err := checkWorkloadRelationshipLabels([]map[string]string{deployment.GetLabels(), deployment.Spec.Template.GetLabels()}, "Deployment", name)
+		err := checkWorkloadRelationshipLabels(
+			[]map[string]string{deployment.GetLabels(), deployment.Spec.Template.GetLabels()},
+			"Deployment",
+			name)
 		if err != nil {
 			return err
 		}
@@ -657,7 +671,8 @@ func checkWorkloadRelationshipLabels(labelMapList []map[string]string, kind, nam
 func CheckOperatorPodStability(continuesDuration time.Duration) {
 	By("Checking that cnao operator pod hasn't performed any resets")
 	if continuesDuration != CheckImmediately {
-		Consistently(CalculateOperatorPodStability()).WithTimeout(continuesDuration).WithPolling(time.Second).ShouldNot(HaveOccurred(), "CNAO operator pod should not restart consistently")
+		Consistently(CalculateOperatorPodStability()).WithTimeout(continuesDuration).WithPolling(time.Second).ShouldNot(HaveOccurred(),
+			"CNAO operator pod should not restart consistently")
 	} else {
 		Expect(CalculateOperatorPodStability()).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
@@ -799,7 +814,8 @@ func checkForPrometheusRule(name string) error {
 
 func checkForNetworkAttachmentDefinition(name string) error {
 	networkAttachmentDefinition := k8snetworkplumbingwgv1.NetworkAttachmentDefinition{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault}, &networkAttachmentDefinition)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault},
+		&networkAttachmentDefinition)
 	if err != nil {
 		return err
 	}
@@ -867,37 +883,47 @@ func checkForDaemonSetRemoval(name string) error {
 }
 
 func checkForDeploymentRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &appsv1.Deployment{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: components.Namespace}, &appsv1.Deployment{})
 	return isNotFound("Deployments", name, err)
 }
 
 func checkForSecretRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
 	return isNotFound("Secret", name, err)
 }
 
 func checkForMutatingWebhookConfigurationRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name}, &admissionregistrationv1.MutatingWebhookConfiguration{})
 	return isNotFound("MutatingWebhookConfiguration", name, err)
 }
 
 func checkForServiceRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Service{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Service{})
 	return isNotFound("Service", name, err)
 }
 
 func checkForServiceMonitorRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.ServiceMonitor{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: components.Namespace},
+		&monitoringv1.ServiceMonitor{})
 	return isNotFound("ServiceMonitor", name, err)
 }
 
 func checkForPrometheusRuleRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &monitoringv1.PrometheusRule{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: components.Namespace},
+		&monitoringv1.PrometheusRule{})
 	return isNotFound("PrometheusRule", name, err)
 }
 
 func checkForNetworkAttachmentDefinitionRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault}, &k8snetworkplumbingwgv1.NetworkAttachmentDefinition{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: corev1.NamespaceDefault},
+		&k8snetworkplumbingwgv1.NetworkAttachmentDefinition{})
 	if err != nil && isKindNotFound(err) {
 		return nil
 	}
@@ -905,14 +931,17 @@ func checkForNetworkAttachmentDefinitionRemoval(name string) error {
 }
 
 func checkForConfigMapRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.ConfigMap{})
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: name, Namespace: components.Namespace},
+		&corev1.ConfigMap{})
 	return isNotFound("ConfigMap", name, err)
 }
 
 func getMonitoringEndpoint() (*corev1.Endpoints, error) {
 	By("Finding CNAO prometheus endpoint")
 	endpoint := &corev1.Endpoints{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: MonitoringComponent.Service, Namespace: components.Namespace}, endpoint)
+	err := testenv.Client.Get(context.Background(),
+		types.NamespacedName{Name: MonitoringComponent.Service, Namespace: components.Namespace}, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -1018,7 +1047,8 @@ func checkUnicast(mac net.HardwareAddr) {
 	// A bitwise AND between 00000001 and the mac address first octet.
 	// In case where the LSB of the first octet (the multicast bit) is on, it will return 1, and 0 otherwise.
 	multicastBit := 1 & mac[0]
-	Expect(multicastBit).ToNot(BeNumerically("==", 1), "invalid mac address. Multicast addressing is not supported. Unicast addressing must be used. The first octet is %#0X", mac[0])
+	Expect(multicastBit).ToNot(BeNumerically("==", 1),
+		"invalid mac address. Multicast addressing is not supported. Unicast addressing must be used. The first octet is %#0X", mac[0])
 }
 
 func retrieveRange() (rangeStart, rangeEnd string) {
