@@ -105,6 +105,16 @@ spec:
                 - localhost/healthz
             initialDelaySeconds: 15
             periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - curl
+                - --fail
+                - --unix-socket
+                - /host/run/multus/multus.sock
+                - localhost/healthz
+            initialDelaySeconds: 15
+            periodSeconds: 5
           resources:
             requests:
               cpu: "100m"
@@ -119,6 +129,7 @@ spec:
               mountPath: /host/run/multus/multus.sock
             - name: cri-socket
               mountPath: /host/run/crio/crio.sock
+          terminationMessagePolicy: FallbackToLogsOnError
           imagePullPolicy: {{ .ImagePullPolicy }}
       terminationGracePeriodSeconds: 10
       volumes:
