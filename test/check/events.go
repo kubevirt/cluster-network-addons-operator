@@ -163,7 +163,7 @@ func (w *ObjectEventWatcher) runWatchLoop(resourceVersion string, process Proces
 	uid := w.object.(metav1.ObjectMetaAccessor).GetObjectMeta().GetName()
 	eventWatcher, err := cli.CoreV1().Events(corev1.NamespaceAll).
 		Watch(context.Background(), metav1.ListOptions{
-			FieldSelector:   fields.ParseSelectorOrDie("involvedObject.name=" + string(uid)).String(),
+			FieldSelector:   fields.ParseSelectorOrDie("involvedObject.name=" + uid).String(),
 			ResourceVersion: resourceVersion,
 		})
 	if err != nil {
