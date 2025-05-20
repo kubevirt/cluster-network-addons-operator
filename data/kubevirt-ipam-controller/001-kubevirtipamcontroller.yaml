@@ -212,6 +212,7 @@ spec:
             capabilities:
               drop:
                 - ALL
+          terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
             - mountPath: {{ .MountPath }}
               name: cert
