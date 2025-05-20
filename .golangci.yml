@@ -102,5 +102,5 @@ linters:
     - mnd
 #    - depguard
     - staticcheck
-#    - stylecheck
+    - stylecheck
 #    - unconvert

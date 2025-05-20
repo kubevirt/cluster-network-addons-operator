@@ -121,7 +121,7 @@ type ComponentsConfig struct {
 }
 
 type ComponentSource struct {
-	Url          string                `yaml:"url"`
+	URL          string                `yaml:"url"`
 	Commit       string                `yaml:"commit"`
 	Branch       string                `yaml:"branch"`
 	UpdatePolicy ComponentUpdatePolicy `yaml:"update-policy"`
@@ -131,12 +131,12 @@ type ComponentSource struct {
 func GetComponentSource(component string) (ComponentSource, error) {
 	componentsConfig, err := parseComponentsYaml("components.yaml")
 	if err != nil {
-		return ComponentSource{}, errors.Wrapf(err, "Failed to get components config")
+		return ComponentSource{}, errors.Wrapf(err, "failed to get components config")
 	}
 
 	componentSource, ok := componentsConfig.Components[component]
 	if !ok {
-		return ComponentSource{}, errors.Wrapf(err, "Failed to get component %s", component)
+		return ComponentSource{}, errors.Wrapf(err, "failed to get component %s", component)
 	}
 
 	return componentSource, nil
@@ -147,16 +147,16 @@ func parseComponentsYaml(componentsConfigPath string) (ComponentsConfig, error) 
 
 	componentsData, err := os.ReadFile(componentsConfigPath)
 	if err != nil {
-		return ComponentsConfig{}, errors.Wrapf(err, "Failed to open file %s", componentsConfigPath)
+		return ComponentsConfig{}, errors.Wrapf(err, "failed to open file %s", componentsConfigPath)
 	}
 
 	err = yaml.Unmarshal(componentsData, &config)
 	if err != nil {
-		return ComponentsConfig{}, errors.Wrapf(err, "Failed to Unmarshal %s", componentsConfigPath)
+		return ComponentsConfig{}, errors.Wrapf(err, "failed to Unmarshal %s", componentsConfigPath)
 	}
 
 	if len(config.Components) == 0 {
-		return ComponentsConfig{}, fmt.Errorf("Failed to Unmarshal %s. Output is empty", componentsConfigPath)
+		return ComponentsConfig{}, fmt.Errorf("failed to Unmarshal %s. Output is empty", componentsConfigPath)
 	}
 
 	return config, nil

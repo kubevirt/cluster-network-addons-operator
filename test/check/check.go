@@ -201,7 +201,7 @@ func checkConfigConditionChangedAfter(
 ) error {
 	confStatus := GetConfigStatus(gvk)
 	if confStatus == nil {
-		return fmt.Errorf("Config Status not found")
+		return fmt.Errorf("config Status not found")
 	}
 
 	for _, cond := range confStatus.Conditions {
@@ -644,10 +644,10 @@ func CheckForGenericDeployment(name, namespace string, checkVersionLabels, check
 		labels := deployment.GetLabels()
 		if labels != nil {
 			if _, operatorLabelSet := labels[cnaov1.GroupVersion.Group+"/version"]; !operatorLabelSet {
-				return fmt.Errorf("Deployment %s/%s is missing operator label", namespace, name)
+				return fmt.Errorf("deployment %s/%s is missing operator label", namespace, name)
 			}
 		} else {
-			return fmt.Errorf("Deployment %s/%s has no labels. Should have operator label", namespace, name)
+			return fmt.Errorf("deployment %s/%s has no labels. Should have operator label", namespace, name)
 		}
 	}
 
@@ -666,7 +666,7 @@ func CheckForGenericDeployment(name, namespace string, checkVersionLabels, check
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("Deployment %s/%s is not ready, current state:\n%v", namespace, name, string(manifest))
+		return fmt.Errorf("deployment %s/%s is not ready, current state:\n%v", namespace, name, string(manifest))
 	}
 
 	return nil
@@ -1018,7 +1018,7 @@ func isNotFound(componentType, componentName string, clientGetOutput error) erro
 func checkConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus) error {
 	confStatus := GetConfigStatus(gvk)
 	if confStatus == nil {
-		return fmt.Errorf("Config Status not found")
+		return fmt.Errorf("config Status not found")
 	}
 	for _, condition := range confStatus.Conditions {
 		if condition.Type == conditionsv1.ConditionType(conditionType) {
