@@ -1098,7 +1098,7 @@ func getPrometheusToken() (string, error) {
 		monitoringNamespace = "monitoring"
 		prometheusPod       = "prometheus-k8s-0"
 		container           = "prometheus"
-		tokenPath           = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+		tokenPath           = "/var/run/secrets/kubernetes.io/serviceaccount/token" // #nosec G101
 	)
 
 	stdout, stderr, err := Kubectl("exec", "-n", monitoringNamespace, prometheusPod, "-c", container, "--", "cat", tokenPath)

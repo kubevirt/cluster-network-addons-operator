@@ -96,7 +96,7 @@ linters:
     - exhaustive
     - gocritic
     - gocyclo
-#    - gosec
+    - gosec
 #    - gosimple
 #    - lll
 #    - mnd
