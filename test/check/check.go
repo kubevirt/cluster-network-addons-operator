@@ -64,6 +64,10 @@ func CheckCrdExplainable() {
 }
 
 func CheckComponentsRemoval(components []Component) {
+	const (
+		pollingDuration = time.Second
+		timeout         = 5 * time.Minute
+	)
 	for _, component := range components {
 		// TODO: Once finalizers are implemented, we should switch to using
 		// once-time checks, since after NodeNetworkState removal, no components
@@ -71,14 +75,14 @@ func CheckComponentsRemoval(components []Component) {
 		By(fmt.Sprintf("Checking that component %s has been removed", component.ComponentName))
 		Eventually(func() error {
 			return checkForComponentRemoval(&component)
-		}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred(),
+		}, timeout, pollingDuration).ShouldNot(HaveOccurred(),
 			fmt.Sprintf("%s component has not been fully removed within the given timeout", component.ComponentName))
 	}
 
 	By(fmt.Sprintf("Checking the %s configmap has been removed", names.AppliedPrefix+names.OperatorConfig))
 	Eventually(func() error {
 		return checkForConfigMapRemoval(names.AppliedPrefix + names.OperatorConfig)
-	}, 5*time.Minute, time.Second).Should(Succeed())
+	}, timeout, pollingDuration).Should(Succeed())
 }
 
 func getConfigComponentsMap(gvk schema.GroupVersionKind) (map[string]struct{}, error) {
@@ -119,6 +123,10 @@ func getConfigComponentsMap(gvk schema.GroupVersionKind) (map[string]struct{}, e
 }
 
 func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) {
+	const (
+		pollingDuration = 10 * time.Millisecond
+		timeout         = 5 * time.Minute
+	)
 	Eventually(func() error {
 		deployedComponents, err := getConfigComponentsMap(gvk)
 		if err != nil {
@@ -130,18 +138,19 @@ func CheckConfigComponents(gvk schema.GroupVersionKind, components []Component) 
 			}
 		}
 		return nil
-	}).WithPolling(10 * time.Millisecond).WithTimeout(5 * time.Minute).Should(Succeed())
+	}).WithPolling(pollingDuration).WithTimeout(timeout).Should(Succeed())
 }
 
 func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionType, conditionStatus ConditionStatus,
 	timeout, duration time.Duration) {
+	const pollingDuration = 10 * time.Millisecond
 	By(fmt.Sprintf("Checking that condition %q status is set to %s", conditionType, conditionStatus))
 	getAndCheckCondition := func() error {
 		return checkConfigCondition(gvk, conditionType, conditionStatus)
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheckCondition, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+		Eventually(getAndCheckCondition, timeout, pollingDuration).ShouldNot(HaveOccurred(),
 			"Timed out waiting for the condition")
 	} else {
 		Expect(getAndCheckCondition()).NotTo(HaveOccurred(),
@@ -149,7 +158,7 @@ func CheckConfigCondition(gvk schema.GroupVersionKind, conditionType ConditionTy
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheckCondition, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+		Consistently(getAndCheckCondition, duration, pollingDuration).ShouldNot(HaveOccurred(),
 			"Condition prematurely changed its value")
 	}
 }
@@ -163,13 +172,15 @@ func CheckConfigConditionChangedAfter(
 ) {
 	By(fmt.Sprintf("Checking that condition %q status is %q and changed after previous transition time", conditionType, expectedStatus))
 
+	const pollingDuration = 10 * time.Millisecond
+
 	getAndCheck := func() error {
 		return checkConfigConditionChangedAfter(gvk, conditionsv1.ConditionType(conditionType),
 			corev1.ConditionStatus(expectedStatus), checkCondTimestampMap)
 	}
 
 	if timeout != CheckImmediately {
-		Eventually(getAndCheck, timeout, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+		Eventually(getAndCheck, timeout, pollingDuration).ShouldNot(HaveOccurred(),
 			fmt.Sprintf("Timed out waiting for condition %q to change", conditionType))
 	} else {
 		Expect(getAndCheck()).NotTo(HaveOccurred(),
@@ -177,7 +188,7 @@ func CheckConfigConditionChangedAfter(
 	}
 
 	if duration != CheckDoNotRepeat {
-		Consistently(getAndCheck, duration, 10*time.Millisecond).ShouldNot(HaveOccurred(),
+		Consistently(getAndCheck, duration, pollingDuration).ShouldNot(HaveOccurred(),
 			fmt.Sprintf("Condition %q prematurely changed again", conditionType))
 	}
 }
@@ -340,6 +351,10 @@ func CheckForLeftoverObjects(currentVersion string) {
 	Expect(err).NotTo(HaveOccurred())
 	listOptions.LabelSelector = labelSelector
 
+	const (
+		pollingDuration = time.Second
+		timeout         = 2 * time.Minute
+	)
 	Eventually(func(g Gomega) {
 		deployments := appsv1.DeploymentList{}
 		err = testenv.Client.List(context.Background(), &deployments, &listOptions)
@@ -397,7 +412,7 @@ func CheckForLeftoverObjects(currentVersion string) {
 		prometheusRules := monitoringv1.PrometheusRuleList{}
 		Expect(testenv.Client.List(context.Background(), &prometheusRules, &listOptions)).To(Succeed())
 		Expect(prometheusRules.Items).To(BeEmpty(), "Found leftover objects from the previous operator version")
-	}, 2*time.Minute, time.Second).Should(Succeed())
+	}, timeout, pollingDuration).Should(Succeed())
 }
 
 func CheckForLeftoverLabels() {
@@ -1052,11 +1067,15 @@ func checkUnicast(mac net.HardwareAddr) {
 }
 
 func retrieveRange() (rangeStart, rangeEnd string) {
+	const (
+		pollingDuration = 5 * time.Second
+		timeout         = 50 * time.Second
+	)
 	configMap := &corev1.ConfigMap{}
 	Eventually(func() error {
 		return testenv.Client.Get(context.TODO(),
 			types.NamespacedName{Namespace: components.Namespace, Name: names.AppliedPrefix + names.OperatorConfig}, configMap)
-	}, 50*time.Second, 5*time.Second).ShouldNot(HaveOccurred())
+	}, timeout, pollingDuration).ShouldNot(HaveOccurred())
 
 	appliedData, exist := configMap.Data["applied"]
 	Expect(exist).To(BeTrue(), "applied data not found in configMap")
@@ -1076,7 +1095,9 @@ func CheckAvailableEvent(gvk schema.GroupVersionKind) {
 	By("Check for Available event")
 	config := GetConfig(gvk)
 	configV1 := ConvertToConfigV1(config)
-	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(time.Duration(15) * time.Minute)
+
+	const timeout = 15 * time.Minute
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(timeout)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.AvailableReason)
@@ -1086,7 +1107,8 @@ func CheckProgressingEvent(gvk schema.GroupVersionKind) {
 	By("Check for Progressing event")
 	config := GetConfig(gvk)
 	configV1 := ConvertToConfigV1(config)
-	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(time.Duration(5) * time.Minute)
+	const timeout = 5 * time.Minute
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(timeout)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.ProgressingReason)
@@ -1096,7 +1118,8 @@ func CheckModifiedEvent(gvk schema.GroupVersionKind) {
 	By("Check for Modified event")
 	config := GetConfig(gvk)
 	configV1 := ConvertToConfigV1(config)
-	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(time.Duration(5) * time.Minute)
+	const timeout = 5 * time.Minute
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceNow().Timeout(timeout)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, NormalEvent, eventemitter.ModifiedReason)
@@ -1106,7 +1129,8 @@ func CheckFailedEvent(gvk schema.GroupVersionKind, reason string) {
 	By("Check for Failed event")
 	config := GetConfig(gvk)
 	configV1 := ConvertToConfigV1(config)
-	objectEventWatcher := NewObjectEventWatcher(configV1).SinceWatchedObjectResourceVersion().Timeout(time.Duration(5) * time.Minute)
+	const timeout = 5 * time.Minute
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceWatchedObjectResourceVersion().Timeout(timeout)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitFor(stopChan, WarningEvent, fmt.Sprintf("%s: %s", eventemitter.FailedReason, reason))
@@ -1116,7 +1140,8 @@ func CheckNoWarningEvents(gvk schema.GroupVersionKind, rv string) {
 	By("Check absence of Warning events")
 	config := GetConfig(gvk)
 	configV1 := ConvertToConfigV1(config)
-	objectEventWatcher := NewObjectEventWatcher(configV1).SinceResourceVersion(rv).Timeout(time.Minute)
+	const timeout = time.Minute
+	objectEventWatcher := NewObjectEventWatcher(configV1).SinceResourceVersion(rv).Timeout(timeout)
 	stopChan := make(chan struct{})
 	defer close(stopChan)
 	objectEventWatcher.WaitNotForType(stopChan, WarningEvent)
