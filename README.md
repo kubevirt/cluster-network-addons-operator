@@ -1,3 +1,4 @@
+BOOM
 # Cluster Network Addons Operator
 
 This operator can be used to deploy additional networking components on top of
