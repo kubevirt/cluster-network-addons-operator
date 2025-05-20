@@ -2,7 +2,7 @@ package check
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -145,7 +145,7 @@ func GetComponentSource(component string) (ComponentSource, error) {
 func parseComponentsYaml(componentsConfigPath string) (ComponentsConfig, error) {
 	config := ComponentsConfig{}
 
-	componentsData, err := ioutil.ReadFile(componentsConfigPath)
+	componentsData, err := os.ReadFile(componentsConfigPath)
 	if err != nil {
 		return ComponentsConfig{}, errors.Wrapf(err, "Failed to open file %s", componentsConfigPath)
 	}
