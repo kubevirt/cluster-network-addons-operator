@@ -74,7 +74,8 @@ func main() {
 		}
 
 		proposedPrTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
-		componentBumpNeeded, err := cnaoRepo.isComponentBumpNeeded(currentReleaseTag, updatedReleaseTag, component.Updatepolicy, proposedPrTitle)
+		componentBumpNeeded, err := cnaoRepo.isComponentBumpNeeded(currentReleaseTag, updatedReleaseTag,
+			component.Updatepolicy, component.Metadata, proposedPrTitle)
 		if err != nil {
 			exitWithError(errors.Wrapf(err, "Failed to discover if Bump need for %s", componentName))
 		}

@@ -204,6 +204,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 		currentReleaseVersion string
 		latestReleaseVersion  string
 		updatePolicy          string
+		metadata              string
 		prTitle               string
 		isBumpExpected        bool
 		isValid               bool
@@ -214,7 +215,7 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			gitCnaoRepo.configParams.Url = repoDir
 
 			By("Checking if bump is needed")
-			isComponentBumpNeeded, err := gitCnaoRepo.isComponentBumpNeeded(b.currentReleaseVersion, b.latestReleaseVersion, b.updatePolicy, b.prTitle)
+			isComponentBumpNeeded, err := gitCnaoRepo.isComponentBumpNeeded(b.currentReleaseVersion, b.latestReleaseVersion, b.updatePolicy, b.metadata, b.prTitle)
 			By("Checking expected error received")
 			if b.isValid {
 				Expect(err).ToNot(HaveOccurred(), "Expect function to not return an Error")
@@ -301,6 +302,24 @@ var _ = Describe("Testing internal git CNAO Repo", func() {
 			currentReleaseVersion: "v3.6.2",
 			latestReleaseVersion:  "v3.6.2",
 			updatePolicy:          "tagged",
+			prTitle:               dummyPRTitle,
+			isBumpExpected:        false,
+			isValid:               true,
+		}),
+		Entry("Should bump if updatePolicy latest and the component issued a release on that branch head", isComponentBumpNeededParams{
+			currentReleaseVersion: "v3.6.2",
+			latestReleaseVersion:  "v3.6.2",
+			updatePolicy:          "latest",
+			metadata:              "v3.6.1-5-g4d4511",
+			prTitle:               dummyPRTitle,
+			isBumpExpected:        true,
+			isValid:               true,
+		}),
+		Entry("Should not bump if updatePolicy latest and the component issued a release on that branch head, but metadata is already aligned", isComponentBumpNeededParams{
+			currentReleaseVersion: "v3.6.2",
+			latestReleaseVersion:  "v3.6.2",
+			updatePolicy:          "latest",
+			metadata:              "v3.6.2",
 			prTitle:               dummyPRTitle,
 			isBumpExpected:        false,
 			isValid:               true,
