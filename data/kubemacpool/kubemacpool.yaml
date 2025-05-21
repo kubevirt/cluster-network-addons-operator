@@ -374,6 +374,79 @@ spec:
         secret:
           secretName: kubemacpool-service
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-egress-to-api-server
+  namespace: '{{ .Namespace }}'
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: kubemacpool
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-egress-to-dns
+  namespace: '{{ .Namespace }}'
+spec:
+  egress:
+  - ports:
+    - port: dns-tcp
+      protocol: TCP
+    - port: dns
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector:
+    matchLabels:
+      app: kubemacpool
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-metrics-endpoint
+  namespace: '{{ .Namespace }}'
+spec:
+  ingress:
+  - ports:
+    - port: 8443
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      control-plane: mac-controller-manager
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-webhook
+  namespace: '{{ .Namespace }}'
+spec:
+  ingress:
+  - ports:
+    - port: 8000
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      control-plane: mac-controller-manager
+  policyTypes:
+  - Ingress
+---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
