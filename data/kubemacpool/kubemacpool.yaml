@@ -509,3 +509,19 @@ webhooks:
     resources:
     - virtualmachines
   sideEffects: NoneOnDryRun
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-kube-proxy-metics-endpoint
+  namespace: '{{ .Namespace }}'
+spec:
+  ingress:
+    - ports:
+        - port: 8443
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app: kubemacpool
+  policyTypes:
+    - Ingress
