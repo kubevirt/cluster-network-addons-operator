@@ -116,7 +116,8 @@ func (cnaoRepoOps *gitCnaoRepo) bumpComponent(componentName string) error {
 	return nil
 }
 
-func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, latestReleaseVersion, updatePolicy, proposedPrTitle string) (bool, error) {
+func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, latestReleaseVersion,
+	updatePolicy, metadata, proposedPrTitle string) (bool, error) {
 	logger.Printf("currentReleaseVersion: %s, latestReleaseVersion: %s, updatePolicy: %s\n", currentReleaseVersion, latestReleaseVersion, updatePolicy)
 
 	if updatePolicy == updatePolicyStatic {
@@ -137,6 +138,14 @@ func (cnaoRepoOps *gitCnaoRepo) isComponentBumpNeeded(currentReleaseVersion, lat
 	// if one of the tags is in vtag format (e.g 0.39.0-32-g1fcbe815), and not equal, then always bump
 	if isVtagFormat(currentReleaseVersion) || isVtagFormat(latestReleaseVersion) {
 		return currentReleaseVersion != latestReleaseVersion, nil
+	}
+
+	// in case a tag is added to the commit consumed (before was untagged so metadata has virtual tag),
+	// then both current,latest Versions will be tagged with the same tag and bump should be issued to prefer the real tag.
+	if isVtagFormat(metadata) && !isVtagFormat(latestReleaseVersion) &&
+		currentReleaseVersion == latestReleaseVersion {
+		logger.Printf("Virtual tag in metadata (%s) was replaced by a real tag (%s); prefer the real tag. Triggering bump.", metadata, latestReleaseVersion)
+		return true, nil
 	}
 
 	currentVersion, err := canonicalizeVersion(currentReleaseVersion)
