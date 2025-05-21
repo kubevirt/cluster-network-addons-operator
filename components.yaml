@@ -16,7 +16,7 @@ components:
     commit: bad2a4bea1bf43b91818f6afb75d8aedf3281135
     branch: main
     update-policy: latest
-    metadata: v0.48.0-1-gbad2a4b
+    metadata: v0.48.1
   kubevirt-ipam-controller:
     url: https://github.com/kubevirt/ipam-extensions
     commit: 2a21433b6875027f4487112af4030ab8ad686c3e
