@@ -130,7 +130,6 @@ func newGitRepo(componentName string, componentParams *component) (*gitRepo, err
 	repo, err := git.PlainClone(repoDir, false, &git.CloneOptions{
 		URL:           componentParams.Url,
 		ReferenceName: plumbing.NewBranchReferenceName(componentParams.Branch),
-		Progress:      os.Stdout,
 	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to clone %s repo", componentName)
