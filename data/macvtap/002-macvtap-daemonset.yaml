@@ -42,6 +42,7 @@ spec:
           volumeMounts:
             - name: deviceplugin
               mountPath: /var/lib/kubelet/device-plugins
+          terminationMessagePolicy: FallbackToLogsOnError
       initContainers:
         - name: install-cni
           command: ["cp", "/macvtap-cni", "/host/opt/cni/bin/macvtap"]
