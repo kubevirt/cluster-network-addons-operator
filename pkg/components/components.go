@@ -538,6 +538,23 @@ func GetRole(namespace string) *rbacv1.Role {
 					"delete",
 				},
 			},
+			{
+				APIGroups: []string{
+					"networking.k8s.io",
+				},
+				Resources: []string{
+					"networkpolicies",
+				},
+				Verbs: []string{
+					"get",
+					"list",
+					"watch",
+					"create",
+					"update",
+					"patch",
+					"delete",
+				},
+			},
 		},
 	}
 	return role
