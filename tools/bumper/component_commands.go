@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -122,7 +121,7 @@ func newGithubApi(token string) (*githubApi, error) {
 
 // newGitRepo clones the repository on a local temp directory.
 func newGitRepo(componentName string, componentParams *component) (*gitRepo, error) {
-	repoDir, err := ioutil.TempDir("/tmp", componentName)
+	repoDir, err := os.MkdirTemp("/tmp", componentName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to create temp dir for component")
 	}
