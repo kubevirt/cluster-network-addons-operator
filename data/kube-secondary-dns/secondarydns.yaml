@@ -16,6 +16,8 @@ data:
         }
         reload
         log
+        health :8082
+        ready :8083
     }
 kind: ConfigMap
 metadata:
@@ -96,6 +98,12 @@ spec:
             - containerPort: 5353
               name: dns
               protocol: UDP
+            - containerPort: 8082
+              name: healthport
+              protocol: TCP
+            - containerPort: 8083
+              name: readyport
+              protocol: TCP
           resources:
             requests:
               cpu: 100m
@@ -107,6 +115,19 @@ spec:
             - name: secdns-zones
               mountPath: /zones
               readOnly: true
+          terminationMessagePolicy: FallbackToLogsOnError
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: readyport
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: healthport
+            initialDelaySeconds: 15
+            periodSeconds: 20
         - name: status-monitor
           securityContext:
             allowPrivilegeEscalation: false
@@ -117,6 +138,10 @@ spec:
             requests:
               cpu: 100m
               memory: 70Mi
+          ports:
+            - containerPort: 8081
+              name: healthport
+              protocol: TCP
           volumeMounts:
             - name: secdns-zones
               mountPath: /zones
@@ -131,6 +156,19 @@ spec:
                 configMapKeyRef:
                   name: secondary-dns
                   key: NAME_SERVER_IP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: healthport
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthport
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          terminationMessagePolicy: FallbackToLogsOnError
           imagePullPolicy: {{ .ImagePullPolicy }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always
