@@ -92,15 +92,15 @@ linters:
     - rowserrcheck
     - unparam
     - unused
-#    - whitespace
-#    - exhaustive
-#    - gocritic
-#    - gocyclo
-#    - gosec
-#    - gosimple
-#    - lll
-#    - mnd
+    - whitespace
+    - exhaustive
+    - gocritic
+    - gocyclo
+    - gosec
+    - gosimple
+    - lll
+    - mnd
 #    - depguard
-#    - staticcheck
-#    - stylecheck
-#    - unconvert
+    - staticcheck
+    - stylecheck
+    - unconvert

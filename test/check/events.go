@@ -106,24 +106,32 @@ func (w *ObjectEventWatcher) SinceResourceVersion(rv string) *ObjectEventWatcher
 }
 
 func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessFunc, watchedDescription string) {
-	Expect(w.startType).ToNot(Equal(invalidWatch))
-	resourceVersion := ""
+	resourceVersion := w.getResourceVersion()
 
+	process := w.wrapProcessFunc(processFunc)
+
+	w.runWatchLoop(resourceVersion, process, abortChan, watchedDescription)
+}
+
+func (w *ObjectEventWatcher) getResourceVersion() string {
 	switch w.startType {
 	case watchSinceNow:
-		resourceVersion = ""
+		return ""
 	case watchSinceObjectUpdate, watchSinceResourceVersion:
-		resourceVersion = w.resourceVersion
+		return w.resourceVersion
 	case watchSinceWatchedObjectUpdate:
-		var err error
-		resourceVersion, err = meta.NewAccessor().ResourceVersion(w.object)
+		rv, err := meta.NewAccessor().ResourceVersion(w.object)
 		Expect(err).ToNot(HaveOccurred())
+		return rv
+	case invalidWatch:
+	default:
+		Fail(fmt.Sprintf("Unsupported watch type: %s", w.startType))
 	}
+	return ""
+}
 
-	cli := testenv.KubeClient
-
-	f := processFunc
-
+func (w *ObjectEventWatcher) wrapProcessFunc(processFunc ProcessFunc) ProcessFunc {
+	var f ProcessFunc
 	if w.failOnWarnings {
 		f = func(event *corev1.Event) bool {
 			msg := fmt.Sprintf("Event(%#v): type: '%v' reason: '%v' %v", event.InvolvedObject, event.Type, event.Reason, event.Message)
@@ -132,10 +140,10 @@ func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessF
 			} else {
 				log.Printf("%s", msg)
 			}
-			ExpectWithOffset(1, event.Type).NotTo(Equal(string(WarningEvent)), "Unexpected Warning event received: %s,%s: %s", event.InvolvedObject.Name, event.InvolvedObject.UID, event.Message)
+			ExpectWithOffset(1, event.Type).NotTo(Equal(string(WarningEvent)),
+				"Unexpected Warning event received: %s,%s: %s", event.InvolvedObject.Name, event.InvolvedObject.UID, event.Message)
 			return processFunc(event)
 		}
-
 	} else {
 		f = func(event *corev1.Event) bool {
 			msg := fmt.Sprintf("Event(%#v): type: '%v' reason: '%v' %v", event.InvolvedObject, event.Type, event.Reason, event.Message)
@@ -147,11 +155,15 @@ func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessF
 			return processFunc(event)
 		}
 	}
+	return f
+}
 
+func (w *ObjectEventWatcher) runWatchLoop(resourceVersion string, process ProcessFunc, abortChan chan struct{}, watchedDescription string) {
+	cli := testenv.KubeClient
 	uid := w.object.(metav1.ObjectMetaAccessor).GetObjectMeta().GetName()
 	eventWatcher, err := cli.CoreV1().Events(corev1.NamespaceAll).
 		Watch(context.Background(), metav1.ListOptions{
-			FieldSelector:   fields.ParseSelectorOrDie("involvedObject.name=" + string(uid)).String(),
+			FieldSelector:   fields.ParseSelectorOrDie("involvedObject.name=" + uid).String(),
 			ResourceVersion: resourceVersion,
 		})
 	if err != nil {
@@ -167,7 +179,7 @@ func (w *ObjectEventWatcher) Watch(abortChan chan struct{}, processFunc ProcessF
 			if !ok {
 				continue
 			}
-			if f(event) {
+			if process(event) {
 				close(done)
 				break
 			}
