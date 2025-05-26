@@ -26,8 +26,8 @@ main() {
 
     # create and push bundle image and index image
     build_date="$(date +%Y%m%d)"
-    export IMAGE_REGISTRY=quay.io/kubevirtci
-    export IMAGE_TAG="nb_${build_date}_$(git show -s --format=%h)"
+    export IMAGE_REGISTRY=quay.io/kubevirt
+    export IMAGE_TAG="${build_date}_$(git show -s --format=%h)"
     export VERSION=${IMAGE_TAG}
     export DEPLOY_DIR=_out
 
