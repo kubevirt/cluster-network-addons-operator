@@ -19,10 +19,11 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			BeforeEach(func() {
 				UninstallRelease(newRelease)
 				oldReleaseGvk := GetCnaoV1alpha1GroupVersionKind()
+				conditionTimestampsBeforeChange := CaptureConditionTimestamps(oldReleaseGvk)
 				InstallRelease(oldRelease)
 				CheckOperatorIsReady(podsDeploymentTimeout)
 				CreateConfig(oldReleaseGvk, oldRelease.SupportedSpec)
-				CheckConfigCondition(oldReleaseGvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+				CheckConfigConditionChangedAfter(oldReleaseGvk, ConditionAvailable, ConditionTrue, conditionTimestampsBeforeChange, 15*time.Minute, CheckDoNotRepeat)
 				CheckReleaseUsesExpectedContainerImages(oldReleaseGvk, oldRelease)
 				expectedOperatorVersion := oldRelease.Version
 				expectedObservedVersion := oldRelease.Version
@@ -59,6 +60,9 @@ var _ = Context("Cluster Network Addons Operator", func() {
 			})
 
 			It(fmt.Sprintf("should transition reported versions while being upgraded to version %s", newRelease.Version), func() {
+				oldReleaseGvk := GetCnaoV1alpha1GroupVersionKind()
+				conditionTimestampsBeforeChange := CaptureConditionTimestamps(oldReleaseGvk)
+
 				newReleaseGvk := GetCnaoV1GroupVersionKind()
 				// Upgrade the operator
 				InstallRelease(newRelease)
@@ -71,7 +75,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 				CheckConfigVersions(newReleaseGvk, expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, podsDeploymentTimeout, CheckDoNotRepeat)
 
 				// Wait until the operator finishes configuration
-				CheckConfigCondition(newReleaseGvk, ConditionAvailable, ConditionTrue, podsDeploymentTimeout, CheckDoNotRepeat)
+				CheckConfigConditionChangedAfter(newReleaseGvk, ConditionAvailable, ConditionTrue, conditionTimestampsBeforeChange, podsDeploymentTimeout, CheckDoNotRepeat)
 
 				// Validate that observed version turned to the newer
 				expectedOperatorVersion = newRelease.Version
