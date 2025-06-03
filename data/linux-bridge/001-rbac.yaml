@@ -26,5 +26,7 @@ seLinuxContext:
 users:
 - system:serviceaccount:{{ .Namespace }}:linux-bridge
 volumes:
-- "*"
+  - hostPath
+  - configMap
+  - secret
 {{ end }}
