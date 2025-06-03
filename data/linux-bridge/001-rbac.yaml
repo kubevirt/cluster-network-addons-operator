@@ -20,7 +20,9 @@ readOnlyRootFilesystem: false
 runAsUser:
   type: RunAsAny
 seLinuxContext:
-  type: RunAsAny
+  type: MustRunAs
+  seLinuxOptions:
+    type: spc_t
 users:
 - system:serviceaccount:{{ .Namespace }}:linux-bridge
 volumes:
