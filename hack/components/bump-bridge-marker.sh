@@ -74,14 +74,14 @@ metadata:
 allowHostNetwork: true
 allowHostDirVolumePlugin: false
 allowPrivilegedContainer: false
-readOnlyRootFilesystem: false
+readOnlyRootFilesystem: true
 allowHostIPC: false
 allowHostPID: false
 allowHostPorts: false
 runAsUser:
-  type: RunAsAny
+  type: MustRunAsNonRoot
 seLinuxContext:
-  type: RunAsAny
+  type: MustRunAs
 users:
 - system:serviceaccount:{{ .Namespace }}:bridge-marker
 volumes:
