@@ -177,6 +177,8 @@ spec:
             - name: hostroot
               mountPath: /hostroot
               mountPropagation: HostToContainer
+            - mountPath: /etc/cni/multus/net.d
+              name: multus-conf-dir
           env:
             - name: MULTUS_NODE_NAME
               valueFrom:
@@ -191,9 +193,9 @@ spec:
         - name: install-multus-binary
           image: {{ .MultusImage }}
           command:
-            - "cp"
-            - "/usr/src/multus-cni/bin/multus-shim"
-            - "/host/opt/cni/bin/multus-shim"
+            - "sh"
+            - "-c"
+            - "cp /usr/src/multus-cni/bin/multus-shim /host/opt/cni/bin/multus-shim && cp /usr/src/multus-cni/bin/passthru /host/opt/cni/bin/passthru"
           resources:
             requests:
               cpu: "10m"
@@ -237,6 +239,9 @@ spec:
         - name: host-run-netns
           hostPath:
             path: /run/netns/
+        - name: multus-conf-dir
+          hostPath:
+            path: /etc/cni/multus/net.d
       priorityClassName: system-cluster-critical
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
