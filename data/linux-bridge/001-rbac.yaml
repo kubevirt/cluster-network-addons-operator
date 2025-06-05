@@ -16,7 +16,7 @@ allowHostIPC: false
 allowHostNetwork: false
 allowHostPID: false
 allowHostPorts: false
-readOnlyRootFilesystem: false
+readOnlyRootFilesystem: true
 runAsUser:
   type: RunAsAny
 seLinuxContext:
@@ -29,4 +29,5 @@ volumes:
   - hostPath
   - configMap
   - secret
+  - emptyDir
 {{ end }}
