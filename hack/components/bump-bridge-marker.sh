@@ -26,6 +26,9 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"bridge-marker"'
 				yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot 'true'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '1001'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.readOnlyRootFilesystem 'true'
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
 		esac
