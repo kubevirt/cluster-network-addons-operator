@@ -81,9 +81,9 @@ allowHostNetwork: true
 allowPrivilegedContainer: true
 allowHostDirVolumePlugin: true
 runAsUser:
-  type: RunAsAny
+  type: MustRunAsNonRoot
 seLinuxContext:
-  type: RunAsAny
+  type: MustRunAs
 users:
   - system:serviceaccount:{{ .Namespace }}:ovs-cni-marker
 {{ end }}
