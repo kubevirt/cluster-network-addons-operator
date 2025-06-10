@@ -181,6 +181,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 					Labels: map[string]string{
 						"name":                   Name,
 						names.PrometheusLabelKey: names.PrometheusLabelValue,
+						// opt-in to hco-bundle network-policy allowing egress to cluster services
+						"hco.kubevirt.io/allow-access-cluster-services": "",
+						// opt-in to hco-bundle network-policy allowing ingress to the metrics endpoint
+						"hco.kubevirt.io/allow-prometheus-access": "",
 					},
 					Annotations: map[string]string{
 						"description": "cluster-network-addons-operator manages the lifecycle of different Kubernetes network components on top of Kubernetes cluster",
