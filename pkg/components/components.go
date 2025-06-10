@@ -40,7 +40,7 @@ const (
 	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:435f374b434b3bc70a5cfaba0011fdcf5f433d96b98b06d29306cbd8db3a8c21"
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:af31faae20c0128a469dd4c1aa866d6bf78d1d2f5972127adf4c9438dcde10f4"
 	KubeRbacProxyImageDefault          = "quay.io/brancz/kube-rbac-proxy@sha256:e6a323504999b2a4d2a6bf94f8580a050378eba0900fd31335cf9df5787d9a9b"
-	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:fbe94c3aeb2ba2c4ce85b506f6fbd4f03fb83a8fcb4f4121bba6ea76da3fbffe"
+	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:d6e5c15c3fd9dc45bbdef559b16f249752f40b58797516fafec5081e2d22ea97"
 	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
 	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:c35e30ad724f0aab04211ca79e1f4f0cf6db96df526f10f06138f40b6ccccb6e"
 )

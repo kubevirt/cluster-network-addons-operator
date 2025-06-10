@@ -7,10 +7,10 @@ components:
     metadata: 0.12.4
   kube-secondary-dns:
     url: https://github.com/kubevirt/kubesecondarydns
-    commit: 1762c7c60935db818fd184530abf805f6d75ad79
+    commit: 0ae6bb174f7a29371a6916db41ddaf20844b249a
     branch: main
     update-policy: tagged
-    metadata: v0.0.20
+    metadata: v0.0.22
   kubemacpool:
     url: https://github.com/k8snetworkplumbingwg/kubemacpool
     commit: 882c6607af9fdd0e9ac31c9cf8653c4738728831
