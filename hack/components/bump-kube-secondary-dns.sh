@@ -35,6 +35,7 @@ function __parametize_by_object() {
         yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
         yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
         yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"restricted-v2"'
+        yaml-utils::set_param ${f} 'spec.template.metadata.labels."hco.kubevirt.io/allow-access-cluster-services"' '""'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
       ./ServiceAccount_secondary.yaml)

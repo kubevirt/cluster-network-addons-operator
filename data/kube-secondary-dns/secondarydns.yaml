@@ -73,6 +73,7 @@ spec:
     metadata:
       labels:
         k8s-app: secondary-dns
+        hco.kubevirt.io/allow-access-cluster-services: ""
       annotations:
         kubectl.kubernetes.io/default-container: status-monitor
         openshift.io/required-scc: "restricted-v2"
