@@ -296,3 +296,21 @@ webhooks:
         resources:
           - pods
     sideEffects: None
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app: ipam-virt-workloads
+  name: kubevirt-ipam-controller-allow-ingress-to-ipam-ext-webhook
+  namespace: '{{ .Namespace }}'
+spec:
+  ingress:
+    - ports:
+        - port: webhook-server
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      app: ipam-virt-workloads
+  policyTypes:
+    - Ingress

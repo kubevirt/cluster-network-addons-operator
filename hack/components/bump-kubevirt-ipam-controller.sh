@@ -67,6 +67,9 @@ function __parametize_by_object() {
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
+      ./NetworkPolicy_kubevirt-ipam-controller-allow-ingress-to-ipam-ext-webhook.yaml)
+        yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+        ;;
     esac
   done
 }
@@ -126,7 +129,9 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
       Deployment_kubevirt-ipam-controller-manager.yaml \
       Certificate_kubevirt-ipam-controller-serving-cert.yaml \
       Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml \
-      MutatingWebhookConfiguration_kubevirt-ipam-controller-mutating-webhook-configuration.yaml > 001-kubevirtipamcontroller.yaml
+      MutatingWebhookConfiguration_kubevirt-ipam-controller-mutating-webhook-configuration.yaml \
+      NetworkPolicy_kubevirt-ipam-controller-allow-ingress-to-ipam-ext-webhook.yaml \
+        > 001-kubevirtipamcontroller.yaml
 
 )
 
