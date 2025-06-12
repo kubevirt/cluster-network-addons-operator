@@ -36,3 +36,61 @@ subjects:
     name: cluster-network-addons-operator
 
 {{.CNA.Deployment}}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-dns
+  namespace: {{.Namespace}}
+spec:
+  podSelector:
+    matchLabels:
+      name: cluster-network-addons-operator
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: {{ .ClusterDNSPlacement.Namespace }}
+        podSelector:
+          matchLabels:
+            {{ .ClusterDNSPlacement.LabelKey }}: {{ .ClusterDNSPlacement.LabelValue }}
+      ports:
+        - protocol: TCP
+          port: dns-tcp
+        - protocol: UDP
+          port: dns
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-api-server
+  namespace: {{.Namespace}}
+spec:
+  podSelector:
+    matchLabels:
+      name: cluster-network-addons-operator
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 6443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-ingress-to-metrics-endpoint
+  namespace: {{.Namespace}}
+spec:
+  podSelector:
+    matchLabels:
+      name: cluster-network-addons-operator
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: metrics

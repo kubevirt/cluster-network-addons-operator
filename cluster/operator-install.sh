@@ -24,3 +24,6 @@ if [[ ! $(./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster
 	exit 1
 fi
 
+# Ensure the project network-polices are valid by installing an additional deny-all network policy affecting CNAO operator pods
+./hack/install-deny-all-net-pol.sh
+
