@@ -153,6 +153,7 @@ spec:
         app: kubemacpool
         control-plane: cert-manager
         controller-tools.k8s.io: "1.0"
+        hco.kubevirt.io/allow-access-cluster-services: ""
     spec:
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       containers:
@@ -245,6 +246,8 @@ spec:
         app: kubemacpool
         control-plane: mac-controller-manager
         controller-tools.k8s.io: "1.0"
+        hco.kubevirt.io/allow-access-cluster-services: ""
+        hco.kubevirt.io/allow-prometheus-access: ""
     spec:
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       containers:
