@@ -41,6 +41,9 @@ function __parametize_by_object() {
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         ;;
+      ./NetworkPolicy_allow-ingress-to-secondary-dns.yaml)
+        yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+        ;;
     esac
   done
 }
@@ -79,7 +82,9 @@ echo 'Adjust kube-secondary-dns to CNAO'
       ClusterRole_secondary.yaml \
       ClusterRoleBinding_secondary.yaml \
       ServiceAccount_secondary.yaml \
-      Deployment_secondary-dns.yaml > secondarydns.yaml
+      Deployment_secondary-dns.yaml \
+      NetworkPolicy_allow-ingress-to-secondary-dns.yaml \
+        > secondarydns.yaml
 )
 
 echo 'copy manifests'
