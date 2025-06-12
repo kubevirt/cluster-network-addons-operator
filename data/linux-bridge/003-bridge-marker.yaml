@@ -47,7 +47,17 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        readOnlyRootFilesystem: true
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -89,19 +99,21 @@ kind: SecurityContextConstraints
 metadata:
   name: bridge-marker
 allowHostNetwork: true
-allowHostDirVolumePlugin: true
+allowHostDirVolumePlugin: false
 allowPrivilegedContainer: false
-readOnlyRootFilesystem: false
+readOnlyRootFilesystem: true
 allowHostIPC: false
 allowHostPID: false
 allowHostPorts: false
 runAsUser:
-  type: RunAsAny
+  type: MustRunAsNonRoot
 seLinuxContext:
-  type: RunAsAny
+  type: MustRunAs
 users:
 - system:serviceaccount:{{ .Namespace }}:bridge-marker
 volumes:
-- "*"
+- configMap
+- emptyDir
+- projected
 {{ end }}
 ---
