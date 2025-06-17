@@ -26,6 +26,13 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"bridge-marker"'
 				yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.volumes[0].name 'tmp'
+				yaml-utils::set_param ${f} spec.template.spec.volumes[0].emptyDir '{}'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[0].name 'tmp'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[0].mountPath '/tmp'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot 'true'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '1001'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.readOnlyRootFilesystem 'true'
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
 		esac
@@ -68,20 +75,22 @@ kind: SecurityContextConstraints
 metadata:
   name: bridge-marker
 allowHostNetwork: true
-allowHostDirVolumePlugin: true
+allowHostDirVolumePlugin: false
 allowPrivilegedContainer: false
-readOnlyRootFilesystem: false
+readOnlyRootFilesystem: true
 allowHostIPC: false
 allowHostPID: false
 allowHostPorts: false
 runAsUser:
-  type: RunAsAny
+  type: MustRunAsNonRoot
 seLinuxContext:
-  type: RunAsAny
+  type: MustRunAs
 users:
 - system:serviceaccount:{{ .Namespace }}:bridge-marker
 volumes:
-- "*"
+- configMap
+- emptyDir
+- projected
 {{ end }}
 ---
 EOF
