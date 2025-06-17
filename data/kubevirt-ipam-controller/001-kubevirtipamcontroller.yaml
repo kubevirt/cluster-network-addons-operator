@@ -178,6 +178,7 @@ spec:
       labels:
         app: ipam-virt-workloads
         control-plane: manager
+        hco.kubevirt.io/allow-access-cluster-services: ""
     spec:
       containers:
         - args:
