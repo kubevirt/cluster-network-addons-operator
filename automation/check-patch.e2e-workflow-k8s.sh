@@ -24,6 +24,10 @@ main() {
     ./hack/deploy-kubevirt.sh
     make cluster-operator-push
     make cluster-operator-install
+
+    echo "Simulate network restriction on CNAO namespace"
+    ./hack/install-network-policy.sh
+
     make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
 }
 
