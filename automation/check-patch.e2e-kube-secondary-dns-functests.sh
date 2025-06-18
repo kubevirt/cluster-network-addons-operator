@@ -29,6 +29,9 @@ main() {
 
     trap teardown EXIT
 
+    echo "Simulate network restrictions on CNAO namespace"
+    ./hack/install-network-policy.sh
+
     ./hack/deploy-kubevirt.sh
     cd ${TMP_COMPONENT_PATH}
     make create-nodeport
