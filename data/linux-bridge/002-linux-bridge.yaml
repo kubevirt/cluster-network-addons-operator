@@ -69,11 +69,16 @@ spec:
               memory: "15Mi"
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           volumeMounts:
             - name: cnibin
               mountPath: /opt/cni/bin
+            - name: tmp
+              mountPath: /tmp
           terminationMessagePolicy: FallbackToLogsOnError
       volumes:
         - name: cnibin
           hostPath:
             path: {{ .CNIBinDir }}
+        - name: tmp
+          emptyDir: { }

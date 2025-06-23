@@ -16,13 +16,18 @@ allowHostIPC: false
 allowHostNetwork: false
 allowHostPID: false
 allowHostPorts: false
-readOnlyRootFilesystem: false
+readOnlyRootFilesystem: true
 runAsUser:
   type: RunAsAny
 seLinuxContext:
-  type: RunAsAny
+  type: MustRunAs
+  seLinuxOptions:
+    type: spc_t
 users:
 - system:serviceaccount:{{ .Namespace }}:linux-bridge
 volumes:
-- "*"
+  - hostPath
+  - configMap
+  - secret
+  - emptyDir
 {{ end }}
