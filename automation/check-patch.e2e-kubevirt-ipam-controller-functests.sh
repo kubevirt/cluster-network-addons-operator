@@ -68,6 +68,8 @@ main() {
     ./cluster/cert-manager-install.sh
     deploy_cnao
     deploy_cnao_cr
+    echo "Simulate network restrictions on CNAO namespace"
+    ./hack/install-network-policy.sh
     ./hack/deploy-kubevirt.sh
     ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=json --patch '[{"op":"add","path":"/spec/configuration/developerConfiguration","value":{"featureGates":[]}},{"op":"add","path":"/spec/configuration/developerConfiguration/featureGates/-","value":"NetworkBindingPlugins"},{"op":"add","path":"/spec/configuration/developerConfiguration/featureGates/-","value":"DynamicPodInterfaceNaming"}]'
     ./cluster/kubectl.sh -n kubevirt patch kubevirt kubevirt --type=json --patch '[{"op":"add","path":"/spec/configuration/network","value":{"binding":{"l2bridge":{"domainAttachmentType":"managedTap","migration":{}}}}}]'

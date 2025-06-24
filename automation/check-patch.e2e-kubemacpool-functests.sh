@@ -44,6 +44,9 @@ main() {
 
     trap teardown EXIT
 
+    echo "Simulate network restrictions on CNAO namespace"
+    ./hack/install-network-policy.sh
+
     echo "Deploy KubeVirt latest stable release"
     ./hack/deploy-kubevirt.sh
 
