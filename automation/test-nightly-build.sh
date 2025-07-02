@@ -42,6 +42,9 @@ main() {
     ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/namespace.yaml
     ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/network-addons-config.crd.yaml
 
+    # Simulate network restrictions on CNAO namespace
+    ./hack/install-network-policy.sh
+
     # Deploy the operator
     make cluster-operator-install
 
