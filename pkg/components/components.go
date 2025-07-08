@@ -40,8 +40,8 @@ const (
 	KubeRbacProxyImageDefault          = "quay.io/brancz/kube-rbac-proxy@sha256:e6a323504999b2a4d2a6bf94f8580a050378eba0900fd31335cf9df5787d9a9b"
 	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:8273cdbc438e06864eaa8e47947bea18fa5118a97cdaddc41b5dfa6e13474c79"
 	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
-	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:fd7c38e129ea4ed8a86d1801c9e1ca387802376fc4abc0b0d228d4278f448ecd"
-	PasstBindingCNIImageDefault        = "ghcr.io/kubevirt/passt-binding-cni@sha256:f3fea2ec66a26850489197edf7c85d074eb78bbac52916b10016ac0de8ef7c14"
+	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:dd5b881acae85332fb8a9dba8622098ac63ec8f34d9e7076dfa268ad469724cb"
+	PasstBindingCNIImageDefault        = "ghcr.io/kubevirt/passt-binding-cni@sha256:9bfc5d0c463d15a8b65b15323a078e2f3ce3a675972761305112d4775fac79a7"
 )
 
 type AddonsImages struct {
