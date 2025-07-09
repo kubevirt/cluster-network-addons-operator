@@ -84,13 +84,13 @@ func init() {
 				ParentName: "kubevirt-ipam-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "ghcr.io/kubevirt/ipam-controller@sha256:fd7c38e129ea4ed8a86d1801c9e1ca387802376fc4abc0b0d228d4278f448ecd",
+				Image:      "ghcr.io/kubevirt/ipam-controller@sha256:dd5b881acae85332fb8a9dba8622098ac63ec8f34d9e7076dfa268ad469724cb",
 			},
 			{
 				ParentName: "passt-binding-cni",
 				ParentKind: "DaemonSet",
 				Name:       "installer",
-				Image:      "ghcr.io/kubevirt/passt-binding-cni@sha256:f3fea2ec66a26850489197edf7c85d074eb78bbac52916b10016ac0de8ef7c14",
+				Image:      "ghcr.io/kubevirt/passt-binding-cni@sha256:9bfc5d0c463d15a8b65b15323a078e2f3ce3a675972761305112d4775fac79a7",
 			},
 		},
 		SupportedSpec: cnao.NetworkAddonsConfigSpec{
