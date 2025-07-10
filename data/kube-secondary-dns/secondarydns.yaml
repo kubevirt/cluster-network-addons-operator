@@ -202,4 +202,4 @@ spec:
   ingress:
     - ports:
         - protocol: UDP
-          port: dns
+          port: 5353
