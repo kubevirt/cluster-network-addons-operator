@@ -42,11 +42,11 @@ main() {
     ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/namespace.yaml
     ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/network-addons-config.crd.yaml
 
-    # Simulate network restrictions on CNAO namespace
-    ./hack/install-network-policy.sh
-
     # Deploy the operator
     make cluster-operator-install
+
+    # Simulate network restrictions on CNAO namespace
+    ./hack/install-network-policy.sh
 
     # run functest
     make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.xml" test/e2e/workflow
