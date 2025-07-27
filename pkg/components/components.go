@@ -1421,6 +1421,12 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"kubevirtIpamController": extv1.JSONSchemaProps{
 							Description: "KubevirtIpamController plugin allows to support IPAM for secondary networks",
 							Type:        "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"defaultNetworkNADNamespace": extv1.JSONSchemaProps{
+									Description: "DefaultNetworkNADNamespace is the namespace of the cluster default network NetworkAttachmentDefinition exist.When a VM is attached to OVN-Kubernetes user-defined network, with persistent IPs, ipam-controller mutates the pod according to the provided default network NAD namespace.",
+									Type:        "string",
+								},
+							},
 						},
 						"selfSignConfiguration": extv1.JSONSchemaProps{
 							Description: "SelfSignConfiguration defines self sign configuration",
