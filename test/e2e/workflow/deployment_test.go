@@ -96,6 +96,14 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				},
 				[]Component{MultusComponent, KubevirtIpamController},
 			),
+			Entry("KubevirtIpamController configures default network NAD namespace",
+				cnao.NetworkAddonsConfigSpec{
+					KubevirtIpamController: &cnao.KubevirtIpamController{
+						DefaultNetworkNADNamespace: "test",
+					},
+				},
+				[]Component{KubevirtIpamController},
+			),
 		)
 		It("should deploy prometheus if NetworkAddonsConfigSpec is not empty", func() {
 			testConfigCreate(gvk, cnao.NetworkAddonsConfigSpec{MacvtapCni: &cnao.MacvtapCni{}}, []Component{MacvtapComponent, MonitoringComponent})

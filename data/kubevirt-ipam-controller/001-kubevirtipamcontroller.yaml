@@ -184,6 +184,9 @@ spec:
         - args:
             - --leader-elect
             - "--certificates-dir={{ .CertDir }}"
+{{- if ne .DefaultNetNADNs "" }}
+            - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"
+{{ end }}
           command:
             - /manager
           image: {{ .KubevirtIpamControllerImage }}

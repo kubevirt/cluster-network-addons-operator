@@ -31,6 +31,7 @@ func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 	data.Data["Placement"] = conf.PlacementConfiguration.Infra
 	data.Data["PlacementPasst"] = conf.PlacementConfiguration.Workloads
 	data.Data["KubevirtIpamControllerImage"] = os.Getenv("KUBEVIRT_IPAM_CONTROLLER_IMAGE")
+	data.Data["DefaultNetNADNs"] = conf.KubevirtIpamController.DefaultNetworkNADNamespace
 
 	if clusterInfo.OpenShift4 {
 		data.Data["WebhookAnnotation"] = `service.beta.openshift.io/inject-cabundle: "true"`
