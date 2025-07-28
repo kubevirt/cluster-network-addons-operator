@@ -294,6 +294,6 @@ func main() {
 	check(err)
 
 	if *dumpOperatorCRD {
-		fmt.Printf(data.CNA.CRDString)
+		fmt.Print(data.CNA.CRDString)
 	}
 }
