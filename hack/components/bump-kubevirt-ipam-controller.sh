@@ -119,6 +119,10 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
         openshift.io/required-scc: "restricted-v2"\
 {{ end }}' Deployment_kubevirt-ipam-controller-manager.yaml
 
+  sed -i '/            - "--certificates-dir={{ .CertDir }}"/a\{{- if ne .DefaultNetNADNs "" }}\
+            - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"\
+{{ end }}' Deployment_kubevirt-ipam-controller-manager.yaml
+
   echo 'rejoin sub-manifests to a final manifest'
   cat Namespace_kubevirt-ipam-controller-system.yaml \
       ServiceAccount_kubevirt-ipam-controller-manager.yaml \
