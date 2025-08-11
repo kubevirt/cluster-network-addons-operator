@@ -178,6 +178,12 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	}
 	objs = append(objs, o...)
 
+	o, err = RenderNetworkPolicy(manifestDir, *clusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	objs = append(objs, o...)
+
 	log.Printf("render phase done, rendered %d objects", len(objs))
 	return objs, nil
 }

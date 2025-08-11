@@ -63,11 +63,6 @@ patches:
   target:
     version: v1
     kind: Deployment
-- path: add-pod-template-label-allow-prometheus-access_patch.yaml
-  target:
-    version: v1
-    kind: Deployment
-    name: mac-controller-manager
 EOF
 
     cat <<EOF > config/cnao/cnao_kubemacpool_manager_patch.yaml
@@ -156,12 +151,7 @@ EOF
 
     cat <<EOF > config/cnao/add-pod-template-label-allow-access-cluster-services_patch.yaml
 - op: add
-  path: /spec/template/metadata/labels/hco.kubevirt.io~1allow-access-cluster-services
-  value: ""
-EOF
-    cat <<EOF > config/cnao/add-pod-template-label-allow-prometheus-access_patch.yaml
-- op: add
-  path: /spec/template/metadata/labels/hco.kubevirt.io~1allow-prometheus-access
+  path: /spec/template/metadata/labels/allow-access-cluster-services
   value: ""
 EOF
 
