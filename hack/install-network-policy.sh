@@ -16,11 +16,8 @@
 #
 
 # This script install NetworkPolicy that affects CNAO namespace.
-# The network-policy blocks egress/ingress traffic in CNAO namespace with the following exceptions:
-# 1. Allow egress to cluster API and DNS for pods who labeled with
-#    "hco.kubevirt.io/allow-access-cluster-services"
-# 2. Allow ingress to metrics endpoint to pods who labeled with
-#    "hco.kubevirt.io/allow-prometheus-access"
+# The network-policy blocks egress/ingress traffic in CNAO namespace except for CNAO operator pods.
+# Allowing egress to cluster API and DNS, and allow ingress to metrics endpoint.
 
 readonly ns="$(./cluster/kubectl.sh get pod -l name=cluster-network-addons-operator -A -o=custom-columns=NS:.metadata.namespace --no-headers | head -1)"
 [[ -z "${ns}" ]] && echo "FATAL: CNAO pods not found. Make sure its installed" && exit 1
@@ -44,9 +41,8 @@ metadata:
   name: allow-egress-to-cluster-dns
 spec:
   podSelector:
-    matchExpressions:
-    - key: hco.kubevirt.io/allow-access-cluster-services
-      operator: Exists
+    matchLabels:
+      name: cluster-network-addons-operator
   policyTypes:
   - Egress
   egress:
@@ -69,9 +65,8 @@ metadata:
   name: allow-egress-to-cluster-api
 spec:
   podSelector:
-    matchExpressions:
-    - key: hco.kubevirt.io/allow-access-cluster-services
-      operator: Exists
+    matchLabels:
+      name: cluster-network-addons-operator
   policyTypes:
   - Egress
   egress:
@@ -85,9 +80,8 @@ metadata:
   name: allow-ingress-to-metrics-endpoint
 spec:
   podSelector:
-    matchExpressions:
-    - key: hco.kubevirt.io/allow-prometheus-access
-      operator: Exists
+    matchLabels:
+      name: cluster-network-addons-operator
   policyTypes:
   - Ingress
   ingress:

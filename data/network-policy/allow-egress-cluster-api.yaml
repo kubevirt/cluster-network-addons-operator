@@ -1,0 +1,17 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: {{.Namespace}}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: allow-access-cluster-services
+        operator: Exists
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 6443
