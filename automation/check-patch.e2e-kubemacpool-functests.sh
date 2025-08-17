@@ -28,6 +28,8 @@ function __get_skipped_tests() {
 }
 
 teardown() {
+    # Copy kubemacpool failure logs to CNAO artifacts before cleanup
+    cp ${TMP_COMPONENT_PATH}/tests/_out/*.log $ARTIFACTS || true
     rm -rf "${TMP_COMPONENT_PATH}"
     cd ${TMP_PROJECT_PATH}
     make cluster-down
