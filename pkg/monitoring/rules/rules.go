@@ -2,7 +2,7 @@ package rules
 
 import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules/alerts"
-	"github.com/machadovilaca/operator-observability/pkg/operatorrules"
+	"github.com/rhobs/operator-observability-toolkit/pkg/operatorrules"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules/recordingrules"
