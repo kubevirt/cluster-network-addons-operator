@@ -31,7 +31,7 @@ main() {
      echo "Simulate network restriction on CNAO namespace"
      ./hack/install-network-policy.sh
 
-    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/monitoring
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/monitoring
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
