@@ -5,7 +5,7 @@ import (
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules"
 
-	"github.com/machadovilaca/operator-observability/pkg/docs"
+	"github.com/rhobs/operator-observability-toolkit/pkg/docs"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 )
