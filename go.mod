@@ -15,7 +15,6 @@ require (
 	github.com/google/go-github/v32 v32.1.0
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.3.0
 	github.com/kubevirt/monitoring/pkg/metrics/parser v0.0.0-20231024120544-6a3ba1a680b4
-	github.com/machadovilaca/operator-observability v0.0.22
 	github.com/onsi/ginkgo/v2 v2.21.0
 	github.com/onsi/gomega v1.35.1
 	github.com/openshift/api v0.0.1
@@ -27,6 +26,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.62.0
+	github.com/rhobs/operator-observability-toolkit v0.0.29
 	github.com/spf13/pflag v1.0.7
 	github.com/thanhpk/randstr v1.0.4
 	golang.org/x/oauth2 v0.28.0
