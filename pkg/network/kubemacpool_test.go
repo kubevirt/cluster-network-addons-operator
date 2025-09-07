@@ -207,16 +207,27 @@ var _ = Describe("Testing kubeMacPool", func() {
 			})
 		})
 
-		Context("When they are not equal", func() {
-			It("should return an error", func() {
+		Context("When only MAC ranges are different", func() {
+			It("should NOT return an error (MAC range changes are allowed)", func() {
 				previousClusterConfig := &cnao.NetworkAddonsConfigSpec{
 					KubeMacPool: &cnao.KubeMacPool{RangeStart: "02:00:00:00:00:00", RangeEnd: "0A:FF:FF:FF:FF:FF"}}
 				currentClusterConfig := &cnao.NetworkAddonsConfigSpec{
 					KubeMacPool: &cnao.KubeMacPool{RangeStart: "02:00:00:00:00:00", RangeEnd: "0A:FF:FF:FF:FF:F1"}}
 
 				errorList := changeSafeKubeMacPool(previousClusterConfig, currentClusterConfig)
-				Expect(len(errorList)).To(Equal(1), "validation failed due to an unexpected error: %v", errorList)
-				Expect(errorList[0].Error()).To(Equal("cannot modify KubeMacPool configuration once it is deployed"))
+				Expect(errorList).To(BeEmpty(), "MAC range changes should be allowed")
+			})
+		})
+
+		Context("When both MAC ranges are different", func() {
+			It("should NOT return an error (MAC range changes are allowed)", func() {
+				previousClusterConfig := &cnao.NetworkAddonsConfigSpec{
+					KubeMacPool: &cnao.KubeMacPool{RangeStart: "02:00:00:00:00:00", RangeEnd: "0A:FF:FF:FF:FF:FF"}}
+				currentClusterConfig := &cnao.NetworkAddonsConfigSpec{
+					KubeMacPool: &cnao.KubeMacPool{RangeStart: "02:00:01:00:00:00", RangeEnd: "0A:FF:FF:FF:FF:F1"}}
+
+				errorList := changeSafeKubeMacPool(previousClusterConfig, currentClusterConfig)
+				Expect(errorList).To(BeEmpty(), "MAC range changes should be allowed")
 			})
 		})
 

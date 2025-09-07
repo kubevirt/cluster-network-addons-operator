@@ -361,27 +361,41 @@ var _ = Describe("NetworkAddonsConfig", func() {
 
 	//2178
 	Context("when kubeMacPool is deployed", func() {
-		BeforeEach(func() {
-			By("Deploying KubeMacPool")
-			config := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
-			CreateConfig(gvk, config)
+		const (
+			initialRangeStart = "02:10:10:00:00:00"
+			initialRangeEnd   = "02:10:10:00:FF:FF"
+			updatedRangeStart = "02:20:20:00:00:00"
+			updatedRangeEnd   = "02:20:20:00:FF:FF"
+		)
+
+		It("should update the MAC range when CNAO CR is modified", func() {
+			By("Deploying KubeMacPool with initial MAC range")
+			initialConfig := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool: &cnao.KubeMacPool{
+					RangeStart: initialRangeStart,
+					RangeEnd:   initialRangeEnd,
+				},
+			}
+			CreateConfig(gvk, initialConfig)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-		})
 
-		It("should modify the MAC range after being redeployed ", func() {
-			oldRangeStart, oldRangeEnd := CheckUnicastAndValidity()
-			By("Redeploying KubeMacPool")
-			DeleteConfig(gvk)
-			CheckComponentsRemoval(AllComponents)
+			By("Validating initial configmap values")
+			Expect(validateKubeMacPoolConfigMapValues(initialRangeStart, initialRangeEnd)).To(Succeed())
 
-			configSpec := cnao.NetworkAddonsConfigSpec{KubeMacPool: &cnao.KubeMacPool{}}
-			CreateConfig(gvk, configSpec)
+			By("Updating CNAO CR with new MAC range")
+			updatedConfig := cnao.NetworkAddonsConfigSpec{
+				KubeMacPool: &cnao.KubeMacPool{
+					RangeStart: updatedRangeStart,
+					RangeEnd:   updatedRangeEnd,
+				},
+			}
+			UpdateConfig(gvk, updatedConfig)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-			rangeStart, rangeEnd := CheckUnicastAndValidity()
 
-			By("Comparing the ranges")
-			Expect(rangeStart).ToNot(Equal(oldRangeStart))
-			Expect(rangeEnd).ToNot(Equal(oldRangeEnd))
+			By("Validating updated configmap values")
+			Eventually(func() error {
+				return validateKubeMacPoolConfigMapValues(updatedRangeStart, updatedRangeEnd)
+			}).WithTimeout(2 * time.Minute).WithPolling(5 * time.Second).Should(Succeed())
 		})
 	})
 	Context("when Macvtap is deployed", func() {
@@ -499,4 +513,35 @@ func checkConfigChange(gvk schema.GroupVersionKind, components []Component, whil
 		// Check that all requested components have been deployed
 		CheckComponentsDeployment(components)
 	}
+}
+
+func validateKubeMacPoolConfigMapValues(expectedRangeStart, expectedRangeEnd string) error {
+	const configMapName = "kubemacpool-mac-range-config"
+
+	configMap := &corev1.ConfigMap{}
+	if err := testenv.Client.Get(context.TODO(), types.NamespacedName{Namespace: components.Namespace, Name: configMapName}, configMap); err != nil {
+		return fmt.Errorf("failed to retrieve kubemacpool configmap: %w", err)
+	}
+
+	if len(configMap.Data) == 0 {
+		return fmt.Errorf("kubemacpool configmap data is empty")
+	}
+
+	actualRangeStart, exists := configMap.Data["RANGE_START"]
+	if !exists {
+		return fmt.Errorf("RANGE_START not found in kubemacpool configmap")
+	}
+	if actualRangeStart != expectedRangeStart {
+		return fmt.Errorf("RANGE_START value does not match expected: got %s, want %s", actualRangeStart, expectedRangeStart)
+	}
+
+	actualRangeEnd, exists := configMap.Data["RANGE_END"]
+	if !exists {
+		return fmt.Errorf("RANGE_END not found in kubemacpool configmap")
+	}
+	if actualRangeEnd != expectedRangeEnd {
+		return fmt.Errorf("RANGE_END value does not match expected: got %s, want %s", actualRangeEnd, expectedRangeEnd)
+	}
+
+	return nil
 }
