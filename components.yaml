@@ -21,7 +21,7 @@ components:
     url: https://github.com/kubevirt/ipam-extensions
     commit: 7a580e38fd8b0f1531edfbc66a52b2885c7b0ced
     branch: release-0.2.4
-    update-policy: tagged
+    update-policy: static
     metadata: v0.2.4-1
   linux-bridge:
     url: https://github.com/containernetworking/plugins
