@@ -9,23 +9,6 @@
 # yum -y install automation/check-patch.packages
 # automation/check-patch.e2e-kubemacpool-functests.sh
 
-function __get_skipped_tests() {
-	local  __resultvar=$1
-	local skipped_regex=""
-
-	# We can't test all KMP opt-mode CNAO context, as the operator will reconcile
-	# back to the configured opt-mode when the test tries to change it.
-	# So we check KMP webhook's opt-mode and skip tests accordingly
-	if grep 'default/mutatevirtualmachines_opt_out_patch.yaml' hack/components/bump-kubemacpool.sh; then
-		echo "KMP VM webhook is set to opt-out mode. Skipping opt-in Context"
-		skipped_regex="${skipped_regex} \(opt-in\smode\)"
-	elif grep 'default/mutatevirtualmachines_opt_in_patch.yaml' hack/components/bump-kubemacpool.sh; then
-		echo "KMP VM webhook is set to opt-in mode. Skipping opt-out Context"
-		skipped_regex="${skipped_regex} \(opt-out\smode\)"
-	fi
-
-	eval $__resultvar="'$skipped_regex'"
-}
 
 teardown() {
     # Copy kubemacpool failure logs to CNAO artifacts before cleanup
@@ -52,14 +35,11 @@ main() {
     echo "Deploy KubeVirt latest stable release"
     ./hack/deploy-kubevirt.sh
 
-    echo "Get skip tests regex"
-    __get_skipped_tests SKIPPED_TESTS
-
     # Run KubeMacPool functional tests
     cd ${TMP_COMPONENT_PATH}
 
     export CLUSTER_ROOT_DIRECTORY=${TMP_PROJECT_PATH}
-    KUBECONFIG=${KUBECONFIG} make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor -test.outputdir=$ARTIFACTS --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml --ginkgo.skip $SKIPPED_TESTS" functest
+    KUBECONFIG=${KUBECONFIG} make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor -test.outputdir=$ARTIFACTS --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml --ginkgo.label-filter=!vm-opt-in" functest
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
