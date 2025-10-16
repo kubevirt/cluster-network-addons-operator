@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
@@ -88,10 +87,6 @@ func fillDefaultsKubeMacPool(conf, previous *cnao.NetworkAddonsConfigSpec) []err
 }
 
 func changeSafeKubeMacPool(prev, next *cnao.NetworkAddonsConfigSpec) []error {
-	if prev.KubeMacPool != nil && next.KubeMacPool != nil && !reflect.DeepEqual(prev.KubeMacPool, next.KubeMacPool) {
-		return []error{errors.Errorf("cannot modify KubeMacPool configuration once it is deployed")}
-	}
-
 	return []error{}
 }
 
