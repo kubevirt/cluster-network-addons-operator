@@ -208,6 +208,17 @@ prepare-minor:
 	./hack/prepare-release.sh minor
 prepare-major:
 	./hack/prepare-release.sh major
+prepare-current-rc:
+	./hack/prepare-release.sh current_rc
+
+prepare-major-rc:
+	./hack/prepare-release.sh major_rc
+
+prepare-minor-rc:
+	./hack/prepare-release.sh minor_rc
+
+prepare-patch-rc:
+	./hack/prepare-release.sh patch_rc
 
 update-workflows-branches:
 	./hack/update-workflows-branches.sh ${git_base_tag} ${branch_name}
@@ -295,6 +306,10 @@ build-multiarch-operator-podman:
 	prepare-patch \
 	prepare-minor \
 	prepare-major \
+	prepare-current-rc \
+	prepare-major-rc \
+	prepare-minor-rc \
+	prepare-patch-rc \
 	vendor \
 	auto-bumper \
 	bump-% \

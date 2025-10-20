@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-expected_types="(major|minor|patch)"
+expected_types="(major|minor|patch|current_rc|major_rc|minor_rc|patch_rc)"
 current_type=$1
 
 bump() {
@@ -48,6 +48,38 @@ bump_patch() {
     local new_version=$(bump "$version" "patch")
     ./hack/version.sh $new_version
 }
+
+bump_major_rc() {
+    local version=$(hack/version.sh)
+    local new_version=$(bump "$version" "major")
+    ./hack/version.sh "${new_version}-rc-0"
+}
+
+bump_minor_rc() {
+    local version=$(hack/version.sh)
+    local new_version=$(bump "$version" "minor")
+    ./hack/version.sh "${new_version}-rc-0"
+}
+
+bump_patch_rc() {
+    local version=$(hack/version.sh)
+    local new_version=$(bump "$version" "patch")
+    ./hack/version.sh "${new_version}-rc-0"
+}
+
+bump_current_rc() {
+    local version=$(hack/version.sh)
+    local new_version
+
+    if [[ $version =~ -rc-[0-9]+$ ]]; then
+        local rc_number=$(echo $version | sed 's/.*-rc-\([0-9]\+\)$/\1/')
+        rc_number=$((++rc_number))
+        new_version=$(echo $version | sed "s/-rc-[0-9]\+$/-rc-$rc_number/")
+    else
+        new_version="${version}-rc-0"
+    fi
+
+    ./hack/version.sh $new_version
 }
 
 if [[ ! $current_type =~ $expected_types ]]; then
