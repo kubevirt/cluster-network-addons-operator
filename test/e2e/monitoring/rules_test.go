@@ -30,7 +30,12 @@ var _ = Context("Prometheus Rules", func() {
 				MacvtapCni: &cnao.MacvtapCni{},
 			}
 			CreateConfig(gvk, configSpec)
+			components := []Component{MacvtapComponent}
+			CheckConfigComponents(gvk, components)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionProgressing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+
+			CheckComponentsDeployment(components)
 		})
 
 		Context("CNAO alert rules", func() {
