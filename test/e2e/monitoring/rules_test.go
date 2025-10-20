@@ -24,13 +24,18 @@ var _ = Context("Prometheus Rules", func() {
 	Context("when networkaddonsconfig CR is deployed", func() {
 
 		BeforeEach(func() {
-			By("delpoying CNAO CR with at least one component")
+			By("deploying CNAO CR with at least one component")
 			gvk := GetCnaoV1GroupVersionKind()
 			configSpec := cnao.NetworkAddonsConfigSpec{
 				MacvtapCni: &cnao.MacvtapCni{},
 			}
 			CreateConfig(gvk, configSpec)
+			components := []Component{MacvtapComponent}
+			CheckConfigComponents(gvk, components)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+			CheckConfigCondition(gvk, ConditionProgressing, ConditionFalse, CheckImmediately, CheckDoNotRepeat)
+
+			CheckComponentsDeployment(components)
 		})
 
 		Context("CNAO alert rules", func() {
@@ -41,7 +46,7 @@ var _ = Context("Prometheus Rules", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should have all the requried annotations", func() {
+			It("should have all the required annotations", func() {
 				for _, group := range prometheusRule.Spec.Groups {
 					for _, rule := range group.Rules {
 						if len(rule.Alert) > 0 {
@@ -52,7 +57,7 @@ var _ = Context("Prometheus Rules", func() {
 				}
 			})
 
-			It("should have all the requried labels", func() {
+			It("should have all the required labels", func() {
 				for _, group := range prometheusRule.Spec.Groups {
 					for _, rule := range group.Rules {
 						if len(rule.Alert) > 0 {
