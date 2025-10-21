@@ -12,6 +12,10 @@ on:
           - major
           - minor
           - patch
+          - major-rc
+          - minor-rc
+          - patch-rc
+          - current-rc
       baseBranch:
         description: 'Test CNAO branch to release from'
         required: true
