@@ -2,9 +2,10 @@ package reporter
 
 import (
 	"fmt"
-	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	"os"
 	"strings"
+
+	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 )
 
 // Cleanup cleans up the current content of the artifactsDir
