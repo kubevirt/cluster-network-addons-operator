@@ -9,7 +9,7 @@
 
 teardown() {
     # Don't fail if there is no logs
-    cp ${E2E_LOGS}/workflow/*.log ${ARTIFACTS} || true
+    cp ${E2E_LOGS}/monitoring/*.log ${ARTIFACTS} || true
     make cluster-down
 }
 
