@@ -7,6 +7,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
@@ -16,6 +18,9 @@ import (
 var cnaoReporter *reporter.KubernetesCNAOReporter
 
 var _ = BeforeSuite(func() {
+	// Set up controller-runtime logger to avoid warnings
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+
 	os.Chdir("../../../")
 
 	testenv.Start()
