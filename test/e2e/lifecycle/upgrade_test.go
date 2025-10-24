@@ -15,7 +15,7 @@ import (
 const podsDeploymentTimeout = 20 * time.Minute
 
 // CNAO supports multiarch from this release
-const multiArchStartRelease = "0.98.2"
+const multiArchRelease = "0.99.0"
 
 var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
@@ -92,7 +92,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 	start := 0
 	if runtime.GOARCH == "s390x" {
 		for index, release := range releases {
-			if release.Version == multiArchStartRelease {
+			if release.Version == multiArchRelease {
 				start = index
 				break
 			}
