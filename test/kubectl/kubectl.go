@@ -41,8 +41,9 @@ func waitForPortForwardCmd(stdout io.ReadCloser, src, dst int) {
 	Eventually(func() string {
 		tmp := make([]byte, 1024)
 		_, err := stdout.Read(tmp)
-		Expect(err).NotTo(HaveOccurred())
-
+		if err != nil {
+			return ""
+		}
 		return string(tmp)
 	}, 30*time.Second, 1*time.Second).Should(ContainSubstring(fmt.Sprintf("Forwarding from 127.0.0.1:%d -> %d", src, dst)))
 }
