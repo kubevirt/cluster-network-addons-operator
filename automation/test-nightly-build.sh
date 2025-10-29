@@ -49,7 +49,7 @@ main() {
     ./hack/install-network-policy.sh
 
     # run functest
-    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.xml" test/e2e/workflow
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.xml" test/e2e/workflow
 
     # functional test passed: publish latest nightly build
     cnao_bucket="kubevirt-prow/devel/nightly/release/kubevirt/cluster-network-addons-operator"

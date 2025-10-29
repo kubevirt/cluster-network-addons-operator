@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"github.com/machadovilaca/operator-observability/pkg/operatormetrics"
+	"github.com/rhobs/operator-observability-toolkit/pkg/operatormetrics"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
