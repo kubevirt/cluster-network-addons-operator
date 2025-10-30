@@ -31,6 +31,7 @@ main() {
 
     echo "Install golang ..."
     cp hack/install-go.sh ${TMP_COMPONENT_PATH}/hack/install-go.sh
+    cp hack/go-version.sh ${TMP_COMPONENT_PATH}/hack/go-version.sh
     cd ${TMP_COMPONENT_PATH}
     BIN_DIR="${TMP_COMPONENT_PATH}/build/_output/go1.18/bin/"
     mkdir -p "$BIN_DIR"
