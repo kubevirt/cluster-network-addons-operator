@@ -12,7 +12,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "kube-multus",
-				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:a60a21ee1d00c9f215b0b2fa03b3d5e384ab7ddb9ea0d231d36aef220e95a69c",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni:v4.2.3-thick",
 			},
 			{
 				ParentName: "dynamic-networks-controller-ds",
@@ -24,7 +24,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "install-multus-binary",
-				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:a60a21ee1d00c9f215b0b2fa03b3d5e384ab7ddb9ea0d231d36aef220e95a69c",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni:v4.2.3-thick",
 			},
 			{
 				ParentName: "bridge-marker",
