@@ -193,9 +193,11 @@ spec:
         - name: install-multus-binary
           image: {{ .MultusImage }}
           command:
-            - "sh"
-            - "-c"
-            - "cp /usr/src/multus-cni/bin/multus-shim /host/opt/cni/bin/multus-shim && cp /usr/src/multus-cni/bin/passthru /host/opt/cni/bin/passthru"
+            - "/usr/src/multus-cni/bin/install_multus"
+            - "-d"
+            - "/host/opt/cni/bin"
+            - "-t"
+            - "thick"
           resources:
             requests:
               cpu: "10m"
