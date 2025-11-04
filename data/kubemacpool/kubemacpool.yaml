@@ -135,7 +135,6 @@ spec:
   ports:
   - port: 443
     targetPort: 8000
-  publishNotReadyAddresses: true
   selector:
     control-plane: mac-controller-manager
 ---
