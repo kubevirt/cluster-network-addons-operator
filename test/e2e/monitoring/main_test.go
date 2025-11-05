@@ -11,6 +11,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
@@ -32,7 +33,7 @@ var _ = BeforeSuite(func() {
 })
 
 func TestE2E(t *testing.T) {
-	cnaoReporter = reporter.New("_out/e2e/monitoring/", prometheusMonitoringNamespace)
+	cnaoReporter = reporter.New("_out/e2e/monitoring/", components.Namespace)
 	cnaoReporter.Cleanup()
 
 	RegisterFailHandler(Fail)
