@@ -71,12 +71,5 @@ var _ = Context("Prometheus Endpoints", func() {
 				},
 			}),
 		)
-		AfterEach(func() {
-			By("removing CNAO CR")
-			gvk := GetCnaoV1GroupVersionKind()
-			if GetConfig(gvk) != nil {
-				DeleteConfig(gvk)
-			}
-		})
 	})
 })

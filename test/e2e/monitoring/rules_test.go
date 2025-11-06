@@ -68,14 +68,6 @@ var _ = Context("Prometheus Rules", func() {
 				}
 			})
 		})
-
-		AfterEach(func() {
-			By("removing CNAO CR")
-			gvk := GetCnaoV1GroupVersionKind()
-			if GetConfig(gvk) != nil {
-				DeleteConfig(gvk)
-			}
-		})
 	})
 })
 

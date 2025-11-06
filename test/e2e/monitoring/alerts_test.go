@@ -60,13 +60,6 @@ var _ = Context("Prometheus Alerts", func() {
 			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
 		})
-		AfterEach(func() {
-			By("removing CNAO CR")
-			gvk := GetCnaoV1GroupVersionKind()
-			if GetConfig(gvk) != nil {
-				DeleteConfig(gvk)
-			}
-		})
 
 		It("should fire no alerts", func() {
 			By("waiting for the max amount of time it takes the alert to fire on CNAO")
@@ -94,13 +87,6 @@ var _ = Context("Prometheus Alerts", func() {
 			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionFalse, 1*time.Minute, 1*time.Minute)
 		})
-		AfterEach(func() {
-			By("removing CNAO CR")
-			gvk := GetCnaoV1GroupVersionKind()
-			if GetConfig(gvk) != nil {
-				DeleteConfig(gvk)
-			}
-		})
 
 		It("should issue NetworkAddonsConfigNotReady and KubemacpoolDown alerts", func() {
 			By("waiting for the amount of time it takes the alerts to fire")
@@ -120,13 +106,6 @@ var _ = Context("Prometheus Alerts", func() {
 			}
 			CreateConfig(gvk, configSpec)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
-		})
-		AfterEach(func() {
-			By("removing CNAO CR")
-			gvk := GetCnaoV1GroupVersionKind()
-			if GetConfig(gvk) != nil {
-				DeleteConfig(gvk)
-			}
 		})
 
 		It("configuration: role-binding should point to the prometheus serviceAccount", func() {
