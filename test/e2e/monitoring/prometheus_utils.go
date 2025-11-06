@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"os/exec"
 	"time"
 
@@ -19,7 +18,6 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"kubevirt.io/client-go/kubecli"
 
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 )
@@ -77,12 +75,9 @@ func (p *promClient) getAlertByName(alertName string) *promApiv1.Alert {
 }
 
 func (p *promClient) getAuthorizationTokenForPrometheus() string {
-	virtCli, err := kubecli.GetKubevirtClientFromFlags("", os.Getenv("KUBECONFIG"))
-	Expect(err).NotTo(HaveOccurred())
-
 	var token string
 	Eventually(func() bool {
-		treq, err := virtCli.CoreV1().ServiceAccounts(p.namespace).CreateToken(
+		treq, err := testenv.KubeClient.CoreV1().ServiceAccounts(p.namespace).CreateToken(
 			context.TODO(),
 			"prometheus-k8s",
 			&authenticationv1.TokenRequest{
