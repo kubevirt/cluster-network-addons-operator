@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	kubevirtv1 "kubevirt.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
@@ -41,6 +42,8 @@ func Start() {
 	err = monitoringv1.AddToScheme(scheme.Scheme)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 	err = k8snetworkplumbingwgv1.AddToScheme(scheme.Scheme)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred())
+	err = kubevirtv1.AddToScheme(scheme.Scheme)
 	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
