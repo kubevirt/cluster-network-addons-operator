@@ -7,11 +7,15 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
+	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
+	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 	"github.com/kubevirt/cluster-network-addons-operator/test/reporter"
 )
 
@@ -29,7 +33,7 @@ var _ = BeforeSuite(func() {
 })
 
 func TestE2E(t *testing.T) {
-	cnaoReporter = reporter.New("_out/e2e/monitoring/", prometheusMonitoringNamespace)
+	cnaoReporter = reporter.New("_out/e2e/monitoring/", components.Namespace)
 	cnaoReporter.Cleanup()
 
 	RegisterFailHandler(Fail)
@@ -50,5 +54,11 @@ var _ = JustAfterEach(func() {
 })
 
 var _ = AfterEach(func() {
+	PrintOperatorPodStability()
 	By("Performing cleanup")
+	gvk := GetCnaoV1GroupVersionKind()
+	if GetConfig(gvk) != nil {
+		DeleteConfig(gvk)
+	}
+	CheckComponentsRemoval(AllComponents)
 })
