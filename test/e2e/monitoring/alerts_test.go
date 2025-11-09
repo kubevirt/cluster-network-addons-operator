@@ -8,8 +8,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"kubevirt.io/kubevirt/tests/framework/checks"
-	"kubevirt.io/kubevirt/tests/testsuite"
 
 	k8sv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -17,7 +15,6 @@ import (
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	v1 "kubevirt.io/api/core/v1"
-	"kubevirt.io/kubevirt/pkg/libvmi"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
@@ -25,6 +22,8 @@ import (
 	. "github.com/kubevirt/cluster-network-addons-operator/test/check"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
+	"github.com/kubevirt/cluster-network-addons-operator/test/libframework"
+	"github.com/kubevirt/cluster-network-addons-operator/test/libvmi"
 	. "github.com/kubevirt/cluster-network-addons-operator/test/operations"
 )
 
@@ -137,14 +136,14 @@ var _ = Context("Prometheus Alerts", func() {
 
 			AfterEach(func() {
 				By("deleting test namespace")
-				err = testenv.Client.Delete(context.Background(), &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: testsuite.NamespaceTestDefault}})
+				err = testenv.Client.Delete(context.Background(), &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: libframework.NamespaceTestDefault}})
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			BeforeEach(func() {
 				By("creating test namespace that is not managed by kubemacpool (opted-out)")
 				namespace := &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{
-					Name: testsuite.NamespaceTestDefault,
+					Name: libframework.NamespaceTestDefault,
 					Labels: map[string]string{
 						"mutatevirtualmachines.kubemacpool.io": "ignore",
 					},
@@ -159,7 +158,7 @@ var _ = Context("Prometheus Alerts", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("cleaning namespace labels, returning the namespace to managed by kubemacpool")
-				err = cleanNamespaceLabels(testsuite.NamespaceTestDefault)
+				err = cleanNamespaceLabels(libframework.NamespaceTestDefault)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("restaring kubemacpool pods")
@@ -180,12 +179,12 @@ var _ = Context("Prometheus Alerts", func() {
 func newRandomVMI() *v1.VirtualMachineInstance {
 	vmi := libvmi.New(
 		libvmi.WithInterface(libvmi.InterfaceDeviceWithMasqueradeBinding()),
-		libvmi.WithNetwork(v1.DefaultPodNetwork()),
+		libvmi.WithNetwork(*v1.DefaultPodNetwork()),
 	)
-	vmi.ObjectMeta.Namespace = testsuite.NamespaceTestDefault
+	vmi.ObjectMeta.Namespace = libframework.NamespaceTestDefault
 	vmi.Spec.Domain.Resources.Requests = k8sv1.ResourceList{}
 
-	if checks.IsARM64(testsuite.Arch) {
+	if libframework.IsARM64(libframework.Arch) {
 		// Cirros image need 256M to boot on ARM64,
 		vmi.Spec.Domain.Resources.Requests[k8sv1.ResourceMemory] = resource.MustParse("256Mi")
 	} else {
