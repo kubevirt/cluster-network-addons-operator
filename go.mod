@@ -38,7 +38,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/helm v2.17.0+incompatible
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
-	kubevirt.io/api v1.4.0
+	kubevirt.io/api v1.6.2
 	sigs.k8s.io/controller-runtime v0.22.4
 	sigs.k8s.io/controller-tools v0.6.0
 )
