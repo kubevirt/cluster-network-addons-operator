@@ -17,10 +17,11 @@ package kustomize
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	manifestsv2 "github.com/operator-framework/operator-sdk/internal/plugins/manifests/v2"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -28,14 +29,13 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation"
-	"sigs.k8s.io/kubebuilder/v3/pkg/config"
-	cfgv2 "sigs.k8s.io/kubebuilder/v3/pkg/config/v2"
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/config"
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
 	"sigs.k8s.io/yaml"
 
 	genutil "github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/generate/internal"
 	"github.com/operator-framework/operator-sdk/internal/generate/clusterserviceversion/bases"
-	"github.com/operator-framework/operator-sdk/internal/plugins/manifests/v2/templates/config/manifests"
+	templatemanifests "github.com/operator-framework/operator-sdk/internal/plugins/manifests/v2/templates/config/manifests"
 	"github.com/operator-framework/operator-sdk/internal/util/k8sutil"
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
 )
@@ -155,11 +155,7 @@ func (c *manifestsCmd) setDefaults(cfg config.Config) error {
 	}
 
 	if c.apisDir == "" {
-		if cfg.IsMultiGroup() {
-			c.apisDir = "apis"
-		} else {
-			c.apisDir = "api"
-		}
+		c.apisDir = "api"
 	}
 	return nil
 }
@@ -220,12 +216,19 @@ func (c manifestsCmd) run(cfg config.Config) error {
 		return err
 	}
 	outputPath := filepath.Join(c.outputDir, relBasePath)
-	if err = ioutil.WriteFile(outputPath, csvBytes, 0644); err != nil {
+	if err = os.WriteFile(outputPath, csvBytes, 0644); err != nil {
 		return fmt.Errorf("error writing CSV base: %v", err)
 	}
 
 	// Write a kustomization.yaml to outputDir if one does not exist.
-	kustomization := manifests.Kustomization{SupportsWebhooks: operatorType == projutil.OperatorTypeGo}
+	kustomization := templatemanifests.Kustomization{
+		// we need perform different scaffold when we know that is using kustomize version 4.x
+		// and is Golang Type
+		SupportsKustomizeV4: manifestsv2.HasSupportForKustomizeV4(cfg),
+		SupportsWebhooks:    operatorType == projutil.OperatorTypeGo,
+	}
+	// Ensure the path to the manifest directory is correctly carried through
+	kustomization.Path = c.outputDir
 	err = machinery.NewScaffold(machinery.Filesystem{FS: afero.NewOsFs()}, machinery.WithConfig(cfg)).Execute(
 		&kustomization,
 	)
@@ -253,11 +256,6 @@ func getGVKs(cfg config.Config) ([]schema.GroupVersionKind, error) {
 	}
 	gvks := make([]schema.GroupVersionKind, len(resources))
 	for i, gvk := range resources {
-		// check if the resource has an specific domain
-		// otherwise use the config.Domain.
-		if cfg.GetVersion().Compare(cfgv2.Version) == 0 {
-			gvk.Domain = cfg.GetDomain()
-		}
 		gvks[i].Group = gvk.QualifiedGroup()
 		gvks[i].Version = gvk.Version
 		gvks[i].Kind = gvk.Kind

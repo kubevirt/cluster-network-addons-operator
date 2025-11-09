@@ -20,17 +20,16 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/spf13/pflag"
-	"helm.sh/helm/v3/pkg/chart"
-	"sigs.k8s.io/kubebuilder/v3/pkg/config"
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
-	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
-	pluginutil "sigs.k8s.io/kubebuilder/v3/pkg/plugin/util"
-
 	"github.com/operator-framework/operator-sdk/internal/plugins/helm/v1/chartutil"
 	"github.com/operator-framework/operator-sdk/internal/plugins/helm/v1/scaffolds"
 	"github.com/operator-framework/operator-sdk/internal/plugins/util"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"helm.sh/helm/v3/pkg/chart"
+	"sigs.k8s.io/kubebuilder/v4/pkg/config"
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/model/resource"
+	"sigs.k8s.io/kubebuilder/v4/pkg/plugin"
 )
 
 const (
@@ -40,6 +39,7 @@ const (
 	helmChartVersionFlag = "helm-chart-version"
 
 	defaultCrdVersion = "v1"
+	legacyCrdVersion  = "v1beta1"
 
 	// defaultGroup is the Kubernetes CRD API Group used for fetched charts when the --group flag is not specified
 	defaultGroup = "charts"
@@ -120,11 +120,21 @@ func (p *createAPISubcommand) BindFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&p.options.chartOptions.Version, helmChartVersionFlag, "", "helm chart version (default: latest)")
 
 	fs.StringVar(&p.options.CRDVersion, crdVersionFlag, defaultCrdVersion, "crd version to generate")
+	// (not required raise an error in this case)
+	// nolint:errcheck,gosec
+	fs.MarkDeprecated(crdVersionFlag, util.WarnMessageRemovalV1beta1)
 }
 
 func (p *createAPISubcommand) InjectConfig(c config.Config) error {
 	p.config = c
 
+	return nil
+}
+
+func (p *createAPISubcommand) PreScaffold(machinery.Filesystem) error {
+	if p.options.CRDVersion == legacyCrdVersion {
+		logrus.Warn(util.WarnMessageRemovalV1beta1)
+	}
 	return nil
 }
 
@@ -188,12 +198,14 @@ func (p *createAPISubcommand) InjectResource(res *resource.Resource) error {
 	}
 
 	// Check that the provided group can be added to the project
+	// nolint:staticcheck
 	if !p.config.IsMultiGroup() && p.config.ResourcesLength() != 0 && !p.config.HasGroup(p.resource.Group) {
 		return fmt.Errorf("multiple groups are not allowed by default, to enable multi-group set 'multigroup: true' in your PROJECT file")
 	}
 
 	// Selected CRD version must match existing CRD versions.
-	if pluginutil.HasDifferentCRDVersion(p.config, p.resource.API.CRDVersion) {
+	// nolint:staticcheck
+	if hasDifferentAPIVersion(p.config.ListCRDVersions(), p.resource.API.CRDVersion) {
 		return fmt.Errorf("only one CRD version can be used for all resources, cannot add %q", p.resource.API.CRDVersion)
 	}
 
@@ -216,4 +228,9 @@ func (p *createAPISubcommand) Scaffold(fs machinery.Filesystem) error {
 	// NOTE: previous step fetches the dependencies of the chart.Chart, so reloading may be needed if used afterwards
 
 	return nil
+}
+
+// hasDifferentCRDVersion returns true if any other CRD version is tracked in the project configuration.
+func hasDifferentAPIVersion(versions []string, version string) bool {
+	return !(len(versions) == 0 || (len(versions) == 1 && versions[0] == version))
 }

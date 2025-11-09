@@ -7,7 +7,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
+
+	"github.com/operator-framework/api/pkg/constraints"
 )
 
 var (
@@ -55,6 +57,7 @@ const (
 	DeprecatedType = "olm.deprecated"
 	LabelType      = "olm.label"
 	PropertyKey    = "olm.properties"
+	ConstraintType = "olm.constraint"
 )
 
 // APIKey stores GroupVersionKind for use as map keys
@@ -77,6 +80,10 @@ type DefinitionKey struct {
 	Version string `json:"version"`
 }
 
+type Deprecation struct {
+	Message string `json:"message,omitempty" yaml:"message,omitempty"`
+}
+
 // PackageManifest holds information about a package, which is a reference to one (or more)
 // channels under a single package.
 type PackageManifest struct {
@@ -89,7 +96,8 @@ type PackageManifest struct {
 	// DefaultChannelName is, if specified, the name of the default channel for the package. The
 	// default channel will be installed if no other channel is explicitly given. If the package
 	// has a single channel, then that channel is implicitly the default.
-	DefaultChannelName string `json:"defaultChannel" yaml:"defaultChannel"`
+	DefaultChannelName string       `json:"defaultChannel" yaml:"defaultChannel"`
+	Deprecation        *Deprecation `json:"deprecation,omitempty" yaml:"deprecation,omitempty"`
 }
 
 // GetDefaultChannel gets the default channel or returns the only one if there's only one. returns empty string if it
@@ -112,7 +120,8 @@ type PackageChannel struct {
 
 	// CurrentCSVName defines a reference to the CSV holding the version of this package currently
 	// for the channel.
-	CurrentCSVName string `json:"currentCSV" yaml:"currentCSV"`
+	CurrentCSVName string       `json:"currentCSV" yaml:"currentCSV"`
+	Deprecation    *Deprecation `json:"deprecation,omitempty" yaml:"deprecation,omitempty"`
 }
 
 // IsDefaultChannel returns true if the PackageChennel is the default for the PackageManifest
@@ -220,6 +229,16 @@ type LabelDependency struct {
 	Label string `json:"label" yaml:"label"`
 }
 
+type CelConstraint struct {
+	// Constraint failure message that surfaces in resolution
+	// This field is optional
+	FailureMessage string `json:"failureMessage" yaml:"failureMessage"`
+
+	// The cel struct that contraints CEL expression
+	// This field is required
+	Cel *constraints.Cel `json:"cel" yaml:"cel"`
+}
+
 type GVKProperty struct {
 	// The group of GVK based property
 	Group string `json:"group" yaml:"group"`
@@ -267,6 +286,7 @@ func (gd *GVKDependency) Validate() []error {
 func (ld *LabelDependency) Validate() []error {
 	errs := []error{}
 	if *ld == (LabelDependency{}) {
+		// nolint:stylecheck
 		errs = append(errs, fmt.Errorf("Label information is missing"))
 	}
 	return errs
@@ -276,14 +296,39 @@ func (ld *LabelDependency) Validate() []error {
 func (pd *PackageDependency) Validate() []error {
 	errs := []error{}
 	if pd.PackageName == "" {
+		// nolint:stylecheck
 		errs = append(errs, fmt.Errorf("Package name is empty"))
 	}
 	if pd.Version == "" {
+		// nolint:stylecheck
 		errs = append(errs, fmt.Errorf("Package version is empty"))
 	} else {
 		_, err := semver.ParseRange(pd.Version)
 		if err != nil {
+			// nolint:stylecheck
 			errs = append(errs, fmt.Errorf("Invalid semver format version"))
+		}
+	}
+	return errs
+}
+
+// Validate will validate constraint type and return error(s)
+func (cc *CelConstraint) Validate() []error {
+	errs := []error{}
+	if cc.Cel == nil {
+		// nolint:stylecheck
+		errs = append(errs, fmt.Errorf("The CEL field is missing"))
+	} else {
+		if cc.Cel.Rule == "" {
+			// nolint:stylecheck
+			errs = append(errs, fmt.Errorf("The CEL expression is missing"))
+			return errs
+		}
+		validator := constraints.NewCelEnvironment()
+		_, err := validator.Validate(cc.Cel.Rule)
+		if err != nil {
+			// nolint:stylecheck
+			errs = append(errs, fmt.Errorf("Invalid CEL expression: %s", err.Error()))
 		}
 	}
 	return errs
@@ -291,6 +336,7 @@ func (pd *PackageDependency) Validate() []error {
 
 // GetDependencies returns the list of dependency
 func (d *DependenciesFile) GetDependencies() []*Dependency {
+	// nolint:prealloc
 	var dependencies []*Dependency
 	for _, item := range d.Dependencies {
 		dep := item
@@ -329,6 +375,13 @@ func (e *Dependency) GetTypeValue() interface{} {
 			return nil
 		}
 		return dep
+	case ConstraintType:
+		dep := CelConstraint{}
+		err := json.Unmarshal([]byte(e.GetValue()), &dep)
+		if err != nil {
+			return nil
+		}
+		return dep
 	}
 	return nil
 }
@@ -359,7 +412,7 @@ func (a *AnnotationsFile) GetDefaultChannelName() string {
 // SelectDefaultChannel returns the first item in channel list that is sorted
 // in lexicographic order.
 func (a *AnnotationsFile) SelectDefaultChannel() string {
-	return a.SelectDefaultChannel()
+	return a.Annotations.SelectDefaultChannel()
 }
 
 func (a Annotations) SelectDefaultChannel() string {

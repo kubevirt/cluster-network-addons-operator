@@ -18,14 +18,14 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
 	"text/template"
 
 	"golang.org/x/mod/modfile"
-	"sigs.k8s.io/kubebuilder/v3/pkg/model/resource"
+	"sigs.k8s.io/kubebuilder/v4/pkg/model/resource"
 	"sigs.k8s.io/yaml"
 )
 
@@ -93,7 +93,7 @@ func convertConfig3AlphaTo3(cfgBytes []byte) (_ []byte, err error) {
 				// Only Go projects use "resources[*].path".
 				var apiPath string
 				if isMultigroup {
-					apiPath = path.Join("apis", resources[i].Group, resources[i].Version)
+					apiPath = path.Join("api", resources[i].Group, resources[i].Version)
 				} else {
 					apiPath = path.Join("api", resources[i].Version)
 				}
@@ -160,7 +160,7 @@ func convertConfig3AlphaTo3(cfgBytes []byte) (_ []byte, err error) {
 
 // Make this a var so it can be mocked in tests.
 var getModulePath = func() (string, error) {
-	b, err := ioutil.ReadFile("go.mod")
+	b, err := os.ReadFile("go.mod")
 	return modfile.ModulePath(b), err
 }
 

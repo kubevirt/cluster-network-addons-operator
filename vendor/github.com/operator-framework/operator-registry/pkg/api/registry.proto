@@ -8,7 +8,9 @@ service Registry {
 	rpc ListPackages(ListPackageRequest) returns (stream PackageName) {}
 	rpc GetPackage(GetPackageRequest) returns (Package) {}
 	rpc GetBundle(GetBundleRequest) returns (Bundle) {}
-	rpc GetBundleForChannel(GetBundleInChannelRequest) returns (Bundle) {}
+	rpc GetBundleForChannel(GetBundleInChannelRequest) returns (Bundle) {
+		option deprecated = true;
+	}
 	rpc GetChannelEntriesThatReplace(GetAllReplacementsRequest) returns (stream ChannelEntry) {}
 	rpc GetBundleThatReplaces(GetReplacementRequest) returns (Bundle) {}
 	rpc GetChannelEntriesThatProvide(GetAllProvidersRequest) returns (stream ChannelEntry) {}
@@ -20,6 +22,7 @@ service Registry {
 message Channel{
 	string name = 1;
 	string csvName = 2;
+	Deprecation deprecation = 3;
 }
 
 message PackageName{
@@ -30,6 +33,7 @@ message Package{
 	string name = 1;
 	repeated Channel channels = 2;
 	string defaultChannelName = 3;
+	Deprecation deprecation = 4;
 }
 
 message GroupVersionKind{
@@ -64,6 +68,7 @@ message Bundle{
 	repeated Property properties = 12;
 	string replaces = 13;
 	repeated string skips = 14;
+	Deprecation deprecation = 15;
 }
 
 message ChannelEntry{
@@ -121,4 +126,8 @@ message GetDefaultProviderRequest{
 	string version = 2;
 	string kind = 3;
 	string plural = 4;
+}
+
+message Deprecation{
+	string message = 1;
 }

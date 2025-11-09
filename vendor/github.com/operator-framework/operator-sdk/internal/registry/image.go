@@ -17,7 +17,6 @@ package registry
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -28,7 +27,7 @@ import (
 
 // ExtractBundleImage returns a bundle directory containing files extracted
 // from image. If local is true, the image will not be pulled.
-func ExtractBundleImage(ctx context.Context, logger *log.Entry, image string, local bool, skipTLS bool) (string, error) {
+func ExtractBundleImage(ctx context.Context, logger *log.Entry, image string, local bool, skipTLSVerify bool, useHTTP bool) (string, error) {
 	if logger == nil {
 		logger = DiscardLogger()
 	}
@@ -38,7 +37,7 @@ func ExtractBundleImage(ctx context.Context, logger *log.Entry, image string, lo
 	if err != nil {
 		return "", err
 	}
-	bundleDir, err := ioutil.TempDir(wd, "bundle-")
+	bundleDir, err := os.MkdirTemp(wd, "bundle-")
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +50,11 @@ func ExtractBundleImage(ctx context.Context, logger *log.Entry, image string, lo
 	logger = logger.WithFields(log.Fields{"dir": bundleDir})
 
 	// Use a containerd registry instead of shelling out to a container tool.
-	reg, err := containerdregistry.NewRegistry(containerdregistry.WithLog(logger), containerdregistry.SkipTLS(skipTLS))
+	reg, err := containerdregistry.NewRegistry(
+		containerdregistry.WithLog(logger),
+		containerdregistry.SkipTLSVerify(skipTLSVerify),
+		containerdregistry.WithPlainHTTP(useHTTP))
+
 	if err != nil {
 		return "", err
 	}

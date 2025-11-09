@@ -85,10 +85,32 @@ This validator allows check the bundle against an specific Kubernetes cluster ve
 
   $ operator-sdk bundle validate ./bundle --select-optional name=operatorhub --optional-values=k8s-version=1.22
 
-To validate a bundle against the (alpha) validator for Community Operators specifically, in addition to required bundle validators:
+[Deprecated] To validate a bundle against the (alpha) validator for Community Operators specifically, in addition to required bundle validators:
 
   $ operator-sdk bundle validate ./bundle --select-optional name=community --optional-values=index-path=bundle.Dockerfile
-	`
+
+To validate a bundle against the validator for Good Practices specifically, in addition to required bundle validators:
+
+  $ operator-sdk bundle validate ./bundle --select-optional name=good-practices
+
+To validate a bundle against the (alpha) validator for Deprecated APIs specifically, in addition to required bundle validators:
+
+  $ operator-sdk bundle validate ./bundle --select-optional name=alpha-deprecated-apis --optional-values=k8s-version=1.22
+
+To validate a bundle against an external validator, in addition to required bundle validators:
+
+  $ operator-sdk bundle validate ./bundle --alpha-select-external /path/to/external-validator[:/path/to/optional-second-validator]
+
+To validate a bundle against the (alpha) validator for Multiple Architectures bundle validation, in addition to required bundle validators:
+
+IMPORTANT: To use this option it is required to have access to pull the images defined on the CSV.
+
+  $ operator-sdk bundle validate ./bundle --select-optional name=multiarch 
+
+NOTE: The --optional-values can be used to inform the container-tools that should be used i.e. "--optional-values=container-tools=docker".
+The valid values for the container-tools optional value are [docker, podman, none]. If no value is supplied then the command will default to using docker to inspect the images.
+More info: https://github.com/operator-framework/api/blob/master/pkg/validation/internal/multiarch.go
+`
 )
 
 // NewCmd returns a command that will validate an operator bundle.
@@ -99,7 +121,7 @@ func NewCmd() *cobra.Command {
 		Short:   "Validate an operator bundle",
 		Long:    longHelp,
 		Example: examples,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(_ *cobra.Command, args []string) (err error) {
 			// Always print non-output logs to stderr as to not pollute actual command output.
 			// Note that it allows the JSON result be redirected to the Stdout. E.g
 			// if we run the command with `| jq . > result.json` the command will print just the logs
@@ -121,16 +143,27 @@ func NewCmd() *cobra.Command {
 				return nil
 			}
 
+			if c.selectorRaw == "name=community" {
+				logger.Warnf("The Optional(stage: alpha) Community Operator bundle validator is deprecated and" +
+					" will be removed in a future release. You can do these checks using the external validator: " +
+					"https://github.com/redhat-openshift-ecosystem/ocp-olm-catalog-validator/")
+			}
+
 			result, err := c.run(logger, args[0])
 			if err != nil {
 				logger.Fatal(err)
 			}
-			if err := result.PrintWithFormat(c.outputFormat); err != nil {
+			failed, err := result.PrintWithFormat(c.outputFormat)
+			if err != nil {
 				logger.Fatal(err)
 			}
 
-			logger.Info("All validation tests have completed successfully")
+			// if a test failed don't print that it was successful
+			if failed {
+				os.Exit(1)
+			}
 
+			logger.Info("All validation tests have completed successfully")
 			return nil
 		},
 	}

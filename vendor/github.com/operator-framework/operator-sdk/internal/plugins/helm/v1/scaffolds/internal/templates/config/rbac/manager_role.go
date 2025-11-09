@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/discovery"
 	crconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
 	"sigs.k8s.io/yaml"
 )
 
@@ -52,6 +52,7 @@ func (f *ManagerRole) SetTemplateDefaults() error {
 	}
 
 	f.TemplateBody = fmt.Sprintf(roleTemplate, machinery.NewMarkerFor(f.Path, rulesMarker))
+	f.IfExistsAction = machinery.OverwriteFile
 
 	return nil
 }
@@ -349,7 +350,7 @@ func generateRoleRules(dc roleDiscoveryInterface, chart *chart.Chart) ([]rbacv1.
 func getDefaultManifests(c *chart.Chart) ([]releaseutil.Manifest, error) {
 	install := action.NewInstall(&action.Configuration{})
 	install.DryRun = true
-	install.ReleaseName = "RELEASE-NAME"
+	install.ReleaseName = "release-name"
 	install.Replace = true
 	install.ClientOnly = true
 	rel, err := install.Run(c, nil)

@@ -15,21 +15,21 @@
 package cli
 
 import (
-	quarkusv1 "github.com/operator-framework/java-operator-plugins/pkg/quarkus/v1alpha"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"sigs.k8s.io/kubebuilder/v3/pkg/cli"
-	cfgv2 "sigs.k8s.io/kubebuilder/v3/pkg/config/v2"
-	cfgv3 "sigs.k8s.io/kubebuilder/v3/pkg/config/v3"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
-	kustomizev1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/common/kustomize/v1"
-	declarativev1 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/declarative/v1"
+	"sigs.k8s.io/kubebuilder/v4/pkg/cli"
+	cfgv3 "sigs.k8s.io/kubebuilder/v4/pkg/config/v3"
+	"sigs.k8s.io/kubebuilder/v4/pkg/model/stage"
+	"sigs.k8s.io/kubebuilder/v4/pkg/plugin"
+	kustomizev2 "sigs.k8s.io/kubebuilder/v4/pkg/plugins/common/kustomize/v2"
+	"sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang"
 
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang"
-	golangv2 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v2"
-	golangv3 "sigs.k8s.io/kubebuilder/v3/pkg/plugins/golang/v3"
+	deployimagev1alpha "sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang/deploy-image/v1alpha1"
+	golangv4 "sigs.k8s.io/kubebuilder/v4/pkg/plugins/golang/v4"
+	grafanav1alpha "sigs.k8s.io/kubebuilder/v4/pkg/plugins/optional/grafana/v1alpha"
 
+	ansiblev1 "github.com/operator-framework/ansible-operator-plugins/pkg/plugins/ansible/v1"
 	"github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/alpha/config3alphato3"
 	"github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/bundle"
 	"github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/cleanup"
@@ -40,8 +40,6 @@ import (
 	"github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/scorecard"
 	"github.com/operator-framework/operator-sdk/internal/flags"
 	"github.com/operator-framework/operator-sdk/internal/plugins"
-	ansiblev1 "github.com/operator-framework/operator-sdk/internal/plugins/ansible/v1"
-	envtestv1 "github.com/operator-framework/operator-sdk/internal/plugins/envtest/v1"
 	helmv1 "github.com/operator-framework/operator-sdk/internal/plugins/helm/v1"
 	manifestsv2 "github.com/operator-framework/operator-sdk/internal/plugins/manifests/v2"
 	scorecardv2 "github.com/operator-framework/operator-sdk/internal/plugins/scorecard/v2"
@@ -72,46 +70,58 @@ func Run() error {
 // This CLI can run kubebuilder commands and certain SDK specific commands that are aligned for
 // the kubebuilder project layout
 func GetPluginsCLIAndRoot() (*cli.CLI, *cobra.Command) {
-	// todo: Export the bundles KB and then change here to use the bundles exported instead
-	// more info: https://github.com/kubernetes-sigs/kubebuilder/pull/2112
-	gov2Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, golangv2.Plugin{}.Version(),
-		golangv2.Plugin{},
-		envtestv1.Plugin{},
-		manifestsv2.Plugin{},
-		scorecardv2.Plugin{},
+	gov4Bundle, _ := plugin.NewBundleWithOptions(
+		plugin.WithName(golang.DefaultNameQualifier),
+		plugin.WithVersion(golangv4.Plugin{}.Version()),
+		plugin.WithPlugins(
+			kustomizev2.Plugin{},
+			golangv4.Plugin{},
+			manifestsv2.Plugin{},
+			scorecardv2.Plugin{},
+		),
 	)
-	gov3Bundle, _ := plugin.NewBundle(golang.DefaultNameQualifier, golangv3.Plugin{}.Version(),
-		kustomizev1.Plugin{},
-		golangv3.Plugin{},
-		manifestsv2.Plugin{},
-		scorecardv2.Plugin{},
+
+	ansibleBundle, _ := plugin.NewBundleWithOptions(
+		plugin.WithName("ansible"+plugins.DefaultNameQualifier),
+		plugin.WithVersion(plugin.Version{Number: 1}),
+		plugin.WithPlugins(
+			kustomizev2.Plugin{},
+			ansiblev1.Plugin{},
+			manifestsv2.Plugin{},
+			scorecardv2.Plugin{},
+		),
 	)
-	ansibleBundle, _ := plugin.NewBundle("ansible"+plugins.DefaultNameQualifier, plugin.Version{Number: 1},
-		kustomizev1.Plugin{},
-		ansiblev1.Plugin{},
-		manifestsv2.Plugin{},
-		scorecardv2.Plugin{},
+
+	helmBundle, _ := plugin.NewBundleWithOptions(
+		plugin.WithName("helm"+plugins.DefaultNameQualifier),
+		plugin.WithVersion(plugin.Version{Number: 1}),
+		plugin.WithPlugins(
+			kustomizev2.Plugin{},
+			helmv1.Plugin{},
+			manifestsv2.Plugin{},
+			scorecardv2.Plugin{},
+		),
 	)
-	helmBundle, _ := plugin.NewBundle("helm"+plugins.DefaultNameQualifier, plugin.Version{Number: 1},
-		kustomizev1.Plugin{},
-		helmv1.Plugin{},
-		manifestsv2.Plugin{},
-		scorecardv2.Plugin{},
+
+	deployImageBundle, _ := plugin.NewBundleWithOptions(
+		plugin.WithName("deploy-image."+golang.DefaultNameQualifier),
+		plugin.WithVersion(plugin.Version{Number: 1, Stage: stage.Alpha}),
+		plugin.WithPlugins(
+			deployimagev1alpha.Plugin{},
+			manifestsv2.Plugin{},
+		),
 	)
 	c, err := cli.New(
 		cli.WithCommandName("operator-sdk"),
 		cli.WithVersion(makeVersionString()),
 		cli.WithPlugins(
 			ansibleBundle,
-			gov2Bundle,
-			gov3Bundle,
+			gov4Bundle,
 			helmBundle,
-			kustomizev1.Plugin{},
-			declarativev1.Plugin{},
-			&quarkusv1.Plugin{},
+			grafanav1alpha.Plugin{},
+			deployImageBundle,
 		),
-		cli.WithDefaultPlugins(cfgv2.Version, gov2Bundle),
-		cli.WithDefaultPlugins(cfgv3.Version, gov3Bundle),
+		cli.WithDefaultPlugins(cfgv3.Version, gov4Bundle),
 		cli.WithDefaultProjectVersion(cfgv3.Version),
 		cli.WithExtraCommands(commands...),
 		cli.WithExtraAlphaCommands(alphaCommands...),

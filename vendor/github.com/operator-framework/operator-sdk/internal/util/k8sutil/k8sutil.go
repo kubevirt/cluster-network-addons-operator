@@ -23,6 +23,8 @@ import (
 	"strings"
 	"unicode"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -64,7 +66,8 @@ func GetDisplayName(name string) string {
 		}
 		splitName[i] = temp
 	}
-	return strings.TrimSpace(strings.Title(strings.Join(splitName, " ")))
+	caser := cases.Title(language.AmericanEnglish, cases.NoLower)
+	return strings.TrimSpace(caser.String(strings.Join(splitName, " ")))
 }
 
 // GetTypeMetaFromBytes gets the type and object metadata from b. b is assumed
@@ -115,10 +118,11 @@ func TrimDNS1123Label(label string) string {
 // The namespace of the dependent resource can either be passed in explicitly, otherwise it will be
 // extracted from the dependent runtime.Object.
 // This function performs following checks:
-//  -- True: Owner is cluster-scoped.
-//  -- True: Both Owner and dependent are Namespaced with in same namespace.
-//  -- False: Owner is Namespaced and dependent is Cluster-scoped.
-//  -- False: Both Owner and dependent are Namespaced with different namespaces.
+//
+//	-- True: Owner is cluster-scoped.
+//	-- True: Both Owner and dependent are Namespaced with in same namespace.
+//	-- False: Owner is Namespaced and dependent is Cluster-scoped.
+//	-- False: Both Owner and dependent are Namespaced with different namespaces.
 func SupportsOwnerReference(restMapper meta.RESTMapper, owner, dependent runtime.Object, depNamespace string) (bool, error) {
 	ownerGVK := owner.GetObjectKind().GroupVersionKind()
 	ownerMapping, err := restMapper.RESTMapping(ownerGVK.GroupKind(), ownerGVK.Version)

@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	apiutilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/utils/set"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -65,7 +65,10 @@ func (c Client) GetObjectsStatus(ctx context.Context, objs ...client.Object) Sta
 		}
 		u := unstructured.Unstructured{}
 		u.SetGroupVersionKind(gvk)
-		rs.Error = c.KubeClient.Get(ctx, nn, &u)
+		err := c.KubeClient.Get(ctx, nn, &u)
+		if err != nil {
+			rs.Error = fmt.Errorf("error getting resource %q with GVK %q: %w", nn, gvk, err)
+		}
 		if rs.Error == nil {
 			rs.Resource = &u
 		}
@@ -88,7 +91,7 @@ func (s Status) HasInstalledResources() (bool, error) {
 	}
 	// Sort resources by whether they're installed or not to get consistent
 	// return values.
-	sort.Slice(s.Resources, func(i int, j int) bool {
+	sort.Slice(s.Resources, func(i int, _ int) bool {
 		return s.Resources[i].Resource != nil
 	})
 	for _, r := range s.Resources {
@@ -111,8 +114,8 @@ func (s Status) HasInstalledResources() (bool, error) {
 }
 
 // getCRDKindSet returns the set of all kinds specified by all CRDs in s.
-func (s Status) getCRDKindSet() (sets.String, error) {
-	crdKindSet := sets.NewString()
+func (s Status) getCRDKindSet() (set.Set[string], error) {
+	crdKindSet := set.New[string]()
 	for _, r := range s.Resources {
 		if r.GVK.Kind == "CustomResourceDefinition" {
 			u := &unstructured.Unstructured{}

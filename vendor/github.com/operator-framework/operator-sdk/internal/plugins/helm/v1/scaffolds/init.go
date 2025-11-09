@@ -18,11 +18,11 @@ limitations under the License.
 package scaffolds
 
 import (
-	"os"
+	kustomizev2 "sigs.k8s.io/kubebuilder/v4/pkg/plugins/common/kustomize/v2"
 
-	"sigs.k8s.io/kubebuilder/v3/pkg/config"
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugins"
+	"sigs.k8s.io/kubebuilder/v4/pkg/config"
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/plugins"
 
 	"github.com/operator-framework/operator-sdk/internal/plugins/helm/v1/chartutil"
 	"github.com/operator-framework/operator-sdk/internal/plugins/helm/v1/scaffolds/internal/templates"
@@ -30,12 +30,7 @@ import (
 	"github.com/operator-framework/operator-sdk/internal/version"
 )
 
-const (
-	// kustomizeVersion is the sigs.k8s.io/kustomize version to be used in the project
-	kustomizeVersion = "v3.8.7"
-
-	imageName = "controller:latest"
-)
+const imageName = "controller:latest"
 
 // helmOperatorVersion is set to the version of helm-operator at compile-time.
 var helmOperatorVersion = version.ImageVersion
@@ -70,9 +65,10 @@ func (s *initScaffolder) Scaffold() error {
 		machinery.WithConfig(s.config),
 	)
 
-	if err := os.MkdirAll(chartutil.HelmChartsDir, 0755); err != nil {
+	if err := s.fs.FS.MkdirAll(chartutil.HelmChartsDir, 0755); err != nil {
 		return err
 	}
+
 	return scaffold.Execute(
 		&templates.Dockerfile{
 			HelmOperatorVersion: helmOperatorVersion,
@@ -80,7 +76,7 @@ func (s *initScaffolder) Scaffold() error {
 		&templates.GitIgnore{},
 		&templates.Makefile{
 			Image:               imageName,
-			KustomizeVersion:    kustomizeVersion,
+			KustomizeVersion:    kustomizev2.KustomizeVersion,
 			HelmOperatorVersion: helmOperatorVersion,
 		},
 		&templates.Watches{},

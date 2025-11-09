@@ -26,7 +26,9 @@ import (
 )
 
 const (
-	DefaultVersion = "latest"
+	// TODO: switch back to latest once olm fixes their releases
+	// https://github.com/operator-framework/operator-lifecycle-manager/issues/3419
+	DefaultVersion = "0.28.0"
 	DefaultTimeout = time.Minute * 2
 	// DefaultOLMNamespace is the namespace where OLM is installed
 	DefaultOLMNamespace = "olm"
@@ -105,7 +107,7 @@ func (m *Manager) Uninstall() error {
 		m.Version = version
 	}
 
-	if err := m.Client.UninstallVersion(ctx, m.OLMNamespace, m.Version); err != nil {
+	if err := m.Client.UninstallVersion(ctx, m.Version); err != nil {
 		return err
 	}
 
@@ -133,7 +135,7 @@ func (m *Manager) Status() error {
 		m.Version = version
 	}
 
-	status, err := m.Client.GetStatus(ctx, m.OLMNamespace, m.Version)
+	status, err := m.Client.GetStatus(ctx, m.Version)
 	if err != nil {
 		return err
 	}

@@ -31,6 +31,7 @@ func ExecuteCommand(cmd *exec.Cmd) error {
 	log.Debugf("Running %#v", cmd.Args)
 
 	if err := cmd.Run(); err != nil {
+		// nolint:stylecheck
 		return fmt.Errorf("Failed to exec %#v: %v", cmd.Args, err)
 	}
 
@@ -51,14 +52,14 @@ func ExecuteCommand(cmd *exec.Cmd) error {
 // @channelDefault: The default channel for the bundle image
 // @overwrite: Boolean flag to enable overwriting annotations.yaml locally if existed
 func BuildFunc(directory, outputDir, imageTag, imageBuilder, packageName, channels, channelDefault string,
-	overwrite bool) error {
+	overwrite bool, baseImage string) error {
 	_, err := os.Stat(directory)
 	if os.IsNotExist(err) {
 		return err
 	}
 
 	// Generate annotations.yaml and Dockerfile
-	err = GenerateFunc(directory, outputDir, packageName, channels, channelDefault, overwrite)
+	err = GenerateFunc(directory, outputDir, packageName, channels, channelDefault, overwrite, baseImage)
 	if err != nil {
 		return err
 	}

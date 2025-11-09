@@ -16,7 +16,7 @@ package config3alphato3
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -34,8 +34,8 @@ The 3-alpha version has recently become stable (3), and therefore is no longer
 supported by operator-sdk v1.5+. This command is intended to migrate 3-alpha PROJECT files
 to 3 with as few manual modifications required as possible.
 `,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cfgBytes, err := ioutil.ReadFile("PROJECT")
+		RunE: func(_ *cobra.Command, _ []string) (err error) {
+			cfgBytes, err := os.ReadFile("PROJECT")
 			if err != nil {
 				return fmt.Errorf("%v (config-3alpha-to-3 must be run from project root)", err)
 			}
@@ -49,7 +49,7 @@ to 3 with as few manual modifications required as possible.
 			if err != nil {
 				return err
 			}
-			if err := ioutil.WriteFile("PROJECT", b, 0666); err != nil {
+			if err := os.WriteFile("PROJECT", b, 0666); err != nil {
 				return err
 			}
 
@@ -64,8 +64,8 @@ to 3 with as few manual modifications required as possible.
 // RootPersistentPreRun prints a helpful message on any exit caused by kubebuilder's
 // config unmarshal step finding "3-alpha", since the CLI will not recognize this version.
 // Add this to the root command (`operator-sdk`).
-var RootPersistentPreRun = func(cmd *cobra.Command, args []string) {
-	if cfgBytes, err := ioutil.ReadFile("PROJECT"); err == nil {
+var RootPersistentPreRun = func(_ *cobra.Command, _ []string) {
+	if cfgBytes, err := os.ReadFile("PROJECT"); err == nil {
 		if ver, err := getConfigVersion(cfgBytes); err == nil && ver == v3alpha {
 			log.Warn("Config version 3-alpha has been stabilized as 3, and 3-alpha is no longer supported. " +
 				"Run `operator-sdk alpha config-3alpha-to-3` to upgrade your PROJECT config file to version 3",

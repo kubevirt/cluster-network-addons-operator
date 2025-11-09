@@ -16,18 +16,16 @@ package projutil
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
-	"sigs.k8s.io/kubebuilder/v3/pkg/config"
-	yamlstore "sigs.k8s.io/kubebuilder/v3/pkg/config/store/yaml"
-	_ "sigs.k8s.io/kubebuilder/v3/pkg/config/v2" // Register config/v2 for `config.New`
-	_ "sigs.k8s.io/kubebuilder/v3/pkg/config/v3" // Register config/v3 for `config.New`
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/config"
+	yamlstore "sigs.k8s.io/kubebuilder/v4/pkg/config/store/yaml"
+	_ "sigs.k8s.io/kubebuilder/v4/pkg/config/v3" // Register config/v3 for `config.New`
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
 )
 
 const (
@@ -133,7 +131,7 @@ func SetGoVerbose() error {
 // RewriteFileContents adds newContent to the line after the last occurrence of target in filename's contents,
 // then writes the updated contents back to disk.
 func RewriteFileContents(filename, target, newContent string) error {
-	text, err := ioutil.ReadFile(filename)
+	text, err := os.ReadFile(filename)
 	if err != nil {
 		return fmt.Errorf("error in getting contents from the file, %v", err)
 	}
@@ -143,7 +141,7 @@ func RewriteFileContents(filename, target, newContent string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filename, []byte(modifiedContent), FileMode)
+	err = os.WriteFile(filename, []byte(modifiedContent), FileMode)
 	if err != nil {
 		return fmt.Errorf("error writing modified contents to file, %v", err)
 	}

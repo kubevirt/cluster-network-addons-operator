@@ -17,7 +17,7 @@ package manifests
 import (
 	"path/filepath"
 
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
 )
 
 var _ machinery.Template = &Kustomization{}
@@ -27,6 +27,12 @@ type Kustomization struct {
 	machinery.TemplateMixin
 	machinery.ProjectNameMixin
 
+	// SupportsKustomizeV4 is true for the projects that are
+	// scaffold using the kustomize/v2-aplha plugin and
+	// the major bump for it 4x
+	// Previous versions uses 3x
+	SupportsKustomizeV4 bool
+
 	SupportsWebhooks bool
 }
 
@@ -35,6 +41,12 @@ func (f *Kustomization) SetTemplateDefaults() error {
 	if f.Path == "" {
 		f.Path = filepath.Join("config", "manifests", "kustomization.yaml")
 	}
+
+	// We cannot overwiting the file after it be created because
+	// it might contain user changes (i.e to work with Kustomize 4.x
+	// the target /spec/template/spec/containers/1/volumeMounts/0
+	// needs to be replaced with /spec/template/spec/containers/0/volumeMounts/0
+	f.IfExistsAction = machinery.SkipFile
 
 	f.TemplateBody = kustomizationTemplate
 
@@ -52,7 +64,7 @@ resources:
 # [WEBHOOK] To enable webhooks, uncomment all the sections with [WEBHOOK] prefix.
 # Do NOT uncomment sections with prefix [CERTMANAGER], as OLM does not support cert-manager.
 # These patches remove the unnecessary "cert" volume and its manager container volumeMount.
-#patchesJson6902:
+#patches:
 #- target:
 #    group: apps
 #    version: v1
@@ -63,7 +75,11 @@ resources:
 #    # Remove the manager container's "cert" volumeMount, since OLM will create and mount a set of certs.
 #    # Update the indices in this path if adding or removing containers/volumeMounts in the manager's Deployment.
 #    - op: remove
+{{ if .SupportsKustomizeV4 }}
+#      path: /spec/template/spec/containers/0/volumeMounts/0
+{{ else -}} 
 #      path: /spec/template/spec/containers/1/volumeMounts/0
+{{ end -}}
 #    # Remove the "cert" volume, since OLM will create and mount a set of certs.
 #    # Update the indices in this path if adding or removing volumes in the manager's Deployment.
 #    - op: remove

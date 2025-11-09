@@ -55,18 +55,17 @@ func Chunk(arr interface{}, size int) interface{} {
 	return resultSlice.Interface()
 }
 
-// ToMap transforms a slice of instances to a Map.
-// []*Foo => Map<int, *Foo>
+// ToMap transforms a collection of instances to a Map.
+// []T => map[type of T.<pivot>]T
 func ToMap(in interface{}, pivot string) interface{} {
-	value := reflect.ValueOf(in)
-
-	// input value must be a slice
-	if value.Kind() != reflect.Slice {
-		panic(fmt.Sprintf("%v must be a slice", in))
+	// input value must be a collection
+	if !IsCollection(in) {
+		panic(fmt.Sprintf("%v must be a slict or an array", in))
 	}
 
-	inType := value.Type()
+	value := reflect.ValueOf(in)
 
+	inType := value.Type()
 	structType := inType.Elem()
 
 	// retrieve the struct in the slice to deduce key type
@@ -74,7 +73,10 @@ func ToMap(in interface{}, pivot string) interface{} {
 		structType = structType.Elem()
 	}
 
-	field, _ := structType.FieldByName(pivot)
+	field, ok := structType.FieldByName(pivot)
+	if !ok {
+		panic(fmt.Sprintf("`%s` must be a field of the struct %s", pivot, structType.Name()))
+	}
 
 	// value of the map will be the input type
 	collectionType := reflect.MapOf(field.Type, inType.Elem())
@@ -93,6 +95,33 @@ func ToMap(in interface{}, pivot string) interface{} {
 		}
 
 		collection.SetMapIndex(field, instance)
+	}
+
+	return collection.Interface()
+}
+
+// ToSet transforms a collection of instances to a Set.
+// []T => map[T]struct{}
+func ToSet(in interface{}) interface{} {
+	// input value must be a collection
+	if !IsCollection(in) {
+		panic(fmt.Sprintf("%v must be a slice or an array", in))
+	}
+
+	var (
+		empty      = struct{}{}
+		emptyType  = reflect.TypeOf(empty)
+		emptyValue = reflect.ValueOf(empty)
+	)
+
+	value := reflect.ValueOf(in)
+	elemType := value.Type().Elem()
+
+	// key of the set will be the input type
+	collection := reflect.MakeMap(reflect.MapOf(elemType, emptyType))
+
+	for i := 0; i < value.Len(); i++ {
+		collection.SetMapIndex(value.Index(i), emptyValue)
 	}
 
 	return collection.Interface()
@@ -364,7 +393,6 @@ func Uniq(in interface{}) interface{} {
 		result := makeSlice(value, 0)
 
 		seen := make(map[interface{}]bool, length)
-		j := 0
 
 		for i := 0; i < length; i++ {
 			val := value.Index(i)
@@ -376,7 +404,44 @@ func Uniq(in interface{}) interface{} {
 
 			seen[v] = true
 			result = reflect.Append(result, val)
-			j++
+		}
+
+		return result.Interface()
+	}
+
+	panic(fmt.Sprintf("Type %s is not supported by Uniq", valueType.String()))
+}
+
+// Uniq creates an array with unique values.
+func UniqBy(in interface{}, mapFunc interface{}) interface{} {
+	if !IsFunction(mapFunc) {
+		panic("Second argument must be function")
+	}
+
+	value := reflect.ValueOf(in)
+	valueType := value.Type()
+
+	kind := value.Kind()
+
+	funcValue := reflect.ValueOf(mapFunc)
+
+	if kind == reflect.Array || kind == reflect.Slice {
+		length := value.Len()
+
+		result := makeSlice(value, 0)
+
+		seen := make(map[interface{}]bool, length)
+
+		for i := 0; i < length; i++ {
+			val := value.Index(i)
+			v := funcValue.Call([]reflect.Value{val})[0].Interface()
+
+			if _, ok := seen[v]; ok {
+				continue
+			}
+
+			seen[v] = true
+			result = reflect.Append(result, val)
 		}
 
 		return result.Interface()
@@ -460,7 +525,6 @@ func PruneByTag(in interface{}, paths []string, tag string) (interface{}, error)
 // which are looked up using struct field Tag "tag". If tag is nil,
 // traverse paths using struct field name
 func pruneByTag(in interface{}, paths []string, tag *string) (interface{}, error) {
-
 	inValue := reflect.ValueOf(in)
 
 	ret := reflect.New(inValue.Type()).Elem()
@@ -475,7 +539,6 @@ func pruneByTag(in interface{}, paths []string, tag *string) (interface{}, error
 }
 
 func prune(inValue reflect.Value, ret reflect.Value, parts []string, tag *string) error {
-
 	if len(parts) == 0 {
 		// we reached the location that ret needs to hold inValue
 		// Note: The value at the end of the path is not copied, maybe we need to change.
@@ -523,7 +586,7 @@ func prune(inValue reflect.Value, ret reflect.Value, parts []string, tag *string
 				}
 			}
 			if !found {
-				return fmt.Errorf("Struct tag %v is not found with key %v", *tag, part)
+				return fmt.Errorf("struct tag %v is not found with key %v", *tag, part)
 			}
 		}
 		// init Ret is zero and go down one more level
