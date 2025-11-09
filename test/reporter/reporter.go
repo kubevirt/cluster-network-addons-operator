@@ -29,6 +29,7 @@ func (r *KubernetesCNAOReporter) DumpLogs() int {
 	r.logCommand([]string{"get", "servicemonitor", "-n", r.namespace, "-o", "yaml"}, "servicemonitors")
 	r.logCommand([]string{"get", "prometheusrule", "-n", r.namespace, "-o", "yaml"}, "prometheusrules")
 	r.logCommand([]string{"get", "service", "-n", r.namespace, "-o", "yaml"}, "services")
+	r.logCommand([]string{"get", "endpointslice", "-n", r.namespace, "-o", "yaml"}, "endpointslices")
 	r.logNamespacePods()
 
 	return r.failureCount
