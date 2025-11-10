@@ -93,9 +93,6 @@ github.com/ProtonMail/go-crypto/openpgp/x25519
 github.com/ProtonMail/go-crypto/openpgp/x448
 # github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d
 ## explicit
-# github.com/VividCortex/ewma v1.2.0
-## explicit; go 1.12
-github.com/VividCortex/ewma
 # github.com/antlr4-go/antlr/v4 v4.13.0
 ## explicit; go 1.20
 github.com/antlr4-go/antlr/v4
@@ -125,10 +122,6 @@ github.com/chai2010/gettext-go
 github.com/chai2010/gettext-go/mo
 github.com/chai2010/gettext-go/plural
 github.com/chai2010/gettext-go/po
-# github.com/cheggaaa/pb/v3 v3.1.0
-## explicit; go 1.12
-github.com/cheggaaa/pb/v3
-github.com/cheggaaa/pb/v3/termutil
 # github.com/cloudflare/cfssl v1.5.0
 ## explicit; go 1.14
 github.com/cloudflare/cfssl/api
@@ -386,15 +379,6 @@ github.com/go-git/go-git/v5/utils/trace
 # github.com/go-gorp/gorp/v3 v3.1.0
 ## explicit; go 1.18
 github.com/go-gorp/gorp/v3
-# github.com/go-kit/kit v0.13.0
-## explicit; go 1.17
-github.com/go-kit/kit/log
-# github.com/go-kit/log v0.2.1
-## explicit; go 1.17
-github.com/go-kit/log
-# github.com/go-logfmt/logfmt v0.6.0
-## explicit; go 1.17
-github.com/go-logfmt/logfmt
 # github.com/go-logr/logr v1.4.2
 ## explicit; go 1.18
 github.com/go-logr/logr
@@ -439,17 +423,9 @@ github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/gogo/protobuf/sortkeys
 github.com/gogo/protobuf/types
-# github.com/golang/glog v1.2.4
-## explicit; go 1.19
-github.com/golang/glog
-github.com/golang/glog/internal/logsink
-github.com/golang/glog/internal/stackdump
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
 github.com/golang/groupcache/lru
-# github.com/golang/mock v1.6.0
-## explicit; go 1.11
-github.com/golang/mock/gomock
 # github.com/golang/protobuf v1.5.4
 ## explicit; go 1.17
 github.com/golang/protobuf/proto
@@ -514,16 +490,10 @@ github.com/google/go-github/v32/github
 # github.com/google/go-querystring v1.0.0
 ## explicit
 github.com/google/go-querystring/query
-# github.com/google/goexpect v0.0.0-20190425035906-112704a48083
-## explicit
-github.com/google/goexpect
 # github.com/google/gofuzz v1.2.0
 ## explicit; go 1.12
 github.com/google/gofuzz
 github.com/google/gofuzz/bytesource
-# github.com/google/goterm v0.0.0-20190311235235-ce302be1d114
-## explicit
-github.com/google/goterm/term
 # github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 ## explicit; go 1.13
 github.com/google/shlex
@@ -635,9 +605,6 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kr/text v0.2.0
 ## explicit
 github.com/kr/text
-# github.com/kubernetes-csi/external-snapshotter/client/v4 v4.2.0
-## explicit; go 1.15
-github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1
 # github.com/kubevirt/monitoring/pkg/metrics/parser v0.0.0-20231024120544-6a3ba1a680b4
 ## explicit; go 1.20
 github.com/kubevirt/monitoring/pkg/metrics/parser
@@ -741,7 +708,6 @@ github.com/onsi/ginkgo/v2/types
 ## explicit; go 1.22
 github.com/onsi/gomega
 github.com/onsi/gomega/format
-github.com/onsi/gomega/gstruct
 github.com/onsi/gomega/gstruct/errors
 github.com/onsi/gomega/internal
 github.com/onsi/gomega/internal/gutil
@@ -762,27 +728,12 @@ github.com/opencontainers/image-spec/specs-go/v1
 ## explicit; go 1.20
 github.com/openshift/api/config/v1
 github.com/openshift/api/operator/v1
-github.com/openshift/api/route/v1
-github.com/openshift/api/security/v1
-# github.com/openshift/client-go v0.0.0 => github.com/openshift/client-go v0.0.1
-## explicit; go 1.20
-github.com/openshift/client-go/route/applyconfigurations/internal
-github.com/openshift/client-go/route/applyconfigurations/route/v1
-github.com/openshift/client-go/route/clientset/versioned/scheme
-github.com/openshift/client-go/route/clientset/versioned/typed/route/v1
-github.com/openshift/client-go/security/applyconfigurations/internal
-github.com/openshift/client-go/security/applyconfigurations/security/v1
-github.com/openshift/client-go/security/clientset/versioned/scheme
-github.com/openshift/client-go/security/clientset/versioned/typed/security/v1
 # github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
 ## explicit
 github.com/openshift/cluster-network-operator/pkg/names
 # github.com/openshift/custom-resource-status v1.1.2
 ## explicit; go 1.12
 github.com/openshift/custom-resource-status/conditions/v1
-# github.com/openshift/library-go v0.0.0-20211220195323-eca2c467c492
-## explicit; go 1.17
-github.com/openshift/library-go/pkg/build/naming
 # github.com/openshift/origin v4.1.0+incompatible
 ## explicit
 github.com/openshift/origin/pkg/security/apis/security
@@ -916,9 +867,6 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/povsister/scp v0.0.0-20210427074412-33febfd9f13e
-## explicit; go 1.15
-github.com/povsister/scp
 # github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 ## explicit; go 1.17
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
@@ -1635,7 +1583,6 @@ k8s.io/apiserver/pkg/endpoints/request
 k8s.io/apiserver/pkg/features
 k8s.io/apiserver/pkg/server/egressselector
 k8s.io/apiserver/pkg/server/egressselector/metrics
-k8s.io/apiserver/pkg/storage/names
 k8s.io/apiserver/pkg/util/feature
 k8s.io/apiserver/pkg/util/version
 k8s.io/apiserver/pkg/util/webhook
@@ -1649,7 +1596,6 @@ k8s.io/cli-runtime/pkg/printers
 k8s.io/cli-runtime/pkg/resource
 # k8s.io/client-go v12.0.0+incompatible => k8s.io/client-go v0.31.0
 ## explicit; go 1.22.0
-k8s.io/client-go/applyconfigurations
 k8s.io/client-go/applyconfigurations/admissionregistration/v1
 k8s.io/client-go/applyconfigurations/admissionregistration/v1alpha1
 k8s.io/client-go/applyconfigurations/admissionregistration/v1beta1
@@ -1679,7 +1625,6 @@ k8s.io/client-go/applyconfigurations/flowcontrol/v1
 k8s.io/client-go/applyconfigurations/flowcontrol/v1beta1
 k8s.io/client-go/applyconfigurations/flowcontrol/v1beta2
 k8s.io/client-go/applyconfigurations/flowcontrol/v1beta3
-k8s.io/client-go/applyconfigurations/imagepolicy/v1alpha1
 k8s.io/client-go/applyconfigurations/internal
 k8s.io/client-go/applyconfigurations/meta/v1
 k8s.io/client-go/applyconfigurations/networking/v1
@@ -1704,7 +1649,6 @@ k8s.io/client-go/applyconfigurations/storagemigration/v1alpha1
 k8s.io/client-go/discovery
 k8s.io/client-go/discovery/cached/disk
 k8s.io/client-go/discovery/cached/memory
-k8s.io/client-go/discovery/fake
 k8s.io/client-go/dynamic
 k8s.io/client-go/features
 k8s.io/client-go/gentype
@@ -1779,114 +1723,60 @@ k8s.io/client-go/informers/storage/v1beta1
 k8s.io/client-go/informers/storagemigration
 k8s.io/client-go/informers/storagemigration/v1alpha1
 k8s.io/client-go/kubernetes
-k8s.io/client-go/kubernetes/fake
 k8s.io/client-go/kubernetes/scheme
 k8s.io/client-go/kubernetes/typed/admissionregistration/v1
-k8s.io/client-go/kubernetes/typed/admissionregistration/v1/fake
 k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1
-k8s.io/client-go/kubernetes/typed/admissionregistration/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/admissionregistration/v1beta1
-k8s.io/client-go/kubernetes/typed/admissionregistration/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/apiserverinternal/v1alpha1
-k8s.io/client-go/kubernetes/typed/apiserverinternal/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/apps/v1
-k8s.io/client-go/kubernetes/typed/apps/v1/fake
 k8s.io/client-go/kubernetes/typed/apps/v1beta1
-k8s.io/client-go/kubernetes/typed/apps/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/apps/v1beta2
-k8s.io/client-go/kubernetes/typed/apps/v1beta2/fake
 k8s.io/client-go/kubernetes/typed/authentication/v1
-k8s.io/client-go/kubernetes/typed/authentication/v1/fake
 k8s.io/client-go/kubernetes/typed/authentication/v1alpha1
-k8s.io/client-go/kubernetes/typed/authentication/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/authentication/v1beta1
-k8s.io/client-go/kubernetes/typed/authentication/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/authorization/v1
-k8s.io/client-go/kubernetes/typed/authorization/v1/fake
 k8s.io/client-go/kubernetes/typed/authorization/v1beta1
-k8s.io/client-go/kubernetes/typed/authorization/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/autoscaling/v1
-k8s.io/client-go/kubernetes/typed/autoscaling/v1/fake
 k8s.io/client-go/kubernetes/typed/autoscaling/v2
-k8s.io/client-go/kubernetes/typed/autoscaling/v2/fake
 k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1
-k8s.io/client-go/kubernetes/typed/autoscaling/v2beta1/fake
 k8s.io/client-go/kubernetes/typed/autoscaling/v2beta2
-k8s.io/client-go/kubernetes/typed/autoscaling/v2beta2/fake
 k8s.io/client-go/kubernetes/typed/batch/v1
-k8s.io/client-go/kubernetes/typed/batch/v1/fake
 k8s.io/client-go/kubernetes/typed/batch/v1beta1
-k8s.io/client-go/kubernetes/typed/batch/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/certificates/v1
-k8s.io/client-go/kubernetes/typed/certificates/v1/fake
 k8s.io/client-go/kubernetes/typed/certificates/v1alpha1
-k8s.io/client-go/kubernetes/typed/certificates/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/certificates/v1beta1
-k8s.io/client-go/kubernetes/typed/certificates/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/coordination/v1
-k8s.io/client-go/kubernetes/typed/coordination/v1/fake
 k8s.io/client-go/kubernetes/typed/coordination/v1alpha1
-k8s.io/client-go/kubernetes/typed/coordination/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/coordination/v1beta1
-k8s.io/client-go/kubernetes/typed/coordination/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/core/v1
-k8s.io/client-go/kubernetes/typed/core/v1/fake
 k8s.io/client-go/kubernetes/typed/discovery/v1
-k8s.io/client-go/kubernetes/typed/discovery/v1/fake
 k8s.io/client-go/kubernetes/typed/discovery/v1beta1
-k8s.io/client-go/kubernetes/typed/discovery/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/events/v1
-k8s.io/client-go/kubernetes/typed/events/v1/fake
 k8s.io/client-go/kubernetes/typed/events/v1beta1
-k8s.io/client-go/kubernetes/typed/events/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/extensions/v1beta1
-k8s.io/client-go/kubernetes/typed/extensions/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/flowcontrol/v1
-k8s.io/client-go/kubernetes/typed/flowcontrol/v1/fake
 k8s.io/client-go/kubernetes/typed/flowcontrol/v1beta1
-k8s.io/client-go/kubernetes/typed/flowcontrol/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/flowcontrol/v1beta2
-k8s.io/client-go/kubernetes/typed/flowcontrol/v1beta2/fake
 k8s.io/client-go/kubernetes/typed/flowcontrol/v1beta3
-k8s.io/client-go/kubernetes/typed/flowcontrol/v1beta3/fake
 k8s.io/client-go/kubernetes/typed/networking/v1
-k8s.io/client-go/kubernetes/typed/networking/v1/fake
 k8s.io/client-go/kubernetes/typed/networking/v1alpha1
-k8s.io/client-go/kubernetes/typed/networking/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/networking/v1beta1
-k8s.io/client-go/kubernetes/typed/networking/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/node/v1
-k8s.io/client-go/kubernetes/typed/node/v1/fake
 k8s.io/client-go/kubernetes/typed/node/v1alpha1
-k8s.io/client-go/kubernetes/typed/node/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/node/v1beta1
-k8s.io/client-go/kubernetes/typed/node/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/policy/v1
-k8s.io/client-go/kubernetes/typed/policy/v1/fake
 k8s.io/client-go/kubernetes/typed/policy/v1beta1
-k8s.io/client-go/kubernetes/typed/policy/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/rbac/v1
-k8s.io/client-go/kubernetes/typed/rbac/v1/fake
 k8s.io/client-go/kubernetes/typed/rbac/v1alpha1
-k8s.io/client-go/kubernetes/typed/rbac/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/rbac/v1beta1
-k8s.io/client-go/kubernetes/typed/rbac/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/resource/v1alpha3
-k8s.io/client-go/kubernetes/typed/resource/v1alpha3/fake
 k8s.io/client-go/kubernetes/typed/scheduling/v1
-k8s.io/client-go/kubernetes/typed/scheduling/v1/fake
 k8s.io/client-go/kubernetes/typed/scheduling/v1alpha1
-k8s.io/client-go/kubernetes/typed/scheduling/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/scheduling/v1beta1
-k8s.io/client-go/kubernetes/typed/scheduling/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/storage/v1
-k8s.io/client-go/kubernetes/typed/storage/v1/fake
 k8s.io/client-go/kubernetes/typed/storage/v1alpha1
-k8s.io/client-go/kubernetes/typed/storage/v1alpha1/fake
 k8s.io/client-go/kubernetes/typed/storage/v1beta1
-k8s.io/client-go/kubernetes/typed/storage/v1beta1/fake
 k8s.io/client-go/kubernetes/typed/storagemigration/v1alpha1
-k8s.io/client-go/kubernetes/typed/storagemigration/v1alpha1/fake
 k8s.io/client-go/listers
 k8s.io/client-go/listers/admissionregistration/v1
 k8s.io/client-go/listers/admissionregistration/v1alpha1
@@ -1951,7 +1841,6 @@ k8s.io/client-go/plugin/pkg/client/auth/exec
 k8s.io/client-go/plugin/pkg/client/auth/gcp
 k8s.io/client-go/plugin/pkg/client/auth/oidc
 k8s.io/client-go/rest
-k8s.io/client-go/rest/fake
 k8s.io/client-go/rest/watch
 k8s.io/client-go/restmapper
 k8s.io/client-go/scale
@@ -1967,7 +1856,6 @@ k8s.io/client-go/third_party/forked/golang/template
 k8s.io/client-go/tools/auth
 k8s.io/client-go/tools/cache
 k8s.io/client-go/tools/cache/synctrack
-k8s.io/client-go/tools/cache/testing
 k8s.io/client-go/tools/clientcmd
 k8s.io/client-go/tools/clientcmd/api
 k8s.io/client-go/tools/clientcmd/api/latest
@@ -1977,7 +1865,6 @@ k8s.io/client-go/tools/leaderelection
 k8s.io/client-go/tools/leaderelection/resourcelock
 k8s.io/client-go/tools/metrics
 k8s.io/client-go/tools/pager
-k8s.io/client-go/tools/portforward
 k8s.io/client-go/tools/record
 k8s.io/client-go/tools/record/util
 k8s.io/client-go/tools/reference
@@ -1987,8 +1874,6 @@ k8s.io/client-go/transport
 k8s.io/client-go/transport/spdy
 k8s.io/client-go/transport/websocket
 k8s.io/client-go/util/cert
-k8s.io/client-go/util/certificate
-k8s.io/client-go/util/certificate/csr
 k8s.io/client-go/util/connrotation
 k8s.io/client-go/util/consistencydetector
 k8s.io/client-go/util/exec
@@ -2027,15 +1912,6 @@ k8s.io/klog/v2/internal/dbg
 k8s.io/klog/v2/internal/serialize
 k8s.io/klog/v2/internal/severity
 k8s.io/klog/v2/internal/sloghandler
-# k8s.io/kube-aggregator v0.31.0 => k8s.io/kube-aggregator v0.31.0
-## explicit; go 1.22.0
-k8s.io/kube-aggregator/pkg/apis/apiregistration
-k8s.io/kube-aggregator/pkg/apis/apiregistration/v1
-k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1
-k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset
-k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/scheme
-k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1
-k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistration/v1beta1
 # k8s.io/kube-openapi v0.31.0 => k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7
 ## explicit; go 1.21
 k8s.io/kube-openapi/pkg/cached
@@ -2056,9 +1932,7 @@ k8s.io/kube-openapi/pkg/validation/validate
 # k8s.io/kubectl v0.33.2 => k8s.io/kubectl v0.31.0
 ## explicit; go 1.22.0
 k8s.io/kubectl/pkg/cmd/util
-k8s.io/kubectl/pkg/cmd/util/podcmd
 k8s.io/kubectl/pkg/scheme
-k8s.io/kubectl/pkg/util
 k8s.io/kubectl/pkg/util/deployment
 k8s.io/kubectl/pkg/util/i18n
 k8s.io/kubectl/pkg/util/interrupt
@@ -2087,200 +1961,15 @@ k8s.io/utils/strings/slices
 k8s.io/utils/trace
 # kubevirt.io/api v1.4.0 => kubevirt.io/api v1.4.0
 ## explicit; go 1.22.0
-kubevirt.io/api/clone
-kubevirt.io/api/clone/v1alpha1
 kubevirt.io/api/core
 kubevirt.io/api/core/v1
-kubevirt.io/api/export
-kubevirt.io/api/export/v1alpha1
-kubevirt.io/api/export/v1beta1
-kubevirt.io/api/instancetype
-kubevirt.io/api/instancetype/v1alpha1
-kubevirt.io/api/instancetype/v1alpha2
-kubevirt.io/api/instancetype/v1beta1
-kubevirt.io/api/migrations
-kubevirt.io/api/migrations/v1alpha1
-kubevirt.io/api/pool
-kubevirt.io/api/pool/v1alpha1
-kubevirt.io/api/snapshot
-kubevirt.io/api/snapshot/v1alpha1
-kubevirt.io/api/snapshot/v1beta1
-# kubevirt.io/client-go v1.4.0 => kubevirt.io/client-go v1.4.0
-## explicit; go 1.22.0
-kubevirt.io/client-go/containerizeddataimporter
-kubevirt.io/client-go/containerizeddataimporter/scheme
-kubevirt.io/client-go/containerizeddataimporter/typed/core/v1beta1
-kubevirt.io/client-go/containerizeddataimporter/typed/upload/v1beta1
-kubevirt.io/client-go/externalsnapshotter
-kubevirt.io/client-go/externalsnapshotter/scheme
-kubevirt.io/client-go/externalsnapshotter/typed/volumesnapshot/v1
-kubevirt.io/client-go/kubecli
-kubevirt.io/client-go/kubevirt
-kubevirt.io/client-go/kubevirt/fake
-kubevirt.io/client-go/kubevirt/scheme
-kubevirt.io/client-go/kubevirt/typed/clone/v1alpha1
-kubevirt.io/client-go/kubevirt/typed/clone/v1alpha1/fake
-kubevirt.io/client-go/kubevirt/typed/core/v1
-kubevirt.io/client-go/kubevirt/typed/core/v1/fake
-kubevirt.io/client-go/kubevirt/typed/export/v1alpha1
-kubevirt.io/client-go/kubevirt/typed/export/v1alpha1/fake
-kubevirt.io/client-go/kubevirt/typed/export/v1beta1
-kubevirt.io/client-go/kubevirt/typed/export/v1beta1/fake
-kubevirt.io/client-go/kubevirt/typed/instancetype/v1alpha1
-kubevirt.io/client-go/kubevirt/typed/instancetype/v1alpha1/fake
-kubevirt.io/client-go/kubevirt/typed/instancetype/v1alpha2
-kubevirt.io/client-go/kubevirt/typed/instancetype/v1alpha2/fake
-kubevirt.io/client-go/kubevirt/typed/instancetype/v1beta1
-kubevirt.io/client-go/kubevirt/typed/instancetype/v1beta1/fake
-kubevirt.io/client-go/kubevirt/typed/migrations/v1alpha1
-kubevirt.io/client-go/kubevirt/typed/migrations/v1alpha1/fake
-kubevirt.io/client-go/kubevirt/typed/pool/v1alpha1
-kubevirt.io/client-go/kubevirt/typed/pool/v1alpha1/fake
-kubevirt.io/client-go/kubevirt/typed/snapshot/v1alpha1
-kubevirt.io/client-go/kubevirt/typed/snapshot/v1alpha1/fake
-kubevirt.io/client-go/kubevirt/typed/snapshot/v1beta1
-kubevirt.io/client-go/kubevirt/typed/snapshot/v1beta1/fake
-kubevirt.io/client-go/log
-kubevirt.io/client-go/networkattachmentdefinitionclient
-kubevirt.io/client-go/networkattachmentdefinitionclient/scheme
-kubevirt.io/client-go/networkattachmentdefinitionclient/typed/k8s.cni.cncf.io/v1
-kubevirt.io/client-go/precond
-kubevirt.io/client-go/prometheusoperator
-kubevirt.io/client-go/prometheusoperator/scheme
-kubevirt.io/client-go/prometheusoperator/typed/monitoring/v1
-kubevirt.io/client-go/subresources
-kubevirt.io/client-go/testing
-kubevirt.io/client-go/util
-kubevirt.io/client-go/version
 # kubevirt.io/containerized-data-importer-api v1.57.0-alpha1
 ## explicit; go 1.19
 kubevirt.io/containerized-data-importer-api/pkg/apis/core
 kubevirt.io/containerized-data-importer-api/pkg/apis/core/v1beta1
-kubevirt.io/containerized-data-importer-api/pkg/apis/upload
-kubevirt.io/containerized-data-importer-api/pkg/apis/upload/v1beta1
 # kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90
 ## explicit; go 1.17
 kubevirt.io/controller-lifecycle-operator-sdk/api
-# kubevirt.io/kubevirt v1.4.0
-## explicit; go 1.22.0
-kubevirt.io/kubevirt/pkg/apimachinery/patch
-kubevirt.io/kubevirt/pkg/certificates/bootstrap
-kubevirt.io/kubevirt/pkg/certificates/triple
-kubevirt.io/kubevirt/pkg/certificates/triple/cert
-kubevirt.io/kubevirt/pkg/cloud-init
-kubevirt.io/kubevirt/pkg/config
-kubevirt.io/kubevirt/pkg/container-disk
-kubevirt.io/kubevirt/pkg/controller
-kubevirt.io/kubevirt/pkg/defaults
-kubevirt.io/kubevirt/pkg/downwardmetrics
-kubevirt.io/kubevirt/pkg/downwardmetrics/vhostmd
-kubevirt.io/kubevirt/pkg/downwardmetrics/vhostmd/api
-kubevirt.io/kubevirt/pkg/ephemeral-disk
-kubevirt.io/kubevirt/pkg/ephemeral-disk-utils
-kubevirt.io/kubevirt/pkg/handler-launcher-com/cmd/v1
-kubevirt.io/kubevirt/pkg/hooks
-kubevirt.io/kubevirt/pkg/hooks/info
-kubevirt.io/kubevirt/pkg/hooks/v1alpha1
-kubevirt.io/kubevirt/pkg/hooks/v1alpha2
-kubevirt.io/kubevirt/pkg/hooks/v1alpha3
-kubevirt.io/kubevirt/pkg/host-disk
-kubevirt.io/kubevirt/pkg/instancetype
-kubevirt.io/kubevirt/pkg/libvmi
-kubevirt.io/kubevirt/pkg/libvmi/cloudinit
-kubevirt.io/kubevirt/pkg/liveupdate/memory
-kubevirt.io/kubevirt/pkg/monitoring/metrics/common/client
-kubevirt.io/kubevirt/pkg/monitoring/metrics/common/workqueue
-kubevirt.io/kubevirt/pkg/monitoring/metrics/virt-controller
-kubevirt.io/kubevirt/pkg/network/downwardapi
-kubevirt.io/kubevirt/pkg/network/istio
-kubevirt.io/kubevirt/pkg/network/multus
-kubevirt.io/kubevirt/pkg/network/namescheme
-kubevirt.io/kubevirt/pkg/network/netbinding
-kubevirt.io/kubevirt/pkg/network/vmispec
-kubevirt.io/kubevirt/pkg/pointer
-kubevirt.io/kubevirt/pkg/safepath
-kubevirt.io/kubevirt/pkg/storage/backend-storage
-kubevirt.io/kubevirt/pkg/storage/reservation
-kubevirt.io/kubevirt/pkg/storage/types
-kubevirt.io/kubevirt/pkg/testutils
-kubevirt.io/kubevirt/pkg/unsafepath
-kubevirt.io/kubevirt/pkg/util
-kubevirt.io/kubevirt/pkg/util/cluster
-kubevirt.io/kubevirt/pkg/util/hardware
-kubevirt.io/kubevirt/pkg/util/migrations
-kubevirt.io/kubevirt/pkg/util/net/dns
-kubevirt.io/kubevirt/pkg/util/net/grpc
-kubevirt.io/kubevirt/pkg/util/net/ip
-kubevirt.io/kubevirt/pkg/util/nodes
-kubevirt.io/kubevirt/pkg/virt-config
-kubevirt.io/kubevirt/pkg/virt-config/deprecation
-kubevirt.io/kubevirt/pkg/virt-controller/network
-kubevirt.io/kubevirt/pkg/virt-controller/services
-kubevirt.io/kubevirt/pkg/virt-controller/watch/descheduler
-kubevirt.io/kubevirt/pkg/virt-controller/watch/topology
-kubevirt.io/kubevirt/pkg/virt-handler/node-labeller/util
-kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/api
-kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/converter/vcpu
-kubevirt.io/kubevirt/pkg/virt-operator/resource/generate/components
-kubevirt.io/kubevirt/pkg/virt-operator/util
-kubevirt.io/kubevirt/pkg/virtctl
-kubevirt.io/kubevirt/pkg/virtctl/adm
-kubevirt.io/kubevirt/pkg/virtctl/adm/logverbosity
-kubevirt.io/kubevirt/pkg/virtctl/configuration
-kubevirt.io/kubevirt/pkg/virtctl/console
-kubevirt.io/kubevirt/pkg/virtctl/create
-kubevirt.io/kubevirt/pkg/virtctl/create/clone
-kubevirt.io/kubevirt/pkg/virtctl/create/instancetype
-kubevirt.io/kubevirt/pkg/virtctl/create/params
-kubevirt.io/kubevirt/pkg/virtctl/create/preference
-kubevirt.io/kubevirt/pkg/virtctl/create/vm
-kubevirt.io/kubevirt/pkg/virtctl/credentials
-kubevirt.io/kubevirt/pkg/virtctl/credentials/addkey
-kubevirt.io/kubevirt/pkg/virtctl/credentials/common
-kubevirt.io/kubevirt/pkg/virtctl/credentials/password
-kubevirt.io/kubevirt/pkg/virtctl/credentials/removekey
-kubevirt.io/kubevirt/pkg/virtctl/expose
-kubevirt.io/kubevirt/pkg/virtctl/guestfs
-kubevirt.io/kubevirt/pkg/virtctl/imageupload
-kubevirt.io/kubevirt/pkg/virtctl/memorydump
-kubevirt.io/kubevirt/pkg/virtctl/pause
-kubevirt.io/kubevirt/pkg/virtctl/portforward
-kubevirt.io/kubevirt/pkg/virtctl/scp
-kubevirt.io/kubevirt/pkg/virtctl/softreboot
-kubevirt.io/kubevirt/pkg/virtctl/ssh
-kubevirt.io/kubevirt/pkg/virtctl/templates
-kubevirt.io/kubevirt/pkg/virtctl/unpause
-kubevirt.io/kubevirt/pkg/virtctl/usbredir
-kubevirt.io/kubevirt/pkg/virtctl/utils
-kubevirt.io/kubevirt/pkg/virtctl/version
-kubevirt.io/kubevirt/pkg/virtctl/vm
-kubevirt.io/kubevirt/pkg/virtctl/vmexport
-kubevirt.io/kubevirt/pkg/virtctl/vnc
-kubevirt.io/kubevirt/pkg/virtctl/vnc/screenshot
-kubevirt.io/kubevirt/pkg/virtiofs
-kubevirt.io/kubevirt/tests/clientcmd
-kubevirt.io/kubevirt/tests/console
-kubevirt.io/kubevirt/tests/containerdisk
-kubevirt.io/kubevirt/tests/errorhandling
-kubevirt.io/kubevirt/tests/exec
-kubevirt.io/kubevirt/tests/flags
-kubevirt.io/kubevirt/tests/framework/checks
-kubevirt.io/kubevirt/tests/framework/cleanup
-kubevirt.io/kubevirt/tests/framework/kubevirt
-kubevirt.io/kubevirt/tests/framework/matcher
-kubevirt.io/kubevirt/tests/framework/matcher/helper
-kubevirt.io/kubevirt/tests/libkubevirt
-kubevirt.io/kubevirt/tests/libnet
-kubevirt.io/kubevirt/tests/libnet/cloudinit
-kubevirt.io/kubevirt/tests/libnet/cluster
-kubevirt.io/kubevirt/tests/libnet/dns
-kubevirt.io/kubevirt/tests/libnode
-kubevirt.io/kubevirt/tests/libregistry
-kubevirt.io/kubevirt/tests/libsecret
-kubevirt.io/kubevirt/tests/libstorage
-kubevirt.io/kubevirt/tests/libvmifact
-kubevirt.io/kubevirt/tests/testsuite
-kubevirt.io/kubevirt/tests/util
 # oras.land/oras-go/v2 v2.6.0
 ## explicit; go 1.23.0
 oras.land/oras-go/v2
