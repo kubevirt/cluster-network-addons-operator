@@ -14,11 +14,12 @@ import (
 
 	"github.com/containerd/containerd/archive"
 	"github.com/containerd/containerd/archive/compression"
-	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/platforms"
 	"github.com/containerd/containerd/remotes"
+	"github.com/containerd/errdefs"
+	"github.com/containers/image/v5/docker/reference"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -30,9 +31,10 @@ import (
 // Registry enables manipulation of images via containerd modules.
 type Registry struct {
 	Store
-	destroy  func() error
-	log      *logrus.Entry
-	resolver remotes.Resolver
+	destroy      func() error
+	log          *logrus.Entry
+	resolverFunc func(repo string) (remotes.Resolver, error)
+	// nolint:staticcheck
 	platform platforms.MatchComparer
 }
 
@@ -45,13 +47,12 @@ func (r *Registry) Pull(ctx context.Context, ref image.Reference) error {
 	// Set the default namespace if unset
 	ctx = ensureNamespace(ctx)
 
-	name, root, err := r.resolver.Resolve(ctx, ref.String())
+	namedRef, err := reference.ParseNamed(ref.String())
 	if err != nil {
-		return fmt.Errorf("error resolving name %s: %v", name, err)
+		return err
 	}
-	r.log.Debugf("resolved name: %s", name)
 
-	fetcher, err := r.resolver.Fetcher(ctx, name)
+	resolver, err := r.resolverFunc(namedRef.Name())
 	if err != nil {
 		return err
 	}
@@ -61,6 +62,27 @@ func (r *Registry) Pull(ctx context.Context, ref image.Reference) error {
 		Factor:   1.0,
 		Jitter:   0.1,
 		Steps:    5,
+	}
+
+	var name string
+	var root ocispec.Descriptor
+	if err := retry.OnError(retryBackoff,
+		func(pullErr error) bool {
+			r.log.Warnf("Error resolving registry %q: %v. Retrying", ref.String(), pullErr)
+			return true
+		},
+		func() error {
+			name, root, err = resolver.Resolve(ctx, ref.String())
+			return err
+		},
+	); err != nil {
+		return fmt.Errorf("error resolving remote name %s: %v", ref.String(), err)
+	}
+	r.log.Debugf("resolved name: %s", name)
+
+	fetcher, err := resolver.Fetcher(ctx, name)
+	if err != nil {
+		return err
 	}
 
 	if err := retry.OnError(retryBackoff,
@@ -132,7 +154,7 @@ func (r *Registry) Labels(ctx context.Context, ref image.Reference) (map[string]
 }
 
 // Destroy cleans up the on-disk boltdb file and other cache files, unless preserve cache is true
-func (r *Registry) Destroy() (err error) {
+func (r *Registry) Destroy() error {
 	return r.destroy()
 }
 
@@ -252,6 +274,7 @@ const paxSchilyXattr = "SCHILY.xattr."
 // dropXattrs removes all xattrs from a Header.
 // This is useful for unpacking on systems where writing certain xattrs is a restricted operation; e.g. "security.capability" on SELinux.
 func dropXattrs(h *tar.Header) (bool, error) {
+	// nolint:staticcheck
 	h.Xattrs = nil // Deprecated, but still in use, clear anyway.
 	for key := range h.PAXRecords {
 		if strings.HasPrefix(key, paxSchilyXattr) { // Xattrs are stored under keys with the "Schilly.xattr." prefix.

@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	pointer "k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/operator-framework/operator-sdk/internal/olm/operator"
@@ -52,10 +53,13 @@ type BundleItem struct {
 	AddMode BundleAddMode `json:"mode"`
 }
 
-// RegistryPod holds resources necessary for creation of a registry server
-type RegistryPod struct { //nolint:maligned
+// SQLiteRegistryPod holds resources necessary for creation of a registry server
+type SQLiteRegistryPod struct { //nolint:maligned
 	// BundleItems contains all bundles to be added to a registry pod.
 	BundleItems []BundleItem
+
+	// ImagePullPolicy is the image pull policy for the registry pod, default is PullAlways
+	ImagePullPolicy corev1.PullPolicy
 
 	// Index image contains a database of pointers to operator manifest content that is queriable via an API.
 	// new version of an operator bundle when published can be added to an index image
@@ -77,8 +81,15 @@ type RegistryPod struct { //nolint:maligned
 	// The secret's key for this file must be "cert.pem".
 	CASecretName string
 
-	// SkipTLS controls wether to ignore SSL errors while pulling bundle image from registry server.
-	SkipTLS bool `json:"SkipTLS"`
+	// SkipTLSVerify represents skip TLS certificate verification for container image registries while pulling bundles.
+	SkipTLSVerify bool `json:"SkipTLSVerify"`
+
+	// UseHTTP uses plain HTTP for container image registries while pulling bundles.
+	UseHTTP bool `json:"UseHTTP"`
+
+	// SecurityContext defines the security context which will enable the
+	// SecurityContext on the Pod
+	SecurityContext string
 
 	// pod represents a kubernetes *corev1.pod that will be created on a cluster using an index image
 	pod *corev1.Pod
@@ -86,8 +97,8 @@ type RegistryPod struct { //nolint:maligned
 	cfg *operator.Configuration
 }
 
-// init initializes the RegistryPod struct and sets defaults for empty fields
-func (rp *RegistryPod) init(cfg *operator.Configuration) error {
+// init initializes the SQLiteRegistryPod struct and sets defaults for empty fields
+func (rp *SQLiteRegistryPod) init(cfg *operator.Configuration) error {
 	if rp.GRPCPort == 0 {
 		rp.GRPCPort = defaultGRPCPort
 	}
@@ -96,7 +107,7 @@ func (rp *RegistryPod) init(cfg *operator.Configuration) error {
 	}
 	rp.cfg = cfg
 
-	// validate the RegistryPod struct and ensure required fields are set
+	// validate the SQLiteRegistryPod struct and ensure required fields are set
 	if err := rp.validate(); err != nil {
 		return fmt.Errorf("invalid registry pod: %v", err)
 	}
@@ -114,7 +125,7 @@ func (rp *RegistryPod) init(cfg *operator.Configuration) error {
 // Create creates a bundle registry pod built from an index image,
 // sets the catalog source as the owner for the pod and verifies that
 // the pod is running
-func (rp *RegistryPod) Create(ctx context.Context, cfg *operator.Configuration, cs *v1alpha1.CatalogSource) (*corev1.Pod, error) {
+func (rp *SQLiteRegistryPod) Create(ctx context.Context, cfg *operator.Configuration, cs *v1alpha1.CatalogSource) (*corev1.Pod, error) {
 	if err := rp.init(cfg); err != nil {
 		return nil, err
 	}
@@ -123,6 +134,30 @@ func (rp *RegistryPod) Create(ctx context.Context, cfg *operator.Configuration, 
 	if err := controllerutil.SetOwnerReference(cs, rp.pod, rp.cfg.Scheme); err != nil {
 		return nil, fmt.Errorf("error setting owner reference: %w", err)
 	}
+
+	// Add security context if the user passed in the --security-context-config flag
+	if rp.SecurityContext == "restricted" {
+		rp.pod.Spec.SecurityContext = &corev1.PodSecurityContext{
+			SeccompProfile: &corev1.SeccompProfile{
+				Type: corev1.SeccompProfileTypeRuntimeDefault,
+			},
+		}
+
+		// Update the Registry Pod container security context to be restrictive
+		rp.pod.Spec.Containers[0].SecurityContext = &corev1.SecurityContext{
+			Privileged:               pointer.To(false),
+			ReadOnlyRootFilesystem:   pointer.To(false),
+			AllowPrivilegeEscalation: pointer.To(false),
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
+			},
+		}
+	}
+
+	if rp.ImagePullPolicy == "" {
+		rp.ImagePullPolicy = corev1.PullAlways
+	}
+	rp.pod.Spec.Containers[0].ImagePullPolicy = rp.ImagePullPolicy
 
 	if err := rp.cfg.Client.Create(ctx, rp.pod); err != nil {
 		return nil, fmt.Errorf("error creating pod: %w", err)
@@ -135,8 +170,8 @@ func (rp *RegistryPod) Create(ctx context.Context, cfg *operator.Configuration, 
 	}
 
 	// poll and verify that pod is running
-	podCheck := wait.ConditionFunc(func() (done bool, err error) {
-		err = rp.cfg.Client.Get(ctx, podKey, rp.pod)
+	podCheck := wait.ConditionWithContextFunc(func(pctx context.Context) (done bool, err error) {
+		err = rp.cfg.Client.Get(pctx, podKey, rp.pod)
 		if err != nil {
 			return false, fmt.Errorf("error getting pod %s: %w", rp.pod.Name, err)
 		}
@@ -147,14 +182,14 @@ func (rp *RegistryPod) Create(ctx context.Context, cfg *operator.Configuration, 
 	if err := rp.checkPodStatus(ctx, podCheck); err != nil {
 		return nil, fmt.Errorf("registry pod did not become ready: %w", err)
 	}
-	log.Infof("Successfully created registry pod: %s", rp.pod.Name)
+	log.Infof("Created registry pod: %s", rp.pod.Name)
 	return rp.pod, nil
 }
 
 // checkPodStatus polls and verifies that the pod status is running
-func (rp *RegistryPod) checkPodStatus(ctx context.Context, podCheck wait.ConditionFunc) error {
+func (rp *SQLiteRegistryPod) checkPodStatus(ctx context.Context, podCheck wait.ConditionWithContextFunc) error {
 	// poll every 200 ms until podCheck is true or context is done
-	err := wait.PollImmediateUntil(200*time.Millisecond, podCheck, ctx.Done())
+	err := wait.PollUntilContextCancel(ctx, 200*time.Millisecond, false, podCheck)
 	if err != nil {
 		return fmt.Errorf("error waiting for registry pod %s to run: %v", rp.pod.Name, err)
 	}
@@ -162,9 +197,9 @@ func (rp *RegistryPod) checkPodStatus(ctx context.Context, podCheck wait.Conditi
 	return err
 }
 
-// validate will ensure that RegistryPod required fields are set
+// validate will ensure that SQLiteRegistryPod required fields are set
 // and throws error if not set
-func (rp *RegistryPod) validate() error {
+func (rp *SQLiteRegistryPod) validate() error {
 	if len(rp.BundleItems) == 0 {
 		return errors.New("bundle image set cannot be empty")
 	}
@@ -197,7 +232,7 @@ func getPodName(bundleImage string) string {
 
 // podForBundleRegistry constructs and returns the registry pod definition
 // and throws error when unable to build the pod definition successfully
-func (rp *RegistryPod) podForBundleRegistry() (*corev1.Pod, error) {
+func (rp *SQLiteRegistryPod) podForBundleRegistry() (*corev1.Pod, error) {
 	// rp was already validated so len(rp.BundleItems) must be greater than 0.
 	bundleImage := rp.BundleItems[len(rp.BundleItems)-1].ImageTag
 
@@ -214,18 +249,53 @@ func (rp *RegistryPod) podForBundleRegistry() (*corev1.Pod, error) {
 			Namespace: rp.cfg.Namespace,
 		},
 		Spec: corev1.PodSpec{
+			// DO NOT set RunAsUser and RunAsNonRoot, we must leave this empty to allow
+			// those that want to use this command against Openshift vendor do not face issues.
+			//
+			// Why not set RunAsUser?
+			// RunAsUser cannot be set because in OpenShift each namespace has a valid range like
+			// [1000680000, 1000689999]. Therefore, values like 1001 will not work. Also, in OCP each namespace
+			// has a valid range allocate. Therefore, by leaving it empty the OCP will adopt RunAsUser strategy
+			// of MustRunAsRange. The PSA will look for the openshift.io/sa.scc.uid-range annotation
+			// in the namespace to populate RunAsUser fields when the pod be admitted. Note that
+			// is NOT possible to know a valid value that could be accepeted beforehand.
+			//
+			// Why not set RunAsNonRoot?
+			// If we set RunAsNonRoot = true and the image informed does not define the UserID
+			// (i.e. in the Dockerfile we have not `USER 11211:11211 `) then, the Pod will fail to run with the
+			// error `"container has runAsNonRoot and image will run as root …` in ANY Kubernetes cluster.
+			// (vanilla or OCP). Therefore, by leaving it empty this field will be set by OCP if/when the Pod be
+			// qualified for restricted-v2 SCC policy.
+			//
+			// TODO: remove when OpenShift 4.10 and Kubernetes 1.19 be no longer supported
+			// Why not set SeccompProfile?
+			// This option can only work in OCP versions >= 4.11 and Kubernetes versions >= 19.
+			//
+			// 2022-09-27 (jesusr): We added a --security-context-config flag to run bundle
+			// that will add the following stanza to the pod. This will allow
+			// users to selectively enable this stanza. Once this context
+			// becomes the default, we should uncomment this code and remove the
+			// --security-context-config flag.
+			// ---- end of update comment
+			//
+			// SecurityContext: &corev1.PodSecurityContext{
+			//     SeccompProfile: &corev1.SeccompProfile{
+			//         Type: corev1.SeccompProfileTypeRuntimeDefault,
+			//     },
+			// },
 			Containers: []corev1.Container{
 				{
 					Name:  defaultContainerName,
 					Image: rp.IndexImage,
 					Command: []string{
-						"/bin/sh",
+						"sh",
 						"-c",
 						containerCmd,
 					},
 					Ports: []corev1.ContainerPort{
 						{Name: defaultContainerPortName, ContainerPort: rp.GRPCPort},
 					},
+					WorkingDir: "/tmp",
 				},
 			},
 			ServiceAccountName: rp.cfg.ServiceAccount,
@@ -303,17 +373,16 @@ func newBool(b bool) *bool {
 	return bp
 }
 
-const cmdTemplate = `/bin/mkdir -p {{ dirname .DBPath }} && \
+const cmdTemplate = `[[ -f {{ .DBPath }} ]] && cp {{ .DBPath }} /tmp/tmp.db; \
 {{- range $i, $item := .BundleItems }}
-/bin/opm registry add -d {{ $.DBPath }} -b {{ $item.ImageTag }} --mode={{ $item.AddMode }}{{ if $.CASecretName }} --ca-file=/certs/cert.pem{{ end }} --skip-tls={{ $.SkipTLS }} && \
+opm registry add -d /tmp/tmp.db -b {{ $item.ImageTag }} --mode={{ $item.AddMode }}{{ if $.CASecretName }} --ca-file=/certs/cert.pem{{ end }} --skip-tls-verify={{ $.SkipTLSVerify }} --use-http={{ $.UseHTTP }} && \
 {{- end }}
-/bin/opm registry serve -d {{ .DBPath }} -p {{ .GRPCPort }}
+opm registry serve -d /tmp/tmp.db -p {{ .GRPCPort }}
 `
 
 // getContainerCmd uses templating to construct the container command
 // and throws error if unable to parse and execute the container command
-func (rp *RegistryPod) getContainerCmd() (string, error) {
-
+func (rp *SQLiteRegistryPod) getContainerCmd() (string, error) {
 	// create a custom dirname template function
 	funcMap := template.FuncMap{
 		"dirname": path.Dir,
@@ -323,7 +392,7 @@ func (rp *RegistryPod) getContainerCmd() (string, error) {
 	// template's FuncMap and parse the cmdTemplate
 	t := template.Must(template.New("cmd").Funcs(funcMap).Parse(cmdTemplate))
 
-	// execute the command by applying the parsed t to command
+	// execute the command by applying the parsed template to command
 	// and write command output to out
 	out := &bytes.Buffer{}
 	if err := t.Execute(out, rp); err != nil {

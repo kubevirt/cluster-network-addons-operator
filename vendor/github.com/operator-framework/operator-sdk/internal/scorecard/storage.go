@@ -16,9 +16,9 @@ package scorecard
 
 import (
 	"archive/tar"
+	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -68,7 +68,7 @@ func (r PodTestRunner) execInPod(podName, mountPath, containerName string) (io.R
 	go func() {
 		defer outStream.Close()
 		defer errStream.Close()
-		err = exec.Stream(remotecommand.StreamOptions{
+		err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
 			Stdin:  nil,
 			Stdout: outStream,
 			Stderr: errStream,
@@ -137,7 +137,7 @@ func untarAll(reader io.Reader, destDir, prefix string) error {
 	return nil
 }
 
-func addStorageToPod(podDef *v1.Pod, mountPath string) {
+func addStorageToPod(podDef *v1.Pod, mountPath string, storageImage string) {
 
 	// add the emptyDir volume for storage to the test Pod
 	newVolume := v1.Volume{}
@@ -149,7 +149,7 @@ func addStorageToPod(podDef *v1.Pod, mountPath string) {
 	// add the storage sidecar container
 	storageContainer := v1.Container{
 		Name:            StorageSidecarContainer,
-		Image:           "busybox",
+		Image:           storageImage,
 		ImagePullPolicy: v1.PullIfNotPresent,
 		Args: []string{
 			"/bin/sh",
@@ -177,6 +177,13 @@ func addStorageToPod(podDef *v1.Pod, mountPath string) {
 	}
 	podDef.Spec.Containers[0].VolumeMounts = append(podDef.Spec.Containers[0].VolumeMounts, vMount)
 
+	// add mountPath to Env
+	mountPathEnv := v1.EnvVar{
+		Name:  "SCORECARD_STORAGE",
+		Value: mountPath,
+	}
+	podDef.Spec.Containers[0].Env = append(podDef.Spec.Containers[0].Env, mountPathEnv)
+
 }
 
 func gatherTestOutput(r PodTestRunner, suiteName, testName, podName, mountPath string) error {
@@ -188,7 +195,7 @@ func gatherTestOutput(r PodTestRunner, suiteName, testName, podName, mountPath s
 		return err
 	}
 
-	srcPath := r.TestOutput
+	srcPath := mountPath
 	prefix := getStoragePrefix(srcPath)
 	prefix = path.Clean(prefix)
 	destPath := getDestPath(r.TestOutput, suiteName, testName)
@@ -196,13 +203,13 @@ func gatherTestOutput(r PodTestRunner, suiteName, testName, podName, mountPath s
 	if err != nil {
 		return err
 	}
-	stderr, err := ioutil.ReadAll(stderrReader)
+	stderr, err := io.ReadAll(stderrReader)
 	if err != nil {
 		return err
 	}
 	if len(stderr) > 0 {
 		destFileName := filepath.Join(destPath, "tar_stderr")
-		err = ioutil.WriteFile(destFileName, stderr, 0644)
+		err = os.WriteFile(destFileName, stderr, 0644)
 		if err != nil {
 			return err
 		}

@@ -3,7 +3,6 @@ package bundle
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,7 +46,7 @@ type AnnotationMetadata struct {
 // @channels: The list of channels that bundle image belongs to
 // @channelDefault: The default channel for the bundle image
 // @overwrite: Boolean flag to enable overwriting annotations.yaml locally if existed
-func GenerateFunc(directory, outputDir, packageName, channels, channelDefault string, overwrite bool) error {
+func GenerateFunc(directory, outputDir, packageName, channels, channelDefault string, overwrite bool, baseImage string) error {
 	// clean the input so that we know the absolute paths of input directories
 	directory, err := filepath.Abs(directory)
 	if err != nil {
@@ -80,6 +79,7 @@ func GenerateFunc(directory, outputDir, packageName, channels, channelDefault st
 	// Channels and packageName are required fields where as default channel is automatically filled if unspecified
 	// and that either of the required field is missing. We are interpreting the bundle information through
 	// bundle directory embedded in the package folder.
+	// nolint:nestif
 	if channels == "" || packageName == "" {
 		var notProvided []string
 		if channels == "" {
@@ -133,7 +133,7 @@ func GenerateFunc(directory, outputDir, packageName, channels, channelDefault st
 	log.Info("Building Dockerfile")
 
 	// Generate Dockerfile
-	content, err = GenerateDockerfile(mediaType, ManifestsDir, MetadataDir, outManifestDir, outMetadataDir, workingDir, packageName, channels, channelDefault)
+	content, err = GenerateDockerfile(mediaType, ManifestsDir, MetadataDir, outManifestDir, outMetadataDir, workingDir, packageName, channels, channelDefault, baseImage)
 	if err != nil {
 		return err
 	}
@@ -156,9 +156,10 @@ func GenerateFunc(directory, outputDir, packageName, channels, channelDefault st
 // CopyYamlOutput takes the generated annotations yaml and writes it to disk.
 // If an outputDir is specified, it will copy the input manifests
 // It returns two strings. resultMetadata is the path to the output metadata/ folder.
-// resultManifests is the path to the output manifests/ folder -- if no copy occured,
+// resultManifests is the path to the output manifests/ folder -- if no copy occurred,
 // it just returns the input manifestDir
-func CopyYamlOutput(annotationsContent []byte, manifestDir, outputDir, workingDir string, overwrite bool) (resultManifests, resultMetadata string, err error) {
+func CopyYamlOutput(annotationsContent []byte, manifestDir, outputDir, workingDir string, overwrite bool) (string, string, error) {
+	var resultManifests, resultMetadata string
 	// First, determine the parent directory of the metadata and manifest directories
 	copyDir := ""
 
@@ -180,7 +181,7 @@ func CopyYamlOutput(annotationsContent []byte, manifestDir, outputDir, workingDi
 	}
 
 	// Now, generate the `metadata/` dir and write the annotations
-	file, err := ioutil.ReadFile(filepath.Join(copyDir, MetadataDir, AnnotationsFile))
+	file, err := os.ReadFile(filepath.Join(copyDir, MetadataDir, AnnotationsFile))
 	if os.IsNotExist(err) || overwrite {
 		writeDir := filepath.Join(copyDir, MetadataDir)
 		err = WriteFile(AnnotationsFile, writeDir, annotationsContent)
@@ -205,11 +206,12 @@ func CopyYamlOutput(annotationsContent []byte, manifestDir, outputDir, workingDi
 // Currently able to detect helm chart, registry+v1 (CSV) and plain k8s resources
 // such as CRD.
 func GetMediaType(directory string) (string, error) {
+	// nolint:prealloc
 	var files []string
 	k8sFiles := make(map[string]*unstructured.Unstructured)
 
 	// Read all file names in directory
-	items, _ := ioutil.ReadDir(directory)
+	items, _ := os.ReadDir(directory)
 	for _, item := range items {
 		if item.IsDir() {
 			continue
@@ -218,8 +220,9 @@ func GetMediaType(directory string) (string, error) {
 		files = append(files, item.Name())
 
 		fileWithPath := filepath.Join(directory, item.Name())
-		fileBlob, err := ioutil.ReadFile(fileWithPath)
+		fileBlob, err := os.ReadFile(fileWithPath)
 		if err != nil {
+			// nolint:stylecheck
 			return "", fmt.Errorf("Unable to read file %s in bundle", fileWithPath)
 		}
 
@@ -231,6 +234,7 @@ func GetMediaType(directory string) (string, error) {
 	}
 
 	if len(files) == 0 {
+		// nolint:stylecheck
 		return "", fmt.Errorf("The directory %s contains no yaml files", directory)
 	}
 
@@ -277,11 +281,13 @@ func ValidateAnnotations(existing, expected []byte) error {
 	for label, item := range expectedAnnotations.Annotations {
 		value, hasAnnotation := fileAnnotations.Annotations[label]
 		if !hasAnnotation {
+			// nolint:stylecheck
 			errs = append(errs, fmt.Errorf("Missing field: %s", label))
 			continue
 		}
 
 		if item != value {
+			// nolint:stylecheck
 			errs = append(errs, fmt.Errorf("Expect field %q to have value %q instead of %q",
 				label, item, value))
 		}
@@ -320,7 +326,7 @@ func GenerateAnnotations(mediaType, manifests, metadata, packageName, channels, 
 // GenerateDockerfile builds Dockerfile with mediatype, manifests &
 // metadata directories in bundle image, package name, channels and default
 // channels information in LABEL section.
-func GenerateDockerfile(mediaType, manifests, metadata, copyManifestDir, copyMetadataDir, workingDir, packageName, channels, channelDefault string) ([]byte, error) {
+func GenerateDockerfile(mediaType, manifests, metadata, copyManifestDir, copyMetadataDir, workingDir, packageName, channels, channelDefault string, baseImage string) ([]byte, error) {
 	var fileContent string
 
 	relativeManifestDirectory, err := filepath.Rel(workingDir, copyManifestDir)
@@ -336,7 +342,7 @@ func GenerateDockerfile(mediaType, manifests, metadata, copyManifestDir, copyMet
 	relativeMetadataDirectory = filepath.ToSlash(relativeMetadataDirectory)
 
 	// FROM
-	fileContent += "FROM scratch\n\n"
+	fileContent += fmt.Sprintf("FROM %s\n\n", baseImage)
 
 	// LABEL
 	fileContent += fmt.Sprintf("LABEL %s=%s\n", MediatypeLabel, mediaType)
@@ -367,7 +373,7 @@ func WriteFile(fileName, directory string, content []byte) error {
 		}
 	}
 	log.Infof("Writing %s in %s", fileName, directory)
-	err := ioutil.WriteFile(filepath.Join(directory, fileName), content, DefaultPermission)
+	err := os.WriteFile(filepath.Join(directory, fileName), content, DefaultPermission)
 	if err != nil {
 		return err
 	}
@@ -376,7 +382,7 @@ func WriteFile(fileName, directory string, content []byte) error {
 
 // copy the contents of a potentially nested manifest dir into an output dir.
 func copyManifestDir(from, to string, overwrite bool) error {
-	fromFiles, err := ioutil.ReadDir(from)
+	fromFiles, err := os.ReadDir(from)
 	if err != nil {
 		return err
 	}
@@ -431,7 +437,11 @@ func copyManifestDir(from, to string, overwrite bool) error {
 			return err
 		}
 
-		err = os.Chmod(toFilePath, fromFile.Mode())
+		info, err := fromFile.Info()
+		if err != nil {
+			return err
+		}
+		err = os.Chmod(toFilePath, info.Mode())
 		if err != nil {
 			return err
 		}
@@ -440,6 +450,7 @@ func copyManifestDir(from, to string, overwrite bool) error {
 	return nil
 }
 
+// nolint:unused
 func containsString(slice []string, s string) bool {
 	for _, item := range slice {
 		if item == s {

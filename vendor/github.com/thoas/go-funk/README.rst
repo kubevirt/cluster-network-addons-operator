@@ -220,7 +220,7 @@ see also, typesafe implementations: LastIndexOfInt_, LastIndexOfInt64_, LastInde
 funk.ToMap
 ..........
 
-Transforms a slice of structs to a map based on a ``pivot`` field.
+Transforms a slice or an array of structs to a map based on a ``pivot`` field.
 
 .. code-block:: go
 
@@ -241,6 +241,33 @@ Transforms a slice of structs to a map based on a ``pivot`` field.
     results := []*Foo{f, b}
 
     mapping := funk.ToMap(results, "ID") // map[int]*Foo{1: f, 2: b}
+
+funk.ToSet
+..........
+
+Transforms an array or a slice to a set (a map with zero-size values).
+
+.. code-block:: go
+
+    f := Foo{
+        ID:        1,
+        FirstName: "Gilles",
+        LastName:  "Fabio",
+        Age:       70,
+    }
+
+    b := Foo{
+        ID:        2,
+        FirstName: "Florent",
+        LastName:  "Messa",
+        Age:       80,
+    }
+
+    mapping := funk.ToSet([]Foo{f, b}) // map[Foo]stuct{}{f: struct{}{}, b: struct{}{}}
+
+    mapping := funk.ToSet([4]int{1, 1, 2, 2}) // map[int]struct{}{1: struct{}{}, 2: struct{}{}}
+
+
 
 funk.Filter
 ...........
@@ -422,11 +449,15 @@ Retrieves the value at path of struct(s) or map(s).
         "FirstName": "Dark",
         "LastName":  "Vador",
         "Age":       30,
+        "Labels": map[string]interface{} {
+            "example.com/hello": "world",
+        },
     } // foo2.Bar is nil
 
     funk.Get(bar, "Name") // "Test"
     funk.Get([]map[string]interface{}{foo1, foo2}, "Bar.Name") // []string{"Test"}
     funk.Get(foo2, "Bar.Name") // nil
+    funk.Get(foo2, `Labels."example.com/hello"`) // world
 
 
 ``funk.Get`` also handles ``nil`` values:
@@ -476,7 +507,7 @@ Set value at a path of a struct
 .. code-block:: go
 
     var bar Bar = Bar{
-        Name: "level-0", 
+        Name: "level-0",
         Bar: &Bar{
             Name: "level-1",
             Bars: []*Bar{
@@ -554,7 +585,7 @@ Creates an array of the own enumerable map values or struct field values.
 
 .. code-block:: go
 
-    funk.Values(map[string]int{"one": 1, "two": 2}) // []string{1, 2} (iteration order is not guaranteed)
+    funk.Values(map[string]int{"one": 1, "two": 2}) // []int{1, 2} (iteration order is not guaranteed)
 
     foo := &Foo{
         ID:        1,
@@ -570,11 +601,17 @@ funk.ForEach
 
 Range over an iteratee (map, slice).
 
+Or update element in slice(Not map, reflect#Value#MapIndex#CanSet is false).
+
 .. code-block:: go
 
     funk.ForEach([]int{1, 2, 3, 4}, func(x int) {
         fmt.Println(x)
     })
+
+    foo := []int{1,2,3}
+    funk.ForEach(foo, func(x *int){ *x = *x * 2})
+    fmt.Println(foo) // []int{2, 4, 6}
 
 funk.ForEachRight
 ............
@@ -626,6 +663,29 @@ see also, typesafe implementations: UniqInt_, UniqInt64_, UniqFloat32_, UniqFloa
 .. _UniqInt: https://godoc.org/github.com/thoas/go-funk#UniqInt
 .. _UniqInt64: https://godoc.org/github.com/thoas/go-funk#UniqInt64
 .. _UniqString: https://godoc.org/github.com/thoas/go-funk#UniqString
+
+funk.UniqBy
+.........
+
+Creates an array with unique values returned by a callback.
+
+.. code-block:: go
+
+    funk.UniqBy([]int{0, 1, 1, 2, 3, 0, 0, 12}, func(nbr int) int {
+		return nbr % 3
+	}) // []int{0, 1, 2}
+
+    foo1 := Foo{
+        ID: 42,
+        FirstName: "Bob",
+    }
+    foo2 := Foo{
+        ID: 42,
+        FirstName: "Bob",
+    }
+    funk.UniqBy([]Foo{foo1, foo2}, func(f Foo) int {
+		return f.ID
+	}) // []Foo{ Foo{ID: 42, Firstname: "Bob"} }
 
 funk.Drop
 .........
@@ -775,14 +835,14 @@ Generates a sharded string with a fixed length and depth.
 funk.Subset
 .............
 
-Returns true if a collection is a subset of another 
+Returns true if a collection is a subset of another
 
 .. code-block:: go
 
     funk.Subset([]int{1, 2, 4}, []int{1, 2, 3, 4, 5}) // true
     funk.Subset([]string{"foo", "bar"},[]string{"foo", "bar", "hello", "bar", "hi"}) //true
-   
-    
+
+
 Performance
 -----------
 

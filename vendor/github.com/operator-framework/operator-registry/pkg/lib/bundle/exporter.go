@@ -2,7 +2,6 @@ package bundle
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -30,11 +29,10 @@ func NewExporterForBundle(image, directory string, containerTool containertools.
 	}
 }
 
-func (i *BundleExporter) Export(skipTLS bool) error {
-
+func (i *BundleExporter) Export(skipTLSVerify, plainHTTP bool) error {
 	log := logrus.WithField("img", i.image)
 
-	tmpDir, err := ioutil.TempDir("./", "bundle_tmp")
+	tmpDir, err := os.MkdirTemp("./", "bundle_tmp")
 	if err != nil {
 		return err
 	}
@@ -44,11 +42,16 @@ func (i *BundleExporter) Export(skipTLS bool) error {
 	var rerr error
 	switch i.containerTool {
 	case containertools.NoneTool:
-		reg, rerr = containerdregistry.NewRegistry(containerdregistry.SkipTLS(skipTLS), containerdregistry.WithLog(log), containerdregistry.WithCacheDir(filepath.Join(tmpDir, "cacheDir")))
+		reg, rerr = containerdregistry.NewRegistry(
+			containerdregistry.SkipTLSVerify(skipTLSVerify),
+			containerdregistry.WithPlainHTTP(plainHTTP),
+			containerdregistry.WithLog(log),
+			containerdregistry.WithCacheDir(filepath.Join(tmpDir, "cacheDir")),
+		)
 	case containertools.PodmanTool:
 		fallthrough
 	case containertools.DockerTool:
-		reg, rerr = execregistry.NewRegistry(i.containerTool, log, containertools.SkipTLS(skipTLS))
+		reg, rerr = execregistry.NewRegistry(i.containerTool, log, containertools.SkipTLS(plainHTTP))
 	}
 	if rerr != nil {
 		return rerr

@@ -4,6 +4,11 @@ import (
 	"math/rand"
 )
 
+// InBools is an alias of ContainsBool, returns true if a bool is present in a iteratee.
+func InBools(s []bool, v bool) bool {
+	return ContainsBool(s, v)
+}
+
 // InInts is an alias of ContainsInt, returns true if an int is present in a iteratee.
 func InInts(s []int, v int) bool {
 	return ContainsInt(s, v)
@@ -131,6 +136,22 @@ func FindString(s []string, cb func(s string) bool) (string, bool) {
 	}
 
 	return "", false
+}
+
+// FilterBool iterates over a collection of bool, returning an array of
+// all bool elements predicate returns truthy for.
+func FilterBool(s []bool, cb func(s bool) bool) []bool {
+	results := []bool{}
+
+	for _, i := range s {
+		result := cb(i)
+
+		if result {
+			results = append(results, i)
+		}
+	}
+
+	return results
 }
 
 // FilterFloat64 iterates over a collection of float64, returning an array of
@@ -277,6 +298,16 @@ func FilterString(s []string, cb func(s string) bool) []string {
 	return results
 }
 
+// ContainsBool returns true if a boolean is present in a iteratee.
+func ContainsBool(s []bool, v bool) bool {
+	for _, vv := range s {
+		if vv == v {
+			return true
+		}
+	}
+	return false
+}
+
 // ContainsInt returns true if an int is present in a iteratee.
 func ContainsInt(s []int, v int) bool {
 	for _, vv := range s {
@@ -336,7 +367,6 @@ func ContainsUInt64(s []uint64, v uint64) bool {
 	}
 	return false
 }
-
 
 // ContainsString returns true if a string is present in a iteratee.
 func ContainsString(s []string, v string) bool {
@@ -432,6 +462,14 @@ func SumFloat32(s []float32) (sum float32) {
 	return
 }
 
+// ReverseBools reverses an array of bool
+func ReverseBools(s []bool) []bool {
+	for i, j := 0, len(s)-1; i < len(s)/2; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
+
 // ReverseStrings reverses an array of string
 func ReverseStrings(s []string) []string {
 	for i, j := 0, len(s)-1; i < len(s)/2; i, j = i+1, j-1 {
@@ -522,6 +560,12 @@ func indexOf(n int, f func(int) bool) int {
 	return -1
 }
 
+// IndexOfBool gets the index at which the first occurrence of a bool value is found in array or return -1
+// if the value cannot be found
+func IndexOfBool(a []bool, x bool) int {
+	return indexOf(len(a), func(i int) bool { return a[i] == x })
+}
+
 // IndexOfInt gets the index at which the first occurrence of an int value is found in array or return -1
 // if the value cannot be found
 func IndexOfInt(a []int, x int) int {
@@ -579,6 +623,12 @@ func lastIndexOf(n int, f func(int) bool) int {
 	return -1
 }
 
+// LastIndexOfBool gets the index at which the first occurrence of a bool value is found in array or return -1
+// if the value cannot be found
+func LastIndexOfBool(a []bool, x bool) int {
+	return lastIndexOf(len(a), func(i int) bool { return a[i] == x })
+}
+
 // LastIndexOfInt gets the index at which the first occurrence of an int value is found in array or return -1
 // if the value cannot be found
 func LastIndexOfInt(a []int, x int) int {
@@ -633,12 +683,29 @@ func LastIndexOfString(a []string, x string) int {
 	return lastIndexOf(len(a), func(i int) bool { return a[i] == x })
 }
 
+// UniqBool creates an array of bool with unique values.
+func UniqBool(a []bool) []bool {
+	results := []bool{}
+	for _, value := range a {
+		// If results is not empty, there is at most 1 value in it
+		if len(results) == 0 || results[0] != value {
+			results = append(results, value)
+		}
+		// At most 2 unique values
+		if len(results) == 2 {
+			break
+		}
+	}
+	return results
+}
+
 // UniqInt32 creates an array of int32 with unique values.
 func UniqInt32(a []int32) []int32 {
-	length := len(a)
-
-	seen := make(map[int32]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[int32]struct{}, length)
+		results = make([]int32, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -648,19 +715,19 @@ func UniqInt32(a []int32) []int32 {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqInt64 creates an array of int64 with unique values.
 func UniqInt64(a []int64) []int64 {
-	length := len(a)
-
-	seen := make(map[int64]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[int64]struct{}, length)
+		results = make([]int64, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -670,19 +737,19 @@ func UniqInt64(a []int64) []int64 {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqInt creates an array of int with unique values.
 func UniqInt(a []int) []int {
-	length := len(a)
-
-	seen := make(map[int]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[int]struct{}, length)
+		results = make([]int, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -692,19 +759,19 @@ func UniqInt(a []int) []int {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqUInt32 creates an array of uint32 with unique values.
 func UniqUInt32(a []uint32) []uint32 {
-	length := len(a)
-
-	seen := make(map[uint32]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[uint32]struct{}, length)
+		results = make([]uint32, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -714,19 +781,19 @@ func UniqUInt32(a []uint32) []uint32 {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqUInt64 creates an array of uint64 with unique values.
 func UniqUInt64(a []uint64) []uint64 {
-	length := len(a)
-
-	seen := make(map[uint64]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[uint64]struct{}, length)
+		results = make([]uint64, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -736,19 +803,19 @@ func UniqUInt64(a []uint64) []uint64 {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqUInt creates an array of uint with unique values.
 func UniqUInt(a []uint) []uint {
-	length := len(a)
-
-	seen := make(map[uint]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[uint]struct{}, length)
+		results = make([]uint, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -758,19 +825,19 @@ func UniqUInt(a []uint) []uint {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqString creates an array of string with unique values.
 func UniqString(a []string) []string {
-	length := len(a)
-
-	seen := make(map[string]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[string]struct{}, length)
+		results = make([]string, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -780,19 +847,19 @@ func UniqString(a []string) []string {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqFloat64 creates an array of float64 with unique values.
 func UniqFloat64(a []float64) []float64 {
-	length := len(a)
-
-	seen := make(map[float64]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[float64]struct{}, length)
+		results = make([]float64, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -802,19 +869,19 @@ func UniqFloat64(a []float64) []float64 {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
 }
 
 // UniqFloat32 creates an array of float32 with unique values.
 func UniqFloat32(a []float32) []float32 {
-	length := len(a)
-
-	seen := make(map[float32]struct{}, length)
-	j := 0
+	var (
+		length  = len(a)
+		seen    = make(map[float32]struct{}, length)
+		results = make([]float32, 0)
+	)
 
 	for i := 0; i < length; i++ {
 		v := a[i]
@@ -824,11 +891,20 @@ func UniqFloat32(a []float32) []float32 {
 		}
 
 		seen[v] = struct{}{}
-		a[j] = v
-		j++
+		results = append(results, v)
 	}
 
-	return a[0:j]
+	return results
+}
+
+// ShuffleBool creates an array of bool shuffled values using Fisher–Yates algorithm
+func ShuffleBool(a []bool) []bool {
+	for i := range a {
+		j := rand.Intn(i + 1)
+		a[i], a[j] = a[j], a[i]
+	}
+
+	return a
 }
 
 // ShuffleInt creates an array of int shuffled values using Fisher–Yates algorithm
@@ -921,6 +997,11 @@ func ShuffleFloat64(a []float64) []float64 {
 	return a
 }
 
+// DropBool creates a slice with `n` bools dropped from the beginning.
+func DropBool(s []bool, n int) []bool {
+	return s[n:]
+}
+
 // DropString creates a slice with `n` strings dropped from the beginning.
 func DropString(s []string, n int) []string {
 	return s[n:]
@@ -964,4 +1045,156 @@ func DropFloat32(s []float32, n int) []float32 {
 // DropFloat64 creates a slice with `n` float64s dropped from the beginning.
 func DropFloat64(s []float64, n int) []float64 {
 	return s[n:]
+}
+
+// ChunkStrings creates an array of strings split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkStrings(arr []string, size int) [][]string {
+	var results [][]string
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkInts creates an array of ints split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkInts(arr []int, size int) [][]int {
+	var results [][]int
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkInt32s creates an array of int32s split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkInt32s(arr []int32, size int) [][]int32 {
+	var results [][]int32
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkInt64s creates an array of int64s split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkInt64s(arr []int64, size int) [][]int64 {
+	var results [][]int64
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkUInts creates an array of uints split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkUInts(arr []uint, size int) [][]uint {
+	var results [][]uint
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkUInt32s creates an array of uint32s split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkUInt32s(arr []uint32, size int) [][]uint32 {
+	var results [][]uint32
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkUInt64s creates an array of uint64s split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkUInt64s(arr []uint64, size int) [][]uint64 {
+	var results [][]uint64
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
+}
+
+// ChunkFloat64s creates an array of float64s split into groups with the length of size.
+// If array can't be split evenly, the final chunk will be
+// the remaining element.
+func ChunkFloat64s(arr []float64, size int) [][]float64 {
+	var results [][]float64
+
+	for i := 0; i < len(arr); i += size {
+		end := i + size
+
+		if end > len(arr) {
+			end = len(arr)
+		}
+
+		results = append(results, arr[i:end])
+	}
+
+	return results
 }

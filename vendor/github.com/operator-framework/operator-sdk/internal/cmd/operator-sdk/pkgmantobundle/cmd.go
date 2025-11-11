@@ -17,7 +17,6 @@ package pkgmantobundle
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -128,10 +127,10 @@ func NewCmd() *cobra.Command {
 		Short:   "Migrates packagemanifests to bundles",
 		Long:    longHelp,
 		Example: examples,
-		PreRunE: func(cmd *cobra.Command, args []string) (err error) {
+		PreRunE: func(_ *cobra.Command, args []string) (err error) {
 			return p.validate(args)
 		},
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
+		RunE: func(_ *cobra.Command, args []string) (err error) {
 			p.pkgmanifestDir = args[0]
 			return p.run()
 		},
@@ -173,7 +172,7 @@ func (p *pkgManToBundleCmd) run() (err error) {
 		return fmt.Errorf("error obtaining metadata from directory %s: %v", p.pkgmanifestDir, err)
 	}
 
-	directories, err := ioutil.ReadDir(p.pkgmanifestDir)
+	directories, err := os.ReadDir(p.pkgmanifestDir)
 	if err != nil {
 		return err
 	}
@@ -243,7 +242,7 @@ func getScorecardConfigPath(inputDir string) (string, error) {
 		}
 
 		if !info.IsDir() {
-			b, err := ioutil.ReadFile(path)
+			b, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}

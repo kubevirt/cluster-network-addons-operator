@@ -56,6 +56,8 @@ type Generator struct {
 	// ExtraServiceAccounts are ServiceAccount names to consider when matching
 	// {Cluster}Roles to include in a CSV via their Bindings.
 	ExtraServiceAccounts []string
+	// RelatedImages are additional images used by the operator.
+	RelatedImages []operatorsv1alpha1.RelatedImage
 
 	// Func that returns the writer the generated CSV's bytes are written to.
 	getWriter func() (io.Writer, error)
@@ -165,6 +167,7 @@ func (g *Generator) generate() (base *operatorsv1alpha1.ClusterServiceVersion, e
 	if g.FromVersion != "" {
 		base.Spec.Replaces = genutil.MakeCSVName(g.OperatorName, g.FromVersion)
 	}
+	base.Spec.RelatedImages = g.RelatedImages
 
 	if err := ApplyTo(g.Collector, base, g.ExtraServiceAccounts); err != nil {
 		return nil, err

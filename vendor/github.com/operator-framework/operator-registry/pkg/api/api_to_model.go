@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/operator-framework/operator-registry/internal/model"
-	"github.com/operator-framework/operator-registry/internal/property"
+	"github.com/blang/semver/v4"
+
+	"github.com/operator-framework/operator-registry/alpha/model"
+	"github.com/operator-framework/operator-registry/alpha/property"
 )
 
 func ConvertAPIBundleToModelBundle(b *Bundle) (*model.Bundle, error) {
@@ -20,30 +22,28 @@ func ConvertAPIBundleToModelBundle(b *Bundle) (*model.Bundle, error) {
 		return nil, fmt.Errorf("get related iamges: %v", err)
 	}
 
+	vers, err := semver.Parse(b.Version)
+	if err != nil {
+		return nil, fmt.Errorf("parse version %q: %v", b.Version, err)
+	}
+
 	return &model.Bundle{
 		Name:          b.CsvName,
 		Image:         b.BundlePath,
 		Replaces:      b.Replaces,
 		Skips:         b.Skips,
+		SkipRange:     b.SkipRange,
 		CsvJSON:       b.CsvJson,
 		Objects:       b.Object,
 		Properties:    bundleProps,
 		RelatedImages: relatedImages,
+		Version:       vers,
 	}, nil
 }
 
 func convertAPIBundleToModelProperties(b *Bundle) ([]property.Property, error) {
+	// nolint:prealloc
 	var out []property.Property
-
-	for _, skip := range b.Skips {
-		out = append(out, property.MustBuildSkips(skip))
-	}
-
-	if b.SkipRange != "" {
-		out = append(out, property.MustBuildSkipRange(b.SkipRange))
-	}
-
-	out = append(out, property.MustBuildChannel(b.ChannelName, b.Replaces))
 
 	providedGVKs := map[property.GVK]struct{}{}
 	requiredGVKs := map[property.GVKRequired]struct{}{}
@@ -116,7 +116,7 @@ func convertAPIBundleToModelProperties(b *Bundle) ([]property.Property, error) {
 	}
 
 	for _, obj := range b.Object {
-		out = append(out, property.MustBuildBundleObjectData([]byte(obj)))
+		out = append(out, property.MustBuildBundleObject([]byte(obj)))
 	}
 
 	sort.Slice(out, func(i, j int) bool {

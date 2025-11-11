@@ -20,14 +20,13 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/pflag"
-	"sigs.k8s.io/kubebuilder/v3/pkg/config"
-	"sigs.k8s.io/kubebuilder/v3/pkg/machinery"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugin"
-	"sigs.k8s.io/kubebuilder/v3/pkg/plugin/util"
+	"sigs.k8s.io/kubebuilder/v4/pkg/config"
+	"sigs.k8s.io/kubebuilder/v4/pkg/machinery"
+	"sigs.k8s.io/kubebuilder/v4/pkg/plugin"
+	"sigs.k8s.io/kubebuilder/v4/pkg/plugin/util"
 
 	"github.com/operator-framework/operator-sdk/internal/plugins/helm/v1/scaffolds"
 	sdkpluginutil "github.com/operator-framework/operator-sdk/internal/plugins/util"
-	sdkutil "github.com/operator-framework/operator-sdk/internal/util"
 )
 
 const (
@@ -147,7 +146,7 @@ func (p *initSubcommand) PostScaffold() error {
 		fmt.Printf("Next: define a resource with:\n$ %s create api\n", p.commandName)
 	} else {
 		args := []string{"create", "api"}
-		// The following three checks should match the default values in sig.k8s.io/kubebuilder/v3/pkg/cli/resource.go
+		// The following three checks should match the default values in sig.k8s.io/kubebuilder/v4/pkg/cli/resource.go
 		if p.group != "" {
 			args = append(args, fmt.Sprintf("--%s", groupFlag), p.group)
 		}
@@ -180,33 +179,14 @@ func (p *initSubcommand) PostScaffold() error {
 // addInitCustomizations will perform the required customizations for this plugin on the common base
 func addInitCustomizations(projectName string) error {
 	managerFile := filepath.Join("config", "manager", "manager.yaml")
+	managerMetricsPatch := filepath.Join("config", "default", "manager_metrics_patch.yaml")
 
 	// todo: we ought to use afero instead. Replace this methods to insert/update
 	// by https://github.com/kubernetes-sigs/kubebuilder/pull/2119
 
-	// Add leader election arg in config/manager/manager.yaml and in config/default/manager_auth_proxy_patch.yaml
-	err := sdkutil.InsertCode(managerFile,
+	err := util.InsertCode(managerFile,
 		"--leader-elect",
-		fmt.Sprintf("\n        - --leader-election-id=%s", projectName))
-	if err != nil {
-		return err
-	}
-	err = sdkutil.InsertCode(filepath.Join("config", "default", "manager_auth_proxy_patch.yaml"),
-		"- \"--leader-elect\"",
-		fmt.Sprintf("\n        - \"--leader-election-id=%s\"", projectName))
-	if err != nil {
-		return err
-	}
-
-	// Increase the default memory required.
-	err = sdkutil.ReplaceInFile(managerFile, "memory: 20Mi", "memory: 60Mi")
-	if err != nil {
-		return err
-	}
-
-	// Remove the webhook option for the componentConfig since webhooks are not supported by helm
-	err = sdkutil.ReplaceInFile(filepath.Join("config", "manager", "controller_manager_config.yaml"),
-		"webhook:\n  port: 9443", "")
+		fmt.Sprintf("\n          - --leader-election-id=%s", projectName))
 	if err != nil {
 		return err
 	}
@@ -216,7 +196,28 @@ func addInitCustomizations(projectName string) error {
 	const command = `command:
         - /manager
         `
-	err = sdkutil.ReplaceInFile(managerFile, command, "")
+	err = util.ReplaceInFile(managerFile, command, "")
+	if err != nil {
+		return err
+	}
+
+	// Enable the proper auth/metrics flags for helm
+	err = util.ReplaceInFile(managerMetricsPatch,
+		`# This patch adds the args to allow exposing the metrics endpoint using HTTPS
+- op: add
+  path: /spec/template/spec/containers/0/args/0
+  value: --metrics-bind-address=:8443`, `# This patch adds the args to allow exposing the metrics endpoint using HTTPS
+- op: add
+  path: /spec/template/spec/containers/0/args/0
+  value: --metrics-bind-address=:8443
+# This patch adds the args to allow securing the metrics endpoint
+- op: add
+  path: /spec/template/spec/containers/0/args/0
+  value: --metrics-secure
+# This patch adds the args to allow RBAC-based authn/authz the metrics endpoint
+- op: add
+  path: /spec/template/spec/containers/0/args/0
+  value: --metrics-require-rbac`)
 	if err != nil {
 		return err
 	}

@@ -17,14 +17,16 @@ package bundle
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/operator-framework/api/pkg/apis/scorecard/v1alpha3"
-	"github.com/operator-framework/operator-registry/pkg/lib/bundle"
 	"sigs.k8s.io/yaml"
 
+	"github.com/operator-framework/api/pkg/apis/scorecard/v1alpha3"
+	"github.com/operator-framework/operator-manifest-tools/pkg/image"
+	"github.com/operator-framework/operator-manifest-tools/pkg/imageresolver"
+	"github.com/operator-framework/operator-manifest-tools/pkg/pullspec"
+	"github.com/operator-framework/operator-registry/pkg/lib/bundle"
 	metricsannotations "github.com/operator-framework/operator-sdk/internal/annotations/metrics"
 	genutil "github.com/operator-framework/operator-sdk/internal/cmd/operator-sdk/generate/internal"
 	gencsv "github.com/operator-framework/operator-sdk/internal/generate/clusterserviceversion"
@@ -188,6 +190,11 @@ func (c bundleCmd) runManifests() (err error) {
 		c.println("Building a ClusterServiceVersion without an existing base")
 	}
 
+	relatedImages, err := genutil.FindRelatedImages(col)
+	if err != nil {
+		return err
+	}
+
 	var opts []gencsv.Option
 	stdout := genutil.NewMultiManifestWriter(os.Stdout)
 	if c.stdout {
@@ -202,6 +209,7 @@ func (c bundleCmd) runManifests() (err error) {
 		Collector:            col,
 		Annotations:          metricsannotations.MakeBundleObjectAnnotations(c.layout),
 		ExtraServiceAccounts: c.extraServiceAccounts,
+		RelatedImages:        relatedImages,
 	}
 	if err := csvGen.Generate(opts...); err != nil {
 		return fmt.Errorf("error generating ClusterServiceVersion: %v", err)
@@ -219,6 +227,14 @@ func (c bundleCmd) runManifests() (err error) {
 		}
 	}
 
+	// Pin images to digests if enabled
+	if c.useImageDigests {
+		c.println("pinning image versions to digests instead of tags")
+		if err := c.pinImages(filepath.Join(c.outputDir, "manifests")); err != nil {
+			return err
+		}
+	}
+
 	// Write the scorecard config if it was passed.
 	if err := writeScorecardConfig(c.outputDir, col.ScorecardConfig); err != nil {
 		return fmt.Errorf("error writing bundle scorecard config: %v", err)
@@ -227,6 +243,7 @@ func (c bundleCmd) runManifests() (err error) {
 	c.println("Bundle manifests generated successfully in", c.outputDir)
 
 	return nil
+
 }
 
 // writeScorecardConfig writes cfg to dir at the hard-coded config path 'config.yaml'.
@@ -246,14 +263,12 @@ func writeScorecardConfig(dir string, cfg v1alpha3.Configuration) error {
 		return err
 	}
 	scorecardConfigPath := filepath.Join(cfgDir, scorecard.ConfigFileName)
-	return ioutil.WriteFile(scorecardConfigPath, b, 0666)
+	return os.WriteFile(scorecardConfigPath, b, 0666)
 }
 
 // runMetadata generates a bundle.Dockerfile and bundle metadata.
 func (c bundleCmd) runMetadata() error {
-
 	c.println("Generating bundle metadata")
-
 	if c.outputDir == "" {
 		c.outputDir = defaultRootDir
 	}
@@ -276,14 +291,41 @@ func (c bundleCmd) runMetadata() error {
 		}
 	}
 
+	scorecardConfigPath := filepath.Join(bundleRoot, scorecard.DefaultConfigDir, scorecard.ConfigFileName)
+
 	bundleMetadata := bundleutil.BundleMetaData{
 		BundleDir:            c.outputDir,
 		PackageName:          c.packageName,
 		Channels:             c.channels,
 		DefaultChannel:       c.defaultChannel,
 		OtherLabels:          metricsannotations.MakeBundleMetadataLabels(c.layout),
-		IsScoreConfigPresent: true,
+		IsScoreConfigPresent: genutil.IsExist(scorecardConfigPath),
 	}
 
 	return bundleMetadata.GenerateMetadata()
+}
+
+// pinImages is used to replace all image tags in the given manifests with digests
+func (c bundleCmd) pinImages(manifestPath string) error {
+	manifests, err := pullspec.FromDirectory(manifestPath, nil)
+	if err != nil {
+		return err
+	}
+	resolverArgs := make(map[string]string)
+	resolverArgs["usedefault"] = "true"
+	resolver, err := imageresolver.GetResolver(imageresolver.ResolverCrane, resolverArgs)
+	if err != nil {
+		return err
+	}
+	if err := image.Pin(resolver, manifests); err != nil {
+		return err
+	}
+
+	for _, manifest := range manifests {
+		if err := manifest.Dump(nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

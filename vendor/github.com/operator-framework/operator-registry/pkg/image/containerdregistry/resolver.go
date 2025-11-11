@@ -1,61 +1,31 @@
 package containerdregistry
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"net"
 	"net/http"
-	"time"
+	"os"
+	"path/filepath"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
-	"github.com/docker/cli/cli/config"
-	"github.com/docker/cli/cli/config/configfile"
-	"github.com/docker/cli/cli/config/credentials"
-	"github.com/docker/docker/registry"
+	"github.com/containers/common/pkg/auth"
+	"github.com/containers/image/v5/pkg/docker/config"
+	"github.com/containers/image/v5/types"
+	dockerconfig "github.com/docker/cli/cli/config"
 )
 
-func NewResolver(configDir string, insecure bool, roots *x509.CertPool) (remotes.Resolver, error) {
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		MaxIdleConns:          10,
-		IdleConnTimeout:       30 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 5 * time.Second,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: false,
-			RootCAs:            roots,
-		},
-	}
-
-	if insecure {
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: insecure,
-		}
-	}
+func NewResolver(client *http.Client, configDir string, plainHTTP bool, repo string) (remotes.Resolver, error) {
 	headers := http.Header{}
 	headers.Set("User-Agent", "opm/alpha")
-
-	client := &http.Client{Transport: transport}
-
-	cfg, err := loadConfig(configDir)
-	if err != nil {
-		return nil, err
-	}
 
 	regopts := []docker.RegistryOpt{
 		docker.WithAuthorizer(docker.NewDockerAuthorizer(
 			docker.WithAuthClient(client),
 			docker.WithAuthHeader(headers),
-			docker.WithAuthCreds(credential(cfg)),
+			docker.WithAuthCreds(credentialFunc(configDir, repo)),
 		)),
 		docker.WithClient(client),
 	}
-	if insecure {
+	if plainHTTP {
 		regopts = append(regopts, docker.WithPlainHTTP(docker.MatchAllHosts))
 	}
 
@@ -67,46 +37,47 @@ func NewResolver(configDir string, insecure bool, roots *x509.CertPool) (remotes
 	return docker.NewResolver(opts), nil
 }
 
-func credential(cfg *configfile.ConfigFile) func(string) (string, string, error) {
-	return func(hostname string) (string, string, error) {
-		hostname = resolveHostname(hostname)
-		auth, err := cfg.GetAuthConfig(hostname)
+func credentialFunc(configDir, repo string) func(string) (string, string, error) {
+	if configDir == "" {
+		configDir = dockerconfig.Dir()
+	}
+
+	// By default, we will use the docker config file in the standard docker config directory.
+	// However, if REGISTRY_AUTH_FILE or DOCKER_CONFIG environment variables are set, we will
+	// use those (in that order) instead to derive the auth config file.
+	authFile := filepath.Join(configDir, dockerconfig.ConfigFileName)
+	if defaultAuthFile := auth.GetDefaultAuthFile(); defaultAuthFile != "" {
+		authFile = defaultAuthFile
+	}
+
+	// We don't use the function parameter in the credential function we return because containerd
+	// only passes in the hostname. Instead, we will use our repo parameter to get the credentials
+	// using the repo-aware GetCredentials function.
+	return func(_ string) (string, string, error) {
+		var (
+			cred types.DockerAuthConfig
+			err  error
+		)
+
+		// In order to maintain backward-compatibility with the original credential getter,
+		// we will first try to get the credentials from the auth config file we derived above,
+		// if it exists.
+		if stat, statErr := os.Stat(authFile); statErr == nil && stat.Mode().IsRegular() {
+			cred, err = config.GetCredentials(&types.SystemContext{AuthFilePath: authFile}, repo)
+		}
+
+		// If the auth file doesn't exist or if we couldn't find credentials in it, we'll use
+		// system defaults from containers/image (podman/skopeo) to lookup the credentials.
+		if cred == (types.DockerAuthConfig{}) || err != nil {
+			cred, err = config.GetCredentials(nil, repo)
+		}
+
 		if err != nil {
 			return "", "", err
 		}
-		if auth.IdentityToken != "" {
-			return "", auth.IdentityToken, nil
+		if cred.IdentityToken != "" {
+			return "", cred.IdentityToken, nil
 		}
-		if auth.Username == "" && auth.Password == "" {
-			return "", "", nil
-		}
-
-		return auth.Username, auth.Password, nil
+		return cred.Username, cred.Password, nil
 	}
-}
-
-func loadConfig(dir string) (*configfile.ConfigFile, error) {
-	if dir == "" {
-		dir = config.Dir()
-	}
-
-	cfg, err := config.Load(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	if !cfg.ContainsAuth() {
-		cfg.CredentialsStore = credentials.DetectDefaultStore(cfg.CredentialsStore)
-	}
-
-	return cfg, nil
-}
-
-// resolveHostname resolves Docker specific hostnames
-func resolveHostname(hostname string) string {
-	switch hostname {
-	case registry.IndexHostname, registry.IndexName, registry.DefaultV2Registry.Host:
-		return registry.IndexServer
-	}
-	return hostname
 }

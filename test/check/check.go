@@ -21,6 +21,7 @@ import (
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
@@ -952,45 +953,67 @@ func checkForConfigMapRemoval(name string) error {
 	return isNotFound("ConfigMap", name, err)
 }
 
-func getMonitoringEndpoint() (*corev1.Endpoints, error) {
+func getMonitoringEndpoint() (*discoveryv1.EndpointSlice, error) {
 	By("Finding CNAO prometheus endpoint")
-	endpoint := &corev1.Endpoints{}
-	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: MonitoringComponent.Service, Namespace: components.Namespace}, endpoint)
+	endpointSliceList := &discoveryv1.EndpointSliceList{}
+	err := testenv.Client.List(context.Background(), endpointSliceList,
+		client.InNamespace(components.Namespace),
+		client.MatchingLabels{"kubernetes.io/service-name": MonitoringComponent.Service})
 	if err != nil {
 		return nil, err
 	}
-	return endpoint, nil
+	if len(endpointSliceList.Items) == 0 {
+		return nil, fmt.Errorf("no EndpointSlices found for service %s", MonitoringComponent.Service)
+	}
+
+	for i := range endpointSliceList.Items {
+		es := &endpointSliceList.Items[i]
+		if len(es.Ports) == 0 {
+			continue
+		}
+
+		for j := range es.Endpoints {
+			endpoint := &es.Endpoints[j]
+			if endpoint.TargetRef != nil && strings.HasPrefix(endpoint.TargetRef.Name, components.Name) {
+				return es, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("no EndpointSlice found with ports defined for service %s", MonitoringComponent.Service)
 }
 
-func ScrapeEndpointAddress(epAddress *corev1.EndpointAddress, epPort int32) (string, error) {
+func ScrapeEndpointAddress(endpoint *discoveryv1.Endpoint, epPort int32) (string, error) {
 	token, err := getPrometheusToken()
 	if err != nil {
 		return "", err
 	}
 
 	bearer := "Authorization: Bearer " + token
-	stdout, _, err := Kubectl("exec", "-n", epAddress.TargetRef.Namespace, epAddress.TargetRef.Name, "--", "curl", "-s", "-k",
-		"--header", bearer, fmt.Sprintf("https://%s:%d/metrics", epAddress.IP, epPort))
+	stdout, _, err := Kubectl("exec", "-n", endpoint.TargetRef.Namespace, endpoint.TargetRef.Name, "--", "curl", "-s", "-k",
+		"--header", bearer, fmt.Sprintf("https://%s:%d/metrics", endpoint.Addresses[0], epPort))
 	if err != nil {
 		return "", err
 	}
 	return stdout, nil
 }
 
-func GetMonitoringEndpoint() (*corev1.EndpointAddress, int32, error) {
-	endpoint, err := getMonitoringEndpoint()
+func GetMonitoringEndpoint() (*discoveryv1.Endpoint, int32, error) {
+	endpointSlice, err := getMonitoringEndpoint()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	epPort := endpoint.Subsets[0].Ports[0].Port
-	for _, epAddr := range endpoint.Subsets[0].Addresses {
-		if !strings.HasPrefix(epAddr.TargetRef.Name, components.Name) {
-			continue
+	if len(endpointSlice.Ports) == 0 {
+		return nil, 0, errors.New("no ports found in EndpointSlice")
+	}
+	epPort := *endpointSlice.Ports[0].Port
+
+	for i := range endpointSlice.Endpoints {
+		endpoint := &endpointSlice.Endpoints[i]
+		if endpoint.TargetRef != nil && strings.HasPrefix(endpoint.TargetRef.Name, components.Name) {
+			return endpoint, epPort, nil
 		}
-		epAddress := epAddr
-		return &epAddress, epPort, nil
 	}
 
 	return nil, 0, errors.New("no endpoint target ref name matches CNAO component")

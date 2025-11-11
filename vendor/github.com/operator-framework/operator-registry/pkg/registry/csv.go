@@ -2,22 +2,25 @@ package registry
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
-	v1 "k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/operator-framework/api/pkg/operators"
+
+	prettyunmarshaler "github.com/operator-framework/operator-registry/pkg/prettyunmarshaler"
 )
 
 const (
 	// Name of the CSV's kind
+	// nolint:unused
 	clusterServiceVersionKind = "ClusterServiceVersion"
 
 	// Name of the section under which the list of owned and required list of
@@ -42,15 +45,17 @@ const (
 	icon = "icon"
 
 	// The yaml attribute that points to the icon.base64data for the ClusterServiceVersion
+	// nolint:unused
 	base64data = "base64data"
 
 	// The yaml attribute that points to the icon.mediatype for the ClusterServiceVersion
+	// nolint:unused
 	mediatype = "mediatype"
 	// The yaml attribute that points to the description for the ClusterServiceVersion
 	description = "description"
 
 	// The yaml attribute that specifies the version of the ClusterServiceVersion
-	// expected to be semver and parseable by blang/semver
+	// expected to be semver and parseable by blang/semver/v4
 	version = "version"
 
 	// The yaml attribute that specifies the related images of the ClusterServiceVersion
@@ -82,7 +87,7 @@ type ClusterServiceVersion struct {
 // ReadCSVFromBundleDirectory tries to parse every YAML file in the directory without inspecting sub-directories and
 // returns a CSV. According to the strict one CSV per bundle rule, func returns an error if more than one CSV is found.
 func ReadCSVFromBundleDirectory(bundleDir string) (*ClusterServiceVersion, error) {
-	dirContent, err := ioutil.ReadDir(bundleDir)
+	dirContent, err := os.ReadDir(bundleDir)
 	if err != nil {
 		return nil, fmt.Errorf("error reading bundle directory %s, %v", bundleDir, err)
 	}
@@ -129,7 +134,6 @@ func ReadCSVFromBundleDirectory(bundleDir string) (*ClusterServiceVersion, error
 		return &csv, nil
 	}
 	return nil, fmt.Errorf("no ClusterServiceVersion object found in %s", bundleDir)
-
 }
 
 // GetReplaces returns the name of the older ClusterServiceVersion object that
@@ -222,16 +226,16 @@ func (csv *ClusterServiceVersion) GetSkips() ([]string, error) {
 //
 // If owned or required is not defined in the spec then an empty list is
 // returned respectively.
-func (csv *ClusterServiceVersion) GetCustomResourceDefintions() (owned []*DefinitionKey, required []*DefinitionKey, err error) {
+func (csv *ClusterServiceVersion) GetCustomResourceDefintions() ([]*DefinitionKey, []*DefinitionKey, error) {
 	var objmap map[string]*json.RawMessage
 
-	if err = json.Unmarshal(csv.Spec, &objmap); err != nil {
-		return
+	if err := json.Unmarshal(csv.Spec, &objmap); err != nil {
+		return nil, nil, err
 	}
 
 	rawValue, ok := objmap[customResourceDefinitions]
 	if !ok || rawValue == nil {
-		return
+		return nil, nil, nil
 	}
 
 	var definitions struct {
@@ -239,13 +243,11 @@ func (csv *ClusterServiceVersion) GetCustomResourceDefintions() (owned []*Defini
 		Required []*DefinitionKey `json:"required"`
 	}
 
-	if err = json.Unmarshal(*rawValue, &definitions); err != nil {
-		return
+	if err := json.Unmarshal(*rawValue, &definitions); err != nil {
+		return nil, nil, err
 	}
 
-	owned = definitions.Owned
-	required = definitions.Required
-	return
+	return definitions.Owned, definitions.Required, nil
 }
 
 // GetApiServiceDefinitions returns a list of owned and required
@@ -259,16 +261,17 @@ func (csv *ClusterServiceVersion) GetCustomResourceDefintions() (owned []*Defini
 //
 // If owned or required is not defined in the spec then an empty list is
 // returned respectively.
-func (csv *ClusterServiceVersion) GetApiServiceDefinitions() (owned []*DefinitionKey, required []*DefinitionKey, err error) {
+// nolint:stylecheck
+func (csv *ClusterServiceVersion) GetApiServiceDefinitions() ([]*DefinitionKey, []*DefinitionKey, error) {
 	var objmap map[string]*json.RawMessage
 
-	if err = json.Unmarshal(csv.Spec, &objmap); err != nil {
+	if err := json.Unmarshal(csv.Spec, &objmap); err != nil {
 		return nil, nil, fmt.Errorf("error unmarshaling into object map: %s", err)
 	}
 
 	rawValue, ok := objmap[apiServiceDefinitions]
 	if !ok || rawValue == nil {
-		return
+		return nil, nil, nil
 	}
 
 	var definitions struct {
@@ -276,27 +279,25 @@ func (csv *ClusterServiceVersion) GetApiServiceDefinitions() (owned []*Definitio
 		Required []*DefinitionKey `json:"required"`
 	}
 
-	if err = json.Unmarshal(*rawValue, &definitions); err != nil {
-		return
+	if err := json.Unmarshal(*rawValue, &definitions); err != nil {
+		return nil, nil, err
 	}
 
-	owned = definitions.Owned
-	required = definitions.Required
-	return
+	return definitions.Owned, definitions.Required, nil
 }
 
 // GetRelatedImage returns the list of associated images for the operator
-func (csv *ClusterServiceVersion) GetRelatedImages() (imageSet map[string]struct{}, err error) {
+func (csv *ClusterServiceVersion) GetRelatedImages() (map[string]struct{}, error) {
 	var objmap map[string]*json.RawMessage
-	imageSet = make(map[string]struct{})
+	imageSet := make(map[string]struct{})
 
-	if err = json.Unmarshal(csv.Spec, &objmap); err != nil {
-		return
+	if err := json.Unmarshal(csv.Spec, &objmap); err != nil {
+		return nil, err
 	}
 
 	rawValue, ok := objmap[relatedImages]
 	if !ok || rawValue == nil {
-		return
+		return imageSet, nil
 	}
 
 	type relatedImage struct {
@@ -304,15 +305,15 @@ func (csv *ClusterServiceVersion) GetRelatedImages() (imageSet map[string]struct
 		Ref  string `json:"image"`
 	}
 	var relatedImages []relatedImage
-	if err = json.Unmarshal(*rawValue, &relatedImages); err != nil {
-		return
+	if err := json.Unmarshal(*rawValue, &relatedImages); err != nil {
+		return nil, err
 	}
 
 	for _, img := range relatedImages {
 		imageSet[img.Ref] = struct{}{}
 	}
 
-	return
+	return imageSet, nil
 }
 
 // GetOperatorImages returns a list of any images used to run the operator.
@@ -320,7 +321,7 @@ func (csv *ClusterServiceVersion) GetRelatedImages() (imageSet map[string]struct
 func (csv *ClusterServiceVersion) GetOperatorImages() (map[string]struct{}, error) {
 	type dep struct {
 		Name string
-		Spec v1.DeploymentSpec
+		Spec appsv1.DeploymentSpec
 	}
 	type strategySpec struct {
 		Deployments []dep
@@ -411,4 +412,56 @@ func (csv *ClusterServiceVersion) GetSubstitutesFor() string {
 		return ""
 	}
 	return substitutesFor
+}
+
+func (csv *ClusterServiceVersion) UnmarshalJSON(data []byte) error {
+	if err := csv.UnmarshalSpec(data); err != nil {
+		return err
+	}
+	if err := csv.UnmarshalTypeMeta(data); err != nil {
+		return err
+	}
+	if err := csv.UnmarshalObjectMeta(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (csv *ClusterServiceVersion) UnmarshalSpec(data []byte) error {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(data, &m); err != nil {
+		return errors.New(prettyunmarshaler.NewJSONUnmarshalError(data, err).Pretty())
+	}
+
+	spec, ok := m["spec"]
+	if !ok {
+		return nil
+	}
+	csv.Spec = spec
+
+	return nil
+}
+
+func (csv *ClusterServiceVersion) UnmarshalTypeMeta(data []byte) error {
+	var t metav1.TypeMeta
+	if err := json.Unmarshal(data, &t); err != nil {
+		return errors.New(prettyunmarshaler.NewJSONUnmarshalError(data, err).Pretty())
+	}
+	csv.TypeMeta = t
+
+	return nil
+}
+
+func (csv *ClusterServiceVersion) UnmarshalObjectMeta(data []byte) error {
+	var o struct {
+		Metadata metav1.ObjectMeta `json:"metadata"`
+	}
+	if err := json.Unmarshal(data, &o); err != nil {
+		return errors.New(prettyunmarshaler.NewJSONUnmarshalError(data, err).Pretty())
+	}
+
+	csv.ObjectMeta = o.Metadata
+
+	return nil
 }

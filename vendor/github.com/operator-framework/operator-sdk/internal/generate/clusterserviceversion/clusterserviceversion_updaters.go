@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/operator-framework/api/pkg/validation"
@@ -61,6 +62,9 @@ func apply(c *collector.Manifests, csv *operatorsv1alpha1.ClusterServiceVersion,
 		applyDeployments(c, &strategy.StrategySpec)
 	}
 	csv.Spec.InstallStrategy = strategy
+
+	// Update createdAt timestamp annotation since the CSV has been updated.
+	csv.ObjectMeta.Annotations["createdAt"] = time.Now().UTC().Format(time.RFC3339)
 
 	applyCustomResourceDefinitions(c, csv)
 	if err := applyCustomResources(c, csv); err != nil {
@@ -203,8 +207,9 @@ func applyDeployments(c *collector.Manifests, strategy *operatorsv1alpha1.Strate
 	depSpecs := []operatorsv1alpha1.StrategyDeploymentSpec{}
 	for _, dep := range c.Deployments {
 		depSpecs = append(depSpecs, operatorsv1alpha1.StrategyDeploymentSpec{
-			Name: dep.GetName(),
-			Spec: dep.Spec,
+			Name:  dep.GetName(),
+			Spec:  dep.Spec,
+			Label: dep.Labels,
 		})
 	}
 	strategy.DeploymentSpecs = depSpecs
@@ -338,7 +343,7 @@ func applyWebhooks(c *collector.Manifests, csv *operatorsv1alpha1.ClusterService
 	}
 	// Sorts the WebhookDescriptions based on natural order of webhookDescriptions Type
 	sort.Slice(webhookDescriptions, func(i, j int) bool {
-		return webhookDescriptions[i].Type < webhookDescriptions[j].Type
+		return webhookDescriptions[i].GenerateName < webhookDescriptions[j].GenerateName
 	})
 	csv.Spec.WebhookDefinitions = webhookDescriptions
 }
@@ -569,7 +574,7 @@ func mutatingToWebhookDescription(webhook admissionregv1.MutatingWebhook, depNam
 func findMatchingDeploymentAndServiceForWebhook(c *collector.Manifests, wcc admissionregv1.WebhookClientConfig) (depName string, ws *corev1.Service) {
 	// Return if a service reference is not specified, since a URL will be in that case.
 	if wcc.Service == nil {
-		return
+		return depName, ws
 	}
 
 	// Find the matching service, if any. The webhook server may be externally managed
@@ -581,18 +586,18 @@ func findMatchingDeploymentAndServiceForWebhook(c *collector.Manifests, wcc admi
 		}
 	}
 	if ws == nil {
-		return
+		return depName, ws
 	}
 
 	// Only ExternalName-type services cannot have selectors.
 	if ws.Spec.Type == corev1.ServiceTypeExternalName {
-		return
+		return depName, ws
 	}
 
 	// If a selector does not exist, there is either an Endpoint or EndpointSlice object accompanying
 	// the service so it should not be added to the CSV.
 	if len(ws.Spec.Selector) == 0 {
-		return
+		return depName, ws
 	}
 
 	depName = findMatchingDepNameFromService(c, ws)
