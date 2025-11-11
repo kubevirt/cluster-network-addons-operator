@@ -1,6 +1,8 @@
 #!/bin/bash
 set -exo pipefail
 
+KUBEVIRT_VERSION=v1.3.1
+
 if [ -z "${KUBEVIRT_VERSION}" ];then
   # Get latest stable KubeVirt version
   export KUBEVIRT_VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt/releases | grep tag_name | grep -v -- - | sort -V | tail -1 | awk -F':' '{print $2}' | sed 's/,//' | xargs)
