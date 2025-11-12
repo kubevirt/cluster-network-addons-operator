@@ -1,9 +1,14 @@
 #!/bin/bash
 set -exo pipefail
 
+function getLatestPatchVersion {
+  local major_minors=$1
+  curl -s https://api.github.com/repos/kubevirt/kubevirt/releases?per_page=100 | grep .tag_name | grep ${major_minors} | sort -V | tail -1 | awk -F':' '{print $2}' | sed 's/,//' | xargs
+}
+
 if [ -z "${KUBEVIRT_VERSION}" ];then
   # Get latest stable KubeVirt version
-  export KUBEVIRT_VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt/releases | grep tag_name | grep -v -- - | sort -V | tail -1 | awk -F':' '{print $2}' | sed 's/,//' | xargs)
+  export KUBEVIRT_VERSION=$(getLatestPatchVersion v1.2)
 fi
 
 ./cluster/kubectl.sh apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml
