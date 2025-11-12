@@ -163,7 +163,7 @@ metadata:
   name: kubevirt-ipam-controller-manager
   namespace: {{ .Namespace }}
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ipam-virt-workloads
