@@ -8,7 +8,7 @@ function getLatestPatchVersion {
 
 if [ -z "${KUBEVIRT_VERSION}" ];then
   # Get latest stable KubeVirt version
-  export KUBEVIRT_VERSION=$(getLatestPatchVersion v1.3)
+  export KUBEVIRT_VERSION=$(getLatestPatchVersion v1.2)
 fi
 
 ./cluster/kubectl.sh apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml
