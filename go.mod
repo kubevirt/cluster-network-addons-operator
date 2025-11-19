@@ -4,6 +4,14 @@ go 1.24.3
 
 toolchain go1.24.10
 
+tool (
+	github.com/github-release/github-release
+	github.com/onsi/ginkgo/v2
+	github.com/operator-framework/operator-sdk/cmd/operator-sdk
+	golang.org/x/tools/cmd/goimports
+	sigs.k8s.io/controller-tools/cmd/controller-gen
+)
+
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/blang/semver v3.5.1+incompatible
@@ -11,7 +19,6 @@ require (
 	github.com/coreos/prometheus-operator v0.38.3
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
-	github.com/github-release/github-release v0.10.0
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-logr/logr v1.4.3
 	github.com/gobwas/glob v0.2.3
@@ -24,7 +31,6 @@ require (
 	github.com/openshift/cluster-network-operator v0.0.0-20200324123637-74e803688dd9
 	github.com/openshift/custom-resource-status v1.1.2
 	github.com/openshift/origin v4.1.0+incompatible
-	github.com/operator-framework/operator-sdk v1.41.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 	github.com/prometheus/client_golang v1.22.0
@@ -34,7 +40,6 @@ require (
 	github.com/thanhpk/randstr v1.0.4
 	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/tools v0.38.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.34.1
 	k8s.io/apiextensions-apiserver v0.34.1
@@ -44,7 +49,6 @@ require (
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 	kubevirt.io/api v1.6.2
 	sigs.k8s.io/controller-runtime v0.22.4
-	sigs.k8s.io/controller-tools v0.18.0
 )
 
 require (
@@ -106,6 +110,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
+	github.com/github-release/github-release v0.10.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.2 // indirect
@@ -201,6 +206,7 @@ require (
 	github.com/operator-framework/api v0.32.0 // indirect
 	github.com/operator-framework/operator-manifest-tools v0.10.0 // indirect
 	github.com/operator-framework/operator-registry v1.56.0 // indirect
+	github.com/operator-framework/operator-sdk v1.41.1 // indirect
 	github.com/otiai10/copy v1.14.1 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
@@ -261,16 +267,16 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/term v0.34.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
@@ -294,6 +300,7 @@ require (
 	kubevirt.io/controller-lifecycle-operator-sdk/api v0.0.0-20220329064328-f3cc58c6ed90 // indirect
 	oras.land/oras-go/v2 v2.6.0 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.34.0 // indirect
+	sigs.k8s.io/controller-tools v0.18.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/kubebuilder/v4 v4.6.0 // indirect
 	sigs.k8s.io/kustomize/api v0.20.1 // indirect

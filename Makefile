@@ -57,11 +57,11 @@ export GOROOT=$(BIN_DIR)/go/
 export GOBIN = $(GOROOT)/bin/
 export PATH := $(GOBIN):$(PATH)
 
-OPERATOR_SDK ?= $(BIN_DIR)/operator-sdk
+OPERATOR_SDK ?= $(GO) tool operator-sdk
 
-GITHUB_RELEASE ?= $(BIN_DIR)/github-release
+GITHUB_RELEASE ?= $(GO) tool github-release
 
-CONTROLLER_GEN ?= $(BIN_DIR)/controller-gen
+CONTROLLER_GEN ?= $(GO) tool controller-gen
 
 MONITORING_LINTER ?= $(BIN_DIR)/monitoringlinter
 
@@ -71,15 +71,6 @@ GO := $(GOBIN)/go
 
 $(GO):
 	hack/install-go.sh $(BIN_DIR)
-
-$(OPERATOR_SDK): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/operator-framework/operator-sdk/cmd/operator-sdk
-
-$(GITHUB_RELEASE): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/github.com/github-release/github-release
-
-$(CONTROLLER_GEN): $(GO) go.mod
-	GOBIN=$$(pwd)/build/_output/bin/ $(GO) install ./vendor/sigs.k8s.io/controller-tools/cmd/controller-gen
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
@@ -94,7 +85,7 @@ apis_sources=$(call rwildcard,pkg/apis,*.go)
 fmt: whitespace goimports
 
 goimports: $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -w ./pkg ./cmd ./test/ ./tools/
+	$(GO) tool goimports -w ./pkg ./cmd ./test/ ./tools/
 	touch $@
 
 whitespace: $(all_sources)
@@ -113,7 +104,7 @@ vet: $(GO) $(cmd_sources) $(pkg_sources)
 	touch $@
 
 goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
-	$(GO) run ./vendor/golang.org/x/tools/cmd/goimports -d ./pkg ./cmd
+	$(GO) tool goimports -d ./pkg ./cmd
 	touch $@
 
 test/unit: $(GO)
@@ -190,7 +181,7 @@ gen-manifests: manifest-templator
 	KUBE_RBAC_PROXY_IMAGE=$(KUBE_RBAC_PROXY_IMAGE) \
 		./hack/generate-manifests.sh
 
-gen-k8s: $(CONTROLLER_GEN) $(apis_sources)
+gen-k8s: $(GO) $(apis_sources)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./pkg/...;./cmd/...;./test/...;./tools/..."
 	touch $@
 
@@ -228,7 +219,7 @@ statify-components:
 release-notes:
 	hack/render-release-notes.sh $(WHAT)
 
-release: $(GITHUB_RELEASE)
+release: $(GO)
 	GITHUB_RELEASE=$(GITHUB_RELEASE) \
 	TAG=v$(shell hack/version.sh) \
 	  hack/release.sh \
