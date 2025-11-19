@@ -113,7 +113,6 @@ func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 
 // Render creates a list of components to be created
 func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
-	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
 
 	// render Multus
@@ -190,7 +189,6 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 
 // RenderObjsToRemove creates list of components to be removed
 func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
-	log.Print("starting rendering objects to delete phase")
 	objsToRemove := []*unstructured.Unstructured{}
 
 	if prev == nil {

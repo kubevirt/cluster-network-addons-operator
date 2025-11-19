@@ -81,7 +81,6 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 
 			return errors.Wrapf(err, "could not update object %s", objDesc)
 		}
-		log.Print("update was successful")
 	}
 
 	return nil

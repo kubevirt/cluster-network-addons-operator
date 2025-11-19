@@ -80,7 +80,6 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 	for i := 0; i < conditionsUpdateRetries; i++ {
 		err := status.set(reachedAvailableLevel, conditions...)
 		if err == nil {
-			log.Print("Successfully updated status conditions")
 			return
 		}
 		log.Printf("Failed calling status Set %d/%d: %v", i+1, conditionsUpdateRetries, err)

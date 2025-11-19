@@ -216,8 +216,6 @@ type ReconcileNetworkAddonsConfig struct {
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
 // and what is in the NetworkAddonsConfig.Spec
 func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	log.Print("reconciling NetworkAddonsConfig")
-
 	// We won't create more than one network addons instance
 	if request.Name != names.OperatorConfig {
 		log.Print("ignoring NetworkAddonsConfig without default name")
