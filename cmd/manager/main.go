@@ -3,15 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"runtime"
 
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
@@ -50,29 +53,32 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
-func printVersion() {
-	log.Printf("Go Version: %s", runtime.Version())
-	log.Printf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
-	log.Printf("version of cluster-network-addons-operator: %v", os.Getenv("OPERATOR_VERSION"))
+func printVersion(logger logr.Logger) {
+	logger.Info("Go Version", "version", runtime.Version())
+	logger.Info("Go OS/Arch", "os", runtime.GOOS, "arch", runtime.GOARCH)
+	logger.Info("cluster-network-addons-operator version", "version", os.Getenv("OPERATOR_VERSION"))
 }
 
 func main() {
+	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
+	logger := logf.Log.WithName("manager")
+
 	// Add flags registered by imported packages (e.g. controller-runtime)
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
 
-	printVersion()
+	printVersion(logger)
 
 	watchNamespace, err := k8s.GetWatchNamespace()
 	if err != nil {
-		log.Printf("failed to get watch namespace: %v", err)
+		logger.Error(err, "failed to get watch namespace")
 		os.Exit(1)
 	}
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Printf("failed to get apiserver config: %v", err)
+		logger.Error(err, "failed to get apiserver config")
 		os.Exit(1)
 	}
 
@@ -93,7 +99,7 @@ func main() {
 		HealthProbeBindAddress: fmt.Sprintf(":%d", components.HealthProbePort),
 	})
 	if err != nil {
-		log.Printf("failed to instantiate new operator manager: %v", err)
+		logger.Error(err, "failed to instantiate new operator manager")
 		os.Exit(1)
 	}
 
@@ -101,38 +107,38 @@ func main() {
 	operatormetrics.Register = controllerruntimemetrics.Registry.Register
 	err = metrics.SetupMetrics()
 	if err != nil {
-		log.Printf("failed to setup metrics: %v", err)
+		logger.Error(err, "failed to setup metrics")
 		os.Exit(1)
 	}
 
-	log.Print("registering Components")
+	logger.Info("registering Components")
 
 	if err := osv1.Install(mgr.GetScheme()); err != nil {
-		log.Printf("failed adding openshift scheme to the client: %v", err)
+		logger.Error(err, "failed adding openshift scheme to the client")
 		os.Exit(1)
 	}
 
-	log.Print("Add readiness and liveness probes")
+	logger.Info("adding readiness and liveness probes")
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		log.Printf("unable to set up health check: %v", err)
+		logger.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		log.Printf("unable to set up ready check: %v", err)
+		logger.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		log.Printf("failed setting up operator controllers: %v", err)
+		logger.Error(err, "failed setting up operator controllers")
 		os.Exit(1)
 	}
 
-	log.Print("starting the operator manager")
+	logger.Info("starting the operator manager")
 
 	// Start the operator manager
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Printf("manager exited with non-zero: %v", err)
+		logger.Error(err, "manager exited with non-zero")
 		os.Exit(1)
 	}
 }

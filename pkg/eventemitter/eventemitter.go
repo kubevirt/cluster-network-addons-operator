@@ -3,17 +3,19 @@ package eventemitter
 import (
 	"context"
 	"fmt"
-	"log"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 )
+
+var eventLog = logf.Log.WithName("eventemitter")
 
 const (
 	ModifiedMessage    = "Config spec was modified"
@@ -87,7 +89,7 @@ func (ee eventEmitter) getConfigForEmitter() *cnaov1.NetworkAddonsConfig {
 	config := &cnaov1.NetworkAddonsConfig{}
 	err := ee.client.Get(context.TODO(), types.NamespacedName{Name: names.OperatorConfig}, config)
 	if err != nil {
-		log.Printf("Failed to get NetworkAddonsConfig in order emit event. %v", err)
+		eventLog.Error(err, "failed to get NetworkAddonsConfig to emit event")
 
 		return nil
 	}

@@ -3,13 +3,13 @@ package networkaddonsconfig
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/go-logr/logr"
 	osconfv1 "github.com/openshift/api/config/v1"
 	osv1 "github.com/openshift/api/operator/v1"
 	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -52,6 +53,7 @@ const ManifestPath = "./data"
 var operatorNamespace string
 var operatorVersion string
 var operatorVersionLabel string
+var setupLog = logf.Log.WithName("setup")
 
 func init() {
 	operatorNamespace = os.Getenv("OPERATOR_NAMESPACE")
@@ -84,7 +86,7 @@ func Add(mgr manager.Manager) error {
 		return fmt.Errorf("failed to check whether running on OpenShift 4: %v", err)
 	}
 	if openShift4 {
-		log.Printf("Running on OpenShift 4")
+		setupLog.V(1).Info("running on OpenShift 4")
 	}
 	clusterInfo.OpenShift4 = openShift4
 
@@ -98,7 +100,7 @@ func Add(mgr manager.Manager) error {
 	if err != nil {
 		// we don't want CNAO to fail only if monitoring cannot be activated.
 		addMonitorServiceResources = false
-		log.Printf("failed to check for availability of Monitoring namespace: %v", err)
+		setupLog.Error(err, "failed to check for availability of Monitoring namespace")
 	}
 	clusterInfo.MonitoringAvailable = addMonitorServiceResources
 
@@ -119,6 +121,7 @@ func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.C
 		statusManager: statusManager,
 		clusterInfo:   clusterInfo,
 		eventEmitter:  eventemitter.New(mgr),
+		logger:        logf.Log.WithName("controller_networkaddonsconfig"),
 	}
 }
 
@@ -129,12 +132,12 @@ type ctrlPredicate[T metav1.Object] struct {
 func (p ctrlPredicate[T]) Update(e event.TypedUpdateEvent[T]) bool {
 	oldConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectOld)
 	if err != nil {
-		log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig (old): %v", err)
+		setupLog.Error(err, "Failed to convert runtime.Object to NetworkAddonsConfig (old)")
 		return false
 	}
 	newConfig, err := runtimeObjectToNetworkAddonsConfig(e.ObjectNew)
 	if err != nil {
-		log.Printf("Failed to convert runtime.Object to NetworkAddonsConfig (new): %v", err)
+		setupLog.Error(err, "Failed to convert runtime.Object to NetworkAddonsConfig (new)")
 		return false
 	}
 	return !reflect.DeepEqual(oldConfig.Spec, newConfig.Spec)
@@ -211,21 +214,23 @@ type ReconcileNetworkAddonsConfig struct {
 	statusManager *statusmanager.StatusManager
 	clusterInfo   *network.ClusterInfo
 	eventEmitter  eventemitter.EventEmitter
+	logger        logr.Logger
 }
 
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
 // and what is in the NetworkAddonsConfig.Spec
 func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	logger := r.logger.WithValues("namespace", request.Namespace, "name", request.Name)
+
 	// We won't create more than one network addons instance
 	if request.Name != names.OperatorConfig {
-		log.Print("ignoring NetworkAddonsConfig without default name")
 		return reconcile.Result{}, nil
 	}
 
 	if r.clusterInfo.OpenShift4 {
 		isSingleReplica, err := isOpenshiftSingleReplica(r.client)
 		if err != nil {
-			log.Printf("failed to check if running on a singleReplica infrastrcuture: %v", err)
+			logger.Error(err, "failed to check if running on a singleReplica infrastructure")
 		}
 		r.clusterInfo.IsSingleReplica = isSingleReplica
 	}
@@ -248,7 +253,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 			return reconcile.Result{}, nil
 		}
 
-		log.Printf("Error reading NetworkAddonsConfig. err = %v", err)
+		logger.Error(err, "error reading NetworkAddonsConfig")
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
@@ -267,7 +272,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 	// Read OpenShift network operator configuration (if exists)
 	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
 	if err != nil {
-		log.Printf("failed to load OpenShift NetworkConfig: %v", err)
+		logger.Error(err, "failed to load OpenShift NetworkConfig")
 		err = errors.Wrapf(err, "failed to load OpenShift NetworkConfig")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToGetOpenShiftNetworkConfig", err.Error())
 		return reconcile.Result{}, err
@@ -275,7 +280,7 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 
 	// Validate the configuration
 	if err := network.Validate(&networkAddonsConfig.Spec, openshiftNetworkConfig); err != nil {
-		log.Printf("failed to validate NetworkConfig.Spec: %v", err)
+		logger.Error(err, "failed to validate NetworkConfig.Spec")
 		err = errors.Wrapf(err, "failed to validate NetworkConfig.Spec")
 		r.statusManager.SetFailing(statusmanager.OperatorConfig, "FailedToValidate", err.Error())
 		return reconcile.Result{}, err
@@ -357,7 +362,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 	// Generate the objects
 	objs, err := network.Render(&networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
-		log.Printf("failed to render: %v", err)
+		r.logger.Error(err, "failed to render")
 		err = errors.Wrapf(err, "failed to render")
 		return objs, err
 	}
@@ -365,14 +370,14 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 	// Perform any special object changes that are impossible to do with regular Apply. e.g. Remove outdated objects
 	// and objects that cannot be modified by Apply method due to incompatible changes.
 	if err := network.SpecialCleanUp(&networkAddonsConfig.Spec, r.client, r.clusterInfo); err != nil {
-		log.Printf("failed to Clean Up outdated objects: %v", err)
+		r.logger.Error(err, "failed to clean up outdated objects")
 		return objs, err
 	}
 
 	// The first object we create should be the record of our applied configuration
 	applied, err := appliedConfiguration(networkAddonsConfig, r.namespace)
 	if err != nil {
-		log.Printf("failed to render applied: %v", err)
+		r.logger.Error(err, "failed to render applied")
 		err = errors.Wrapf(err, "failed to render applied")
 		return objs, err
 	}
@@ -380,7 +385,7 @@ func (r *ReconcileNetworkAddonsConfig) renderObjectsV1(networkAddonsConfig *cnao
 
 	err = updateObjectsLabels(networkAddonsConfig.GetLabels(), objs)
 	if err != nil {
-		log.Printf("failed to update objects labels: %v", err)
+		r.logger.Error(err, "failed to update objects labels")
 		err = errors.Wrapf(err, "failed to update objects labels")
 		return objs, err
 	}
@@ -393,14 +398,14 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 	// Retrieve the previously applied operator configuration
 	prev, err := getAppliedConfiguration(context.TODO(), r.client, networkAddonsConfig.ObjectMeta.Name, r.namespace)
 	if err != nil {
-		log.Printf("failed to retrieve previously applied configuration: %v", err)
+		r.logger.Error(err, "failed to retrieve previously applied configuration")
 		err = errors.Wrapf(err, "failed to retrieve previously applied configuration")
 		return nil, err
 	}
 
 	// Fill all defaults explicitly
 	if err := network.FillDefaults(&networkAddonsConfig.Spec, prev); err != nil {
-		log.Printf("failed to fill defaults: %v", err)
+		r.logger.Error(err, "failed to fill defaults")
 		err = errors.Wrapf(err, "failed to fill defaults")
 		return nil, err
 	}
@@ -412,7 +417,7 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 		// upconversion scheme -- if we add additional fields to the config.
 		err = network.IsChangeSafe(prev, &networkAddonsConfig.Spec)
 		if err != nil {
-			log.Printf("not applying unsafe change: %v", err)
+			r.logger.Error(err, "not applying unsafe change")
 			err = errors.Wrapf(err, "not applying unsafe change")
 			return nil, err
 		}
@@ -425,7 +430,7 @@ func (r *ReconcileNetworkAddonsConfig) getPreviousConfigSpec(networkAddonsConfig
 func (r *ReconcileNetworkAddonsConfig) renderObjectsToDelete(networkAddonsConfig *cnao.NetworkAddonsConfig, openshiftNetworkConfig *osv1.Network, prev *cnao.NetworkAddonsConfigSpec) ([]*unstructured.Unstructured, error) {
 	objsToRemove, err := network.RenderObjsToRemove(r.scheme, prev, &networkAddonsConfig.Spec, ManifestPath, openshiftNetworkConfig, r.clusterInfo)
 	if err != nil {
-		log.Printf("failed to render for removal: %v", err)
+		r.logger.Error(err, "failed to render for removal")
 		err = errors.Wrapf(err, "failed to render for removal")
 		return objsToRemove, err
 	}
@@ -445,7 +450,7 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 		_, isRejectingOwner := obj.GetAnnotations()[names.RejectOwnerAnnotation]
 		if !isCRD && !isOperatorNamespace(obj) && !isRejectingOwner {
 			if err := controllerutil.SetControllerReference(networkAddonsConfig, obj, r.scheme); err != nil {
-				log.Printf("could not set reference for (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+				r.logger.Error(err, "could not set reference", "kind", obj.GroupVersionKind(), "namespace", obj.GetNamespace(), "name", obj.GetName())
 				err = errors.Wrapf(err, "could not set reference for (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 				return err
 			}
@@ -453,7 +458,7 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 
 		// Apply all objects on apiserver
 		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
-			log.Printf("could not apply (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+			r.logger.Error(err, "could not apply object", "kind", obj.GroupVersionKind(), "namespace", obj.GetNamespace(), "name", obj.GetName())
 			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 			return err
 		}
@@ -466,7 +471,7 @@ func (r *ReconcileNetworkAddonsConfig) applyObjects(networkAddonsConfig metav1.O
 func (r *ReconcileNetworkAddonsConfig) deleteOwnedObjects(objs []*unstructured.Unstructured) error {
 	for _, obj := range objs {
 		if err := apply.DeleteOwnedObject(context.TODO(), r.client, obj); err != nil {
-			log.Printf("could not delete (%s) %s/%s: %v", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+			r.logger.Error(err, "could not delete object", "kind", obj.GroupVersionKind(), "namespace", obj.GetNamespace(), "name", obj.GetName())
 			err = errors.Wrapf(err, "could not delete (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 			return err
 		}
@@ -489,7 +494,7 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 
 			daemonSet, err := unstructuredToDaemonSet(obj)
 			if err != nil {
-				log.Printf("Failed to detect images used in DaemonSet %q: %v", obj.GetName(), err)
+				r.logger.Error(err, "Failed to detect images used in DaemonSet", "name", obj.GetName())
 				continue
 			}
 
@@ -500,7 +505,7 @@ func (r *ReconcileNetworkAddonsConfig) trackDeployedObjects(objs []*unstructured
 
 			deployment, err := unstructuredToDeployment(obj)
 			if err != nil {
-				log.Printf("Failed to detect images used in Deployment %q: %v", obj.GetName(), err)
+				r.logger.Error(err, "Failed to detect images used in Deployment", "name", obj.GetName())
 				continue
 			}
 
@@ -578,7 +583,7 @@ func updateObjectTemplateLabels(obj *unstructured.Unstructured, labels map[strin
 			if value, exist := labels[key]; exist == true {
 				err := unstructured.SetNestedField(obj.Object, value, "spec", "template", "metadata", "labels", key)
 				if err != nil {
-					log.Printf("failed to add relationship label %s: %v", key, err)
+					setupLog.Error(err, "failed to add relationship label", "key", key)
 					err = errors.Wrapf(err, "failed to add relationship labels")
 					return err
 				}
@@ -610,10 +615,10 @@ func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.N
 	err := c.Get(ctx, types.NamespacedName{Namespace: "", Name: osnetnames.OPERATOR_CONFIG}, nc)
 	if err != nil {
 		if apierrors.IsNotFound(err) || strings.Contains(err.Error(), "no matches for kind") {
-			log.Printf("OpenShift cluster network configuration resource has not been found: %v", err)
+			setupLog.V(1).Info("OpenShift cluster network configuration resource has not been found", "error", err)
 			return nil, nil
 		}
-		log.Printf("failed to obtain OpenShift cluster network configuration with unexpected error: %v", err)
+		setupLog.Error(err, "failed to obtain OpenShift cluster network configuration with unexpected error")
 		return nil, err
 	}
 
@@ -646,7 +651,7 @@ func IsMonitoringAvailable(c kubernetes.Interface) (bool, error) {
 		return true, nil
 	}
 
-	log.Printf("will not deploy monitoring manifests: not all monitoring resources are available: %s: %v, %s, %v", monitoringv1.PrometheusRuleKind, prometheusRuleResourceAvailable, monitoringv1.ServiceMonitorsKind, serviceMonitorResourceAvailable)
+	setupLog.Info("will not deploy monitoring manifests: not all monitoring resources are available", monitoringv1.PrometheusRuleKind, prometheusRuleResourceAvailable, monitoringv1.ServiceMonitorsKind, serviceMonitorResourceAvailable)
 	return false, nil
 }
 

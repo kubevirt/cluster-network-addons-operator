@@ -2,8 +2,6 @@ package network
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -66,13 +64,12 @@ func cleanUpMultusOldName(ctx context.Context, client k8sclient.Client) []error 
 	}
 
 	// if we found the object
-	objDesc := fmt.Sprintf("(%s) %s/%s", gvk.String(), namespace, name)
-	log.Printf("Cleaning up %s Object", objDesc)
+	renderLog.Info("cleaning up object", "kind", gvk.String(), "namespace", namespace, "name", name)
 
 	// Delete the object
 	err = client.Delete(ctx, existing)
 	if err != nil {
-		log.Printf("Failed Cleaning up %s Object", objDesc)
+		renderLog.Error(err, "failed cleaning up object", "kind", gvk.String(), "namespace", namespace, "name", name)
 		return []error{err}
 	}
 

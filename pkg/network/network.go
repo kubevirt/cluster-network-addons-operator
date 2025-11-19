@@ -3,7 +3,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -22,11 +21,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
+
+var renderLog = logf.Log.WithName("render")
 
 // Canonicalize converts configuration to a canonical form.
 func Canonicalize(conf *cnao.NetworkAddonsConfigSpec) {
@@ -183,7 +185,7 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	}
 	objs = append(objs, o...)
 
-	log.Printf("render phase done, rendered %d objects", len(objs))
+	renderLog.Info("render phase done", "objectCount", len(objs))
 	return objs, nil
 }
 
@@ -296,7 +298,7 @@ func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsCo
 	}
 	objsToRemove = append(objsToRemove, oldIPAMControllerPasstObjects...)
 
-	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemove))
+	renderLog.Info("object removal render phase done", "objectsToRemove", len(objsToRemove))
 	return objsToRemove, nil
 }
 
