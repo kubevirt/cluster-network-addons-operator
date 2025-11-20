@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -191,6 +193,12 @@ func (componentOps *gitComponent) getUpdatedReleaseInfo() (string, string, error
 	}
 }
 
+// tagWithVersion holds a tag name and its parsed semantic version
+type tagWithVersion struct {
+	tagName string
+	version *semver.Version
+}
+
 // getLatestTaggedFromBranch get the latest updated tag and associated commit-sha under a given branch, using "tagged" Update policy
 // since some tags are represented by the tag sha and not the commit sha, we also need to convert it to commit sha.
 func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch, repoDir string) (string, string, error) {
@@ -200,14 +208,38 @@ func (componentOps *gitComponent) getLatestTaggedFromBranch(repo, owner, branch,
 		return "", "", errors.Wrap(err, "Failed to get release tag refs from github client API")
 	}
 
+	var tagsWithVersions []tagWithVersion
+	for _, tag := range tagRefs {
+		tagName := strings.Replace(tag.GetRef(), "refs/tags/", "", 1)
+
+		version, err := semver.NewVersion(tagName)
+		if err != nil {
+			logger.Printf("Skipping tag %s: not a valid semantic version", tagName)
+			continue
+		}
+
+		tagsWithVersions = append(tagsWithVersions, tagWithVersion{
+			tagName: tagName,
+			version: version,
+		})
+	}
+
+	if len(tagsWithVersions) == 0 {
+		return "", "", fmt.Errorf("no valid semantic version tags found in repository")
+	}
+
+	sort.Slice(tagsWithVersions, func(i, j int) bool {
+		return tagsWithVersions[i].version.GreaterThan(tagsWithVersions[j].version)
+	})
+
 	const (
 		maxPagePaginate = 10
 		pageSize        = 100
 	)
-	// look for the first tag that belongs to the chosen branch, going over from last tag
-	for i := len(tagRefs) - 1; i >= 0; i-- {
-		tag := tagRefs[i]
-		tagName := strings.Replace(tag.GetRef(), "refs/tags/", "", 1)
+
+	// look for the first tag that belongs to the chosen branch, going over from latest to oldest
+	for _, tagWithVer := range tagsWithVersions {
+		tagName := tagWithVer.tagName
 		commitShaOfTag, err := componentOps.getTagCommitSha(tagName)
 		if err != nil {
 			return "", "", errors.Wrap(err, "Failed to get commit-sha from tag name")
