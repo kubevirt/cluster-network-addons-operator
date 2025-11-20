@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
 
 	"github.com/go-logr/logr"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
@@ -59,13 +60,27 @@ func printVersion(logger logr.Logger) {
 	logger.Info("cluster-network-addons-operator version", "version", os.Getenv("OPERATOR_VERSION"))
 }
 
-func main() {
-	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
-	logger := logf.Log.WithName("manager")
+func setupLogger() logr.Logger {
+	logLevel := zapcore.InfoLevel
+	if level, err := strconv.Atoi(os.Getenv("CNAO_LOG_LEVEL")); err == nil {
+		logLevel = zapcore.Level(level)
+	}
 
-	// Add flags registered by imported packages (e.g. controller-runtime)
+	opts := zap.Options{
+		Development: false,
+		Level:       logLevel,
+	}
+	opts.BindFlags(flag.CommandLine)
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
+
+	logger := zap.New(zap.UseFlagOptions(&opts))
+	ctrl.SetLogger(logger)
+	return logger.WithName("manager")
+}
+
+func main() {
+	logger := setupLogger()
 
 	printVersion(logger)
 

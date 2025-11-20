@@ -279,6 +279,31 @@ spec:
         node-role.kubernetes.io/worker: ""
 ```
 
+## Operator Log Level Configuration
+
+The CNAO operator supports configurable log levels to help with debugging and reducing log verbosity in production environments.
+
+### Available Log Levels
+
+| Value | Level   | Description                          |
+|-------|---------|--------------------------------------|
+| `-1`  | Debug   | Most verbose, detailed debug info    |
+| `0`   | Info    | Default, general operational info    |
+| `1`   | Warn    | Warnings and errors only             |
+| `2`   | Error   | Least verbose, errors only           |
+
+### Configuration methods
+
+**Enable debug logging via shell:**
+
+```shell
+kubectl set env deployment/cluster-network-addons-operator -n cluster-network-addons CNAO_LOG_LEVEL=-1
+```
+
+**Change in release manifests:**
+
+Edit `manifests/cluster-network-addons/<version>/operator.yaml` and change the `CNAO_LOG_LEVEL` value.
+
 # Deployment
 
 First install the operator itself:

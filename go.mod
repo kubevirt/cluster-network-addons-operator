@@ -32,6 +32,7 @@ require (
 	github.com/rhobs/operator-observability-toolkit v0.0.29
 	github.com/spf13/pflag v1.0.7
 	github.com/thanhpk/randstr v1.0.4
+	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/tools v0.36.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -258,7 +259,6 @@ require (
 	go.opentelemetry.io/proto/otlp v1.7.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
