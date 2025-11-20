@@ -32,7 +32,7 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[0].mountPath '/tmp'
 				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot 'true'
 				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '1001'
-				yaml-utils::set_param ${f} spec.template.spec.securityContext.readOnlyRootFilesystem 'true'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem 'true'
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
 		esac
