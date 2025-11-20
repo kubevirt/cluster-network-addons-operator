@@ -185,7 +185,7 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	}
 	objs = append(objs, o...)
 
-	renderLog.Info("render phase done", "objectCount", len(objs))
+	renderLog.V(1).Info("render phase done", "objectCount", len(objs))
 	return objs, nil
 }
 
@@ -298,7 +298,7 @@ func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsCo
 	}
 	objsToRemove = append(objsToRemove, oldIPAMControllerPasstObjects...)
 
-	renderLog.Info("object removal render phase done", "objectsToRemove", len(objsToRemove))
+	renderLog.V(1).Info("object removal render phase done", "objectsToRemove", len(objsToRemove))
 	return objsToRemove, nil
 }
 
