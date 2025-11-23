@@ -3,7 +3,6 @@ package apply
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -13,7 +12,10 @@ import (
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+var applyLog = logf.Log.WithName("apply")
 
 // ApplyObject applies the desired object against the apiserver,
 // merging it with any existing objects if already present.
@@ -26,7 +28,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	gvk := obj.GroupVersionKind()
 	// used for logging and errors
 	objDesc := fmt.Sprintf("(%s) %s/%s", gvk.String(), namespace, name)
-	log.Printf("reconciling %s", objDesc)
+	applyLog.V(1).Info("reconciling", "kind", gvk.String(), "namespace", namespace, "name", name)
 
 	if err := IsObjectSupported(obj); err != nil {
 		return errors.Wrapf(err, "object %s unsupported", objDesc)
@@ -38,12 +40,12 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	err := client.Get(ctx, types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}, existing)
 
 	if err != nil && apierrors.IsNotFound(err) {
-		log.Printf("does not exist, creating %s", objDesc)
+		applyLog.Info("creating object", "kind", gvk.String(), "namespace", namespace, "name", name)
 		err := client.Create(ctx, obj)
 		if err != nil {
 			return errors.Wrapf(err, "could not create %s", objDesc)
 		}
-		log.Printf("successfully created %s", objDesc)
+		applyLog.Info("successfully created object", "kind", gvk.String(), "namespace", namespace, "name", name)
 		return nil
 	}
 	if err != nil {
@@ -51,7 +53,7 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 	}
 
 	if isTLSSecret(obj) {
-		log.Printf("Ignoring TLS secret %s at reconcile", obj.GetName())
+		applyLog.V(1).Info("ignoring TLS secret at reconcile", "name", obj.GetName())
 		return nil
 	}
 
@@ -69,19 +71,18 @@ func ApplyObject(ctx context.Context, client k8sclient.Client, obj *uns.Unstruct
 			// that possible, this exception should be dropped.
 			bridgeMarkerDaemonSetUpdateError := "DaemonSet.apps \"bridge-marker\" is invalid: spec.selector: Invalid value: v1.LabelSelector{MatchLabels:map[string]string{\"name\":\"bridge-marker\"}, MatchExpressions:[]v1.LabelSelectorRequirement(nil)}: field is immutable"
 			if strings.Contains(err.Error(), bridgeMarkerDaemonSetUpdateError) {
-				log.Print("update failed due to change in DaemonSet API group; removing original object and recreating")
+				applyLog.Info("update failed due to change in DaemonSet API group; removing original object and recreating")
 				if err := client.Delete(ctx, existing); err != nil {
 					return errors.Wrapf(err, "could not delete %s", objDesc)
 				}
 				if err := client.Create(ctx, obj); err != nil {
 					return errors.Wrapf(err, "could not create %s", objDesc)
 				}
-				log.Print("update of conflicting DaemonSet was successful")
+				applyLog.Info("update of conflicting DaemonSet was successful")
 			}
 
 			return errors.Wrapf(err, "could not update object %s", objDesc)
 		}
-		log.Print("update was successful")
 	}
 
 	return nil
@@ -116,7 +117,7 @@ func DeleteOwnedObject(ctx context.Context, client k8sclient.Client, obj *uns.Un
 	if !cnaoOwns(existing) {
 		return nil
 	}
-	log.Printf("Handling deletion of %s", objDesc)
+	applyLog.Info("handling deletion", "kind", gvk.String(), "namespace", namespace, "name", name)
 	if err := client.Delete(ctx, existing); err != nil {
 		return errors.Wrapf(err, "failed deleting owned %s", objDesc)
 	}

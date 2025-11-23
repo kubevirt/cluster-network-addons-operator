@@ -2,8 +2,6 @@ package network
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -135,12 +133,11 @@ func cleanUpKubevirtIpamControllerOldNames(ctx context.Context, client k8sclient
 			continue
 		}
 
-		objDesc := fmt.Sprintf("(%s) %s/%s", resource.gvk.String(), namespace, resource.name)
-		log.Printf("Cleaning up %s Object", objDesc)
+		renderLog.Info("cleaning up object", "kind", resource.gvk.String(), "namespace", namespace, "name", resource.name)
 
 		err = client.Delete(ctx, existing)
 		if err != nil {
-			log.Printf("Failed Cleaning up %s Object", objDesc)
+			renderLog.Error(err, "failed cleaning up object", "kind", resource.gvk.String(), "namespace", namespace, "name", resource.name)
 			errors = append(errors, err)
 		}
 	}

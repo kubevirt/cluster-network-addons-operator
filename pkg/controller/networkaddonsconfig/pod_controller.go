@@ -2,15 +2,17 @@ package networkaddonsconfig
 
 import (
 	"context"
-	"log"
 
 	"k8s.io/apimachinery/pkg/types"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller/statusmanager"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 )
+
+var podLog = logf.Log.WithName("pod_controller")
 
 // newPodReconciler returns a new reconcile.Reconciler
 func newPodReconciler(statusManager *statusmanager.StatusManager, mgr manager.Manager) *ReconcilePods {
@@ -39,7 +41,7 @@ func (r *ReconcilePods) SetResources(resources []types.NamespacedName) {
 func (r *ReconcilePods) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	for _, name := range r.resources {
 		if name.Namespace == request.Namespace && name.Name == request.Name {
-			log.Printf("Reconciling update to %s/%s\n", request.Namespace, request.Name)
+			podLog.V(1).Info("reconciling update", "namespace", request.Namespace, "name", request.Name)
 			r.eventEmitter.EmitModifiedForConfig()
 			r.statusManager.SetFromPods()
 			return reconcile.Result{}, nil

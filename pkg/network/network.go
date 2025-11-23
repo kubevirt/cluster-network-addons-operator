@@ -3,7 +3,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -22,11 +21,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
+
+var renderLog = logf.Log.WithName("render")
 
 // Canonicalize converts configuration to a canonical form.
 func Canonicalize(conf *cnao.NetworkAddonsConfigSpec) {
@@ -113,7 +115,6 @@ func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 
 // Render creates a list of components to be created
 func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
-	log.Print("starting render phase")
 	objs := []*unstructured.Unstructured{}
 
 	// render Multus
@@ -184,13 +185,12 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	}
 	objs = append(objs, o...)
 
-	log.Printf("render phase done, rendered %d objects", len(objs))
+	renderLog.V(1).Info("render phase done", "objectCount", len(objs))
 	return objs, nil
 }
 
 // RenderObjsToRemove creates list of components to be removed
 func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
-	log.Print("starting rendering objects to delete phase")
 	objsToRemove := []*unstructured.Unstructured{}
 
 	if prev == nil {
@@ -298,7 +298,7 @@ func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsCo
 	}
 	objsToRemove = append(objsToRemove, oldIPAMControllerPasstObjects...)
 
-	log.Printf("object removal render phase done, rendered %d objects to remove", len(objsToRemove))
+	renderLog.V(1).Info("object removal render phase done", "objectsToRemove", len(objsToRemove))
 	return objsToRemove, nil
 }
 

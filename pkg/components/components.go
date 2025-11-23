@@ -307,6 +307,10 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 									Name:  "RUNBOOK_URL_TEMPLATE",
 									Value: alerts.GetRunbookURLTemplate(),
 								},
+								{
+									Name:  "CNAO_LOG_LEVEL",
+									Value: "0",
+								},
 							},
 							SecurityContext: &corev1.SecurityContext{
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,

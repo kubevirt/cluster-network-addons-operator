@@ -3,7 +3,6 @@ package statusmanager
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -16,12 +15,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
 	eventemitter "github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
 )
+
+var statusLog = logf.Log.WithName("statusmanager")
 
 const (
 	conditionsUpdateRetries  = 10
@@ -80,20 +82,19 @@ func (status *StatusManager) Set(reachedAvailableLevel bool, conditions ...condi
 	for i := 0; i < conditionsUpdateRetries; i++ {
 		err := status.set(reachedAvailableLevel, conditions...)
 		if err == nil {
-			log.Print("Successfully updated status conditions")
 			return
 		}
-		log.Printf("Failed calling status Set %d/%d: %v", i+1, conditionsUpdateRetries, err)
+		statusLog.Error(err, "failed calling status Set", "attempt", i+1, "maxRetries", conditionsUpdateRetries)
 		time.Sleep(conditionsUpdateCoolDown)
 	}
-	log.Print("Failed to update conditions within given number of retries")
+	statusLog.Error(nil, "failed to update conditions within given number of retries")
 }
 
 // set updates the NetworkAddonsConfig.Status with the provided conditions
 func (status *StatusManager) set(reachedAvailableLevel bool, conditions ...conditionsv1.Condition) error {
 	config, err := status.getCurrentNetworkAddonsConfig()
 	if err != nil {
-		log.Printf("Failed to get NetworkAddonsOperator %q in order to update its State: %v", status.name, err)
+		statusLog.Error(err, "failed to get NetworkAddonsOperator to update its State", "name", status.name)
 		return nil
 	}
 
@@ -210,7 +211,7 @@ func (status *StatusManager) getCurrentNetworkAddonsConfig() (*cnaov1.NetworkAdd
 func (status *StatusManager) IsStatusAvailable() bool {
 	config, err := status.getCurrentNetworkAddonsConfig()
 	if err != nil {
-		log.Printf("Failed to get NetworkAddonsOperator %q in order to assess availability: %v", status.name, err)
+		statusLog.Error(err, "failed to get NetworkAddonsOperator to assess availability", "name", status.name)
 		return false
 	}
 
