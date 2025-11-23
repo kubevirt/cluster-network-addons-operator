@@ -191,7 +191,7 @@ gen-manifests: manifest-templator
 		./hack/generate-manifests.sh
 
 gen-k8s: $(CONTROLLER_GEN) $(apis_sources)
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./pkg/...;./cmd/...;./test/...;./tools/..."
 	touch $@
 
 gen-k8s-check: $(apis_sources)
