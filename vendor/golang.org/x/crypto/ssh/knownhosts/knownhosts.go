@@ -421,26 +421,20 @@ func New(files ...string) (ssh.HostKeyCallback, error) {
 	return certChecker.CheckHostKey, nil
 }
 
-// Normalize normalizes an address into the form used in known_hosts. Supports
-// IPv4, hostnames, bracketed IPv6. Any other non-standard formats are returned
-// with minimal transformation.
+// Normalize normalizes an address into the form used in known_hosts
 func Normalize(address string) string {
-	const defaultSSHPort = "22"
-
 	host, port, err := net.SplitHostPort(address)
 	if err != nil {
 		host = address
-		port = defaultSSHPort
+		port = "22"
 	}
-
-	if strings.HasPrefix(host, "[") && strings.HasSuffix(host, "]") {
-		host = host[1 : len(host)-1]
+	entry := host
+	if port != "22" {
+		entry = "[" + entry + "]:" + port
+	} else if strings.Contains(host, ":") && !strings.HasPrefix(host, "[") {
+		entry = "[" + entry + "]"
 	}
-
-	if port == defaultSSHPort {
-		return host
-	}
-	return "[" + host + "]:" + port
+	return entry
 }
 
 // Line returns a line to add append to the known_hosts files.
