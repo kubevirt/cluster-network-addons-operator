@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/kubevirt/monitoring/pkg/metrics/parser"
+	dto "github.com/prometheus/client_model/go"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules"
@@ -33,6 +34,17 @@ import (
 // https://sdk.operatorframework.io/docs/best-practices/observability-best-practices/#metrics-guidelines
 // should be ignored.
 var excludedMetrics = map[string]bool{}
+
+type RecordingRule struct {
+	Record string `json:"record,omitempty"`
+	Expr   string `json:"expr,omitempty"`
+	Type   string `json:"type,omitempty"`
+}
+
+type Output struct {
+	MetricFamilies []*dto.MetricFamily `json:"metricFamilies,omitempty"`
+	RecordingRules []RecordingRule     `json:"recordingRules,omitempty"`
+}
 
 func main() {
 	err := metrics.SetupMetrics()
@@ -45,32 +57,53 @@ func main() {
 		panic(err)
 	}
 
-	var metricFamilies []parser.Metric
+	var metricFamilies []*dto.MetricFamily
 	for _, m := range metrics.ListMetrics() {
 		if excludedMetrics[m.GetOpts().Name] {
 			continue
 		}
 
-		metricFamilies = append(metricFamilies, parser.Metric{
+		pm := parser.Metric{
 			Name: m.GetOpts().Name,
 			Help: m.GetOpts().Help,
-			Type: strings.ToUpper(string(m.GetType())),
-		})
+			Type: strings.ToUpper(string(m.GetBaseType())),
+		}
+		metricFamilies = append(metricFamilies, parser.CreateMetricFamily(pm))
 	}
 
-	for _, m := range rules.ListRecordingRules() {
-		if excludedMetrics[m.GetOpts().Name] {
+	recNames := map[string]struct{}{}
+	var recRules []RecordingRule
+	for _, r := range rules.ListRecordingRules() {
+		name := r.GetOpts().Name
+		if excludedMetrics[name] {
 			continue
 		}
 
-		metricFamilies = append(metricFamilies, parser.Metric{
-			Name: m.GetOpts().Name,
-			Help: m.GetOpts().Help,
-			Type: strings.ToUpper(string(m.GetType())),
+		recNames[name] = struct{}{}
+		recRules = append(recRules, RecordingRule{
+			Record: name,
+			Expr:   r.Expr.String(),
+			Type:   strings.ToUpper(string(r.GetType())),
 		})
 	}
 
-	jsonBytes, err := json.Marshal(metricFamilies)
+	// Filter out metric families that are also recording rules
+	var filteredFamilies []*dto.MetricFamily
+	for _, mf := range metricFamilies {
+		if mf == nil || mf.Name == nil {
+			continue
+		}
+		if _, isRec := recNames[*mf.Name]; isRec {
+			continue
+		}
+		filteredFamilies = append(filteredFamilies, mf)
+	}
+
+	out := Output{
+		MetricFamilies: filteredFamilies,
+		RecordingRules: recRules,
+	}
+	jsonBytes, err := json.Marshal(out)
 	if err != nil {
 		panic(err)
 	}
