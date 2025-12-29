@@ -7,6 +7,20 @@ bump() {
     local version="$1"
     local bump_type="$2"
 
+    # If version is a pre-release (RC), strip it and decide what to do
+    if [[ $version =~ -rc-[0-9]+$ ]]; then
+        local base_version=$(echo $version | sed 's/-rc-[0-9]\+$//')
+
+        # Patch bump always removes the RC
+        if [[ $bump_type == "patch" ]]; then
+            echo $base_version
+            return
+        fi
+
+        # Minor/Major bumps: strip RC, then apply the bump
+        version=$base_version
+    fi
+
     case $bump_type in
         major)
             local major=$(echo $version | sed 's/^\([0-9]\+\)\..*$/\1/')
