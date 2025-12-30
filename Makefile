@@ -220,11 +220,11 @@ release-notes:
 	hack/render-release-notes.sh $(WHAT)
 
 release: $(GO)
-	GITHUB_RELEASE=$(GITHUB_RELEASE) \
-	TAG=v$(shell hack/version.sh) \
-	  hack/release.sh \
-	    manifests/cluster-network-addons/cluster-network-addons.package.yaml \
-	    $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
+	export GITHUB_RELEASE="$(GITHUB_RELEASE)"; \
+	export TAG=v$(shell hack/version.sh); \
+	hack/release.sh \
+	  manifests/cluster-network-addons/cluster-network-addons.package.yaml \
+	  $(shell find manifests/cluster-network-addons/$(shell hack/version.sh) -type f)
 
 vendor: $(GO)
 	$(GO) mod tidy -compat=$(GO_VERSION)
