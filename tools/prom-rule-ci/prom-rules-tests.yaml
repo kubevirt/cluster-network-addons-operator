@@ -76,7 +76,7 @@ tests:
         alertname: NetworkAddonsConfigNotReady
         exp_alerts:
 
-# KubeMacPoolDuplicateMacsFound positive tests
+# KubeMacPoolDuplicateMacsFound positive tests (deprecated alert)
   - interval: 1m
     input_series:
       - series: "kubevirt_kmp_duplicate_macs{namespace='ci'}"
@@ -88,10 +88,12 @@ tests:
         exp_alerts:
           - exp_annotations:
               summary: "Duplicate macs found."
+              description: "DEPRECATED: This alert is deprecated and will be removed in the next minor release. It monitors VM MAC addresses instead of running VMI MACs, which can produce false positives. A replacement alert monitoring running VMI MAC collisions will be provided by KubeMacPool."
               runbook_url: "https://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound"
             exp_labels:
-              severity: "warning"
-              operator_health_impact: "warning"
+              severity: "info"
+              operator_health_impact: "none"
+              deprecated: "true"
               kubernetes_operator_part_of: "kubevirt"
               kubernetes_operator_component: "cluster-network-addons-operator"
 

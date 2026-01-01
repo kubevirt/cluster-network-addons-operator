@@ -131,6 +131,8 @@ var _ = Context("Prometheus Alerts", func() {
 			})
 		})
 
+		// DEPRECATED: This test validates a deprecated alert that will be removed in the next minor release.
+		// The KubeMacPoolDuplicateMacsFound alert monitors VM MACs instead of running VMI MACs.
 		Context("and there are duplicate MACs", func() {
 			var err error
 
@@ -165,7 +167,7 @@ var _ = Context("Prometheus Alerts", func() {
 				restartKubemacpoolPods()
 			})
 
-			It("should issue KubeMacPoolDuplicateMacsFound alert", func() {
+			PIt("[DEPRECATED] should issue KubeMacPoolDuplicateMacsFound alert", func() {
 				By("waiting for the amount of time it takes the alert to fire")
 				time.Sleep(5 * time.Minute)
 
