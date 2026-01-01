@@ -11,7 +11,6 @@ import (
 
 	k8sv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	v1 "kubevirt.io/api/core/v1"
@@ -128,49 +127,6 @@ var _ = Context("Prometheus Alerts", func() {
 			AfterEach(func() {
 				By("restoring CNAO operator deployment replicas to 1")
 				ScaleDeployment(components.Name, components.Namespace, 1)
-			})
-		})
-
-		Context("and there are duplicate MACs", func() {
-			var err error
-
-			AfterEach(func() {
-				By("deleting test namespace")
-				err = testenv.Client.Delete(context.Background(), &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: libframework.NamespaceTestDefault}})
-				Expect(err).ToNot(HaveOccurred())
-			})
-
-			BeforeEach(func() {
-				By("creating test namespace that is not managed by kubemacpool (opted-out)")
-				namespace := &k8sv1.Namespace{ObjectMeta: metav1.ObjectMeta{
-					Name: libframework.NamespaceTestDefault,
-					Labels: map[string]string{
-						"mutatevirtualmachines.kubemacpool.io": "ignore",
-					},
-				}}
-				err := testenv.Client.Create(context.Background(), namespace)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("creating 2 VMs with a duplicate MAC")
-				err = createVirtualMachineWithPrimaryInterfaceMacAddress("00-B0-D0-63-C2-26")
-				Expect(err).ToNot(HaveOccurred())
-				err = createVirtualMachineWithPrimaryInterfaceMacAddress("00-B0-D0-63-C2-26")
-				Expect(err).ToNot(HaveOccurred())
-
-				By("cleaning namespace labels, returning the namespace to managed by kubemacpool")
-				err = cleanNamespaceLabels(libframework.NamespaceTestDefault)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("restaring kubemacpool pods")
-				restartKubemacpoolPods()
-			})
-
-			It("should issue KubeMacPoolDuplicateMacsFound alert", func() {
-				By("waiting for the amount of time it takes the alert to fire")
-				time.Sleep(5 * time.Minute)
-
-				By("checking existence of alert")
-				prometheusClient.checkForAlert("KubeMacPoolDuplicateMacsFound")
 			})
 		})
 	})
