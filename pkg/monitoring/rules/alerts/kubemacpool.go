@@ -13,11 +13,13 @@ var kubemacpoolAlerts = []promv1.Rule{
 		Expr:  intstr.FromString("kubevirt_cnao_kubemacpool_duplicate_macs != 0"),
 		For:   ptr.To(promv1.Duration("5m")),
 		Annotations: map[string]string{
-			"summary": "Duplicate macs found.",
+			"summary":     "Duplicate macs found.",
+			"description": "DEPRECATED: This alert is deprecated and will be removed in the next minor release. It monitors VM MAC addresses instead of running VMI MACs, which can produce false positives. A replacement alert monitoring running VMI MAC collisions will be provided by KubeMacPool.",
 		},
 		Labels: map[string]string{
-			severityAlertLabelKey:        "warning",
-			operatorHealthImpactLabelKey: "warning",
+			severityAlertLabelKey:        "info",
+			operatorHealthImpactLabelKey: "none",
+			"deprecated":                 "true",
 		},
 	},
 	{
