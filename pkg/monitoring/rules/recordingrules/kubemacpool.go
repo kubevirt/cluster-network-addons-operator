@@ -29,7 +29,7 @@ func kubemacpoolRecordingRules(namespace string) []operatorrules.RecordingRule {
 		{
 			MetricsOpts: operatormetrics.MetricOpts{
 				Name: "kubevirt_cnao_kubemacpool_duplicate_macs",
-				Help: "Total count of duplicate KubeMacPool MAC addresses",
+				Help: "[DEPRECATED] Total count of duplicate KubeMacPool MAC addresses. This recording rule monitors VM MACs instead of running VMI MACs and will be removed in the next minor release. Use KubeMacPool's native VMI collision detection instead",
 			},
 			MetricType: operatormetrics.GaugeType,
 			Expr:       intstr.FromString(fmt.Sprintf("sum(kubevirt_kmp_duplicate_macs{namespace='%s'} or vector(0))", namespace)),

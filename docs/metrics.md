@@ -10,7 +10,7 @@ KubeMacpool is deployed by CNAO CR. Type: Gauge.
 CNAO CR Ready. Type: Gauge.
 
 ### kubevirt_cnao_kubemacpool_duplicate_macs
-Total count of duplicate KubeMacPool MAC addresses. Type: Gauge.
+[DEPRECATED] Total count of duplicate KubeMacPool MAC addresses. This recording rule monitors VM MACs instead of running VMI MACs and will be removed in the next minor release. Use KubeMacPool's native VMI collision detection instead. Type: Gauge.
 
 ### kubevirt_cnao_kubemacpool_manager_up
 Total count of running KubeMacPool manager pods. Type: Gauge.

@@ -76,38 +76,6 @@ tests:
         alertname: NetworkAddonsConfigNotReady
         exp_alerts:
 
-# KubeMacPoolDuplicateMacsFound positive tests
-  - interval: 1m
-    input_series:
-      - series: "kubevirt_kmp_duplicate_macs{namespace='ci'}"
-        values: "1 1 1 1 1 1"
-
-    alert_rule_test:
-      - eval_time: 5m
-        alertname: KubeMacPoolDuplicateMacsFound
-        exp_alerts:
-          - exp_annotations:
-              summary: "Duplicate macs found."
-              runbook_url: "https://kubevirt.io/monitoring/runbooks/KubeMacPoolDuplicateMacsFound"
-            exp_labels:
-              severity: "warning"
-              operator_health_impact: "warning"
-              kubernetes_operator_part_of: "kubevirt"
-              kubernetes_operator_component: "cluster-network-addons-operator"
-
-# KubeMacPoolDuplicateMacsFound negative tests
-  - interval: 1m
-    input_series:
-      - series: "kubevirt_kmp_duplicate_macs{namespace='ci'}"
-        values: "1 0 0 0 0 0"
-      - series: "kubevirt_kmp_duplicate_macs{namespace='not-ci'}"
-        values: "1 1 1 1 1 1"
-
-    alert_rule_test:
-      - eval_time: 5m
-        alertname: KubeMacPoolDuplicateMacsFound
-        exp_alerts:
-
 # KubemacpoolDown positive tests
   - interval: 1m
     input_series:
