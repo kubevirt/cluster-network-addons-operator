@@ -16,6 +16,7 @@ podman manifest create "${OPERATOR_IMAGE_TAGGED}"
 
 for platform in "${PLATFORM_LIST[@]}"; do
     podman build \
+        --network=host \
         --build-arg BUILD_ARCH="$ARCH" \
         --platform "$platform" \
         --manifest "${OPERATOR_IMAGE_TAGGED}" \
