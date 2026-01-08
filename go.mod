@@ -1,8 +1,6 @@
 module github.com/kubevirt/cluster-network-addons-operator
 
-go 1.24.3
-
-toolchain go1.24.10
+go 1.24.11
 
 tool (
 	github.com/github-release/github-release
