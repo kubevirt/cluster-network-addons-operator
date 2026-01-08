@@ -46,7 +46,23 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          ports:
+            - name: healthport
+              containerPort: 8081
+              protocol: TCP
           terminationMessagePolicy: FallbackToLogsOnError
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: healthport
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthport
+            initialDelaySeconds: 10
+            periodSeconds: 20
           volumeMounts:
             - name: tmp
               mountPath: /tmp
