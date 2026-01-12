@@ -80,7 +80,7 @@ allowPrivilegedContainer: false
 readOnlyRootFilesystem: true
 allowHostIPC: false
 allowHostPID: false
-allowHostPorts: false
+allowHostPorts: true
 runAsUser:
   type: MustRunAsNonRoot
 seLinuxContext:
