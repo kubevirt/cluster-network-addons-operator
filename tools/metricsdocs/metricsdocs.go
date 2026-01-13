@@ -10,31 +10,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 )
 
-const tpl = `# Cluster Network Addons Operator Metrics
-
-{{- range . }}
-
-{{ $deprecatedVersion := "" -}}
-{{- with index .ExtraFields "DeprecatedVersion" -}}
-    {{- $deprecatedVersion = printf " in %s" . -}}
-{{- end -}}
-
-{{- $stabilityLevel := "" -}}
-{{- if and (.ExtraFields.StabilityLevel) (ne .ExtraFields.StabilityLevel "STABLE") -}}
-	{{- $stabilityLevel = printf "[%s%s] " .ExtraFields.StabilityLevel $deprecatedVersion -}}
-{{- end -}}
-
-### {{ .Name }}
-{{ print $stabilityLevel }}{{ .Help }}. Type: {{ .Type -}}.
-
-{{- end }}
-
-## Developing new metrics
-
-All metrics documented here are auto-generated and reflect exactly what is being
-exposed. After developing new metrics or changing old ones please regenerate
-this document.
-`
+const title = `Cluster Network Addons Operator Metrics`
 
 func main() {
 	if err := metrics.SetupMetrics(); err != nil {
@@ -45,6 +21,6 @@ func main() {
 		panic(err)
 	}
 
-	docsString := docs.BuildMetricsDocsWithCustomTemplate(metrics.ListMetrics(), rules.ListRecordingRules(), tpl)
+	docsString := docs.BuildMetricsDocs(title, metrics.ListMetrics(), rules.ListRecordingRules())
 	fmt.Print(docsString)
 }
