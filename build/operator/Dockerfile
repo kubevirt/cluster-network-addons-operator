@@ -24,15 +24,18 @@ ENV ENTRYPOINT=/entrypoint \
     MANIFEST_TEMPLATOR=/manifest-templator \
     CSV_TEMPLATE=/cluster-network-addons-operator.VERSION.clusterserviceversion.yaml.in \
     USER_UID=1001 \
-    USER_NAME=cluster-network-addons-operator
+    USER_NAME=cluster-network-addons-operator \
+    HOME=/home/${USER_NAME}
+
 RUN \
     yum -y update && \
-    yum clean all
+    yum clean all && \
+    mkdir -p ${HOME} && \
+    chown ${USER_UID}:0 ${HOME} && \
+    chmod ug+rwx ${HOME}
 
-COPY build/operator/bin/user_setup /user_setup
 COPY build/operator/bin/csv-generator /usr/bin/csv-generator
 COPY templates/cluster-network-addons/VERSION/cluster-network-addons-operator.VERSION.clusterserviceversion.yaml.in cluster-network-addons-operator.VERSION.clusterserviceversion.yaml.in
-RUN /user_setup
 COPY data /data
 
 COPY --from=builder /go/src/cluster-network-addons-operator/build/_output/bin/manager $OPERATOR
