@@ -29,7 +29,7 @@ export KUBECONFIG=${KUBECONFIG:-$(cluster::kubeconfig)}
 
 function deploy_cluster {
   # Spin up Kubernetes cluster
-  export KUBEVIRT_MEMORY_SIZE=9216M
+  export KUBEVIRT_MEMORY_SIZE=10240M
   make cluster-down cluster-up
 }
 

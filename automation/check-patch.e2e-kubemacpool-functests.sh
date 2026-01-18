@@ -12,7 +12,7 @@
 
 teardown() {
     # Copy kubemacpool failure logs to CNAO artifacts before cleanup
-    cp ${TMP_COMPONENT_PATH}/tests/_out/*.log $ARTIFACTS || true
+    cp -r ${TMP_COMPONENT_PATH}/tests/_out/* $ARTIFACTS || true
     rm -rf "${TMP_COMPONENT_PATH}"
     cd ${TMP_PROJECT_PATH}
     make cluster-down
@@ -23,6 +23,7 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
+    export KUBEVIRT_NUM_NODES=${KUBEVIRT_NUM_NODES:-3}
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
     COMPONENT="kubemacpool" source automation/components-functests.setup.sh
