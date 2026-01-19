@@ -13,7 +13,7 @@
 # limitations under the License.
 
 export KUBEVIRT_FLANNEL=false
-export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.33'}
+export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.34'}
 export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2601261222-1094ed30}
 
 KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
