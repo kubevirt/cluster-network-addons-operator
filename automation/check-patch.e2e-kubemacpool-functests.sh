@@ -19,6 +19,7 @@ teardown() {
 }
 
 main() {
+    export KUBEVIRT_FLANNEL=false
     # Setup CNAO and artifacts temp directory
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
