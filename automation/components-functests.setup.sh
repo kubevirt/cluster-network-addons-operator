@@ -22,6 +22,7 @@ source hack/components/yaml-utils.sh
 source cluster/cluster.sh
 
 USE_KUBEVIRTCI=${USE_KUBEVIRTCI:-"true"}
+CNAO_DEPLOY_KUBEVIRT=${CNAO_DEPLOY_KUBEVIRT:-"false"}
 
 # Export .kubeconfig full path, so it will be possible
 # to use 'kubectl' directly from the component directory path
@@ -103,5 +104,9 @@ if [[ $USE_KUBEVIRTCI == true ]]; then
   deploy_cluster
   deploy_cnao
   patch_restricted_namespace
+  if [[ ${CNAO_DEPLOY_KUBEVIRT} == "true" ]]; then
+    echo "Deploying KubeVirt before applying CNAO CR (CNAO_DEPLOY_KUBEVIRT=true)"
+    ./hack/deploy-kubevirt.sh
+  fi
   deploy_cnao_cr
 fi

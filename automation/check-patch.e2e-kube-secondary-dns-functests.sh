@@ -25,14 +25,13 @@ main() {
 
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
+    export CNAO_DEPLOY_KUBEVIRT=true
     COMPONENT="kube-secondary-dns" source automation/components-functests.setup.sh
 
     trap teardown EXIT
 
     echo "Simulate network restrictions on CNAO namespace"
     ./hack/install-network-policy.sh
-
-    ./hack/deploy-kubevirt.sh
     cd ${TMP_COMPONENT_PATH}
     make create-nodeport
     echo "Run kube-secondary-dns functional tests"
