@@ -88,4 +88,17 @@ spec:
   - ports:
     - protocol: TCP
       port: 8443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-flannel-vxlan-egress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - ports:
+    - protocol: UDP
+      port: 8472
 EOF
