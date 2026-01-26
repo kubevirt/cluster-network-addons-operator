@@ -23,6 +23,7 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
+    export KUBEVIRT_NUM_NODES=3
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
     export CNAO_DEPLOY_KUBEVIRT=true
@@ -30,8 +31,15 @@ main() {
 
     trap teardown EXIT
 
+    echo "check cross-node connectivity before network-policy"
+    ./automation/check-pod-to-pod-ping.sh
+
     echo "Simulate network restrictions on CNAO namespace"
     ./hack/install-network-policy.sh
+
+    echo "check cross-node connectivity after network-policy"
+    ./automation/check-pod-to-pod-ping.sh
+
     cd ${TMP_COMPONENT_PATH}
     make create-nodeport
     echo "Run kube-secondary-dns functional tests"
