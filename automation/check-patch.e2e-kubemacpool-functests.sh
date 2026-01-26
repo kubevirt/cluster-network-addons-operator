@@ -25,15 +25,13 @@ main() {
 
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
+    export CNAO_DEPLOY_KUBEVIRT=true
     COMPONENT="kubemacpool" source automation/components-functests.setup.sh
 
     trap teardown EXIT
 
     echo "Simulate network restrictions on CNAO namespace"
     ./hack/install-network-policy.sh
-
-    echo "Deploy KubeVirt latest stable release"
-    ./hack/deploy-kubevirt.sh
 
     # Run KubeMacPool functional tests
     cd ${TMP_COMPONENT_PATH}
