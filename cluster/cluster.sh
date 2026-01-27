@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export KUBEVIRT_FLANNEL=false
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.34'}
 export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2601261222-1094ed30}
 
