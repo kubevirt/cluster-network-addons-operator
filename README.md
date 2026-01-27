@@ -381,7 +381,6 @@ make docker-build-registry
 make cluster-up
 
 # bridge up a local cluster with supported kubernetes provider
-export KUBEVIRT_PROVIDER=k8s-1.30
 make cluster-up
 
 # build images and push them to the local cluster
