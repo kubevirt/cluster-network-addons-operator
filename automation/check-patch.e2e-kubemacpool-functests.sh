@@ -38,7 +38,7 @@ main() {
     cd ${TMP_COMPONENT_PATH}
 
     export CLUSTER_ROOT_DIRECTORY=${TMP_PROJECT_PATH}
-    KUBECONFIG=${KUBECONFIG} make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor -test.outputdir=$ARTIFACTS --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml --ginkgo.label-filter=!vm-opt-in&&!mac-range-day2-update" functest
+    KUBECONFIG=${KUBECONFIG} make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor -test.outputdir=$ARTIFACTS --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml --ginkgo.label-filter=!vm-opt-in&&!vmi-opt-in&&!mac-range-day2-update" functest
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
