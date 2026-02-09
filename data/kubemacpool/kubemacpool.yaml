@@ -136,8 +136,8 @@ roleRef:
   name: kubemacpool-prometheus
 subjects:
 - kind: ServiceAccount
-  name: prometheus-k8s
-  namespace: monitoring
+  name: '{{ .MonitoringServiceAccount }}'
+  namespace: '{{ .MonitoringNamespace }}'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
