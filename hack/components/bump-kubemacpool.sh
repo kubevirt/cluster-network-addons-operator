@@ -175,7 +175,8 @@ rm kustomize.tar.gz
 (
     cd $KUBEMACPOOL_PATH
     ./kustomize build config/cnao | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/;s/'{{ .RunAsNonRoot }}'/{{ .RunAsNonRoot }}/g;s/'{{ .RunAsUser }}'/{{ .RunAsUser }}/g" \
-        | sed "s/  name: prometheus-k8s$/  name: '{{ .MonitoringServiceAccount }}'/;s/  namespace: monitoring$/  namespace: '{{ .MonitoringNamespace }}'/"
+        | sed "s/  name: prometheus-k8s$/  name: '{{ .MonitoringServiceAccount }}'/;s/  namespace: monitoring$/  namespace: '{{ .MonitoringNamespace }}'/" \
+        | sed 's/{{ \$value }}/{{ "{{" }} \$value {{ "}}" }}/g'
 ) > data/kubemacpool/kubemacpool.yaml
 
 echo 'Get kubemacpool image name and update it under CNAO'

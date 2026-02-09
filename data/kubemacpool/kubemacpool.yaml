@@ -455,7 +455,7 @@ spec:
     rules:
     - alert: KubemacpoolMACCollisionDetected
       annotations:
-        description: '{{ $value }} MAC address(es) have collisions. Multiple running
+        description: '{{ "{{" }} $value {{ "}}" }} MAC address(es) have collisions. Multiple running
           objects are using the same MAC address.'
         summary: MAC address collisions detected.
       expr: count(kmp_mac_collisions > 1) > 0
