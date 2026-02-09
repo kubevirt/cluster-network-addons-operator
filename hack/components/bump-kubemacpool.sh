@@ -22,6 +22,7 @@ echo 'Configure kustomize for CNAO templates and save the rendered manifest unde
 (
     cd ${KUBEMACPOOL_PATH}
     mkdir -p config/cnao
+    mkdir -p config/cnao-monitoring
 
     cat <<EOF > config/cnao/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -63,6 +64,14 @@ patches:
   target:
     version: v1
     kind: Deployment
+EOF
+
+    cat <<EOF > config/cnao-monitoring/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: "{{ .Namespace }}"
+bases:
+- ../monitoring
 EOF
 
     cat <<EOF > config/cnao/cnao_kubemacpool_manager_patch.yaml
@@ -176,6 +185,15 @@ rm kustomize.tar.gz
     cd $KUBEMACPOOL_PATH
     ./kustomize build config/cnao | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/;s/'{{ .RunAsNonRoot }}'/{{ .RunAsNonRoot }}/g;s/'{{ .RunAsUser }}'/{{ .RunAsUser }}/g"
 ) > data/kubemacpool/kubemacpool.yaml
+
+(
+    cd $KUBEMACPOOL_PATH
+    echo '{{ if .MonitoringAvailable }}'
+    ./kustomize build config/cnao-monitoring | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/;s/'{{ .RunAsNonRoot }}'/{{ .RunAsNonRoot }}/g;s/'{{ .RunAsUser }}'/{{ .RunAsUser }}/g" \
+        | sed "s/  name: prometheus-k8s$/  name: '{{ .MonitoringServiceAccount }}'/;s/  namespace: monitoring$/  namespace: '{{ .MonitoringNamespace }}'/" \
+        | sed 's/{{ \$value }}/{{ "{{" }} \$value {{ "}}" }}/g'
+    echo '{{ end }}'
+) > data/kubemacpool/kubemacpool-monitoring.yaml
 
 echo 'Get kubemacpool image name and update it under CNAO'
 KUBEMACPOOL_TAG=$(git-utils::get_component_tag ${KUBEMACPOOL_PATH})
