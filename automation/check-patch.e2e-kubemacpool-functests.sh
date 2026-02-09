@@ -24,6 +24,7 @@ main() {
     cd ${TMP_PROJECT_PATH}
 
     export KUBEVIRT_NUM_NODES=${KUBEVIRT_NUM_NODES:-3}
+    export MONITORING_NAMESPACE="monitoring"
     # Spin-up ephemeral cluster with latest CNAO
     # this script also exports KUBECONFIG, and fetch $COMPONENT repository
     export CNAO_DEPLOY_KUBEVIRT=true
