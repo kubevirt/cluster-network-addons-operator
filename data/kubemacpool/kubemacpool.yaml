@@ -10,6 +10,23 @@ metadata:
   namespace: '{{ .Namespace }}'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kubemacpool-prometheus
+  namespace: '{{ .Namespace }}'
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
@@ -109,6 +126,20 @@ rules:
   - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubemacpool-prometheus
+  namespace: '{{ .Namespace }}'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubemacpool-prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   creationTimestamp: null
@@ -133,6 +164,23 @@ metadata:
     controller-tools.k8s.io: "1.0"
   name: kubemacpool-mac-range-config
   namespace: '{{ .Namespace }}'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    prometheus.kubemacpool.io: "true"
+  name: kubemacpool-metrics-service
+  namespace: '{{ .Namespace }}'
+spec:
+  ports:
+  - name: metrics
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    control-plane: mac-controller-manager
 ---
 apiVersion: v1
 kind: Service
@@ -392,6 +440,48 @@ spec:
       - name: tls-key-pair
         secret:
           secretName: kubemacpool-service
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+    prometheus.kubemacpool.io: "true"
+  name: kubemacpool-prometheus-rule
+  namespace: '{{ .Namespace }}'
+spec:
+  groups:
+  - name: alerts.rules
+    rules:
+    - alert: KubemacpoolMACCollisionDetected
+      annotations:
+        description: '{{ $value }} MAC address(es) have collisions. Multiple running
+          objects are using the same MAC address.'
+        summary: MAC address collisions detected.
+      expr: count(kmp_mac_collisions > 1) > 0
+      for: 30s
+      labels:
+        operator_health_impact: warning
+        severity: warning
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: "true"
+    prometheus.kubemacpool.io: "true"
+  name: kubemacpool-metrics-monitor
+  namespace: '{{ .Namespace }}'
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  selector:
+    matchLabels:
+      control-plane: mac-controller-manager
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
