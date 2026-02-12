@@ -544,7 +544,7 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 		if !isOperatorNamespace(obj) {
 			// Label objects with version of the operator they were created by
 			labels[cnaov1.GroupVersion.Group+"/version"] = operatorVersionLabel
-			labels[names.PrometheusLabelKey] = names.PrometheusLabelValueTrue
+			labels[names.PrometheusLabelKey] = prometheusLabelValueWithOptOut(labels)
 			labels[names.ManagedByLabelKey] = names.ManagedByLabelDefaultValue
 
 			appLabelKeys := []string{names.ComponentLabelKey, names.PartOfLabelKey, names.VersionLabelKey}
@@ -563,6 +563,13 @@ func updateObjectsLabels(crLabels map[string]string, objs []*unstructured.Unstru
 	}
 
 	return nil
+}
+
+func prometheusLabelValueWithOptOut(labels map[string]string) string {
+	if labels[names.KubemacpoolControlPlaneKey] == names.KubemacpoolMacControllerManagerValue {
+		return names.PrometheusLabelValueFalse
+	}
+	return names.PrometheusLabelValueTrue
 }
 
 func updateLabelsFromCR(labels, crLabels map[string]string, appLabelKeys []string) map[string]string {
