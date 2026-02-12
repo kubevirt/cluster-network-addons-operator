@@ -163,7 +163,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 				cnaov1.GroupVersion.Group + "/version": k8s.StringToLabel(operatorVersion),
 			},
 			Labels: map[string]string{
-				names.PrometheusLabelKey: names.PrometheusLabelValue,
+				names.PrometheusLabelKey: names.PrometheusLabelValueTrue,
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -180,7 +180,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"name":                   Name,
-						names.PrometheusLabelKey: names.PrometheusLabelValue,
+						names.PrometheusLabelKey: names.PrometheusLabelValueTrue,
 						// opt-in to hco-bundle network-policy allowing egress to cluster services
 						"np.kubevirt.io/allow-access-cluster-services": "",
 						// opt-in to hco-bundle network-policy allowing ingress to the metrics endpoint

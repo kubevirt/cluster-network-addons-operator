@@ -14,7 +14,7 @@ const AppliedPrefix = "cluster-networks-addons-operator-applied-"
 const RejectOwnerAnnotation = "networkaddonsoperator.network.kubevirt.io/rejectOwner"
 
 const PrometheusLabelKey = "prometheus.cnao.io"
-const PrometheusLabelValue = "true"
+const PrometheusLabelValueTrue = "true"
 
 // Relationship labels
 
