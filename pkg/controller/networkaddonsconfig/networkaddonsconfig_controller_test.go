@@ -112,6 +112,38 @@ var _ = Describe("Networkaddonsconfig", func() {
 			checkObjectsRelationshipLabels(objs, expectedAppLabelKeys)
 		})
 	})
+
+	Context("When component opts out of CNAO monitoring label", func() {
+		var objs []*unstructured.Unstructured
+
+		BeforeEach(func() {
+			var err error
+			renderData := render.MakeRenderData()
+			objs, err = render.RenderTemplate(testDataFile, &renderData)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Simulate KubeMacPool mac-controller-manager object.
+			labels := objs[0].GetLabels()
+			if labels == nil {
+				labels = map[string]string{}
+			}
+			labels[names.KubemacpoolControlPlaneKey] = names.KubemacpoolMacControllerManagerValue
+			objs[0].SetLabels(labels)
+
+			err = updateObjectsLabels(map[string]string{}, objs)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should opt out KubeMacPool workload from CNAO scraping", func() {
+			labels := objs[0].GetLabels()
+			Expect(labels).To(HaveKeyWithValue(names.PrometheusLabelKey, names.PrometheusLabelValueFalse))
+
+			templateLabels, found, err := unstructured.NestedStringMap(objs[0].Object, "spec", "template", "metadata", "labels")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(found).To(BeTrue())
+			Expect(templateLabels).To(HaveKeyWithValue(names.PrometheusLabelKey, names.PrometheusLabelValueFalse))
+		})
+	})
 })
 
 func checkObjectsRelationshipLabels(objs []*unstructured.Unstructured, appLabelKeys []checkUnit) {
