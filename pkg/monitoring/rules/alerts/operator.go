@@ -13,7 +13,7 @@ func operatorAlerts(namespace string) []promv1.Rule {
 	return []promv1.Rule{
 		{
 			Alert: "CnaoDown",
-			Expr:  intstr.FromString("kubevirt_cnao_operator_up == 0"),
+			Expr:  intstr.FromString("cluster:kubevirt_cnao_operator_up:sum == 0"),
 			For:   ptr.To(promv1.Duration("5m")),
 			Annotations: map[string]string{
 				"summary": "CNAO pod is down.",

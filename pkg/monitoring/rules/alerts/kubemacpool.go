@@ -10,7 +10,7 @@ import (
 var kubemacpoolAlerts = []promv1.Rule{
 	{
 		Alert: "KubemacpoolDown",
-		Expr:  intstr.FromString("kubevirt_cnao_cr_kubemacpool_aggregated == 1 and kubevirt_cnao_kubemacpool_manager_up == 0"),
+		Expr:  intstr.FromString("cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum == 1 and cluster:kubevirt_cnao_kubemacpool_manager_up:sum == 0"),
 		For:   ptr.To(promv1.Duration("5m")),
 		Annotations: map[string]string{
 			"summary": "KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down.",
