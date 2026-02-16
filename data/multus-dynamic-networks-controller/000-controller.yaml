@@ -55,7 +55,7 @@ metadata:
 data:
   dynamic-networks-config.json: |
     {
-        "criSocketPath": "/host/run/crio/crio.sock",
+        "criSocketPath": "/host{{ .HostCRISocketPath }}",
         "multusSocketPath": "/host/run/multus/multus.sock"
     }
 ---
@@ -128,7 +128,7 @@ spec:
             - name: multus-server-socket
               mountPath: /host/run/multus/multus.sock
             - name: cri-socket
-              mountPath: /host/run/crio/crio.sock
+              mountPath: /host{{ .HostCRISocketPath }}
           terminationMessagePolicy: FallbackToLogsOnError
           imagePullPolicy: {{ .ImagePullPolicy }}
       terminationGracePeriodSeconds: 10
@@ -145,7 +145,7 @@ spec:
             type: Socket
         - name: cri-socket
           hostPath:
-            path: /run/crio/crio.sock
+            path: {{ .HostCRISocketPath }}
             type: Socket
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 ---
