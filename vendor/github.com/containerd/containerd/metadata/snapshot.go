@@ -24,15 +24,17 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/containerd/log"
+	bolt "go.etcd.io/bbolt"
+
+	eventstypes "github.com/containerd/containerd/api/events"
+	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/filters"
 	"github.com/containerd/containerd/labels"
 	"github.com/containerd/containerd/metadata/boltutil"
 	"github.com/containerd/containerd/mount"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/snapshots"
-	"github.com/containerd/errdefs"
-	"github.com/containerd/log"
-	bolt "go.etcd.io/bbolt"
 )
 
 const (
@@ -273,7 +275,22 @@ func (s *snapshotter) Mounts(ctx context.Context, key string) ([]mount.Mount, er
 }
 
 func (s *snapshotter) Prepare(ctx context.Context, key, parent string, opts ...snapshots.Opt) ([]mount.Mount, error) {
-	return s.createSnapshot(ctx, key, parent, false, opts)
+	mounts, err := s.createSnapshot(ctx, key, parent, false, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.db.dbopts.publisher != nil {
+		if err := s.db.dbopts.publisher.Publish(ctx, "/snapshot/prepare", &eventstypes.SnapshotPrepare{
+			Key:         key,
+			Parent:      parent,
+			Snapshotter: s.name,
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	return mounts, nil
 }
 
 func (s *snapshotter) View(ctx context.Context, key, parent string, opts ...snapshots.Opt) ([]mount.Mount, error) {
@@ -634,6 +651,16 @@ func (s *snapshotter) Commit(ctx context.Context, name, key string, opts ...snap
 		return err
 	}
 
+	if rerr == nil && s.db.dbopts.publisher != nil {
+		if err := s.db.dbopts.publisher.Publish(ctx, "/snapshot/commit", &eventstypes.SnapshotCommit{
+			Key:         key,
+			Name:        name,
+			Snapshotter: s.name,
+		}); err != nil {
+			return err
+		}
+	}
+
 	return rerr
 
 }
@@ -647,7 +674,7 @@ func (s *snapshotter) Remove(ctx context.Context, key string) error {
 		return err
 	}
 
-	return update(ctx, s.db, func(tx *bolt.Tx) error {
+	if err := update(ctx, s.db, func(tx *bolt.Tx) error {
 		var sbkt *bolt.Bucket
 		bkt := getSnapshotterBucket(tx, ns, s.name)
 		if bkt != nil {
@@ -690,7 +717,17 @@ func (s *snapshotter) Remove(ctx context.Context, key string) error {
 		s.db.dirtySS[s.name] = struct{}{}
 
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	if s.db.dbopts.publisher != nil {
+		return s.db.dbopts.publisher.Publish(ctx, "/snapshot/remove", &eventstypes.SnapshotRemove{
+			Key:         key,
+			Snapshotter: s.name,
+		})
+	}
+	return nil
 }
 
 type infoPair struct {
