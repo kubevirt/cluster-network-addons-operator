@@ -10,7 +10,7 @@ tests:
 # CnaoDown positive tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_operator_up"
+      - series: "cluster:kubevirt_cnao_operator_up:sum"
         values: "0 0 0 0 0 0"
 
     alert_rule_test:
@@ -28,11 +28,11 @@ tests:
 # CnaoDown negative tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_operator_up"
+      - series: "cluster:kubevirt_cnao_operator_up:sum"
         values: "1 1 1 0 1 1"
-      - series: "kubevirt_cnao_operator_up"
+      - series: "cluster:kubevirt_cnao_operator_up:sum"
         values: "1 1 1 1 1 1"
-      - series: "kubevirt_cnao_operator_up"
+      - series: "cluster:kubevirt_cnao_operator_up:sum"
         values: "0 0 0 0 0 1"
 
     alert_rule_test:
@@ -79,9 +79,9 @@ tests:
 # KubemacpoolDown positive tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_up"
+      - series: "cluster:kubevirt_cnao_kubemacpool_manager_up:sum"
         values: "0 0 0 0 0 0"
-      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
+      - series: "cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum"
         values: "1 1 1 1 1 1"
 
     alert_rule_test:
@@ -100,9 +100,9 @@ tests:
   # KubemacpoolDown negative tests
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_up"
+      - series: "cluster:kubevirt_cnao_kubemacpool_manager_up:sum"
         values: "0 0 0 0 1 0"
-      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
+      - series: "cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum"
         values: "1 1 1 1 1 1"
 
     alert_rule_test:
@@ -112,9 +112,9 @@ tests:
 
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_up"
+      - series: "cluster:kubevirt_cnao_kubemacpool_manager_up:sum"
         values: "0 0 0 0 0 0"
-      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
+      - series: "cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum"
         values: "1 1 1 1 0 1"
 
     alert_rule_test:
@@ -124,9 +124,9 @@ tests:
 
   - interval: 1m
     input_series:
-      - series: "kubevirt_cnao_kubemacpool_manager_up"
+      - series: "cluster:kubevirt_cnao_kubemacpool_manager_up:sum"
         values: "1 1 1 1 1 1"
-      - series: "kubevirt_cnao_cr_kubemacpool_aggregated"
+      - series: "cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum"
         values: "0 0 0 0 0 0"
 
     alert_rule_test:

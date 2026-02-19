@@ -13,7 +13,15 @@ func operatorRecordingRules(namespace string) []operatorrules.RecordingRule {
 		{
 			MetricsOpts: operatormetrics.MetricOpts{
 				Name: "kubevirt_cnao_operator_up",
-				Help: "Total count of running CNAO operators",
+				Help: "[Deprecated] Total count of running CNAO operators",
+			},
+			MetricType: operatormetrics.GaugeType,
+			Expr:       intstr.FromString(fmt.Sprintf("sum(up{namespace='%s', pod=~'cluster-network-addons-operator-.*'} or vector(0))", namespace)),
+		},
+		{
+			MetricsOpts: operatormetrics.MetricOpts{
+				Name: "cluster:kubevirt_cnao_operator_up:sum",
+				Help: "The number of CNAO pods that are up",
 			},
 			MetricType: operatormetrics.GaugeType,
 			Expr:       intstr.FromString(fmt.Sprintf("sum(up{namespace='%s', pod=~'cluster-network-addons-operator-.*'} or vector(0))", namespace)),
