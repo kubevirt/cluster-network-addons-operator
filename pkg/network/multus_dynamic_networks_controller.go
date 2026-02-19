@@ -15,6 +15,23 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 )
 
+func fillDefaultsMultusDynamicNetworks(conf, previous *cnao.NetworkAddonsConfigSpec) []error {
+	if conf.MultusDynamicNetworks == nil {
+		return []error{}
+	}
+
+	// If user hasn't explicitly set host cri socket path, set it to default value
+	if conf.MultusDynamicNetworks.HostCRISocketPath == "" {
+		conf.MultusDynamicNetworks.HostCRISocketPath = "/run/crio/crio.sock"
+	}
+
+	return []error{}
+}
+
+func changeSafeMultusDynamicNetworks(prev, next *cnao.NetworkAddonsConfigSpec) []error {
+	return []error{}
+}
+
 // renderMultusDynamicNetworks generates the manifests of multus-dynamic-networks-controller
 func renderMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.MultusDynamicNetworks == nil {
@@ -33,6 +50,7 @@ func renderMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec, manifestDir
 		data.Data["CniMountPath"] = cni.BinDir
 	}
 	data.Data["Placement"] = conf.PlacementConfiguration.Workloads
+	data.Data["HostCRISocketPath"] = conf.MultusDynamicNetworks.HostCRISocketPath
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "multus-dynamic-networks-controller"), &data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to render multus-dynamic-networks-controller state handler manifests")
