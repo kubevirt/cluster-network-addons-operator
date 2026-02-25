@@ -23,11 +23,33 @@ seLinuxContext:
   type: MustRunAs
   seLinuxOptions:
     type: spc_t
-users:
-- system:serviceaccount:{{ .Namespace }}:linux-bridge
 volumes:
   - hostPath
   - configMap
   - secret
   - emptyDir
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: linux-bridge-scc-use
+rules:
+- apiGroups: ["security.openshift.io"]
+  resources: ["securitycontextconstraints"]
+  resourceNames: ["linux-bridge"]
+  verbs: ["use"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: linux-bridge-scc-use
+  namespace: {{ .Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: linux-bridge-scc-use
+subjects:
+- kind: ServiceAccount
+  name: linux-bridge
+  namespace: {{ .Namespace }}
 {{ end }}
