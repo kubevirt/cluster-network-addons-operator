@@ -65,6 +65,7 @@ func FillDefaults(conf, previous *cnao.NetworkAddonsConfigSpec) error {
 	errs = append(errs, fillDefaultsSelfSignConfiguration(conf, previous)...)
 	errs = append(errs, fillDefaultsImagePullPolicy(conf, previous)...)
 	errs = append(errs, fillDefaultsKubeMacPool(conf, previous)...)
+	errs = append(errs, fillDefaultsMultusDynamicNetworks(conf, previous)...)
 	fillMacvtapDefaults(conf, previous)
 
 	if len(errs) > 0 {
