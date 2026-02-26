@@ -12,6 +12,7 @@ import (
 )
 
 const podsDeploymentTimeout = 20 * time.Minute
+const observedVersionUpdateTimeout = 2 * time.Minute
 
 var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
@@ -77,7 +78,7 @@ var _ = Context("Cluster Network Addons Operator", func() {
 				expectedOperatorVersion = newRelease.Version
 				expectedObservedVersion = newRelease.Version
 				expectedTargetVersion = newRelease.Version
-				CheckConfigVersions(newReleaseGvk, expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, CheckImmediately, CheckDoNotRepeat)
+				CheckConfigVersions(newReleaseGvk, expectedOperatorVersion, expectedObservedVersion, expectedTargetVersion, observedVersionUpdateTimeout, CheckDoNotRepeat)
 			})
 		})
 	}
