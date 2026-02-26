@@ -63,11 +63,11 @@ spec:
       annotations:
         description: '{{ "{{" }} $value {{ "}}" }} MAC address(es) have collisions. Multiple running
           objects are using the same MAC address.'
+        runbook_url: https://kubevirt.io/monitoring/runbooks/KubemacpoolMACCollisionDetected
         summary: MAC address collisions detected.
       expr: count(kmp_mac_collisions > 1) > 0
       for: 30s
       labels:
-        operator_health_impact: warning
         severity: warning
 ---
 apiVersion: monitoring.coreos.com/v1
