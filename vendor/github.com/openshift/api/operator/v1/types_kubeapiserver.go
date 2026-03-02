@@ -7,11 +7,15 @@ import (
 // +genclient
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:path=kubeapiservers,scope=Cluster,categories=coreoperators
+// +kubebuilder:subresource:status
+// +openshift:api-approved.openshift.io=https://github.com/openshift/api/pull/475
+// +openshift:file-pattern=cvoRunLevel=0000_20,operatorName=kube-apiserver,operatorOrdering=01
 
 // KubeAPIServer provides information to configure an operator to manage kube-apiserver.
 //
 // Compatibility level 1: Stable within a major release for a minimum of 12 months or 3 minor releases (whichever is longer).
-// +openshift:compatibility-gen:level=1
 // +openshift:compatibility-gen:level=1
 type KubeAPIServer struct {
 	metav1.TypeMeta `json:",inline"`
@@ -21,7 +25,6 @@ type KubeAPIServer struct {
 	metav1.ObjectMeta `json:"metadata"`
 
 	// spec is the specification of the desired behavior of the Kubernetes API Server
-	// +kubebuilder:validation:Required
 	// +required
 	Spec KubeAPIServerSpec `json:"spec"`
 
@@ -32,6 +35,21 @@ type KubeAPIServer struct {
 
 type KubeAPIServerSpec struct {
 	StaticPodOperatorSpec `json:",inline"`
+
+	// eventTTLMinutes specifies the amount of time that the events are stored before being deleted.
+	// The TTL is allowed between 5 minutes minimum up to a maximum of 180 minutes (3 hours).
+	//
+	// Lowering this value will reduce the storage required in etcd. Note that this setting will only apply
+	// to new events being created and will not update existing events.
+	//
+	// When omitted this means no opinion, and the platform is left to choose a reasonable default, which is subject to change over time.
+	// The current default value is 3h (180 minutes).
+	//
+	// +openshift:enable:FeatureGate=EventTTL
+	// +kubebuilder:validation:Minimum=5
+	// +kubebuilder:validation:Maximum=180
+	// +optional
+	EventTTLMinutes int32 `json:"eventTTLMinutes,omitempty"`
 }
 
 type KubeAPIServerStatus struct {
@@ -43,6 +61,7 @@ type KubeAPIServerStatus struct {
 	// The default expiration for the items is set by the platform and it defaults to 24h.
 	// see: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection
 	// +optional
+	// +listType=atomic
 	ServiceAccountIssuers []ServiceAccountIssuerStatus `json:"serviceAccountIssuers,omitempty"`
 }
 
@@ -73,6 +92,6 @@ type KubeAPIServerList struct {
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata"`
 
-	// Items contains the items
+	// items contains the items
 	Items []KubeAPIServer `json:"items"`
 }
