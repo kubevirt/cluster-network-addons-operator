@@ -70,5 +70,18 @@ func validateMultusDynamicNetworks(conf *cnao.NetworkAddonsConfigSpec, openshift
 	if conf.Multus == nil {
 		return []error{fmt.Errorf("the `multus` configuration is required")}
 	}
+
+	var allowedCRISocketPaths = map[string]struct{}{
+		"/run/crio/crio.sock":                 {},
+		"/run/containerd/containerd.sock":     {},
+		"/run/k3s/containerd/containerd.sock": {},
+	}
+
+	if conf.MultusDynamicNetworks.HostCRISocketPath != "" {
+		if _, ok := allowedCRISocketPaths[conf.MultusDynamicNetworks.HostCRISocketPath]; !ok {
+			return []error{fmt.Errorf("`hostCRISocketPath` must be one of: /run/crio/crio.sock, /run/containerd/containerd.sock, /run/k3s/containerd/containerd.sock")}
+		}
+	}
+
 	return nil
 }

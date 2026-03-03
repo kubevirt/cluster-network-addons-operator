@@ -64,14 +64,39 @@ var _ = Describe("Testing multus-dynamic-networks", func() {
 			})
 		})
 
-		When("`hostCRISocketPath` is configured", func() {
-			config := &cnao.NetworkAddonsConfigSpec{
-				Multus:                &cnao.Multus{},
-				MultusDynamicNetworks: &cnao.MultusDynamicNetworks{HostCRISocketPath: "/run/containerd/containerd.sock"},
-			}
-			It("is successfully validated", func() {
-				Expect(validateMultusDynamicNetworks(config, nil)).To(BeEmpty())
-			})
+		When("`hostCRISocketPath` is configured with a validated value", func() {
+			DescribeTable(
+				"should use the default value of hostCRISocketPath, and not return an error",
+				func(value string) {
+					currentClusterConfig := &cnao.NetworkAddonsConfigSpec{
+						Multus:                &cnao.Multus{},
+						MultusDynamicNetworks: &cnao.MultusDynamicNetworks{HostCRISocketPath: value},
+					}
+					errorList := validateMultusDynamicNetworks(currentClusterConfig, nil)
+					Expect(currentClusterConfig.MultusDynamicNetworks.HostCRISocketPath).To(Equal(value))
+					Expect(errorList).To(BeEmpty())
+				},
+				Entry("is set to \"/run/crio/crio.sock\"", "/run/crio/crio.sock"),
+				Entry("is set to \"/run/containerd/containerd.sock\"", "/run/containerd/containerd.sock"),
+				Entry("is set to \"/run/k3s/containerd/containerd.sock\"", "/run/k3s/containerd/containerd.sock"),
+			)
+		})
+
+		When("`hostCRISocketPath` is configured with an invalid value", func() {
+			DescribeTable(
+				"should fails to be validated",
+				func(value string) {
+					currentClusterConfig := &cnao.NetworkAddonsConfigSpec{
+						Multus:                &cnao.Multus{},
+						MultusDynamicNetworks: &cnao.MultusDynamicNetworks{HostCRISocketPath: value},
+					}
+					errorList := validateMultusDynamicNetworks(currentClusterConfig, nil)
+					Expect(errorList).To(ConsistOf(MatchError("`hostCRISocketPath` must be one of: /run/crio/crio.sock, /run/containerd/containerd.sock, /run/k3s/containerd/containerd.sock")))
+				},
+				Entry("is random string", "Lorem ipsum"),
+				Entry("is random path", "/etc/somewhere/some.conf"),
+				Entry("is untested socket path", "/run/unknown-cri/unknown-cri.sock"),
+			)
 		})
 	})
 
