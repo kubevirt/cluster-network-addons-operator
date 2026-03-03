@@ -12,7 +12,6 @@ import (
 	"github.com/go-logr/logr"
 	osconfv1 "github.com/openshift/api/config/v1"
 	osv1 "github.com/openshift/api/operator/v1"
-	osnetnames "github.com/openshift/cluster-network-operator/pkg/names"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -619,7 +618,7 @@ func collectContainersInfo(parentKind string, parentName string, containers []v1
 func getOpenShiftNetworkConfig(ctx context.Context, c k8sclient.Client) (*osv1.Network, error) {
 	nc := &osv1.Network{}
 
-	err := c.Get(ctx, types.NamespacedName{Namespace: "", Name: osnetnames.OPERATOR_CONFIG}, nc)
+	err := c.Get(ctx, types.NamespacedName{Namespace: "", Name: "cluster"}, nc)
 	if err != nil {
 		if apierrors.IsNotFound(err) || strings.Contains(err.Error(), "no matches for kind") {
 			setupLog.V(1).Info("OpenShift cluster network configuration resource has not been found", "error", err)

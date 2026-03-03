@@ -16,8 +16,8 @@ import (
 	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	testenv "github.com/kubevirt/cluster-network-addons-operator/test/env"
 	conditionsv1 "github.com/openshift/custom-resource-status/conditions/v1"
-	securityapi "github.com/openshift/origin/pkg/security/apis/security"
 	"gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -612,12 +612,17 @@ func checkForClusterRoleBinding(name string) error {
 }
 
 func checkForSecurityContextConstraints(name string) error {
-	scc := securityapi.SecurityContextConstraints{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &scc)
-	if isNotSupportedKind(err) {
-		return nil
-	}
+	scc := &unstructured.Unstructured{}
+	scc.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "security.openshift.io",
+		Version: "v1",
+		Kind:    "SecurityContextConstraints",
+	})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, scc)
 	if err != nil {
+		if isNotSupportedKind(err) || isKindNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -886,8 +891,14 @@ func checkForClusterRoleBindingRemoval(name string) error {
 }
 
 func checkForSecurityContextConstraintsRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, &securityapi.SecurityContextConstraints{})
-	if isNotSupportedKind(err) {
+	scc := &unstructured.Unstructured{}
+	scc.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "security.openshift.io",
+		Version: "v1",
+		Kind:    "SecurityContextConstraints",
+	})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name}, scc)
+	if err != nil && (isNotSupportedKind(err) || isKindNotFound(err)) {
 		return nil
 	}
 	return isNotFound("SecurityContextConstraints", name, err)
