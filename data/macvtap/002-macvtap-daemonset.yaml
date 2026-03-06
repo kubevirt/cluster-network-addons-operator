@@ -65,6 +65,7 @@ spec:
         - name: cni
           hostPath:
             path: {{ .CniMountPath }}
+      serviceAccountName: macvtap-cni
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}

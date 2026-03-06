@@ -140,7 +140,29 @@ runAsUser:
   type: RunAsAny
 seLinuxContext:
   type: RunAsAny
-users:
-  - system:serviceaccount:{{ .Namespace }}:ovs-cni-marker
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ovs-cni-marker-scc-use
+rules:
+- apiGroups: ["security.openshift.io"]
+  resources: ["securitycontextconstraints"]
+  resourceNames: ["ovs-cni-marker"]
+  verbs: ["use"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ovs-cni-marker-scc-use
+  namespace: {{ .Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ovs-cni-marker-scc-use
+subjects:
+- kind: ServiceAccount
+  name: ovs-cni-marker
+  namespace: {{ .Namespace }}
 {{ end }}
 ---
