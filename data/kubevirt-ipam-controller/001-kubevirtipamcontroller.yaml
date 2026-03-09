@@ -187,6 +187,12 @@ spec:
 {{- if ne .DefaultNetNADNs "" }}
             - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"
 {{ end }}
+{{- if ne .TLSMinVersion "" }}
+            - "--tls-min-version={{ .TLSMinVersion }}"
+{{ end }}
+{{ if index . "TLSSecurityProfileCiphers" }}
+            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"
+{{ end }}
           command:
             - /manager
           env:
