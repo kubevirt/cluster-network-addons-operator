@@ -14,6 +14,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	ocpv1 "github.com/openshift/api/config/v1"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
@@ -375,6 +376,10 @@ var _ = Describe("NetworkAddonsConfig", func() {
 					RangeStart: initialRangeStart,
 					RangeEnd:   initialRangeEnd,
 				},
+				TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+					Type:         ocpv1.TLSProfileIntermediateType,
+					Intermediate: &ocpv1.IntermediateTLSProfile{},
+				},
 			}
 			CreateConfig(gvk, initialConfig)
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
@@ -382,11 +387,15 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			By("Validating initial configmap values")
 			Expect(validateKubeMacPoolConfigMapValues(initialRangeStart, initialRangeEnd)).To(Succeed())
 
-			By("Updating CNAO CR with new MAC range")
+			By("Updating CNAO CR with new MAC range and Modern TLS profile (1.3)")
 			updatedConfig := cnao.NetworkAddonsConfigSpec{
 				KubeMacPool: &cnao.KubeMacPool{
 					RangeStart: updatedRangeStart,
 					RangeEnd:   updatedRangeEnd,
+				},
+				TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+					Type:   ocpv1.TLSProfileModernType,
+					Modern: &ocpv1.ModernTLSProfile{},
 				},
 			}
 			UpdateConfig(gvk, updatedConfig)
