@@ -32,6 +32,8 @@ function __parametize_by_object() {
         yaml-utils::set_param ${f} 'spec.template.metadata.labels."allow-access-cluster-services"' '""'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         # sed operation is done after all yq operations to avoid unexpected yq error
+        sed -i '/            - "--certificates-dir={{ .CertDir }}"/a{{ if index . "TLSSecurityProfileCiphers" }}\n            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"\n{{ end }}' ${f}
+        sed -i '/            - "--certificates-dir={{ .CertDir }}"/a\\            - "--tls-min-version={{ .TLSMinVersion }}"' ${f}
         sed -i '/            - "--certificates-dir={{ .CertDir }}"/a{{- if ne .DefaultNetNADNs "" }}\n            - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"\n{{ end }}' ${f}
         ;;
       ./Service_kubevirt-ipam-controller-webhook-service.yaml)
