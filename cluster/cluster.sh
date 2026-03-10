@@ -15,13 +15,8 @@
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.34'}
 export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2601261222-1094ed30}
 
-KUBEVIRTCI_REPO='https://github.com/kubevirt/kubevirtci.git'
 # The CLUSTER_PATH var is used in cluster folder and points to the _kubevirtci where the cluster is deployed from.
 CLUSTER_PATH=${CLUSTER_PATH:-"${PWD}/_kubevirtci/"}
-
-function cluster::_get_repo() {
-    git --git-dir ${CLUSTER_PATH}/.git remote get-url origin
-}
 
 function cluster::_get_tag() {
     git -C ${CLUSTER_PATH} describe --tags
@@ -29,7 +24,7 @@ function cluster::_get_tag() {
 
 function cluster::install() {
     if [ -d ${CLUSTER_PATH} ]; then
-        if [[ $(cluster::_get_repo) != ${KUBEVIRTCI_REPO} || $(cluster::_get_tag) != ${KUBEVIRTCI_TAG} ]]; then
+        if [[ $(cluster::_get_tag) != ${KUBEVIRTCI_TAG} ]]; then
             rm -rf ${CLUSTER_PATH}
         fi
     fi
