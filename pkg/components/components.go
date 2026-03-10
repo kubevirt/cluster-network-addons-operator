@@ -609,6 +609,24 @@ func GetClusterRole(allowMultus bool) *rbacv1.ClusterRole {
 			},
 			{
 				APIGroups: []string{
+					"security.openshift.io",
+				},
+				Resources: []string{
+					"securitycontextconstraints",
+				},
+				ResourceNames: []string{
+					"linux-bridge",
+					"bridge-marker",
+					"macvtap-cni",
+					"multus",
+					"ovs-cni-marker",
+				},
+				Verbs: []string{
+					"use",
+				},
+			},
+			{
+				APIGroups: []string{
 					"apiextensions.k8s.io",
 				},
 				Resources: []string{
