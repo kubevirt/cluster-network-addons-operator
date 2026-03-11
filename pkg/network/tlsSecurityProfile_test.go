@@ -1,6 +1,8 @@
 package network
 
 import (
+	"crypto/tls"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -135,6 +137,61 @@ var _ = Describe("Testing TLS Security Profile", func() {
 				"TOTALLY-MADE-UP-CIPHER",
 			})
 			Expect(goNames).To(Equal([]string{"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"}))
+		})
+	})
+
+	Context("CipherSuiteIDs", func() {
+		It("should convert known OpenSSL ciphers to uint16 IDs", func() {
+			ids := CipherSuiteIDs([]string{
+				"ECDHE-ECDSA-AES128-GCM-SHA256",
+				"ECDHE-RSA-AES256-GCM-SHA384",
+			})
+			Expect(ids).To(Equal([]uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			}))
+		})
+
+		It("should skip unknown ciphers", func() {
+			ids := CipherSuiteIDs([]string{
+				"ECDHE-ECDSA-AES128-GCM-SHA256",
+				"TOTALLY-MADE-UP-CIPHER",
+			})
+			Expect(ids).To(Equal([]uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			}))
+		})
+
+		It("should return nil for empty input", func() {
+			Expect(CipherSuiteIDs(nil)).To(BeNil())
+			Expect(CipherSuiteIDs([]string{})).To(BeNil())
+		})
+
+		It("should return IDs for all Intermediate profile ciphers", func() {
+			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+				Type:         ocpv1.TLSProfileIntermediateType,
+				Intermediate: &ocpv1.IntermediateTLSProfile{},
+			})
+			ids := CipherSuiteIDs(ciphers)
+			Expect(ids).ToNot(BeEmpty())
+			Expect(ids).To(HaveLen(len(OCPTLSProfileCiphersToGoCipherNames(ciphers))))
+		})
+	})
+
+	Context("TLSMinVersionID", func() {
+		DescribeTable("should map known versions correctly",
+			func(version ocpv1.TLSProtocolVersion, expected uint16) {
+				Expect(TLSMinVersionID(version)).To(Equal(expected))
+			},
+			Entry("TLS 1.0", ocpv1.VersionTLS10, uint16(tls.VersionTLS10)),
+			Entry("TLS 1.1", ocpv1.VersionTLS11, uint16(tls.VersionTLS11)),
+			Entry("TLS 1.2", ocpv1.VersionTLS12, uint16(tls.VersionTLS12)),
+			Entry("TLS 1.3", ocpv1.VersionTLS13, uint16(tls.VersionTLS13)),
+		)
+
+		It("should default to TLS 1.3 for unrecognized values", func() {
+			Expect(TLSMinVersionID("")).To(Equal(uint16(tls.VersionTLS13)))
+			Expect(TLSMinVersionID("VersionTLS99")).To(Equal(uint16(tls.VersionTLS13)))
 		})
 	})
 })
