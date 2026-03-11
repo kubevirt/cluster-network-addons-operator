@@ -46,8 +46,6 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
-const metricsBindAddress = ":8443"
-
 var (
 	scheme = apiruntime.NewScheme()
 )
@@ -115,7 +113,7 @@ func main() {
 			},
 		},
 		Metrics: metricsserver.Options{
-			BindAddress:    metricsBindAddress,
+			BindAddress:    fmt.Sprintf(":%d", components.MetricsPort),
 			SecureServing:  true,
 			FilterProvider: filters.WithAuthenticationAndAuthorization,
 			TLSOpts: []func(*tls.Config){func(cfg *tls.Config) {
