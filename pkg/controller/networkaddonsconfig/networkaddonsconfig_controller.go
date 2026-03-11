@@ -43,6 +43,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/names"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/tlsconfig"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -62,7 +63,7 @@ func init() {
 
 // Add creates a new NetworkAddonsConfig Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
+func Add(mgr manager.Manager, tlsCache *tlsconfig.Cache) error {
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return fmt.Errorf("failed to get apiserver config: %v", err)
@@ -103,11 +104,11 @@ func Add(mgr manager.Manager) error {
 	}
 	clusterInfo.MonitoringAvailable = addMonitorServiceResources
 
-	return add(mgr, newReconciler(mgr, namespace, clusterInfo))
+	return add(mgr, newReconciler(mgr, namespace, clusterInfo, tlsCache))
 }
 
 // newReconciler returns a new ReconcileNetworkAddonsConfig
-func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.ClusterInfo) *ReconcileNetworkAddonsConfig {
+func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.ClusterInfo, tlsCache *tlsconfig.Cache) *ReconcileNetworkAddonsConfig {
 	// Status manager is shared between both reconcilers, and it is used to update conditions of
 	// NetworkAddonsConfig.State. NetworkAddonsConfig reconciler updates it with progress of rendering
 	// and applying of manifests. Pods reconciler updates it with progress of deployed pods.
@@ -121,6 +122,7 @@ func newReconciler(mgr manager.Manager, namespace string, clusterInfo *network.C
 		clusterInfo:   clusterInfo,
 		eventEmitter:  eventemitter.New(mgr),
 		logger:        logf.Log.WithName("controller_networkaddonsconfig"),
+		tlsCache:      tlsCache,
 	}
 }
 
@@ -214,6 +216,7 @@ type ReconcileNetworkAddonsConfig struct {
 	clusterInfo   *network.ClusterInfo
 	eventEmitter  eventemitter.EventEmitter
 	logger        logr.Logger
+	tlsCache      *tlsconfig.Cache
 }
 
 // Reconcile reads that state of the cluster for a NetworkAddonsConfig object and makes changes based on the state read
@@ -267,6 +270,8 @@ func (r *ReconcileNetworkAddonsConfig) Reconcile(ctx context.Context, request re
 
 	// Convert to a canonicalized form
 	network.Canonicalize(&networkAddonsConfig.Spec)
+
+	r.tlsCache.Store(networkAddonsConfig.Spec.TLSSecurityProfile)
 
 	// Read OpenShift network operator configuration (if exists)
 	openshiftNetworkConfig, err := getOpenShiftNetworkConfig(context.TODO(), r.client)
