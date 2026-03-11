@@ -164,7 +164,7 @@ func main() {
 	}
 
 	// Setup all Controllers
-	if err := controller.AddToManager(mgr); err != nil {
+	if err := controller.AddToManager(mgr, tlsProfile); err != nil {
 		logger.Error(err, "failed setting up operator controllers")
 		os.Exit(1)
 	}
