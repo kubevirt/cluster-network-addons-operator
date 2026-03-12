@@ -360,6 +360,33 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 	})
 
+	It("all components deployed, TLSSecurityProfile set, should be able to TLSSecurityProfile type", func() {
+		By("Creating config with TLSSecurityProfile type set to Intermediate")
+		configSpec := cnao.NetworkAddonsConfigSpec{
+			LinuxBridge:           &cnao.LinuxBridge{},
+			Multus:                &cnao.Multus{},
+			KubeMacPool:           &cnao.KubeMacPool{},
+			Ovs:                   &cnao.Ovs{},
+			MacvtapCni:            &cnao.MacvtapCni{},
+			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
+			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
+			TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+				Type:         ocpv1.TLSProfileIntermediateType,
+				Intermediate: &ocpv1.IntermediateTLSProfile{},
+			},
+		}
+		CreateConfig(gvk, configSpec)
+		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+
+		By("Updating TLSSecurityProfile type to Modern")
+		configSpec.TLSSecurityProfile = &ocpv1.TLSSecurityProfile{
+			Type:   ocpv1.TLSProfileModernType,
+			Modern: &ocpv1.ModernTLSProfile{},
+		}
+		UpdateConfig(gvk, configSpec)
+		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
+	})
+
 	//2178
 	Context("when kubeMacPool is deployed", func() {
 		const (
