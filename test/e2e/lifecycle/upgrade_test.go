@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -13,6 +14,9 @@ import (
 
 const podsDeploymentTimeout = 20 * time.Minute
 const observedVersionUpdateTimeout = 2 * time.Minute
+
+// CNAO supports multiarch from this release
+const multiArchRelease = "0.99.0"
 
 var _ = Context("Cluster Network Addons Operator", func() {
 	testUpgrade := func(oldRelease, newRelease Release) {
@@ -85,7 +89,18 @@ var _ = Context("Cluster Network Addons Operator", func() {
 
 	// Run tests upgrading from each released version to the latest/main
 	releases := Releases()
-	for _, oldRelease := range releases[:len(releases)-1] {
+
+	start := 0
+	if runtime.GOARCH == "s390x" {
+		for index, release := range releases {
+			if release.Version == multiArchRelease {
+				start = index
+				break
+			}
+		}
+	}
+
+	for _, oldRelease := range releases[start : len(releases)-1] {
 		testUpgrade(oldRelease, LatestRelease())
 	}
 })
