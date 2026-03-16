@@ -32,5 +32,8 @@ func (r *KubernetesCNAOReporter) DumpLogs() int {
 	r.logCommand([]string{"get", "endpointslice", "-n", r.namespace, "-o", "yaml"}, "endpointslices")
 	r.logNamespacePods()
 
+	r.logCommand([]string{"get", "tlsreport"}, "tlsreport-overview")
+	r.logCommand([]string{"get", "tlsreport", "-o", "yaml"}, "tlsreport")
+
 	return r.failureCount
 }
