@@ -36,6 +36,7 @@ var _ = BeforeSuite(func() {
 var _ = JustAfterEach(func() {
 	if CurrentSpecReport().Failed() {
 		failureCount := cnaoReporter.DumpLogs()
+		cnaoReporter.DumpTLSComplianceOperatorReports()
 		By(fmt.Sprintf("Test failed, collected logs and artifacts, failure count %d", failureCount))
 	}
 })

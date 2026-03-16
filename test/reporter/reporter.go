@@ -34,3 +34,9 @@ func (r *KubernetesCNAOReporter) DumpLogs() int {
 
 	return r.failureCount
 }
+
+// DumpTLSComplianceOperatorReports dumps the TLSComplianceReport CRs provided by 'tls-compliance-operator'
+func (r *KubernetesCNAOReporter) DumpTLSComplianceOperatorReports() {
+	r.logCommand([]string{"get", "tlscompliancereport", "-o", "wide"}, "tlscompliancereport-overview")
+	r.logCommand([]string{"get", "tlscompliancereport", "-o", "yaml"}, "tlscompliancereports")
+}
