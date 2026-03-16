@@ -1,12 +1,14 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/go-logr/logr"
 	"go.uber.org/zap/zapcore"
@@ -16,10 +18,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	k8snetworkplumbingwgv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 
+	ocpv1 "github.com/openshift/api/config/v1"
 	osv1 "github.com/openshift/api/operator/v1"
 	"github.com/rhobs/operator-observability-toolkit/pkg/operatormetrics"
 	"github.com/spf13/pflag"
@@ -38,6 +42,7 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/controller"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/metrics"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/network"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 )
 
@@ -97,6 +102,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	tlsProfile := &atomic.Pointer[ocpv1.TLSSecurityProfile]{}
+
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Scheme: scheme,
@@ -106,7 +113,18 @@ func main() {
 			},
 		},
 		Metrics: metricsserver.Options{
-			BindAddress: metricsserver.DefaultBindAddress,
+			BindAddress:    fmt.Sprintf(":%d", components.MetricsPort),
+			SecureServing:  true,
+			FilterProvider: filters.WithAuthenticationAndAuthorization,
+			TLSOpts: []func(*tls.Config){func(cfg *tls.Config) {
+				cfg.GetConfigForClient = func(_ *tls.ClientHelloInfo) (*tls.Config, error) {
+					ciphers, minVersion := network.SelectCipherSuitesAndMinTLSVersion(tlsProfile.Load())
+					clone := cfg.Clone()
+					clone.CipherSuites = network.CipherSuiteIDs(ciphers)
+					clone.MinVersion = network.TLSMinVersionID(minVersion)
+					return clone, nil
+				}
+			}},
 		},
 		MapperProvider: func(c *rest.Config, httpClient *http.Client) (meta.RESTMapper, error) {
 			return apiutil.NewDynamicRESTMapper(c, httpClient)
@@ -144,7 +162,7 @@ func main() {
 	}
 
 	// Setup all Controllers
-	if err := controller.AddToManager(mgr); err != nil {
+	if err := controller.AddToManager(mgr, tlsProfile); err != nil {
 		logger.Error(err, "failed setting up operator controllers")
 		os.Exit(1)
 	}

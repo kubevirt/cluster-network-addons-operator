@@ -86,6 +86,33 @@ func OCPTLSProfileCiphersToGoCipherNames(openSSLCiphers []string) []string {
 	return result
 }
 
+// CipherSuiteIDs converts OpenSSL cipher names to crypto/tls uint16 IDs
+// suitable for tls.Config.CipherSuites. Unknown names are silently skipped.
+func CipherSuiteIDs(openSSLCiphers []string) []uint16 {
+	var ids []uint16
+	for _, c := range openSSLCiphers {
+		if id, ok := ocpTLSProfileOpenSSLCipherNames[c]; ok {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+var tlsVersionID = map[ocpv1.TLSProtocolVersion]uint16{
+	ocpv1.VersionTLS10: tls.VersionTLS10,
+	ocpv1.VersionTLS11: tls.VersionTLS11,
+	ocpv1.VersionTLS12: tls.VersionTLS12,
+	ocpv1.VersionTLS13: tls.VersionTLS13,
+}
+
+// TLSMinVersionID converts an OpenShift TLSProtocolVersion to the crypto/tls
+// uint16 constant suitable for tls.Config.MinVersion.
+// An unrecognized version returns 0, which causes crypto/tls to use its
+// default minimum (currently TLS 1.2).
+func TLSMinVersionID(version ocpv1.TLSProtocolVersion) uint16 {
+	return tlsVersionID[version]
+}
+
 func TLSVersionToHumanReadable(version ocpv1.TLSProtocolVersion) string {
 	switch version {
 	case ocpv1.VersionTLS10:

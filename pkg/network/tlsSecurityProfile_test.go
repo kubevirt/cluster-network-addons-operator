@@ -1,6 +1,8 @@
 package network
 
 import (
+	"crypto/tls"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -135,6 +137,98 @@ var _ = Describe("Testing TLS Security Profile", func() {
 				"TOTALLY-MADE-UP-CIPHER",
 			})
 			Expect(goNames).To(Equal([]string{"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"}))
+		})
+	})
+
+	Context("CipherSuiteIDs", func() {
+		It("should skip unknown ciphers", func() {
+			ids := CipherSuiteIDs([]string{
+				"ECDHE-ECDSA-AES128-GCM-SHA256",
+				"TOTALLY-MADE-UP-CIPHER",
+			})
+			Expect(ids).To(Equal([]uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			}))
+		})
+
+		It("should return nil for empty input", func() {
+			Expect(CipherSuiteIDs(nil)).To(BeNil())
+			Expect(CipherSuiteIDs([]string{})).To(BeNil())
+		})
+
+		type cipherSuiteIDsCase struct {
+			profile     *ocpv1.TLSSecurityProfile
+			expectedIDs []uint16
+		}
+		DescribeTable("should return expected IDs for each TLS profile",
+			func(c cipherSuiteIDsCase) {
+				ciphers, _ := SelectCipherSuitesAndMinTLSVersion(c.profile)
+				Expect(CipherSuiteIDs(ciphers)).To(Equal(c.expectedIDs))
+			},
+			Entry("Intermediate profile", cipherSuiteIDsCase{
+				profile: &ocpv1.TLSSecurityProfile{
+					Type:         ocpv1.TLSProfileIntermediateType,
+					Intermediate: &ocpv1.IntermediateTLSProfile{},
+				},
+				expectedIDs: []uint16{
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+				},
+			}),
+			Entry("Old profile", cipherSuiteIDsCase{
+				profile: &ocpv1.TLSSecurityProfile{
+					Type: ocpv1.TLSProfileOldType,
+					Old:  &ocpv1.OldTLSProfile{},
+				},
+				expectedIDs: []uint16{
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+					tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+					tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+				},
+			}),
+			Entry("Modern profile (TLS 1.3 only, no configurable cipher IDs)", cipherSuiteIDsCase{
+				profile: &ocpv1.TLSSecurityProfile{
+					Type:   ocpv1.TLSProfileModernType,
+					Modern: &ocpv1.ModernTLSProfile{},
+				},
+				expectedIDs: nil,
+			}),
+		)
+	})
+
+	Context("TLSMinVersionID", func() {
+		DescribeTable("should map known versions correctly",
+			func(version ocpv1.TLSProtocolVersion, expected uint16) {
+				Expect(TLSMinVersionID(version)).To(Equal(expected))
+			},
+			Entry("TLS 1.0", ocpv1.VersionTLS10, uint16(tls.VersionTLS10)),
+			Entry("TLS 1.1", ocpv1.VersionTLS11, uint16(tls.VersionTLS11)),
+			Entry("TLS 1.2", ocpv1.VersionTLS12, uint16(tls.VersionTLS12)),
+			Entry("TLS 1.3", ocpv1.VersionTLS13, uint16(tls.VersionTLS13)),
+		)
+
+		It("should return 0 for unrecognized values", func() {
+			Expect(TLSMinVersionID("")).To(Equal(uint16(0)))
+			Expect(TLSMinVersionID("VersionTLS99")).To(Equal(uint16(0)))
 		})
 	})
 })

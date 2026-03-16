@@ -25,6 +25,7 @@ const (
 	Name            = "cluster-network-addons-operator"
 	Namespace       = "cluster-network-addons"
 	HealthProbePort = 8081
+	MetricsPort     = 8443
 )
 
 var (
@@ -339,38 +340,15 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								InitialDelaySeconds: 5,
 								PeriodSeconds:       10,
 							},
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: HealthProbePort,
-								Name:          "healthprobe",
-							}},
-						},
-						{
-							Name:            "kube-rbac-proxy",
-							Image:           addonsImages.KubeRbacProxy,
-							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
+									ContainerPort: HealthProbePort,
+									Name:          "healthprobe",
+								},
+								{
+									ContainerPort: MetricsPort,
 									Name:          "metrics",
-									Protocol:      "TCP",
-									ContainerPort: 8443,
-								},
-							},
-							Args: []string{
-								"--logtostderr",
-								"--secure-listen-address=:8443",
-								"--upstream=http://127.0.0.1:8080",
-							},
-							Resources: corev1.ResourceRequirements{
-								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("10m"),
-									corev1.ResourceMemory: resource.MustParse("20Mi"),
-								},
-							},
-							TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
-							SecurityContext: &corev1.SecurityContext{
-								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-								Capabilities: &corev1.Capabilities{
-									Drop: []corev1.Capability{corev1.Capability("ALL")},
+									Protocol:      corev1.ProtocolTCP,
 								},
 							},
 						},
