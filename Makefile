@@ -49,6 +49,7 @@ E2E_TEST_ARGS ?= $(strip -test.v -test.timeout=$(E2E_TEST_TIMEOUT) -ginkgo.timeo
 E2E_SUITES = \
 	test/e2e/lifecycle \
 	test/e2e/workflow \
+	test/e2e/compliance \
 	test/e2e/monitoring
 
 OUTPUT_DIR = $(CURDIR)/build/_output/
