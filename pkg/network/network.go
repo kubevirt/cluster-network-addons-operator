@@ -166,7 +166,7 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 	objs = append(objs, o...)
 
 	// render KubevirtIPAMController
-	o, err = renderKubevirtIPAMController(conf, manifestDir, clusterInfo)
+	o, err = RenderKubevirtIPAMController(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsCo
 	}
 
 	if conf.KubevirtIpamController == nil {
-		o, err := renderKubevirtIPAMController(prev, manifestDir, clusterInfo)
+		o, err := RenderKubevirtIPAMController(prev, manifestDir, clusterInfo)
 		if err != nil {
 			return nil, err
 		}

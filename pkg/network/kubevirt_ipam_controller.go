@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -16,8 +17,8 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 )
 
-// renderKubevirtIPAMController generates the manifests of kubevirt-ipam-controller
-func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+// RenderKubevirtIPAMController generates the manifests of kubevirt-ipam-controller
+func RenderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.KubevirtIpamController == nil {
 		return nil, nil
 	}
@@ -30,6 +31,10 @@ func renderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 	data.Data["PlacementPasst"] = conf.PlacementConfiguration.Workloads
 	data.Data["KubevirtIpamControllerImage"] = os.Getenv("KUBEVIRT_IPAM_CONTROLLER_IMAGE")
 	data.Data["DefaultNetNADNs"] = conf.KubevirtIpamController.DefaultNetworkNADNamespace
+
+	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
+	data.Data["TLSMinVersion"] = tlsMinVersion
+	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
 
 	if clusterInfo.OpenShift4 {
 		data.Data["WebhookAnnotation"] = `service.beta.openshift.io/inject-cabundle: "true"`
