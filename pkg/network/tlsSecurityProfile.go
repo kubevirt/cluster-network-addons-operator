@@ -113,17 +113,3 @@ func TLSMinVersionID(version ocpv1.TLSProtocolVersion) uint16 {
 	return tlsVersionID[version]
 }
 
-func TLSVersionToHumanReadable(version ocpv1.TLSProtocolVersion) string {
-	switch version {
-	case ocpv1.VersionTLS10:
-		return "1.0"
-	case ocpv1.VersionTLS11:
-		return "1.1"
-	case ocpv1.VersionTLS12:
-		return "1.2"
-	case ocpv1.VersionTLS13:
-		return "1.3"
-	default:
-		return ""
-	}
-}
