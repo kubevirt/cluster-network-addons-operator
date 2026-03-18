@@ -100,7 +100,6 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	data := render.MakeRenderData()
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["KubeMacPoolImage"] = os.Getenv("KUBEMACPOOL_IMAGE")
-	data.Data["KubeRbacProxyImage"] = os.Getenv("KUBE_RBAC_PROXY_IMAGE")
 	data.Data["MonitoringAvailable"] = clusterInfo.MonitoringAvailable
 	data.Data["MonitoringNamespace"] = monitoringNamespace()
 	data.Data["MonitoringServiceAccount"] = monitoringServiceAccount()
@@ -124,8 +123,6 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
 	data.Data["TLSSecurityProfileCiphers"] = strings.Join(ciphers, ",")
 	data.Data["TLSMinVersion"] = string(tlsMinVersion)
-	data.Data["TLSMinVersionKubeRbacProxy"] = string(tlsMinVersion)
-	data.Data["TLSCipherSuitesKubeRbacProxy"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
 	if err != nil {

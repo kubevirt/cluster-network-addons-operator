@@ -341,15 +341,6 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs/
           name: tls-key-pair
           readOnly: true
-      - args:
-        - --secure-listen-address=:8443
-        - --upstream=http://127.0.0.1:8080
-        - --proxy-endpoints-port=8643
-        - --tls-min-version={{ .TLSMinVersionKubeRbacProxy }}
-        - --tls-cipher-suites={{ .TLSCipherSuitesKubeRbacProxy }}
-        image: '{{ .KubeRbacProxyImage }}'
-        imagePullPolicy: '{{ .ImagePullPolicy }}'
-        name: kube-rbac-proxy
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always

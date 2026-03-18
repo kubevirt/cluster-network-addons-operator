@@ -45,12 +45,6 @@ func init() {
 				Image:      "quay.io/kubevirt/kubemacpool@sha256:0c52a67264c78d7eb8811429a64358e646a00c65fcec45ec7abdbb51a647aa36",
 			},
 			{
-				ParentName: "kubemacpool-mac-controller-manager",
-				ParentKind: "Deployment",
-				Name:       "kube-rbac-proxy",
-				Image:      "quay.io/brancz/kube-rbac-proxy@sha256:cbdad91c207e55cf366b59ce3e6c9d3f3e0b8e51ff33c1e7d153c2f762d83a1e",
-			},
-			{
 				ParentName: "kubemacpool-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
