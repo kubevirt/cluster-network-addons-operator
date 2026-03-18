@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -141,6 +142,15 @@ func newGitRepo(componentName string, componentParams *component) (*gitRepo, err
 		repo:     repo,
 		localDir: repoDir,
 	}, nil
+}
+
+func verifyNewReleaseTagImageExist(componentImage, newReleaseTag string) error {
+	if componentImage == "" {
+		return nil
+	}
+	logger.Printf("Checking container image tag exist %q %q", componentImage, newReleaseTag)
+	return exec.Command("skopeo", "inspect", fmt.Sprintf("docker://%s:%s", componentImage, newReleaseTag)).Run()
+
 }
 
 // getCurrentReleaseTag gets the tag name of currently configured commit sha in this component.

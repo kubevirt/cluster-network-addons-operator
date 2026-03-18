@@ -73,6 +73,11 @@ func main() {
 			exitWithError(errors.Wrapf(err, "Failed to get latest release version tag from %s", componentName))
 		}
 
+		if err := verifyNewReleaseTagImageExist(component.Image, updatedReleaseTag); err != nil {
+			exitWithError(errors.Wrapf(err, "Failed to verify image exist for component %q image %q updated release tag %q",
+				componentName, component.Image, updatedReleaseTag))
+		}
+
 		proposedPrTitle := fmt.Sprintf("bump %s to %s", componentName, updatedReleaseTag)
 		componentBumpNeeded, err := cnaoRepo.isComponentBumpNeeded(currentReleaseTag, updatedReleaseTag,
 			component.Updatepolicy, component.Metadata, proposedPrTitle)

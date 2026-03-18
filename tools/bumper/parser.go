@@ -15,6 +15,7 @@ type component struct {
 	Branch       string `yaml:"branch"`
 	Updatepolicy string `yaml:"update-policy"`
 	Metadata     string `yaml:"metadata"`
+	Image        string `yaml:"image"`
 }
 
 type componentsConfig struct {
