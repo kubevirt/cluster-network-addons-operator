@@ -122,7 +122,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	}
 
 	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
-	data.Data["TLSSecurityProfileCiphers"] = strings.Join(ciphers, ",")
+	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
 	data.Data["TLSMinVersion"] = string(tlsMinVersion)
 	data.Data["TLSMinVersionKubeRbacProxy"] = string(tlsMinVersion)
 	data.Data["TLSCipherSuitesKubeRbacProxy"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
