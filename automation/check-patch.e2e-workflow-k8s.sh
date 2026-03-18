@@ -34,7 +34,13 @@ main() {
 
     ./hack/install-tls-compliance-operator.sh
 
-    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml -ginkgo.v -ginkgo.progress" test/e2e/compliance
+    (
+        export KUBECONFIG="$(./_kubevirtci/cluster-up/kubeconfig.sh)"
+        export OCI_BIN="podman"
+        export TLSREPORT_IMAGE="quay.io/omergi0/kubectl-tlsreport:v0.0.10"
+        export ARTIFACTS
+        make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml -ginkgo.v -ginkgo.progress" test/e2e/compliance
+    )
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"

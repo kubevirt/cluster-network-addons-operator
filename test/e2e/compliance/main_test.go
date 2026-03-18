@@ -38,4 +38,7 @@ var _ = JustAfterEach(func() {
 		failureCount := cnaoReporter.DumpLogs()
 		By(fmt.Sprintf("Test failed, collected logs and artifacts, failure count %d", failureCount))
 	}
+
+	By("Exporting TLSCompliance reports")
+	Expect(cnaoReporter.DumpTLSComplianceReports()).To(Succeed())
 })
