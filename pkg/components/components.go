@@ -40,7 +40,6 @@ const (
 	KubeMacPoolImageDefault            = "quay.io/kubevirt/kubemacpool@sha256:0c52a67264c78d7eb8811429a64358e646a00c65fcec45ec7abdbb51a647aa36"
 	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:435f374b434b3bc70a5cfaba0011fdcf5f433d96b98b06d29306cbd8db3a8c21"
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:5266955a654a4cb4e425424ab274cf31e7a6deb3f340e3679a11d689bfa734d0"
-	KubeRbacProxyImageDefault          = "quay.io/brancz/kube-rbac-proxy@sha256:cbdad91c207e55cf366b59ce3e6c9d3f3e0b8e51ff33c1e7d153c2f762d83a1e"
 	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:f5fe9c98fb6d7e5e57a6df23fe82e43e65db5953d76af44adda9ab40c46ad0bf"
 	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
 	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:3d1e9bf40e716856c7ffe21c7a4d842299c492a059c74eaf832bd51b6e5e8fa4"
@@ -54,7 +53,6 @@ type AddonsImages struct {
 	KubeMacPool            string
 	OvsCni                 string
 	MacvtapCni             string
-	KubeRbacProxy          string
 	KubeSecondaryDNS       string
 	CoreDNS                string
 	KubevirtIpamController string
@@ -103,9 +101,6 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.MacvtapCni == "" {
 		ai.MacvtapCni = MacvtapCniImageDefault
 	}
-	if ai.KubeRbacProxy == "" {
-		ai.KubeRbacProxy = KubeRbacProxyImageDefault
-	}
 	if ai.KubeSecondaryDNS == "" {
 		ai.KubeSecondaryDNS = KubeSecondaryDNSImageDefault
 	}
@@ -127,7 +122,6 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.KubeMacPool,
 		ai.OvsCni,
 		ai.MacvtapCni,
-		ai.KubeRbacProxy,
 		ai.KubeSecondaryDNS,
 		ai.CoreDNS,
 		ai.KubevirtIpamController,
@@ -239,10 +233,6 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MACVTAP_CNI_IMAGE",
 									Value: addonsImages.MacvtapCni,
-								},
-								{
-									Name:  "KUBE_RBAC_PROXY_IMAGE",
-									Value: addonsImages.KubeRbacProxy,
 								},
 								{
 									Name:  "KUBE_SECONDARY_DNS_IMAGE",

@@ -112,4 +112,3 @@ var tlsVersionID = map[ocpv1.TLSProtocolVersion]uint16{
 func TLSMinVersionID(version ocpv1.TLSProtocolVersion) uint16 {
 	return tlsVersionID[version]
 }
-

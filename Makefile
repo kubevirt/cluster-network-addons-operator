@@ -178,7 +178,6 @@ gen-manifests: manifest-templator
 	KUBE_SECONDARY_DNS_IMAGE=$(KUBE_SECONDARY_DNS_IMAGE) \
 	KUBEVIRT_IPAM_CONTROLLER_IMAGE=$(KUBEVIRT_IPAM_CONTROLLER_IMAGE) \
 	CORE_DNS_IMAGE=$(CORE_DNS_IMAGE) \
-	KUBE_RBAC_PROXY_IMAGE=$(KUBE_RBAC_PROXY_IMAGE) \
 		./hack/generate-manifests.sh
 
 gen-k8s: $(GO) $(apis_sources)
