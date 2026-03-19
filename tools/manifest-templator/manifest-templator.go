@@ -247,7 +247,6 @@ func main() {
 	kubeMacPoolImage := flag.String("kubemacpool-image", components.KubeMacPoolImageDefault, "The kubemacpool-image managed by CNA")
 	ovsCniImage := flag.String("ovs-cni-image", components.OvsCniImageDefault, "The ovs cni image managed by CNA")
 	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
-	kubeRbacProxyImage := flag.String("kube-rbac-proxy-image", components.KubeRbacProxyImageDefault, "The kube rbac proxy used by CNA")
 	coreDNSImage := flag.String("core-dns-image", components.CoreDNSImageDefault, "The coredns image used by CNA")
 	multusDynamicNetworksImage := flag.String("multus-dynamic-networks-image", components.MultusDynamicNetworksImageDefault, "The multus dynamic networks controller image managed by CNA")
 	kubeSecondaryDNSImage := flag.String("kube-secondary-dns-image", components.KubeSecondaryDNSImageDefault, "The kubesecondarydns-image managed by CNA")
@@ -274,7 +273,6 @@ func main() {
 			KubeMacPool:            *kubeMacPoolImage,
 			OvsCni:                 *ovsCniImage,
 			MacvtapCni:             *macvtapCniImage,
-			KubeRbacProxy:          *kubeRbacProxyImage,
 			MultusDynamicNetworks:  *multusDynamicNetworksImage,
 			KubeSecondaryDNS:       *kubeSecondaryDNSImage,
 			KubevirtIpamController: *kubevirtIpamControllerImage,

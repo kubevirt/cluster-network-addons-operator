@@ -368,13 +368,13 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Intermediate: &ocpv1.IntermediateTLSProfile{},
 			},
 			KubevirtIpamController: &cnao.KubevirtIpamController{},
-			KubeMacPool:           &cnao.KubeMacPool{},
-			LinuxBridge:           &cnao.LinuxBridge{},
-			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
-			Ovs:                   &cnao.Ovs{},
-			Multus:                &cnao.Multus{},
-			MacvtapCni:            &cnao.MacvtapCni{},
-			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
+			KubeMacPool:            &cnao.KubeMacPool{},
+			LinuxBridge:            &cnao.LinuxBridge{},
+			MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
+			Ovs:                    &cnao.Ovs{},
+			Multus:                 &cnao.Multus{},
+			MacvtapCni:             &cnao.MacvtapCni{},
+			KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 		}
 		CreateConfig(gvk, configSpec)
 		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)
