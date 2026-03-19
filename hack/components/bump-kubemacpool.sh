@@ -95,15 +95,6 @@ spec:
             value: "{{ .TLSMinVersion }}"
           - name: TLS_CIPHERS
             value: "{{ .TLSSecurityProfileCiphers }}"
-      - image: "{{ .KubeRbacProxyImage }}"
-        imagePullPolicy: "{{ .ImagePullPolicy }}"
-        name: kube-rbac-proxy
-        args:
-        - --secure-listen-address=:8443
-        - --upstream=http://127.0.0.1:8080
-        - --proxy-endpoints-port=8643
-        - --tls-min-version={{ .TLSMinVersionKubeRbacProxy }}
-        - --tls-cipher-suites={{ .TLSCipherSuitesKubeRbacProxy }}
       securityContext:
         runAsNonRoot: "{{ .RunAsNonRoot }}"
         runAsUser: "{{ .RunAsUser }}"

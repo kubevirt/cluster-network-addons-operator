@@ -314,6 +314,9 @@ spec:
         - containerPort: 8000
           name: webhook-server
           protocol: TCP
+        - containerPort: 8443
+          name: metrics
+          protocol: TCP
         readinessProbe:
           httpGet:
             httpHeaders:
@@ -338,46 +341,6 @@ spec:
         - mountPath: /tmp/k8s-webhook-server/serving-certs/
           name: tls-key-pair
           readOnly: true
-      - args:
-        - --secure-listen-address=:8443
-        - --upstream=http://127.0.0.1:8080
-        - --proxy-endpoints-port=8643
-        - --tls-min-version={{ .TLSMinVersionKubeRbacProxy }}
-        - --tls-cipher-suites={{ .TLSCipherSuitesKubeRbacProxy }}
-        image: '{{ .KubeRbacProxyImage }}'
-        imagePullPolicy: '{{ .ImagePullPolicy }}'
-        livenessProbe:
-          httpGet:
-            path: healthz
-            port: proxy
-            scheme: HTTPS
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: metrics
-          protocol: TCP
-        - containerPort: 8643
-          name: proxy
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: healthz
-            port: proxy
-            scheme: HTTPS
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          requests:
-            cpu: 10m
-            memory: 20Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-        terminationMessagePolicy: FallbackToLogsOnError
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always
