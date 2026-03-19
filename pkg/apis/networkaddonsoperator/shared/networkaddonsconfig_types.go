@@ -1,3 +1,4 @@
+// +kubebuilder:object:generate=true
 package shared
 
 import (
