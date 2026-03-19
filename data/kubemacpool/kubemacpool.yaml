@@ -314,6 +314,9 @@ spec:
         - containerPort: 8000
           name: webhook-server
           protocol: TCP
+        - containerPort: 8443
+          name: metrics
+          protocol: TCP
         readinessProbe:
           httpGet:
             httpHeaders:
@@ -346,38 +349,7 @@ spec:
         - --tls-cipher-suites={{ .TLSCipherSuitesKubeRbacProxy }}
         image: '{{ .KubeRbacProxyImage }}'
         imagePullPolicy: '{{ .ImagePullPolicy }}'
-        livenessProbe:
-          httpGet:
-            path: healthz
-            port: proxy
-            scheme: HTTPS
-          initialDelaySeconds: 15
-          periodSeconds: 20
         name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: metrics
-          protocol: TCP
-        - containerPort: 8643
-          name: proxy
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: healthz
-            port: proxy
-            scheme: HTTPS
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          requests:
-            cpu: 10m
-            memory: 20Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-        terminationMessagePolicy: FallbackToLogsOnError
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       priorityClassName: system-cluster-critical
       restartPolicy: Always
