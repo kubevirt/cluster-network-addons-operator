@@ -85,12 +85,34 @@ runAsUser:
   type: MustRunAsNonRoot
 seLinuxContext:
   type: MustRunAs
-users:
-- system:serviceaccount:{{ .Namespace }}:bridge-marker
 volumes:
 - configMap
 - emptyDir
 - projected
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bridge-marker-scc-use
+rules:
+- apiGroups: ["security.openshift.io"]
+  resources: ["securitycontextconstraints"]
+  resourceNames: ["bridge-marker"]
+  verbs: ["use"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bridge-marker-scc-use
+  namespace: {{ .Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bridge-marker-scc-use
+subjects:
+- kind: ServiceAccount
+  name: bridge-marker
+  namespace: {{ .Namespace }}
 {{ end }}
 ---
 EOF
