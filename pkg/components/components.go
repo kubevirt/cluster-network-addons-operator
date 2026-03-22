@@ -1389,6 +1389,12 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"multusDynamicNetworks": extv1.JSONSchemaProps{
 							Description: "A multus extension enabling hot-plug and hot-unplug of Pod interfaces",
 							Type:        "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"hostCRISocketPath": extv1.JSONSchemaProps{
+									Description: "HostCRISocketPath defines the path to the CRI socket on the host",
+									Type:        "string",
+								},
+							},
 						},
 						"kubeSecondaryDNS": extv1.JSONSchemaProps{
 							Description: "KubeSecondaryDNS plugin allows to support FQDN for VMI's secondary networks",
