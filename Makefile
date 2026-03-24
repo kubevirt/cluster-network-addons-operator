@@ -7,7 +7,7 @@ VERSION_REPLACES ?= 0.101.0
 
 DEPLOY_DIR ?= manifests
 
-MAX_GO_VERSION=1.24
+MAX_GO_VERSION=1.25
 
 IMAGE_REGISTRY ?= quay.io/kubevirt
 IMAGE_TAG ?= latest
