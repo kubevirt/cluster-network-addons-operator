@@ -15,7 +15,7 @@ spec:
         - alert: CnaoDown
           annotations:
             summary: CNAO pod is down.
-            runbook_url: '{{ .RunbookURLTemplate }}CnaoDown'
+            runbook_url: '{{ printf .RunbookURLTemplate "CnaoDown" }}'
           expr: kubevirt_cnao_operator_up == 0
           for: 5m
           labels:
@@ -26,7 +26,7 @@ spec:
         - alert: NetworkAddonsConfigNotReady
           annotations:
             summary: CNAO CR NetworkAddonsConfig is not ready.
-            runbook_url: '{{ .RunbookURLTemplate }}NetworkAddonsConfigNotReady'
+            runbook_url: '{{ printf .RunbookURLTemplate "NetworkAddonsConfigNotReady" }}'
           expr: sum(kubevirt_cnao_cr_ready{namespace='{{ .Namespace }}'} or vector(0)) == 0
           for: 5m
           labels:
@@ -40,7 +40,7 @@ spec:
         - alert: KubeMacPoolDuplicateMacsFound
           annotations:
             summary: Duplicate macs found.
-            runbook_url: '{{ .RunbookURLTemplate }}KubeMacPoolDuplicateMacsFound'
+            runbook_url: '{{ printf .RunbookURLTemplate "KubeMacPoolDuplicateMacsFound" }}'
           expr: kubevirt_cnao_kubemacpool_duplicate_macs != 0
           for: 5m
           labels:
@@ -57,7 +57,7 @@ spec:
         - alert: KubemacpoolDown
           annotations:
             summary: KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down.
-            runbook_url: '{{ .RunbookURLTemplate }}KubemacpoolDown'
+            runbook_url: '{{ printf .RunbookURLTemplate "KubemacpoolDown" }}'
           expr: kubevirt_cnao_cr_kubemacpool_aggregated == 1 and kubevirt_cnao_kubemacpool_manager_up == 0
           for: 5m
           labels:
