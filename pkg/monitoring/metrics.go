@@ -20,7 +20,7 @@ const (
 	defaultMetricPort          = 8080
 	defaultMonitoringNamespace = "monitoring"
 	defaultServiceAccountName  = "prometheus-k8s"
-	defaultRunbookURLTemplate  = "https://kubevirt.io/monitoring/runbooks/"
+	defaultRunbookURLTemplate  = "https://kubevirt.io/monitoring/runbooks/%s"
 	runbookURLTemplateEnv      = "RUNBOOK_URL_TEMPLATE"
 )
 

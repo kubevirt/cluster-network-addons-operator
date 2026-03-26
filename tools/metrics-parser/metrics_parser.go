@@ -99,7 +99,7 @@ func ParseTemplateFile() []byte {
 		RunbookURLTemplate string
 	}{
 		Namespace:          "testNamespace",
-		RunbookURLTemplate: "testRunbookURLTemplate",
+		RunbookURLTemplate: "testRunbookURLTemplate/%s",
 	}
 
 	err = t.Execute(&doc, test)
