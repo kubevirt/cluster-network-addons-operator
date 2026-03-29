@@ -6,6 +6,103 @@ source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 source hack/components/docker-utils.sh
 
+function __parametize_by_object() {
+	for f in ./*; do
+		case "${f}" in
+			./Namespace_kubemacpool-system.yaml)
+				yaml-utils::update_param ${f} metadata.name '{{ .Namespace }}'
+				yaml-utils::delete_param ${f} metadata.labels
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./ServiceAccount_kubemacpool-sa.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./ClusterRoleBinding_kubemacpool-manager-rolebinding.yaml)
+				yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./ConfigMap_kubemacpool-mac-range-config.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::update_param ${f} data.RANGE_START '{{ .RangeStart }}'
+				yaml-utils::update_param ${f} data.RANGE_END '{{ .RangeEnd }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./Service_kubemacpool-service.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./Deployment_kubemacpool-cert-manager.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .KubeMacPoolImage }}'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+				yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot '{{ .RunAsNonRoot }}'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '{{ .RunAsUser }}'
+				yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"restricted-v2"'
+				yaml-utils::set_param ${f} 'spec.template.metadata.labels."allow-access-cluster-services"' '""'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				# Templatize cert rotation env var values with defaults
+				sed -i '/- name: CA_ROTATE_INTERVAL/{n;s|value: .*|value: {{ .CARotateInterval \| default "8760h0m0s" }}|}' ${f}
+				sed -i '/- name: CA_OVERLAP_INTERVAL/{n;s|value: .*|value: {{ .CAOverlapInterval \| default "24h0m0s" }}|}' ${f}
+				sed -i '/- name: CERT_ROTATE_INTERVAL/{n;s|value: .*|value: {{ .CertRotateInterval \| default "4380h0m0s" }}|}' ${f}
+				sed -i '/- name: CERT_OVERLAP_INTERVAL/{n;s|value: .*|value: {{ .CertOverlapInterval \| default "24h0m0s" }}|}' ${f}
+				;;
+			./Deployment_kubemacpool-mac-controller-manager.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .KubeMacPoolImage }}'
+				yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+				yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot '{{ .RunAsNonRoot }}'
+				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '{{ .RunAsUser }}'
+				yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"restricted-v2"'
+				yaml-utils::set_param ${f} 'spec.template.metadata.labels."allow-access-cluster-services"' '""'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				# Templatize TLS env vars
+				sed -i '/- name: TLS_MIN_VERSION/{n;s|value: .*|value: {{ .TLSMinVersion }}|}' ${f}
+				# Add TLS_CIPHERS env var after TLS_MIN_VERSION
+				sed -i '/value: {{ \.TLSMinVersion }}/a\        - name: TLS_CIPHERS\n          value: {{ .TLSSecurityProfileCiphers }}' ${f}
+				;;
+			./NetworkPolicy_kubemacpool-allow-ingress-to-metrics-endpoint.yaml | \
+			./NetworkPolicy_kubemacpool-allow-ingress-to-webhook.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./MutatingWebhookConfiguration_kubemacpool-mutator.yaml)
+				sed -i "s/namespace: kubemacpool-system/namespace: {{ .Namespace }}/g" ${f}
+				;;
+			./Role_kubemacpool-prometheus.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./RoleBinding_kubemacpool-prometheus.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::update_param ${f} subjects[0].name '{{ .MonitoringServiceAccount }}'
+				yaml-utils::update_param ${f} subjects[0].namespace '{{ .MonitoringNamespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./Service_kubemacpool-metrics-service.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+			./PrometheusRule_kubemacpool-prometheus-rule.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				# Escape Go template expressions ({{ $value }} -> {{ "{{" }} $value {{ "}}" }})
+				sed -i 's/{{ \$value }}/{{ "{{" }} $value {{ "}}" }}/g' ${f}
+				;;
+			./ServiceMonitor_kubemacpool-metrics-monitor.yaml)
+				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
+				yaml-utils::remove_single_quotes_from_yaml ${f}
+				;;
+		esac
+	done
+}
+
 echo 'Bumping kubemacpool'
 KUBEMACPOOL_URL=$(yaml-utils::get_component_url kubemacpool)
 KUBEMACPOOL_COMMIT=$(yaml-utils::get_component_commit kubemacpool)
@@ -18,179 +115,68 @@ KUBEMACPOOL_PATH=${TEMP_DIR}/${KUBEMACPOOL_REPO}
 echo 'Fetch kubemacpool sources'
 git-utils::fetch_component ${KUBEMACPOOL_PATH} ${KUBEMACPOOL_URL} ${KUBEMACPOOL_COMMIT}
 
-echo 'Configure kustomize for CNAO templates and save the rendered manifest under CNAO data'
+echo 'Adjust kubemacpool manifests for CNAO'
 (
-    cd ${KUBEMACPOOL_PATH}
-    mkdir -p config/cnao
-    mkdir -p config/cnao-monitoring
+	cd ${KUBEMACPOOL_PATH}
+	mkdir -p config/cnao
+	cp config/release/kubemacpool.yaml config/cnao/
 
-    cat <<EOF > config/cnao/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: "{{ .Namespace }}"
-bases:
-- ../default
-patchesStrategicMerge:
-- cnao_kubemacpool_manager_patch.yaml
-- cnao_cert-manager_patch.yaml
-- mutatevirtualmachines_opt_mode_patch.yaml
-- mutatepods_opt_mode_patch.yaml
-patches:
-- path: cnao_placement_patch.yaml
-  target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: cert-manager
-    namespace: system
-- path: cnao_placement_patch.yaml
-  target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: mac-controller-manager
-    namespace: system
-- path: cnao_mac-range_patch.yaml
-  target:
-    version: v1
-    kind: ConfigMap
-    name: mac-range-config
-    namespace: system
-- path: cnao_remove-labels_patch.yaml
-  target:
-    version: v1
-    kind: Namespace
-- path: add-pod-template-label-allow-access-cluster-services_patch.yaml
-  target:
-    version: v1
-    kind: Deployment
-EOF
+	echo 'Split manifest per object'
+	cd config/cnao
+	$(yaml-utils::append_delimiter kubemacpool.yaml)
+	$(yaml-utils::split_yaml_by_seperator . kubemacpool.yaml)
+	rm kubemacpool.yaml
+	$(yaml-utils::rename_files_by_object .)
 
-    cat <<EOF > config/cnao-monitoring/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: "{{ .Namespace }}"
-bases:
-- ../monitoring
-EOF
+	echo 'Parametize manifests by object'
+	__parametize_by_object
 
-    cat <<EOF > config/cnao/cnao_kubemacpool_manager_patch.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mac-controller-manager
-  namespace: system
-spec:
-  template:
-    metadata:
-      annotations:
-        openshift.io/required-scc: "restricted-v2"
-    spec:
-      containers:
-      - image: "{{ .KubeMacPoolImage }}"
-        imagePullPolicy: "{{ .ImagePullPolicy }}"
-        name: manager
-        env:
-          - name: TLS_MIN_VERSION
-            value: "{{ .TLSMinVersion }}"
-          - name: TLS_CIPHERS
-            value: "{{ .TLSSecurityProfileCiphers }}"
-      securityContext:
-        runAsNonRoot: "{{ .RunAsNonRoot }}"
-        runAsUser: "{{ .RunAsUser }}"
-EOF
-
-    cat <<EOF > config/cnao/cnao_cert-manager_patch.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: cert-manager
-  namespace: system
-spec:
-  template:
-    metadata:
-      annotations:
-        openshift.io/required-scc: "restricted-v2"
-    spec:
-      containers:
-      - image: "{{ .KubeMacPoolImage }}"
-        imagePullPolicy: "{{ .ImagePullPolicy }}"
-        name: manager
-        env:
-          - name: CA_ROTATE_INTERVAL
-            value: "{{ .CARotateInterval | default \"8760h0m0s\" }}"
-          - name: CA_OVERLAP_INTERVAL
-            value: "{{ .CAOverlapInterval | default \"24h0m0s\" }}"
-          - name: CERT_ROTATE_INTERVAL
-            value: "{{ .CertRotateInterval | default \"4380h0m0s\" }}"
-          - name: CERT_OVERLAP_INTERVAL
-            value: "{{ .CertOverlapInterval | default \"24h0m0s\" }}"
-      securityContext:
-        runAsNonRoot: "{{ .RunAsNonRoot }}"
-        runAsUser: "{{ .RunAsUser }}"
-EOF
-
-    cat <<EOF > config/cnao/cnao_placement_patch.yaml
-- op: replace
-  path: /spec/template/spec/affinity
-  value: "{{ toYaml .Placement.Affinity | nindent 8 }}"
-- op: replace
-  path: /spec/template/spec/nodeSelector
-  value: "{{ toYaml .Placement.NodeSelector | nindent 8 }}"
-- op: replace
-  path: /spec/template/spec/tolerations
-  value: "{{ toYaml .Placement.Tolerations | nindent 8 }}"
-EOF
-
-    cat <<EOF > config/cnao/cnao_mac-range_patch.yaml
-- op: replace
-  path: /data/RANGE_START
-  value: "{{ .RangeStart }}"
-- op: replace
-  path: /data/RANGE_END
-  value: "{{ .RangeEnd }}"
-EOF
-    cat <<EOF > config/cnao/cnao_remove-labels_patch.yaml
-- op: remove
-  path: /metadata/labels
-EOF
-
-    cat <<EOF > config/cnao/add-pod-template-label-allow-access-cluster-services_patch.yaml
-- op: add
-  path: /spec/template/metadata/labels/allow-access-cluster-services
-  value: ""
-EOF
-
-    (
-        cd config/cnao
-
-        echo setting pods to opt-in mode
-        cp ../default/mutatepods_opt_in_patch.yaml mutatepods_opt_mode_patch.yaml
-        echo setting vms to opt-in mode
-        cp ../default/mutatevirtualmachines_opt_out_patch.yaml mutatevirtualmachines_opt_mode_patch.yaml
-    )
-
+	echo 'Rejoin sub-manifests to final manifest'
+	cat Namespace_kubemacpool-system.yaml \
+		ServiceAccount_kubemacpool-sa.yaml \
+		ClusterRole_kubemacpool-manager-role.yaml \
+		ClusterRoleBinding_kubemacpool-manager-rolebinding.yaml \
+		ConfigMap_kubemacpool-mac-range-config.yaml \
+		Service_kubemacpool-service.yaml \
+		Deployment_kubemacpool-cert-manager.yaml \
+		Deployment_kubemacpool-mac-controller-manager.yaml \
+		NetworkPolicy_kubemacpool-allow-ingress-to-metrics-endpoint.yaml \
+		NetworkPolicy_kubemacpool-allow-ingress-to-webhook.yaml \
+		MutatingWebhookConfiguration_kubemacpool-mutator.yaml \
+		> kubemacpool.yaml
 )
 
 rm -rf data/kubemacpool/*
-kustomize_version=$(grep kustomize $KUBEMACPOOL_PATH/Makefile |sed "s/.*@v/v/g")
-curl -L "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${kustomize_version}/kustomize_${kustomize_version}_linux_amd64.tar.gz" -o kustomize.tar.gz
-tar -xvzf kustomize.tar.gz
-mv kustomize $KUBEMACPOOL_PATH
-rm kustomize.tar.gz
-(
-    cd $KUBEMACPOOL_PATH
-    ./kustomize build config/cnao | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/;s/'{{ .RunAsNonRoot }}'/{{ .RunAsNonRoot }}/g;s/'{{ .RunAsUser }}'/{{ .RunAsUser }}/g"
-) > data/kubemacpool/kubemacpool.yaml
+cp ${KUBEMACPOOL_PATH}/config/cnao/kubemacpool.yaml data/kubemacpool/
 
+echo 'Prepare kubemacpool monitoring manifest'
 (
-    cd $KUBEMACPOOL_PATH
-    echo '{{ if .MonitoringAvailable }}'
-    ./kustomize build config/cnao-monitoring | sed "s/'{{ toYaml \(.*\)}}'/{{ toYaml \1}}/;s/'{{ .RunAsNonRoot }}'/{{ .RunAsNonRoot }}/g;s/'{{ .RunAsUser }}'/{{ .RunAsUser }}/g" \
-        | sed "s/  name: prometheus-k8s$/  name: '{{ .MonitoringServiceAccount }}'/;s/  namespace: monitoring$/  namespace: '{{ .MonitoringNamespace }}'/" \
-        | sed 's/{{ \$value }}/{{ "{{" }} \$value {{ "}}" }}/g'
-    echo '{{ end }}'
-) > data/kubemacpool/kubemacpool-monitoring.yaml
+	cd ${KUBEMACPOOL_PATH}
+	mkdir -p config/cnao-monitoring
+	cp config/release/kubemacpool-monitoring.yaml config/cnao-monitoring/
+
+	echo 'Split monitoring manifest per object'
+	cd config/cnao-monitoring
+	$(yaml-utils::append_delimiter kubemacpool-monitoring.yaml)
+	$(yaml-utils::split_yaml_by_seperator . kubemacpool-monitoring.yaml)
+	rm kubemacpool-monitoring.yaml
+	$(yaml-utils::rename_files_by_object .)
+
+	echo 'Parametize monitoring manifests by object'
+	__parametize_by_object
+
+	echo 'Rejoin monitoring sub-manifests to final manifest'
+	echo '{{ if .MonitoringAvailable }}' > kubemacpool-monitoring.yaml
+	cat Role_kubemacpool-prometheus.yaml \
+		RoleBinding_kubemacpool-prometheus.yaml \
+		Service_kubemacpool-metrics-service.yaml \
+		PrometheusRule_kubemacpool-prometheus-rule.yaml \
+		ServiceMonitor_kubemacpool-metrics-monitor.yaml \
+		>> kubemacpool-monitoring.yaml
+	echo '{{ end }}' >> kubemacpool-monitoring.yaml
+)
+
+cp ${KUBEMACPOOL_PATH}/config/cnao-monitoring/kubemacpool-monitoring.yaml data/kubemacpool/
 
 echo 'Get kubemacpool image name and update it under CNAO'
 KUBEMACPOOL_TAG=$(git-utils::get_component_tag ${KUBEMACPOOL_PATH})
