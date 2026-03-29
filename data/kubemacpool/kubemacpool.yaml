@@ -326,7 +326,7 @@ spec:
             port: webhook-server
             scheme: HTTPS
           initialDelaySeconds: 10
-          periodSeconds: 180
+          periodSeconds: 10
         resources:
           requests:
             cpu: 100m
