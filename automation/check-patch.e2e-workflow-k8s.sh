@@ -9,6 +9,7 @@
 
 teardown() {
     # Don't fail if there is no logs
+    cp ${E2E_LOGS}/compliance/*.log ${ARTIFACTS} || true
     cp ${E2E_LOGS}/workflow/*.log ${ARTIFACTS} || true
     make cluster-down
 }
@@ -28,7 +29,10 @@ main() {
     echo "Simulate network restriction on CNAO namespace"
     ./hack/install-network-policy.sh
 
-    make E2E_TEST_EXTRA_ARGS="-ginkgo.noColor --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    ./hack/install-tls-compliance-operator.sh
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.compliance.xml" test/e2e/compliance
+
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
