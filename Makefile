@@ -66,7 +66,8 @@ CONTROLLER_GEN ?= $(GO) tool controller-gen
 
 MONITORING_LINTER ?= $(BIN_DIR)/monitoringlinter
 
-GOLANGCI_LINT_VERSION ?= v1.64.8
+GOLANGCI_LINT_VERSION ?= v2.10.1
+GOLANGCI_LINT_BIN := $(BIN_DIR)/golangci-lint
 
 GO := $(GOBIN)/go
 
@@ -249,10 +250,13 @@ bump-all:
 generate-doc:
 	go run ./tools/metricsdocs > docs/metrics.md
 
-lint:
-	GOTOOLCHAIN=$$(grep '^toolchain' go.mod | awk '{print $$2}' | sed 's/go//' | awk -F. '{print $$1"."$$2}' || echo ""); \
-	GOFLAGS= $(GO) run -mod=mod \
-    github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION} run --verbose test/check/...
+$(GOLANGCI_LINT_BIN):
+	@echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."
+	@mkdir -p $(BIN_DIR)
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(BIN_DIR) $(GOLANGCI_LINT_VERSION)
+
+lint: $(GOLANGCI_LINT_BIN)
+	$(GOLANGCI_LINT_BIN) run --timeout=10m --verbose test/check/...
 
 lint-metrics:
 	./hack/prom_metric_linter.sh --operator-name="kubevirt" --sub-operator-name="cnao"

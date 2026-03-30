@@ -15,7 +15,7 @@ type Component struct {
 	SecurityContextConstraints   string
 	DaemonSets                   []string
 	Deployments                  []string
-	Secret                       string
+	Secret                       string //nolint:gosec
 	MutatingWebhookConfiguration string
 	Service                      string
 	ServiceMonitor               string

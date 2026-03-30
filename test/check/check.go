@@ -31,7 +31,7 @@ import (
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 	cnaov1 "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/v1"
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/components"
+	pkgcomp "github.com/kubevirt/cluster-network-addons-operator/pkg/components"
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/util/k8s"
 
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/eventemitter"
@@ -212,7 +212,7 @@ func checkConfigConditionChangedAfter(
 			}
 
 			oldTime, found := checkCondTimestampMap[conditionType]
-			if found && !cond.LastTransitionTime.Time.After(oldTime) {
+			if found && !cond.LastTransitionTime.After(oldTime) {
 				return fmt.Errorf("condition %q has not changed since %s", conditionType, oldTime.Format(time.RFC3339))
 			}
 
@@ -244,7 +244,7 @@ func PlacementListFromComponentDaemonSets(component Component) ([]cnao.Placement
 	placementList := []cnao.Placement{}
 	for _, daemonSetName := range component.DaemonSets {
 		daemonSet := appsv1.DaemonSet{}
-		err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: daemonSetName, Namespace: components.Namespace}, &daemonSet)
+		err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: daemonSetName, Namespace: pkgcomp.Namespace}, &daemonSet)
 		if err != nil {
 			return placementList, err
 		}
@@ -264,7 +264,7 @@ func PlacementListFromComponentDeployments(component Component) ([]cnao.Placemen
 	placementList := []cnao.Placement{}
 	for _, deploymentName := range component.Deployments {
 		deployment := appsv1.Deployment{}
-		err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
+		err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: pkgcomp.Namespace}, &deployment)
 		if err != nil {
 			return placementList, err
 		}
@@ -282,7 +282,7 @@ func PlacementListFromComponentDeployments(component Component) ([]cnao.Placemen
 
 func GetEnvVarsFromDeployment(deploymentName string) ([]corev1.EnvVar, error) {
 	deployment := appsv1.Deployment{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: components.Namespace}, &deployment)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: deploymentName, Namespace: pkgcomp.Namespace}, &deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -338,10 +338,10 @@ func CheckOperatorIsReady(timeout time.Duration) {
 	By("Checking that the operator is up and running")
 	if timeout != CheckImmediately {
 		Eventually(func() error {
-			return checkForDeployment(components.Name, false, false)
+			return checkForDeployment(pkgcomp.Name, false, false)
 		}, timeout, time.Second).ShouldNot(HaveOccurred(), "Timed out waiting for the operator to become ready")
 	} else {
-		Expect(checkForDeployment(components.Name, false, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
+		Expect(checkForDeployment(pkgcomp.Name, false, false)).ShouldNot(HaveOccurred(), "Operator is not ready")
 	}
 }
 
@@ -418,7 +418,7 @@ func CheckForLeftoverObjects(currentVersion string) {
 
 func CheckForLeftoverLabels() {
 	namespace := corev1.Namespace{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: components.Namespace}, &namespace)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: pkgcomp.Namespace}, &namespace)
 	Expect(err).NotTo(HaveOccurred())
 
 	labels := namespace.GetLabels()
@@ -635,7 +635,7 @@ func checkForSecurityContextConstraints(name string) error {
 }
 
 func checkForDeployment(name string, checkVersionLabels, checkRelationshipLabels bool) error {
-	return CheckForGenericDeployment(name, components.Namespace, checkVersionLabels, checkRelationshipLabels)
+	return CheckForGenericDeployment(name, pkgcomp.Namespace, checkVersionLabels, checkRelationshipLabels)
 }
 
 func CheckForGenericDeployment(name, namespace string, checkVersionLabels, checkRelationshipLabels bool) error {
@@ -708,8 +708,8 @@ func PrintOperatorPodStability() {
 func CalculateOperatorPodStability() error {
 	pods := corev1.PodList{}
 	listOptions := []client.ListOption{
-		client.MatchingLabels(map[string]string{"name": components.Name}),
-		client.InNamespace(components.Namespace),
+		client.MatchingLabels(map[string]string{"name": pkgcomp.Name}),
+		client.InNamespace(pkgcomp.Namespace),
 	}
 
 	err := testenv.Client.List(context.Background(), &pods, listOptions...)
@@ -730,7 +730,7 @@ func CalculateOperatorPodStability() error {
 func checkForDaemonSet(name string) error {
 	daemonSet := appsv1.DaemonSet{}
 
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &daemonSet)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &daemonSet)
 	if err != nil {
 		return err
 	}
@@ -738,7 +738,7 @@ func checkForDaemonSet(name string) error {
 	labels := daemonSet.GetLabels()
 	if labels != nil {
 		if _, operatorLabelSet := labels[cnaov1.GroupVersion.Group+"/version"]; !operatorLabelSet {
-			return fmt.Errorf("DaemonSet %s/%s is missing operator label", components.Namespace, name)
+			return fmt.Errorf("DaemonSet %s/%s is missing operator label", pkgcomp.Namespace, name)
 		}
 	}
 
@@ -752,7 +752,7 @@ func checkForDaemonSet(name string) error {
 		if err != nil {
 			panic(err)
 		}
-		return fmt.Errorf("DaemonSet %s/%s is not ready, current state:\n%v", components.Namespace, name, string(manifest))
+		return fmt.Errorf("DaemonSet %s/%s is not ready, current state:\n%v", pkgcomp.Namespace, name, string(manifest))
 	}
 
 	return nil
@@ -760,7 +760,7 @@ func checkForDaemonSet(name string) error {
 
 func checkForSecret(name string) error {
 	secret := corev1.Secret{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &secret)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &secret)
 	if err != nil {
 		return err
 	}
@@ -790,7 +790,7 @@ func checkForMutatingWebhookConfiguration(name string) error {
 
 func checkForService(name string) error {
 	service := corev1.Service{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &service)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &service)
 	if err != nil {
 		return err
 	}
@@ -805,7 +805,7 @@ func checkForService(name string) error {
 
 func checkForServiceMonitor(name string) error {
 	serviceMonitor := monitoringv1.ServiceMonitor{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &serviceMonitor)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &serviceMonitor)
 	if err != nil {
 		return err
 	}
@@ -820,7 +820,7 @@ func checkForServiceMonitor(name string) error {
 
 func checkForPrometheusRule(name string) error {
 	prometheusRule := monitoringv1.PrometheusRule{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &prometheusRule)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &prometheusRule)
 	if err != nil {
 		return err
 	}
@@ -851,7 +851,7 @@ func checkForNetworkAttachmentDefinition(name string) error {
 
 func checkForConfigMap(name string) error {
 	configMap := corev1.ConfigMap{}
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &configMap)
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &configMap)
 	if err != nil {
 		return err
 	}
@@ -905,19 +905,19 @@ func checkForSecurityContextConstraintsRemoval(name string) error {
 }
 
 func checkForDaemonSetRemoval(name string) error {
-	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: components.Namespace}, &appsv1.DaemonSet{})
+	err := testenv.Client.Get(context.Background(), types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &appsv1.DaemonSet{})
 	return isNotFound("DaemonSets", name, err)
 }
 
 func checkForDeploymentRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: name, Namespace: components.Namespace}, &appsv1.Deployment{})
+		types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &appsv1.Deployment{})
 	return isNotFound("Deployments", name, err)
 }
 
 func checkForSecretRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Secret{})
+		types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &corev1.Secret{})
 	return isNotFound("Secret", name, err)
 }
 
@@ -929,20 +929,20 @@ func checkForMutatingWebhookConfigurationRemoval(name string) error {
 
 func checkForServiceRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: name, Namespace: components.Namespace}, &corev1.Service{})
+		types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace}, &corev1.Service{})
 	return isNotFound("Service", name, err)
 }
 
 func checkForServiceMonitorRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: name, Namespace: components.Namespace},
+		types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace},
 		&monitoringv1.ServiceMonitor{})
 	return isNotFound("ServiceMonitor", name, err)
 }
 
 func checkForPrometheusRuleRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: name, Namespace: components.Namespace},
+		types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace},
 		&monitoringv1.PrometheusRule{})
 	return isNotFound("PrometheusRule", name, err)
 }
@@ -959,7 +959,7 @@ func checkForNetworkAttachmentDefinitionRemoval(name string) error {
 
 func checkForConfigMapRemoval(name string) error {
 	err := testenv.Client.Get(context.Background(),
-		types.NamespacedName{Name: name, Namespace: components.Namespace},
+		types.NamespacedName{Name: name, Namespace: pkgcomp.Namespace},
 		&corev1.ConfigMap{})
 	return isNotFound("ConfigMap", name, err)
 }
@@ -968,7 +968,7 @@ func getMonitoringEndpoint() (*discoveryv1.EndpointSlice, error) {
 	By("Finding CNAO prometheus endpoint")
 	endpointSliceList := &discoveryv1.EndpointSliceList{}
 	err := testenv.Client.List(context.Background(), endpointSliceList,
-		client.InNamespace(components.Namespace),
+		client.InNamespace(pkgcomp.Namespace),
 		client.MatchingLabels{"kubernetes.io/service-name": MonitoringComponent.Service})
 	if err != nil {
 		return nil, err
@@ -985,7 +985,7 @@ func getMonitoringEndpoint() (*discoveryv1.EndpointSlice, error) {
 
 		for j := range es.Endpoints {
 			endpoint := &es.Endpoints[j]
-			if endpoint.TargetRef != nil && strings.HasPrefix(endpoint.TargetRef.Name, components.Name) {
+			if endpoint.TargetRef != nil && strings.HasPrefix(endpoint.TargetRef.Name, pkgcomp.Name) {
 				return es, nil
 			}
 		}
@@ -1022,7 +1022,7 @@ func GetMonitoringEndpoint() (*discoveryv1.Endpoint, int32, error) {
 
 	for i := range endpointSlice.Endpoints {
 		endpoint := &endpointSlice.Endpoints[i]
-		if endpoint.TargetRef != nil && strings.HasPrefix(endpoint.TargetRef.Name, components.Name) {
+		if endpoint.TargetRef != nil && strings.HasPrefix(endpoint.TargetRef.Name, pkgcomp.Name) {
 			return endpoint, epPort, nil
 		}
 	}
@@ -1108,7 +1108,7 @@ func retrieveRange() (rangeStart, rangeEnd string) {
 	configMap := &corev1.ConfigMap{}
 	Eventually(func() error {
 		return testenv.Client.Get(context.TODO(),
-			types.NamespacedName{Namespace: components.Namespace, Name: names.AppliedPrefix + names.OperatorConfig}, configMap)
+			types.NamespacedName{Namespace: pkgcomp.Namespace, Name: names.AppliedPrefix + names.OperatorConfig}, configMap)
 	}, timeout, pollingDuration).ShouldNot(HaveOccurred())
 
 	appliedData, exist := configMap.Data["applied"]
