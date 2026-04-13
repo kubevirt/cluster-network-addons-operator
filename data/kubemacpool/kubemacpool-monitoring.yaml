@@ -1,20 +1,21 @@
 {{ if .MonitoringAvailable }}
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: kubemacpool-prometheus
   namespace: '{{ .Namespace }}'
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - services
-  - endpoints
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -26,9 +27,9 @@ roleRef:
   kind: Role
   name: kubemacpool-prometheus
 subjects:
-- kind: ServiceAccount
-  name: '{{ .MonitoringServiceAccount }}'
-  namespace: '{{ .MonitoringNamespace }}'
+  - kind: ServiceAccount
+    name: '{{ .MonitoringServiceAccount }}'
+    namespace: '{{ .MonitoringNamespace }}'
 ---
 apiVersion: v1
 kind: Service
@@ -40,10 +41,10 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   ports:
-  - name: metrics
-    port: 8443
-    protocol: TCP
-    targetPort: 8443
+    - name: metrics
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
   selector:
     control-plane: mac-controller-manager
 ---
@@ -57,18 +58,17 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   groups:
-  - name: alerts.rules
-    rules:
-    - alert: KubemacpoolMACCollisionDetected
-      annotations:
-        description: '{{ "{{" }} $value {{ "}}" }} MAC address(es) have collisions. Multiple running
-          objects are using the same MAC address.'
-        runbook_url: https://kubevirt.io/monitoring/runbooks/KubemacpoolMACCollisionDetected
-        summary: MAC address collisions detected.
-      expr: count(kmp_mac_collisions > 1) > 0
-      for: 30s
-      labels:
-        severity: warning
+    - name: alerts.rules
+      rules:
+        - alert: KubemacpoolMACCollisionDetected
+          annotations:
+            description: '{{ "{{" }} $value {{ "}}" }} MAC address(es) have collisions. Multiple running objects are using the same MAC address.'
+            runbook_url: https://kubevirt.io/monitoring/runbooks/KubemacpoolMACCollisionDetected
+            summary: MAC address collisions detected.
+          expr: count(kmp_mac_collisions > 1) > 0
+          for: 30s
+          labels:
+            severity: warning
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -80,11 +80,11 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   endpoints:
-  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    port: metrics
-    scheme: https
-    tlsConfig:
-      insecureSkipVerify: true
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      port: metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
   selector:
     matchLabels:
       control-plane: mac-controller-manager
