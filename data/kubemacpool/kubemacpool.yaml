@@ -294,10 +294,6 @@ spec:
                   name: kubemacpool-mac-range-config
             - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
               value: v1
-            - name: TLS_MIN_VERSION
-              value: '{{ .TLSMinVersion }}'
-            - name: TLS_CIPHERS
-              value: '{{ .TLSSecurityProfileCiphers }}'
           image: '{{ .KubeMacPoolImage }}'
           imagePullPolicy: '{{ .ImagePullPolicy }}'
           livenessProbe:
