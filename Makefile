@@ -106,7 +106,7 @@ vet: $(GO) $(cmd_sources) $(pkg_sources)
 	touch $@
 
 goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
-	$(GO) tool goimports -d ./pkg ./cmd
+	$(GO) tool goimports -d ./pkg ./cmd ./test/ ./tools/
 	touch $@
 
 test/unit: $(GO)
