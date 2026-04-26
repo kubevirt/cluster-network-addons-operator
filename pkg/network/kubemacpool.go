@@ -121,7 +121,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	}
 
 	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
-	data.Data["TLSSecurityProfileCiphers"] = strings.Join(ciphers, ",")
+	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
 	data.Data["TLSMinVersion"] = string(tlsMinVersion)
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
