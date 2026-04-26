@@ -271,6 +271,10 @@ spec:
         - args:
             - --v=production
             - --wait-time=300
+            - "--tls-min-version={{ .TLSMinVersion }}"
+{{ if index . "TLSSecurityProfileCiphers" }}
+            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"
+{{ end }}
           command:
             - /manager
           env:
