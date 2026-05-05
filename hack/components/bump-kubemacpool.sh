@@ -105,6 +105,8 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
 				# Escape Go template expressions ({{ $value }} -> {{ "{{" }} $value {{ "}}" }})
 				sed -i 's/{{ \$value }}/{{ "{{" }} $value {{ "}}" }}/g' ${f}
+				# Templatize runbook URL to use RUNBOOK_URL_TEMPLATE
+				sed -i "s|runbook_url:.*|runbook_url: '{{ printf .RunbookURLTemplate \"KubemacpoolMACCollisionDetected\" }}'|" ${f}
 				;;
 			./ServiceMonitor_kubemacpool-metrics-monitor.yaml)
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
