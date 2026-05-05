@@ -72,6 +72,19 @@ kind: Kustomization
 namespace: "{{ .Namespace }}"
 bases:
 - ../monitoring
+patches:
+- path: cnao_runbook_url_patch.yaml
+  target:
+    group: monitoring.coreos.com
+    version: v1
+    kind: PrometheusRule
+    name: kubemacpool-prometheus-rule
+EOF
+
+    cat <<EOF > config/cnao-monitoring/cnao_runbook_url_patch.yaml
+- op: replace
+  path: /spec/groups/0/rules/0/annotations/runbook_url
+  value: '{{ printf .RunbookURLTemplate "KubemacpoolMACCollisionDetected" }}'
 EOF
 
     cat <<EOF > config/cnao/cnao_kubemacpool_manager_patch.yaml
