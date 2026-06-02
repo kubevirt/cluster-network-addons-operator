@@ -21,6 +21,9 @@ source hack/components/git-utils.sh
 source hack/components/yaml-utils.sh
 source cluster/cluster.sh
 
+# Pre-pull yq image with retry logic to avoid CI failures during setup
+yaml-utils::prepull_yq_image
+
 USE_KUBEVIRTCI=${USE_KUBEVIRTCI:-"true"}
 CNAO_DEPLOY_KUBEVIRT=${CNAO_DEPLOY_KUBEVIRT:-"false"}
 
