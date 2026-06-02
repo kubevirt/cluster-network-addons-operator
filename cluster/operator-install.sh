@@ -17,7 +17,11 @@
 set -ex
 
 ./cluster/kubectl.sh create -f _out/cluster-network-addons/${VERSION}/operator.yaml
-if [[ ! $(./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster-network-addons-operator --for condition=Available --timeout=600s) ]]; then
+
+# Wrap kubectl wait with timeout to prevent indefinite hangs due to API server issues
+# kubectl has its own --timeout=600s, but can hang if API server becomes unresponsive
+# Using 15m wrapper timeout to fail faster than Prow job timeout
+if ! timeout 15m ./cluster/kubectl.sh -n cluster-network-addons wait deployment cluster-network-addons-operator --for condition=Available --timeout=600s; then
 	echo "Failed to wait for CNAO deployment to be ready"
 	./cluster/kubectl.sh get pods -n cluster-network-addons
 	./cluster/kubectl.sh describe deployment cluster-network-addons-operator -n cluster-network-addons
