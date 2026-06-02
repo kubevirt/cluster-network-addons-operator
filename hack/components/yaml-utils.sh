@@ -5,9 +5,38 @@ set -xeo pipefail
 source hack/components/docker-utils.sh
 
 export OCI_BIN=${OCI_BIN:-$(docker-utils::determine_cri_bin)}
+export YQ_IMAGE=${YQ_IMAGE:-docker.io/mikefarah/yq:3.3.4}
+
+# Pre-pull the yq image with retry logic to avoid failures during setup
+function yaml-utils::prepull_yq_image() {
+  local max_attempts=3
+  local attempt=1
+  local wait_time=5
+
+  echo "Pre-pulling yq image: ${YQ_IMAGE}"
+
+  while [ $attempt -le $max_attempts ]; do
+    echo "Attempt $attempt of $max_attempts to pull ${YQ_IMAGE}"
+    if ${OCI_BIN} pull ${YQ_IMAGE}; then
+      echo "Successfully pulled ${YQ_IMAGE}"
+      return 0
+    else
+      echo "Failed to pull ${YQ_IMAGE} on attempt $attempt"
+      if [ $attempt -lt $max_attempts ]; then
+        echo "Waiting ${wait_time} seconds before retry..."
+        sleep $wait_time
+        wait_time=$((wait_time * 2))  # Exponential backoff
+      fi
+      attempt=$((attempt + 1))
+    fi
+  done
+
+  echo "ERROR: Failed to pull ${YQ_IMAGE} after $max_attempts attempts"
+  return 1
+}
 
 function __yq() {
-  ${OCI_BIN} run --rm -v ${PWD}:/workdir:Z docker.io/mikefarah/yq:3.3.4 yq "$@"
+  ${OCI_BIN} run --pull=missing --rm -v ${PWD}:/workdir:Z ${YQ_IMAGE} yq "$@"
 }
 
 function yaml-utils::get_param() {
