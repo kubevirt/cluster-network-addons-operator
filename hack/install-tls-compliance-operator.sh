@@ -26,6 +26,6 @@ echo "Patching the operator's Deployment for fine tuning reporting intervals.."
 ]'
 
 echo "Waiting for TLS Compliance Operator readiness.."
-./cluster/kubectl.sh -n $NAMESPACE rollout status deployment/$DEPLOY_NAME --timeout=120s
+./cluster/kubectl.sh -n $NAMESPACE rollout status deployment/$DEPLOY_NAME --timeout=600s
 
 echo "TLS Compliance Operator is ready"
