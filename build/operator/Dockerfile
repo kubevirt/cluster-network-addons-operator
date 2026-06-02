@@ -1,14 +1,15 @@
 ARG BUILD_ARCH=amd64
-FROM --platform=linux/${BUILD_ARCH} quay.io/centos/centos:stream9 AS builder
+# Use official Go image instead of downloading Go manually
+FROM --platform=linux/${BUILD_ARCH} docker.io/library/golang:1.25.7 AS builder
 
-RUN dnf install -y tar gzip jq && dnf clean all
-RUN ARCH=$(uname -m | sed 's/x86_64/amd64/') && \
-    GO_VERSION=$(curl -L -s "https://go.dev/dl/?mode=json" | jq -r '.[0].version') && \
-    curl -L "https://go.dev/dl/${GO_VERSION}.linux-${ARCH}.tar.gz" -o go.tar.gz && \
-    tar -C /usr/local -xzf go.tar.gz && \
-    rm go.tar.gz
-ENV PATH=$PATH:/usr/local/go/bin
 WORKDIR /go/src/cluster-network-addons-operator
+
+# Copy go.mod and go.sum first to leverage Docker layer caching
+# This allows dependency downloads to be cached separately from source code
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Now copy the rest of the source code
 COPY . .
 
 ARG TARGETOS
