@@ -13,12 +13,9 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
-    make bump-all
-    if ! make check; then
-        echo "error: Uncommitted changes found after bump check. \
-        If you are performing a component bump, recheck all created manifests and image URL are valid. \
-        If you are not attempting a component bump, please contact the repo's maintainer for further analysis"
-    fi
+    # Skip bump-all in unit tests to avoid expensive multi-platform image builds
+    # Component bump validation should be done in a separate build/integration job
+    # See: https://github.com/kubevirt/cluster-network-addons-operator/issues/2732
 
     make vendor
     if ! make check; then
@@ -29,6 +26,10 @@ main() {
     verify_metrics_docs_updated
     make lint-metrics
     make lint-monitoring
+
+    # Build only for current architecture to speed up CI
+    # Multi-platform builds should be done in release/integration jobs
+    export PLATFORMS=$(uname -m | sed 's/x86_64/linux\/amd64/;s/aarch64/linux\/arm64/;s/s390x/linux\/s390x/')
     make docker-build
 }
 
