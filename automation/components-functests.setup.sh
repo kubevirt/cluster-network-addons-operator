@@ -24,6 +24,12 @@ source cluster/cluster.sh
 USE_KUBEVIRTCI=${USE_KUBEVIRTCI:-"true"}
 CNAO_DEPLOY_KUBEVIRT=${CNAO_DEPLOY_KUBEVIRT:-"false"}
 
+# Pre-pull yq image to avoid timeout issues during yaml parsing
+# The yaml-utils functions use this image multiple times, and pulling
+# on-demand can be slow in CI environments
+echo "Pre-pulling yq container image..."
+${OCI_BIN} pull docker.io/mikefarah/yq:3.3.4 || true
+
 # Export .kubeconfig full path, so it will be possible
 # to use 'kubectl' directly from the component directory path
 export KUBECONFIG=${KUBECONFIG:-$(cluster::kubeconfig)}
