@@ -28,7 +28,9 @@ main() {
         export E2E_TEST_TIMEOUT=4h
     else
         # Don't run all upgrade tests in regular PRs, stick to those released under HCO
-        export RELEASES_SELECTOR="{0.89.3,0.91.1,0.93.0,0.95.0,99.0.0}"
+        # Reduced to 2 versions to avoid Prow job timeout (issue #2777)
+        # Tests most recent (0.95.0) and oldest (0.89.3) for upgrade path coverage
+        export RELEASES_SELECTOR="{0.89.3,0.95.0,99.0.0}"
     fi
 
     make cluster-down
