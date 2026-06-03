@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"time"
 
 	v1 "k8s.io/api/apps/v1"
@@ -135,6 +136,16 @@ var _ = Describe("NetworkAddonsConfig", func() {
 		})
 		//2304
 		It("should be able to deploy all components one by one", func() {
+			// Skip this time-intensive test on s390x to avoid CI timeout (#2776)
+			// This test sequentially deploys 8 components with waits between each,
+			// which is redundant with individual component tests and takes 20-30 minutes on s390x.
+			// The s390x CI job has a 4-hour Prow timeout and was timing out after completing
+			// only 22 of 30 tests. Coverage is maintained via individual component tests and
+			// the "all components at once" test.
+			if runtime.GOARCH == "s390x" {
+				Skip("Skipping time-intensive sequential deployment test on s390x to avoid CI timeout")
+			}
+
 			configSpec := cnao.NetworkAddonsConfigSpec{}
 			components := []Component{}
 
