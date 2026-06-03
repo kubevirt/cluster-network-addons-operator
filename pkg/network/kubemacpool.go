@@ -8,11 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/monitoring/rules/alerts"
+	"github.com/kubevirt/cluster-network-addons-operator/pkg/render"
 )
 
 // ValidateMultus validates the combination of DisableMultiNetwork and AddtionalNetworks
@@ -123,6 +124,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
 	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
 	data.Data["TLSMinVersion"] = string(tlsMinVersion)
+	data.Data["RunbookURLTemplate"] = alerts.GetRunbookURLTemplate()
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)
 	if err != nil {
