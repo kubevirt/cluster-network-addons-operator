@@ -29,9 +29,33 @@ CNAO_DEPLOY_KUBEVIRT=${CNAO_DEPLOY_KUBEVIRT:-"false"}
 export KUBECONFIG=${KUBECONFIG:-$(cluster::kubeconfig)}
 
 function deploy_cluster {
-  # Spin up Kubernetes cluster
+  # Spin up Kubernetes cluster with retry logic for transient failures
   export KUBEVIRT_MEMORY_SIZE=10240M
-  make cluster-down cluster-up
+  local max_attempts=3
+  local attempt=1
+
+  while [ $attempt -le $max_attempts ]; do
+    echo "Attempting cluster deployment (attempt $attempt of $max_attempts)..."
+
+    if make cluster-down cluster-up; then
+      echo "Cluster deployment succeeded on attempt $attempt"
+      return 0
+    else
+      echo "Cluster deployment failed on attempt $attempt"
+
+      if [ $attempt -lt $max_attempts ]; then
+        echo "Waiting 10 seconds before retry..."
+        sleep 10
+        echo "Cleaning up before retry..."
+        make cluster-down || true
+      fi
+
+      attempt=$((attempt + 1))
+    fi
+  done
+
+  echo "ERROR: Cluster deployment failed after $max_attempts attempts"
+  return 1
 }
 
 function deploy_cnao {
