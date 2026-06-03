@@ -34,7 +34,10 @@ function yaml-utils::update_param() {
 
 	local old_value=$(yaml-utils::get_param ${yaml_file} ${path})
 	if [ ! -z "${old_value}" ]; then
-		yaml-utils::set_param ${yaml_file} ${path} "${new_value}"
+		# Skip the update if the value is already correct to avoid unnecessary file modifications
+		if [ "${old_value}" != "${new_value}" ]; then
+			yaml-utils::set_param ${yaml_file} ${path} "${new_value}"
+		fi
 	else
 		echo Error: ${path} is not found in ${yaml_file}
 		exit 1
