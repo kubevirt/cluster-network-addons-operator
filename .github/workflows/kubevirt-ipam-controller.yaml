@@ -23,6 +23,9 @@ jobs:
           mysql-server-core-* php-* php7* \
           powershell temurin-* zulu-*
 
+    - name: Pre-pull yq image
+      run: docker pull docker.io/mikefarah/yq:3.3.4
+
     - name: Run e2e tests
       env:
         KIND_ALLOW_SYSTEM_WRITES: true
