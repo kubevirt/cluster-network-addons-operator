@@ -28,7 +28,6 @@ ENV ENTRYPOINT=/entrypoint \
     HOME=/home/${USER_NAME}
 
 RUN \
-    yum -y update && \
     yum clean all && \
     mkdir -p ${HOME} && \
     chown ${USER_UID}:0 ${HOME} && \
