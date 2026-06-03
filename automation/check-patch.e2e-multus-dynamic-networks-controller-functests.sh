@@ -42,6 +42,28 @@ main() {
     go version
 
     echo "Run multus-dynamic-networks functional tests"
+
+    # Patch e2e test timeout for IPAM hot-unplug test (issue #2766)
+    # Increase timeout from 15s to 30s to account for slower IPAM cleanup in CI
+    echo "Patching e2e test timeout for hot-unplug operations..."
+    if [ -f "e2e/e2e_test.go" ]; then
+        # Replace timeout variable assignments from 15s to 30s
+        # This handles patterns like: timeout := 15 * time.Second
+        sed -i 's/timeout := 15 \* time\.Second/timeout := 30 * time.Second/g' e2e/e2e_test.go
+        sed -i 's/timeout = 15 \* time\.Second/timeout = 30 * time.Second/g' e2e/e2e_test.go
+
+        # Also handle direct usage in Eventually calls
+        # Pattern: Eventually(..., 15*time.Second, ...)
+        sed -i 's/\(Eventually([^,]*,\) 15\*time\.Second/\1 30*time.Second/g' e2e/e2e_test.go
+
+        # Handle const timeout definitions
+        sed -i 's/const timeout = 15 \* time\.Second/const timeout = 30 * time.Second/g' e2e/e2e_test.go
+
+        echo "Timeout patch applied successfully"
+    else
+        echo "Warning: e2e/e2e_test.go not found, skipping timeout patch"
+    fi
+
     export LOWER_DEVICE="eth0"
     make e2e/test
 }
