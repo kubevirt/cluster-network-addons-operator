@@ -43,7 +43,28 @@ main() {
 
     echo "Run multus-dynamic-networks functional tests"
     export LOWER_DEVICE="eth0"
-    make e2e/test
+
+    # The hot-unplug test in the upstream multus-dynamic-networks-controller
+    # is known to be flaky due to timing issues (see #1871, #2273, #2692, #2770).
+    # Add retry logic to handle intermittent failures.
+    MAX_RETRIES=3
+    RETRY_DELAY=10
+
+    for attempt in $(seq 1 $MAX_RETRIES); do
+        echo "Test attempt $attempt of $MAX_RETRIES"
+        if make e2e/test; then
+            echo "Tests passed on attempt $attempt"
+            break
+        else
+            if [ $attempt -lt $MAX_RETRIES ]; then
+                echo "Tests failed on attempt $attempt, retrying in ${RETRY_DELAY}s..."
+                sleep $RETRY_DELAY
+            else
+                echo "Tests failed after $MAX_RETRIES attempts"
+                exit 1
+            fi
+        fi
+    done
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
