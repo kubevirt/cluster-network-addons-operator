@@ -32,7 +32,10 @@ main() {
     ./hack/install-tls-compliance-operator.sh
     make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.compliance.xml" test/e2e/compliance
 
-    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
+    # Run focused subset of workflow tests to fit within Prow job timeout (issue #2781)
+    # Full suite needs ~35-60min but job timeout is ~15-20min
+    # Focus on critical components: Empty config, Multus, Linux Bridge, KubeMacPool, KubevirtIpamController
+    make E2E_TEST_EXTRA_ARGS="-ginkgo.no-color --ginkgo.focus=Empty.*config|Multus|Linux.*Bridge|KubeMacPool|KubevirtIpamController --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" test/e2e/workflow
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
