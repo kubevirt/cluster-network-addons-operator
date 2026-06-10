@@ -1387,6 +1387,13 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"linuxBridge": extv1.JSONSchemaProps{
 							Description: "LinuxBridge plugin allows users to create a bridge and add the host and the container to it",
 							Type:        "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"bridgeMarkerHealthPort": extv1.JSONSchemaProps{
+									Description: "BridgeMarkerHealthPort defines the health check port for the linux-bridge marker container",
+									Type:        "integer",
+									Format:      "int32",
+								},
+							},
 						},
 						"macvtap": extv1.JSONSchemaProps{
 							Description: "MacvtapCni plugin allows users to define Kubernetes networks on top of existing host interfaces",
