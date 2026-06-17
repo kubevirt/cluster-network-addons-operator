@@ -1,13 +1,6 @@
 ARG BUILD_ARCH=amd64
-FROM --platform=linux/${BUILD_ARCH} quay.io/centos/centos:stream9 AS builder
-
-RUN dnf install -y tar gzip jq && dnf clean all
-RUN ARCH=$(uname -m | sed 's/x86_64/amd64/') && \
-    GO_VERSION=$(curl -L -s "https://go.dev/dl/?mode=json" | jq -r '.[0].version') && \
-    curl -L "https://go.dev/dl/${GO_VERSION}.linux-${ARCH}.tar.gz" -o go.tar.gz && \
-    tar -C /usr/local -xzf go.tar.gz && \
-    rm go.tar.gz
-ENV PATH=$PATH:/usr/local/go/bin
+ARG GO_VERSION
+FROM --platform=linux/${BUILD_ARCH} quay.io/projectquay/golang:${GO_VERSION} AS builder
 WORKDIR /go/src/cluster-network-addons-operator
 COPY . .
 
