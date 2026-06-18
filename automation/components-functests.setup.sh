@@ -101,6 +101,16 @@ git-utils::fetch_component ${component_path} ${component_url} ${component_commit
 export TMP_COMPONENT_PATH=${component_path}
 
 if [[ $USE_KUBEVIRTCI == true ]]; then
+  # Pre-pull kubevirtci cluster image to avoid timeout issues during cluster setup
+  if [ -z "${OCI_BIN:-}" ]; then
+    export OCI_BIN=$(if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
+  fi
+  if [ -n "${OCI_BIN:-}" ]; then
+    KUBEVIRTCI_IMAGE="quay.io/kubevirtci/${KUBEVIRT_PROVIDER}:${KUBEVIRTCI_TAG}"
+    echo "Pre-pulling kubevirtci cluster image: ${KUBEVIRTCI_IMAGE}..."
+    ${OCI_BIN} pull ${KUBEVIRTCI_IMAGE} || true
+  fi
+
   deploy_cluster
   deploy_cnao
   patch_restricted_namespace
