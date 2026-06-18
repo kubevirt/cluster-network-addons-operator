@@ -24,6 +24,20 @@ source cluster/cluster.sh
 USE_KUBEVIRTCI=${USE_KUBEVIRTCI:-"true"}
 CNAO_DEPLOY_KUBEVIRT=${CNAO_DEPLOY_KUBEVIRT:-"false"}
 
+# Pre-pull kubevirtci cluster image to avoid timeout issues during cluster setup
+# The cluster-up process downloads this large image, and pulling on-demand can be
+# slow in CI environments, potentially exceeding Prow timeout constraints
+if [[ $USE_KUBEVIRTCI == true ]]; then
+  if [ -z "${OCI_BIN:-}" ]; then
+    export OCI_BIN=$(if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; fi)
+  fi
+  if [ -n "${OCI_BIN:-}" ]; then
+    KUBEVIRTCI_IMAGE="quay.io/kubevirtci/${KUBEVIRT_PROVIDER}:${KUBEVIRTCI_TAG}"
+    echo "Pre-pulling kubevirtci cluster image: ${KUBEVIRTCI_IMAGE}..."
+    ${OCI_BIN} pull ${KUBEVIRTCI_IMAGE} || true
+  fi
+fi
+
 # Export .kubeconfig full path, so it will be possible
 # to use 'kubectl' directly from the component directory path
 export KUBECONFIG=${KUBECONFIG:-$(cluster::kubeconfig)}
