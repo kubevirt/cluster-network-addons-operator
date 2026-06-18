@@ -18,12 +18,21 @@ set -ex
 
 SCRIPTS_PATH="$(dirname "$(realpath "$0")")"
 source ${SCRIPTS_PATH}/cluster.sh
+source ${SCRIPTS_PATH}/../hack/components/docker-utils.sh
 
 export KUBEVIRT_DEPLOY_PROMETHEUS=true
 export KUBEVIRT_DEPLOY_PROMETHEUS_ALERTMANAGER=true
 export KUBEVIRT_DEPLOY_GRAFANA=true
 
 cluster::install
+
+# Pre-pull kubevirtci cluster image to avoid timeout issues during cluster-up
+# The cluster-up script downloads this large image, which can be slow in CI environments
+# and cause Prow job timeouts. Pre-pulling ensures the image is cached.
+OCI_BIN=${OCI_BIN:-$(docker-utils::determine_cri_bin)}
+CLUSTER_IMAGE="quay.io/kubevirtci/${KUBEVIRT_PROVIDER}:${KUBEVIRTCI_TAG}"
+echo "Pre-pulling kubevirtci cluster image: ${CLUSTER_IMAGE}..."
+${OCI_BIN} pull ${CLUSTER_IMAGE} || true
 
 $(cluster::path)/cluster-up/up.sh
 
