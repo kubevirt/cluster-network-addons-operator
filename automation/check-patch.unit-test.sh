@@ -13,6 +13,11 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
+    # Build only for current architecture to speed up CI
+    # Multi-platform builds (amd64, s390x, arm64) should be done in release/integration jobs
+    # This reduces CI time from ~2.5+ minutes to under 1 minute by avoiding QEMU emulation
+    export PLATFORMS="linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+
     make bump-all
     if ! make check; then
         echo "error: Uncommitted changes found after bump check. \
