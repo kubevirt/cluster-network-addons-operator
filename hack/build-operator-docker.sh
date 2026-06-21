@@ -7,7 +7,9 @@ fi
 
 IFS=',' read -r -a PLATFORM_LIST <<< "$PLATFORMS"
 
-BUILD_ARGS="--build-arg BUILD_ARCH=$ARCH -f build/operator/Dockerfile -t $OPERATOR_IMAGE_TAGGED --push ."
+GO_VERSION=$(./hack/go-version.sh | cut -d'.' -f1-2)
+
+BUILD_ARGS="--build-arg BUILD_ARCH=$ARCH --build-arg GO_VERSION=$GO_VERSION -f build/operator/Dockerfile -t $OPERATOR_IMAGE_TAGGED --push ."
 
 if [ ${#PLATFORM_LIST[@]} -eq 1 ]; then
     docker build --platform "$PLATFORMS" $BUILD_ARGS
