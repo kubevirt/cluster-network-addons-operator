@@ -64,6 +64,33 @@ RUN sha256sum ${LINUX_BRIDGE_TAR_CONTAINER_DIR}/tuning >${LINUX_BRIDGE_TAR_CONTA
 EOF
 }
 
+# Retry a command with exponential backoff
+# Usage: retry_with_backoff <max_attempts> <initial_delay> <command> [args...]
+retry_with_backoff() {
+    local max_attempts=$1
+    local delay=$2
+    shift 2
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        echo "Attempt $attempt of $max_attempts: $*"
+        if "$@"; then
+            echo "Command succeeded on attempt $attempt"
+            return 0
+        fi
+
+        if [ $attempt -lt $max_attempts ]; then
+            echo "Command failed. Waiting ${delay}s before retry..."
+            sleep "$delay"
+            delay=$((delay * 2))
+        fi
+        attempt=$((attempt + 1))
+    done
+
+    echo "Command failed after $max_attempts attempts"
+    return 1
+}
+
 check_and_create_docker_builder() {
     existing_builder=$(docker buildx ls | grep -w "$DOCKER_BUILDER" | awk '{print $1}' || true)
     if [ -n "$existing_builder" ]; then
@@ -76,7 +103,7 @@ check_and_create_docker_builder() {
 }
 
 build_docker_image() {
-    docker buildx build --platform "${PLATFORMS}" -t "${LINUX_BRIDGE_IMAGE_TAGGED}" . --push
+    retry_with_backoff 3 5 docker buildx build --platform "${PLATFORMS}" -t "${LINUX_BRIDGE_IMAGE_TAGGED}" . --push
     docker buildx rm "$DOCKER_BUILDER"
 }
 
@@ -87,7 +114,7 @@ build_podman_image() {
     podman manifest create "${LINUX_BRIDGE_IMAGE_TAGGED}"
 
     for platform in "${PLATFORM_LIST[@]}"; do
-        podman build --platform "$platform" --manifest "${LINUX_BRIDGE_IMAGE_TAGGED}" .
+        retry_with_backoff 3 5 podman build --platform "$platform" --manifest "${LINUX_BRIDGE_IMAGE_TAGGED}" .
     done
 }
 
@@ -95,7 +122,7 @@ push_image_to_kubevirt_repo() {
     echo 'Push the image to KubeVirt repo'
     if [ "${OCI_BIN}" == "podman" ]; then
         if [ ! -z "${PUSH_IMAGES}" ]; then
-            podman manifest push "${LINUX_BRIDGE_IMAGE_TAGGED}"
+            retry_with_backoff 3 5 podman manifest push "${LINUX_BRIDGE_IMAGE_TAGGED}"
         fi
     fi
 }
