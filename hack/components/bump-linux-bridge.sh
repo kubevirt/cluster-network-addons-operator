@@ -87,7 +87,25 @@ build_podman_image() {
     podman manifest create "${LINUX_BRIDGE_IMAGE_TAGGED}"
 
     for platform in "${PLATFORM_LIST[@]}"; do
-        podman build --platform "$platform" --manifest "${LINUX_BRIDGE_IMAGE_TAGGED}" .
+        local max_retries=3
+        local retry_count=0
+        local retry_delay=5
+
+        while [ $retry_count -lt $max_retries ]; do
+            if podman build --platform "$platform" --manifest "${LINUX_BRIDGE_IMAGE_TAGGED}" .; then
+                break
+            else
+                retry_count=$((retry_count + 1))
+                if [ $retry_count -lt $max_retries ]; then
+                    echo "Build failed for platform $platform, attempt $retry_count/$max_retries. Retrying in ${retry_delay}s..."
+                    sleep $retry_delay
+                    retry_delay=$((retry_delay * 2))
+                else
+                    echo "Build failed for platform $platform after $max_retries attempts."
+                    return 1
+                fi
+            fi
+        done
     done
 }
 
