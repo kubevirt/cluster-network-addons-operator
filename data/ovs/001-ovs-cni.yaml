@@ -81,7 +81,7 @@ spec:
                 - sh
                 - -c
                 - >-
-                  find /tmp/healthy -mmin -2 | grep -q /tmp/healthy
+                  find /tmp/healthy -mmin -2 | grep -q '/tmp/healthy'
             initialDelaySeconds: 60
             periodSeconds: 60
           terminationMessagePolicy: FallbackToLogsOnError

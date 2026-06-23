@@ -126,7 +126,7 @@ subjects:
 apiVersion: v1
 data:
   RANGE_END: '{{ .RangeEnd }}'
-  RANGE_START: '{{ .RangeStart }}'
+  RANGE_START: "{{ .RangeStart }}"
 kind: ConfigMap
 metadata:
   labels:

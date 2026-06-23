@@ -183,13 +183,13 @@ spec:
       containers:
         - args:
             - --leader-elect
-            - "--certificates-dir={{ .CertDir }}"
+            - --certificates-dir={{ .CertDir }}
 {{- if ne .DefaultNetNADNs "" }}
-            - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"
+            - --default-network-nad-namespace={{ .DefaultNetNADNs }}
 {{ end }}
-            - "--tls-min-version={{ .TLSMinVersion }}"
+            - --tls-min-version={{ .TLSMinVersion }}
 {{ if index . "TLSSecurityProfileCiphers" }}
-            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"
+            - --tls-cipher-suites={{ .TLSSecurityProfileCiphers }}
 {{ end }}
           command:
             - /manager

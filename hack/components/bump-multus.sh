@@ -12,11 +12,11 @@ function __parametize_by_object() {
 		case "${f}" in
 			./ClusterRoleBinding_multus.yaml)
 				yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 			./ServiceAccount_multus.yaml)
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
                        ./ConfigMap_multus-daemon-config.yaml)
                                yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
@@ -39,7 +39,7 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].lifecycle.preStop.exec.command '["/bin/sh", "-c", "rm -rf /host/etc/cni/net.d/00-multus.conf /host/var/lib/cni/*"]'
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 		esac
 	done
