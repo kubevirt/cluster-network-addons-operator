@@ -11,17 +11,17 @@ function __parametize_by_object() {
     case "${f}" in
       ./Namespace_secondary.yaml)
         yaml-utils::update_param ${f} metadata.name '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ConfigMap_secondary-dns.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::set_param ${f} data.DOMAIN '{{ .Domain }}'
         yaml-utils::set_param ${f} data.NAME_SERVER_IP '{{ .NameServerIp }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ClusterRoleBinding_secondary.yaml)
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./Deployment_secondary-dns.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
@@ -36,11 +36,11 @@ function __parametize_by_object() {
         yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
         yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"restricted-v2"'
         yaml-utils::set_param ${f} 'spec.template.metadata.labels."allow-access-cluster-services"' '""'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ServiceAccount_secondary.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./NetworkPolicy_allow-ingress-to-secondary-dns.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
