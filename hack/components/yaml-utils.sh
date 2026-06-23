@@ -32,19 +32,27 @@ function yaml-utils::set_param() {
 		yq_path=".${yq_path}"
 	fi
 
-	# Use strenv() to pass value via environment variable to avoid quoting issues
-	export YQ_VALUE="${value}"
-
 	# Check if value is empty object or empty array
 	if [[ "$value" == "{}" ]] || [[ "$value" == "[]" ]]; then
 		# Empty objects/arrays should not use strenv
 		__yq eval "${yq_path} = ${value}" -i "${yaml_file}"
+	elif [[ "$value" == "true" ]] || [[ "$value" == "false" ]]; then
+		# Boolean values - use directly without strenv to preserve type
+		__yq eval "${yq_path} = ${value}" -i "${yaml_file}"
+	elif [[ "$value" =~ ^[0-9]+$ ]]; then
+		# Numeric values - use directly without strenv to preserve type
+		__yq eval "${yq_path} = ${value}" -i "${yaml_file}"
+	elif { [[ "$value" == "["* ]] || [[ "$value" == "{"* ]]; } && [[ "$value" != *"{{"* ]]; then
+		# Non-empty JSON array or object without Go templates - use from_json to parse it
+		export YQ_VALUE="${value}"
+		__yq eval "${yq_path} = (strenv(YQ_VALUE) | from_json)" -i "${yaml_file}"
+		unset YQ_VALUE
 	else
-		# Regular value - use strenv
+		# Regular value (including JSON with Go templates) - use strenv
+		export YQ_VALUE="${value}"
 		__yq eval "${yq_path} = strenv(YQ_VALUE)" -i "${yaml_file}"
+		unset YQ_VALUE
 	fi
-
-	unset YQ_VALUE
 
 	# yq write removes the heading --- from the yaml, so we re-add it.
 	yaml-utils::append_delimiter "${yaml_file}"

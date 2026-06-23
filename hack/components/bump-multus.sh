@@ -33,8 +33,8 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.spec.volumes[0].hostPath.path '{{ .CNIConfigDir }}'
 				yaml-utils::update_param ${f} spec.template.spec.volumes[1].hostPath.path '{{ .CNIBinDir }}'
 				yaml-utils::delete_param ${f} spec.template.spec.containers[0].resources.limits
-				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.cpu '"10m"'
-				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.memory '"15Mi"'
+				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.cpu '10m'
+				yaml-utils::update_param ${f} spec.template.spec.containers[0].resources.requests.memory '15Mi'
 				yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].lifecycle.preStop.exec.command '["/bin/sh", "-c", "rm -rf /host/etc/cni/net.d/00-multus.conf /host/var/lib/cni/*"]'
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'

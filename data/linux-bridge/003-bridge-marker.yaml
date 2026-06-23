@@ -67,14 +67,14 @@ spec:
             - name: tmp
               mountPath: /tmp
           securityContext:
-            readOnlyRootFilesystem: "true"
+            readOnlyRootFilesystem: true
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
       volumes:
         - name: tmp
           emptyDir: {}
       securityContext:
-        runAsNonRoot: "true"
-        runAsUser: "1001"
+        runAsNonRoot: true
+        runAsUser: 1001
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
