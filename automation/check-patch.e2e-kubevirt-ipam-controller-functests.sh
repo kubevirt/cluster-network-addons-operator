@@ -20,7 +20,7 @@ teardown() {
 }
 
 increase_ulimit() {
-    if [ -z "${OCI_BIN}" ];then
+    if [ -z "${OCI_BIN:-}" ];then
       export OCI_BIN=$(if podman ps >/dev/null 2>&1; then echo podman; elif docker ps >/dev/null 2>&1; then echo docker; else echo "Neither podman nor docker is available." >&2; exit 1; fi)
     fi
 
