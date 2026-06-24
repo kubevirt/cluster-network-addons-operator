@@ -32,6 +32,13 @@ function __parametize_by_object() {
         yaml-utils::set_param ${f} 'spec.template.metadata.labels."allow-access-cluster-services"' '""'
         yaml-utils::remove_single_quotes_from_yaml ${f}
         # sed operation is done after all yq operations to avoid unexpected yq error
+        # NOTE: When using sed '/pattern/a' to append multiple blocks after the same line,
+        # the LAST sed command's output appears FIRST (closest to the anchor line).
+        # These commands are ordered to produce the following args sequence:
+        # 1. --certificates-dir (already present)
+        # 2. DefaultNetNADNs block (from last sed, appears first)
+        # 3. --tls-min-version (from middle sed, appears second)
+        # 4. TLSSecurityProfileCiphers block (from first sed, appears third)
         sed -i '/            - "--certificates-dir={{ .CertDir }}"/a{{ if index . "TLSSecurityProfileCiphers" }}\n            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"\n{{ end }}' ${f}
         sed -i '/            - "--certificates-dir={{ .CertDir }}"/a\\            - "--tls-min-version={{ .TLSMinVersion }}"' ${f}
         sed -i '/            - "--certificates-dir={{ .CertDir }}"/a{{- if ne .DefaultNetNADNs "" }}\n            - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"\n{{ end }}' ${f}
