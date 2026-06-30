@@ -77,6 +77,12 @@ var _ = Describe("TLS", func() {
 					Status: "True",
 					Reason: "Valid",
 				},
+				{
+					Type:    "PQCCompliant",
+					Status:  metav1.ConditionTrue,
+					Reason:  "PQCReady",
+					Message: "Endpoint supports TLS 1.3 with post-quantum key exchange (ML-KEM)",
+				},
 			},
 		}
 		expectedReports := []tlsReport{
