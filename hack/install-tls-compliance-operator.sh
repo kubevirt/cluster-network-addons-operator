@@ -17,7 +17,7 @@ echo "Installing TLS Compliance Operator ${VERSION} from: ${URL}.."
 # To allow the operator reach and check all services the network-policy is deleted.
 # [1] https://github.com/sebrandon1/tls-compliance-operator/blob/v0.0.10/docs/troubleshooting.md#:~:text=Check%20for%20NetworkPolicy%20restrictions
 echo "Deleting the operator's network-policy to allow egress all services.."
-./cluster/kubectl.sh -n $NAMESPACE delete networkpolicy $NP_NAME 
+./cluster/kubectl.sh -n $NAMESPACE delete networkpolicy $NP_NAME
 
 echo "Patching the operator's Deployment for fine tuning reporting intervals.."
 ./cluster/kubectl.sh -n $NAMESPACE patch deployment $DEPLOY_NAME --type='json' -p='[

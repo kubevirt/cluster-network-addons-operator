@@ -12,11 +12,11 @@ function __parametize_by_object() {
 		case "${f}" in
 			./ClusterRoleBinding_bridge-marker-crb.yaml)
 				yaml-utils::update_param ${f} subjects[0].namespace  '{{ .Namespace }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 			./ServiceAccount_bridge-marker.yaml)
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 			./DaemonSet_bridge-marker.yaml)
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
@@ -33,7 +33,7 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot 'true'
 				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '1001'
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem 'true'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 		esac
 	done
