@@ -12,11 +12,11 @@ function __parametize_by_object() {
 		case "${f}" in
 			./ClusterRoleBinding_ovs-cni-marker-crb.yaml)
 				yaml-utils::update_param ${f} subjects[0].namespace  '{{ .Namespace }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 			./ServiceAccount_ovs-cni-marker.yaml)
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 			./DaemonSet_ovs-cni-amd64.yaml)
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
@@ -29,7 +29,7 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
-				yaml-utils::remove_single_quotes_from_yaml ${f}
+				yaml-utils::unquote_template_variables ${f}
 				;;
 		esac
 	done

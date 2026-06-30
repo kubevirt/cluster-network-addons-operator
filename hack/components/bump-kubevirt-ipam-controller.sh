@@ -13,64 +13,64 @@ function __parametize_by_object() {
     case "${f}" in
       ./Namespace_kubevirt-ipam-controller-system.yaml)
         yaml-utils::update_param ${f} metadata.name '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ClusterRoleBinding_kubevirt-ipam-controller-manager-rolebinding.yaml)
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./Deployment_kubevirt-ipam-controller-manager.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::update_param ${f} spec.template.spec.containers[0].image '{{ .KubevirtIpamControllerImage }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
-        yaml-utils::set_param ${f} spec.template.spec.containers[0].args[1] '"--certificates-dir={{ .CertDir }}"'
+        yaml-utils::set_param ${f} spec.template.spec.containers[0].args[1] '--certificates-dir={{ .CertDir }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].volumeMounts[0].mountPath '{{ .MountPath }}'
         yaml-utils::set_param ${f} spec.template.spec.volumes[0].secret.secretName '{{ .SecretName }}'
         yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
         yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
         yaml-utils::set_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
         yaml-utils::set_param ${f} 'spec.template.metadata.labels."allow-access-cluster-services"' '""'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         # sed operation is done after all yq operations to avoid unexpected yq error
-        sed -i '/            - "--certificates-dir={{ .CertDir }}"/a{{ if index . "TLSSecurityProfileCiphers" }}\n            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"\n{{ end }}' ${f}
-        sed -i '/            - "--certificates-dir={{ .CertDir }}"/a\\            - "--tls-min-version={{ .TLSMinVersion }}"' ${f}
-        sed -i '/            - "--certificates-dir={{ .CertDir }}"/a{{- if ne .DefaultNetNADNs "" }}\n            - "--default-network-nad-namespace={{ .DefaultNetNADNs }}"\n{{ end }}' ${f}
+        sed -i '/            - --certificates-dir={{ .CertDir }}/a{{ if index . "TLSSecurityProfileCiphers" }}\n            - --tls-cipher-suites={{ .TLSSecurityProfileCiphers }}\n{{ end }}' ${f}
+        sed -i '/            - --certificates-dir={{ .CertDir }}/a\\            - --tls-min-version={{ .TLSMinVersion }}' ${f}
+        sed -i '/            - --certificates-dir={{ .CertDir }}/a{{- if ne .DefaultNetNADNs "" }}\n            - --default-network-nad-namespace={{ .DefaultNetNADNs }}\n{{ end }}' ${f}
         ;;
       ./Service_kubevirt-ipam-controller-webhook-service.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./Certificate_kubevirt-ipam-controller-serving-cert.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::update_param ${f} spec.dnsNames[0] 'kubevirt-ipam-controller-webhook-service.{{ .Namespace }}.svc'
         yaml-utils::update_param ${f} spec.dnsNames[1] 'kubevirt-ipam-controller-webhook-service.{{ .Namespace }}.svc.cluster.local'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./Issuer_kubevirt-ipam-controller-selfsigned-issuer.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./MutatingWebhookConfiguration_kubevirt-ipam-controller-mutating-webhook-configuration.yaml)
         yaml-utils::update_param ${f} webhooks[0].clientConfig.service.namespace '{{ .Namespace }}'
         sed -i '/cert-manager.io\/inject-ca-from/c\    {{ .WebhookAnnotation }}' ${f}
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./RoleBinding_kubevirt-ipam-controller-leader-election-rolebinding.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./Role_kubevirt-ipam-controller-leader-election-role.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ServiceAccount_kubevirt-ipam-controller-manager.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./Service_kubevirt-ipam-controller-webhook-service.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./NetworkPolicy_kubevirt-ipam-controller-allow-ingress-to-ipam-ext-webhook.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
