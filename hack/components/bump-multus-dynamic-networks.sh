@@ -14,25 +14,25 @@ function __parametize_by_object() {
         json_content=$(yaml-utils::get_param ${f} 'data."dynamic-networks-config.json"')
         updated_json=$(echo "${json_content}" | sed -E "s|\"criSocketPath\": *\"[^\"]*\"|\"criSocketPath\": \"/host{{ .HostCRISocketPath }}\"|")
         yaml-utils::set_param ${f} 'data."dynamic-networks-config.json"' "${updated_json}"$'\n'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ClusterRoleBinding_dynamic-networks-controller.yaml)
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./DaemonSet_dynamic-networks-controller-ds.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
         yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .MultusDynamicNetworksControllerImage }}'
-        yaml-utils::update_param ${f} spec.template.spec.containers[0].volumeMounts\(name=="cri-socket"\).mountPath '/host{{ .HostCRISocketPath }}'
+        yaml-utils::update_param ${f} '(.spec.template.spec.containers[0].volumeMounts[] | select(.name == "cri-socket")).mountPath' '/host{{ .HostCRISocketPath }}'
         yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
         yaml-utils::update_param ${f} spec.template.spec.tolerations '{{ toYaml .Placement.Tolerations | nindent 8 }}'
-        yaml-utils::update_param ${f} spec.template.spec.volumes\(name=="cri-socket"\).hostPath.path  '{{ .HostCRISocketPath }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::update_param ${f} '(.spec.template.spec.volumes[] | select(.name == "cri-socket")).hostPath.path' '{{ .HostCRISocketPath }}'
+        yaml-utils::unquote_template_variables ${f}
         ;;
       ./ServiceAccount_dynamic-networks-controller.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
+        yaml-utils::unquote_template_variables ${f}
         ;;
     esac
   done
