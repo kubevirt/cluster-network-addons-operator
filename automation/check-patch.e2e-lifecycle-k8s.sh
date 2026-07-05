@@ -32,6 +32,11 @@ main() {
     fi
 
     make cluster-down
+    # Wait for cluster resources to be fully cleaned up before starting a new cluster
+    # This addresses a cleanup timing issue in kubevirtci 2607010724-10559826
+    # where resources like configmaps may not be immediately deleted
+    echo "Waiting 30 seconds for cluster cleanup to complete..."
+    sleep 30
     make cluster-up
     trap teardown EXIT SIGINT SIGTERM SIGSTOP
     make cluster-operator-push
