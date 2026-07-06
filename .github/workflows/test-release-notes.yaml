@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.baseBranch }}
           fetch-depth: 0
@@ -49,7 +49,7 @@ jobs:
           echo "LAST_VERSION=$(./hack/version.sh)" >> $GITHUB_ENV
           echo "START_SHA=$(git rev-list -n 1 v$(./hack/version.sh))" >> $GITHUB_ENV
           echo "END_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.16'
       - name: Dump release-notes
