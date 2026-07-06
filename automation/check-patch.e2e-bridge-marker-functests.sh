@@ -34,7 +34,7 @@ main() {
     echo "Run bridge-marker functional tests"
     (
         cd ${TMP_COMPONENT_PATH}
-        KUBECONFIG=$KUBECONFIG FUNC_TEST_ARGS="--ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" make functest
+        timeout 20m env KUBECONFIG=$KUBECONFIG FUNC_TEST_ARGS="--ginkgo.noColor --junit-output=$ARTIFACTS/junit.functest.xml" make functest
     )
 }
 
