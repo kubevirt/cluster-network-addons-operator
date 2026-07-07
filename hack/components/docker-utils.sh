@@ -13,7 +13,16 @@ set -xo pipefail
 # The image digest
 #
 function docker-utils::get_image_digest() {
-  echo "${2}@$(${OCI_BIN} run --rm quay.io/skopeo/stable:latest inspect "docker://${1}" | jq -r '.Digest')"
+  local digest
+  digest=$(${OCI_BIN} run --rm quay.io/skopeo/stable:latest inspect "docker://${1}" | jq -r '.Digest')
+
+  if [[ -z "${digest}" || "${digest}" == "null" ]]; then
+    echo "Error: Failed to retrieve image digest for ${1}" >&2
+    echo "This may be due to network issues, registry unavailability, or authentication problems" >&2
+    return 1
+  fi
+
+  echo "${2}@${digest}"
 }
 
 # The check_image_exists function checks if an image already exists in the registry.
