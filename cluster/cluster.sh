@@ -22,6 +22,32 @@ function cluster::_get_tag() {
     git -C ${CLUSTER_PATH} describe --tags
 }
 
+function cluster::_clone_with_retry() {
+    local repo_url=$1
+    local target_path=$2
+    local max_attempts=5
+    local attempt=1
+    local wait_time=2
+
+    while [ $attempt -le $max_attempts ]; do
+        echo "Attempting to clone kubevirtci (attempt $attempt/$max_attempts)..."
+        if git clone "$repo_url" "$target_path"; then
+            echo "Successfully cloned kubevirtci"
+            return 0
+        fi
+
+        if [ $attempt -lt $max_attempts ]; then
+            echo "Clone failed, retrying in ${wait_time}s..."
+            sleep $wait_time
+            wait_time=$((wait_time * 2))
+        fi
+        attempt=$((attempt + 1))
+    done
+
+    echo "Failed to clone kubevirtci after $max_attempts attempts"
+    return 1
+}
+
 function cluster::install() {
     if [ -d ${CLUSTER_PATH} ]; then
         if [[ $(cluster::_get_tag) != ${KUBEVIRTCI_TAG} ]]; then
@@ -30,7 +56,7 @@ function cluster::install() {
     fi
 
     if [ ! -d ${CLUSTER_PATH} ]; then
-        git clone https://github.com/kubevirt/kubevirtci.git ${CLUSTER_PATH}
+        cluster::_clone_with_retry https://github.com/kubevirt/kubevirtci.git ${CLUSTER_PATH}
         (
             cd ${CLUSTER_PATH}
             git checkout ${KUBEVIRTCI_TAG}
