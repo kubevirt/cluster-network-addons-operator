@@ -22,10 +22,9 @@ const (
 	allocMediumMap  = 64
 )
 
-//nolint:gochecknoglobals // it's okay to use a private global for logging
 var debugLog = debug.GetLogger("analysis/flatten/replace", os.Getenv("SWAGGER_DEBUG") != "")
 
-// RewriteSchemaToRef replaces a schema with a Ref.
+// RewriteSchemaToRef replaces a schema with a Ref
 func RewriteSchemaToRef(sp *spec.Swagger, key string, ref spec.Ref) error {
 	debugLog("rewriting schema to ref for %s with %s", key, ref.String())
 	_, value, err := getPointerFromKey(sp, key)
@@ -143,7 +142,7 @@ func rewriteParentRef(sp *spec.Swagger, key string, ref spec.Ref) error {
 	return nil
 }
 
-// getPointerFromKey retrieves the content of the JSON pointer "key".
+// getPointerFromKey retrieves the content of the JSON pointer "key"
 func getPointerFromKey(sp any, key string) (string, any, error) {
 	switch sp.(type) {
 	case *spec.Schema:
@@ -155,10 +154,7 @@ func getPointerFromKey(sp any, key string) (string, any, error) {
 		return "", sp, nil
 	}
 	// unescape chars in key, e.g. "{}" from path params
-	pth, err := url.PathUnescape(key[1:])
-	if err != nil {
-		return "", nil, errors.Join(err, ErrReplace)
-	}
+	pth, _ := url.PathUnescape(key[1:])
 	ptr, err := jsonpointer.New(pth)
 	if err != nil {
 		return "", nil, errors.Join(err, ErrReplace)
@@ -174,7 +170,7 @@ func getPointerFromKey(sp any, key string) (string, any, error) {
 	return pth, value, nil
 }
 
-// getParentFromKey retrieves the container of the JSON pointer "key".
+// getParentFromKey retrieves the container of the JSON pointer "key"
 func getParentFromKey(sp any, key string) (string, string, any, error) {
 	switch sp.(type) {
 	case *spec.Schema:
@@ -200,7 +196,7 @@ func getParentFromKey(sp any, key string) (string, string, any, error) {
 	return parent, entry, pvalue, nil
 }
 
-// UpdateRef replaces a ref by another one.
+// UpdateRef replaces a ref by another one
 func UpdateRef(sp any, key string, ref spec.Ref) error {
 	switch sp.(type) {
 	case *spec.Schema:
@@ -269,7 +265,7 @@ func UpdateRef(sp any, key string, ref spec.Ref) error {
 	return nil
 }
 
-// UpdateRefWithSchema replaces a ref with a schema (i.e. re-inline schema).
+// UpdateRefWithSchema replaces a ref with a schema (i.e. re-inline schema)
 func UpdateRefWithSchema(sp *spec.Swagger, key string, sch *spec.Schema) error {
 	debugLog("updating ref for %s with schema", key)
 	pth, value, err := getPointerFromKey(sp, key)
@@ -328,7 +324,7 @@ func UpdateRefWithSchema(sp *spec.Swagger, key string, sch *spec.Schema) error {
 	return nil
 }
 
-// DeepestRefResult holds the results from [DeepestRef] analysis.
+// DeepestRefResult holds the results from DeepestRef analysis
 type DeepestRefResult struct {
 	Ref      spec.Ref
 	Schema   *spec.Schema
@@ -336,13 +332,10 @@ type DeepestRefResult struct {
 }
 
 // DeepestRef finds the first definition ref, from a cascade of nested refs which are not definitions.
-//
 //   - if no definition is found, returns the deepest ref.
 //   - pointers to external files are expanded
 //
 // NOTE: all external $ref's are assumed to be already expanded at this stage.
-//
-//nolint:gocognit,gocyclo,cyclop // definitely needs a refactoring, in a follow-up PR
 func DeepestRef(sp *spec.Swagger, opts *spec.ExpandOptions, ref spec.Ref) (*DeepestRefResult, error) {
 	if !ref.HasFragmentOnly {
 		// we found an external $ref, which is odd at this stage:
@@ -399,13 +392,11 @@ DOWNREF:
 		case spec.Response:
 			// a pointer points to a schema initially marshalled in responses section...
 			// Attempt to convert this to a schema. If this fails, the spec is invalid
-			asJSON, err := refable.MarshalJSON()
-			if err != nil {
-				return nil, ErrInvalidPointerType(currentRef.String(), value, err)
-			}
+			asJSON, _ := refable.MarshalJSON()
 			var asSchema spec.Schema
 
-			if err = asSchema.UnmarshalJSON(asJSON); err != nil {
+			err := asSchema.UnmarshalJSON(asJSON)
+			if err != nil {
 				return nil, ErrInvalidPointerType(currentRef.String(), value, err)
 			}
 			warnings = append(warnings, fmt.Sprintf("found $ref %q (response) interpreted as schema", currentRef.String()))
@@ -418,12 +409,9 @@ DOWNREF:
 		case spec.Parameter:
 			// a pointer points to a schema initially marshalled in parameters section...
 			// Attempt to convert this to a schema. If this fails, the spec is invalid
-			asJSON, err := refable.MarshalJSON()
-			if err != nil {
-				return nil, ErrInvalidPointerType(currentRef.String(), value, err)
-			}
+			asJSON, _ := refable.MarshalJSON()
 			var asSchema spec.Schema
-			if err = asSchema.UnmarshalJSON(asJSON); err != nil {
+			if err := asSchema.UnmarshalJSON(asJSON); err != nil {
 				return nil, ErrInvalidPointerType(currentRef.String(), value, err)
 			}
 
@@ -440,12 +428,9 @@ DOWNREF:
 				break DOWNREF
 			}
 
-			asJSON, err := json.Marshal(refable)
-			if err != nil {
-				return nil, ErrInvalidPointerType(currentRef.String(), value, err)
-			}
+			asJSON, _ := json.Marshal(refable)
 			var asSchema spec.Schema
-			if err = asSchema.UnmarshalJSON(asJSON); err != nil {
+			if err := asSchema.UnmarshalJSON(asJSON); err != nil {
 				return nil, ErrInvalidPointerType(currentRef.String(), value, err)
 			}
 			warnings = append(warnings, fmt.Sprintf("found $ref %q (%T) interpreted as schema", currentRef.String(), refable))

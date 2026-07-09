@@ -1,5 +1,4 @@
-*.out
-*.cov
-.idea
-.env
-.mcp.json
+secrets.yml
+coverage.out
+profile.cov
+profile.out

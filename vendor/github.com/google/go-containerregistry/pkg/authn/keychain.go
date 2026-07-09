@@ -117,8 +117,8 @@ func (dk *defaultKeychain) ResolveContext(_ context.Context, target Resource) (A
 		if err != nil {
 			return nil, err
 		}
-	} else if path := filepath.Clean(os.Getenv("REGISTRY_AUTH_FILE")); fileExists(path) {
-		f, err := os.Open(path)
+	} else if fileExists(os.Getenv("REGISTRY_AUTH_FILE")) {
+		f, err := os.Open(os.Getenv("REGISTRY_AUTH_FILE"))
 		if err != nil {
 			return nil, err
 		}
@@ -127,8 +127,8 @@ func (dk *defaultKeychain) ResolveContext(_ context.Context, target Resource) (A
 		if err != nil {
 			return nil, err
 		}
-	} else if path := filepath.Clean(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json")); fileExists(path) {
-		f, err := os.Open(path)
+	} else if fileExists(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json")) {
+		f, err := os.Open(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "containers/auth.json"))
 		if err != nil {
 			return nil, err
 		}

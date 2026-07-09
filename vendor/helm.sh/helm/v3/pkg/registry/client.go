@@ -150,13 +150,7 @@ func NewClient(options ...ClientOption) (*Client, error) {
 		}
 		authorizer.SetUserAgent(version.GetUserAgent())
 
-		if client.username != "" && client.password != "" {
-			authorizer.Credential = func(_ context.Context, _ string) (auth.Credential, error) {
-				return auth.Credential{Username: client.username, Password: client.password}, nil
-			}
-		} else {
-			authorizer.Credential = credentials.Credential(client.credentialsStore)
-		}
+		authorizer.Credential = credentials.Credential(client.credentialsStore)
 
 		if client.enableCache {
 			authorizer.Cache = auth.NewCache()
@@ -510,7 +504,6 @@ func (c *Client) Pull(ref string, options ...PullOption) (*PullResult, error) {
 	}
 	memoryStore := memory.New()
 	allowedMediaTypes := []string{
-		ocispec.MediaTypeImageIndex,
 		ocispec.MediaTypeImageManifest,
 		ConfigMediaType,
 	}
@@ -892,7 +885,6 @@ func (c *Client) Resolve(ref string) (desc ocispec.Descriptor, err error) {
 		return desc, err
 	}
 	remoteRepository.PlainHTTP = c.plainHTTP
-	remoteRepository.Client = c.authorizer
 
 	parsedReference, err := newReference(ref)
 	if err != nil {

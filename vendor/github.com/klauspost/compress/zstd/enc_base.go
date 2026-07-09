@@ -21,7 +21,7 @@ type fastBase struct {
 	crc         *xxhash.Digest
 	tmp         [8]byte
 	blk         *blockEnc
-	lastDict    *dict
+	lastDictID  uint32
 	lowMem      bool
 }
 

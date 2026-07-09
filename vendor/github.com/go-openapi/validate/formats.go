@@ -76,12 +76,7 @@ func (f *formatValidator) Validate(val any) *Result {
 		result = new(Result)
 	}
 
-	str, ok := val.(string)
-	if !ok {
-		return result
-	}
-
-	if err := FormatOf(f.Path, f.In, f.Format, str, f.KnownFormats); err != nil {
+	if err := FormatOf(f.Path, f.In, f.Format, val.(string), f.KnownFormats); err != nil {
 		result.AddErrors(err)
 	}
 

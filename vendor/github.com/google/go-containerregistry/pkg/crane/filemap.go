@@ -32,7 +32,7 @@ func Layer(filemap map[string][]byte) (v1.Layer, error) {
 	b := &bytes.Buffer{}
 	w := tar.NewWriter(b)
 
-	fn := make([]string, 0, len(filemap))
+	fn := []string{}
 	for f := range filemap {
 		fn = append(fn, f)
 	}

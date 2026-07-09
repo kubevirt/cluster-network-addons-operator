@@ -84,35 +84,27 @@ func Hasher(name string) (hash.Hash, error) {
 }
 
 func (h *Hash) parse(unquoted string) error {
-	algo, body, ok := strings.Cut(unquoted, ":")
-	if !ok || algo == "" || body == "" {
+	parts := strings.Split(unquoted, ":")
+	if len(parts) != 2 {
 		return fmt.Errorf("cannot parse hash: %q", unquoted)
 	}
 
-	rest := strings.TrimLeft(body, "0123456789abcdef")
+	rest := strings.TrimLeft(parts[1], "0123456789abcdef")
 	if len(rest) != 0 {
 		return fmt.Errorf("found non-hex character in hash: %c", rest[0])
 	}
 
-	var wantBytes int
-	switch algo {
-	case "sha256":
-		wantBytes = crypto.SHA256.Size()
-	default:
-		hasher, err := Hasher(algo)
-		if err != nil {
-			return err
-		}
-		wantBytes = hasher.Size()
+	hasher, err := Hasher(parts[0])
+	if err != nil {
+		return err
 	}
-
 	// Compare the hex to the expected size (2 hex characters per byte)
-	if len(body) != hex.EncodedLen(wantBytes) {
-		return fmt.Errorf("wrong number of hex digits for %s: %s", algo, body)
+	if len(parts[1]) != hasher.Size()*2 {
+		return fmt.Errorf("wrong number of hex digits for %s: %s", parts[0], parts[1])
 	}
 
-	h.Algorithm = algo
-	h.Hex = body
+	h.Algorithm = parts[0]
+	h.Hex = parts[1]
 	return nil
 }
 

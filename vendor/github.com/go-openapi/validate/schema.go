@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/swag/jsonutils"
 )
 
-// SchemaValidator validates data against a JSON schema.
+// SchemaValidator validates data against a JSON schema
 type SchemaValidator struct {
 	Path         string
 	in           string
@@ -26,7 +26,7 @@ type SchemaValidator struct {
 
 // AgainstSchema validates the specified data against the provided schema, using a registry of supported formats.
 //
-// When no pre-parsed *[spec.Schema] structure is provided, it uses a JSON schema as default. See example.
+// When no pre-parsed *spec.Schema structure is provided, it uses a JSON schema as default. See example.
 func AgainstSchema(schema *spec.Schema, data any, formats strfmt.Registry, options ...Option) error {
 	res := NewSchemaValidator(schema, nil, "", formats,
 		append(options, WithRecycleValidators(true), withRecycleResults(true))...,
@@ -103,20 +103,18 @@ func newSchemaValidator(schema *spec.Schema, rootSchema any, root string, format
 	return s
 }
 
-// SetPath sets the path for this schema validator.
+// SetPath sets the path for this schema valdiator
 func (s *SchemaValidator) SetPath(path string) {
 	s.Path = path
 }
 
-// Applies returns true when this schema validator applies.
+// Applies returns true when this schema validator applies
 func (s *SchemaValidator) Applies(source any, _ reflect.Kind) bool {
 	_, ok := source.(*spec.Schema)
 	return ok
 }
 
-// Validate validates the data against the schema.
-//
-//nolint:gocognit // refactor in a forthcoming PR
+// Validate validates the data against the schema
 func (s *SchemaValidator) Validate(data any) *Result {
 	if s == nil {
 		return emptyResult
@@ -178,7 +176,7 @@ func (s *SchemaValidator) Validate(data any) *Result {
 		d = dd
 	}
 
-	// Proposal for enhancement: this part should be handed over to type validator
+	// TODO: this part should be handed over to type validator
 	// Handle special case of json.Number data (number marshalled as string)
 	isnumber := s.Schema != nil && (s.Schema.Type.Contains(numberType) || s.Schema.Type.Contains(integerType))
 	if num, ok := data.(json.Number); ok && isnumber {

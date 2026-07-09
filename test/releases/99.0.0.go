@@ -12,7 +12,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "kube-multus",
-				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:2b9671447f3ea4e7e56730843dbf59445b9307246f393b61386b896d56ae51c9",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:3c20900b5381fac7f9cbbdfac8370ea10a2f6ed7fbecc678384a9db57047abb1",
 			},
 			{
 				ParentName: "dynamic-networks-controller-ds",
@@ -24,7 +24,7 @@ func init() {
 				ParentName: "multus",
 				ParentKind: "DaemonSet",
 				Name:       "install-multus-binary",
-				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:2b9671447f3ea4e7e56730843dbf59445b9307246f393b61386b896d56ae51c9",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:3c20900b5381fac7f9cbbdfac8370ea10a2f6ed7fbecc678384a9db57047abb1",
 			},
 			{
 				ParentName: "bridge-marker",
@@ -42,13 +42,13 @@ func init() {
 				ParentName: "kubemacpool-mac-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:0ac8ce65d9e54b6c36eff6ba5b6b9fb8041648259a66953858fa8a113f0c00dd",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:02fdb40b310d91db30c49c0e4ad29351f2070b6922a723f274b580ebeb70b78e",
 			},
 			{
 				ParentName: "kubemacpool-cert-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
-				Image:      "quay.io/kubevirt/kubemacpool@sha256:0ac8ce65d9e54b6c36eff6ba5b6b9fb8041648259a66953858fa8a113f0c00dd",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:02fdb40b310d91db30c49c0e4ad29351f2070b6922a723f274b580ebeb70b78e",
 			},
 			{
 				ParentName: "ovs-cni-amd64",

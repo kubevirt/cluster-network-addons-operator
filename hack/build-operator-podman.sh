@@ -7,8 +7,6 @@ fi
 
 IFS=',' read -r -a PLATFORM_LIST <<< "$PLATFORMS"
 
-GO_VERSION=$(./hack/go-version.sh | cut -d'.' -f1-2)
-
 # Remove any existing manifest and image
 podman manifest rm "${OPERATOR_IMAGE_TAGGED}" 2>/dev/null || true
 podman rmi "${OPERATOR_IMAGE_TAGGED}" 2>/dev/null || true
@@ -19,7 +17,6 @@ podman manifest create "${OPERATOR_IMAGE_TAGGED}"
 for platform in "${PLATFORM_LIST[@]}"; do
     podman build \
         --build-arg BUILD_ARCH="$ARCH" \
-        --build-arg GO_VERSION="$GO_VERSION" \
         --platform "$platform" \
         --manifest "${OPERATOR_IMAGE_TAGGED}" \
         -f build/operator/Dockerfile \

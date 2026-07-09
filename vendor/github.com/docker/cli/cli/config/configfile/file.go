@@ -1,6 +1,3 @@
-// FIXME(thaJeztah): remove once we are a module; the go:build directive prevents go from downgrading language version to go1.16:
-//go:build go1.25
-
 package configfile
 
 import (
@@ -9,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -378,7 +374,9 @@ func getConfiguredCredentialStore(c *ConfigFile, registryHostname string) string
 func (configFile *ConfigFile) GetAllCredentials() (map[string]types.AuthConfig, error) {
 	auths := make(map[string]types.AuthConfig)
 	addAll := func(from map[string]types.AuthConfig) {
-		maps.Copy(auths, from)
+		for reg, ac := range from {
+			auths[reg] = ac
+		}
 	}
 
 	defaultStore := configFile.GetCredentialsStore("")

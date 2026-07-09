@@ -421,9 +421,7 @@ func (d *compressor) deflateLazy() {
 			d.h = newHuffmanEncoder(maxFlateBlockTokens)
 		}
 		var tmp [256]uint16
-		toIndex := d.window[s.index:d.windowEnd]
-		toIndex = toIndex[:min(len(toIndex), maxFlateBlockTokens)]
-		for _, v := range toIndex {
+		for _, v := range d.window[s.index:d.windowEnd] {
 			tmp[v]++
 		}
 		d.h.generate(tmp[:], 15)

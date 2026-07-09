@@ -1,5 +1,5 @@
-*.out
+secrets.yml
+coverage.out
+coverage.txt
 *.cov
 .idea
-.env
-.mcp.json

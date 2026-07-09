@@ -2,7 +2,8 @@
 set -exo pipefail
 
 if [ -z "${KUBEVIRT_VERSION}" ];then
-  export KUBEVIRT_VERSION=$(curl -sSfL https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
+  # Get latest stable KubeVirt version
+  export KUBEVIRT_VERSION=$(curl -s https://api.github.com/repos/kubevirt/kubevirt/releases | grep tag_name | grep -v -- - | sort -V | tail -1 | awk -F':' '{print $2}' | sed 's/,//' | xargs)
 fi
 
 ./cluster/kubectl.sh apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml

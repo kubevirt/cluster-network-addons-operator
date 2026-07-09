@@ -12,12 +12,19 @@ package sha1cd
 // Original: https://github.com/golang/go/blob/master/src/crypto/sha1/sha1.go
 
 import (
+	"crypto"
 	"encoding/binary"
 	"errors"
 	"hash"
 
 	shared "github.com/pjbgf/sha1cd/internal"
 )
+
+//go:generate go run -C asm . -out ../sha1cdblock_amd64.s -pkg $GOPACKAGE
+
+func init() {
+	crypto.RegisterHash(crypto.SHA1, New)
+}
 
 // The size of a SHA-1 checksum in bytes.
 const Size = shared.Size
@@ -33,7 +40,8 @@ type digest struct {
 	len uint64
 
 	// col defines whether a collision has been found.
-	col bool
+	col       bool
+	blockFunc func(dig *digest, p []byte)
 }
 
 func (d *digest) MarshalBinary() ([]byte, error) {
@@ -93,7 +101,7 @@ func (d *digest) UnmarshalBinary(b []byte) error {
 
 func consumeUint64(b []byte) ([]byte, uint64) {
 	_ = b[7]
-	x := uint64(b[7]) | uint64(b[6])<<8 | uint64(b[5])<<16 | uint64(b[4])<<24 |
+	x := uint64(b[7]) | uint64(b[6])<<8 | uint64(b[shared.WordBuffers])<<16 | uint64(b[4])<<24 |
 		uint64(b[3])<<32 | uint64(b[2])<<40 | uint64(b[1])<<48 | uint64(b[0])<<56
 	return b[8:], x
 }
@@ -120,9 +128,21 @@ func (d *digest) Reset() {
 // implements encoding.BinaryMarshaler and encoding.BinaryUnmarshaler to
 // marshal and unmarshal the internal state of the hash.
 func New() hash.Hash {
-	var d digest
+	d := new(digest)
+
+	d.blockFunc = block
 	d.Reset()
-	return &d
+	return d
+}
+
+// NewGeneric is equivalent to New but uses the Go generic implementation,
+// avoiding any processor-specific optimizations.
+func NewGeneric() hash.Hash {
+	d := new(digest)
+
+	d.blockFunc = blockGeneric
+	d.Reset()
+	return d
 }
 
 func (d *digest) Size() int { return Size }
@@ -140,14 +160,14 @@ func (d *digest) Write(p []byte) (nn int, err error) {
 		n := copy(d.x[d.nx:], p)
 		d.nx += n
 		if d.nx == shared.Chunk {
-			block(d, d.x[:])
+			d.blockFunc(d, d.x[:])
 			d.nx = 0
 		}
 		p = p[n:]
 	}
 	if len(p) >= shared.Chunk {
 		n := len(p) &^ (shared.Chunk - 1)
-		block(d, p[:n])
+		d.blockFunc(d, p[:n])
 		p = p[n:]
 	}
 	if len(p) > 0 {
@@ -166,20 +186,18 @@ func (d *digest) Sum(in []byte) []byte {
 func (d *digest) checkSum() [Size]byte {
 	len := d.len
 	// Padding.  Add a 1 bit and 0 bits until 56 bytes mod 64.
-	var tmp [64 + 8]byte
+	var tmp [64]byte
 	tmp[0] = 0x80
-	var t uint64
 	if len%64 < 56 {
-		t = 56 - len%64
+		d.Write(tmp[0 : 56-len%64])
 	} else {
-		t = 64 + 56 - len%64
+		d.Write(tmp[0 : 64+56-len%64])
 	}
 
 	// Length in bits.
 	len <<= 3
-	padlen := tmp[:t+8]
-	binary.BigEndian.PutUint64(tmp[t:], len)
-	d.Write(padlen)
+	binary.BigEndian.PutUint64(tmp[:], len)
+	d.Write(tmp[0:8])
 
 	if d.nx != 0 {
 		panic("d.nx != 0")
@@ -198,8 +216,7 @@ func (d *digest) checkSum() [Size]byte {
 
 // Sum returns the SHA-1 checksum of the data.
 func Sum(data []byte) ([Size]byte, bool) {
-	var d digest
-	d.Reset()
+	d := New().(*digest)
 	d.Write(data)
 	return d.checkSum(), d.col
 }
