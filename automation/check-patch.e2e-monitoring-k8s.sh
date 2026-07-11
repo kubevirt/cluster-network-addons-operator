@@ -17,6 +17,12 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
+    # Set extended timeout to accommodate cluster setup variability and test execution
+    # The monitoring test suite includes 8 specs with deployment waits (15min) and
+    # alert verification (5min), requiring ~20-30 minutes total execution time.
+    # See issue #2877 for context on timeout requirements.
+    export E2E_TEST_TIMEOUT=4h
+
     export MONITORING_NAMESPACE="monitoring"
     make cluster-down
     make cluster-up
