@@ -13,6 +13,7 @@ main() {
     source automation/check-patch.setup.sh
     cd ${TMP_PROJECT_PATH}
 
+    export PLATFORMS="linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
     make bump-all
     if ! make check; then
         echo "error: Uncommitted changes found after bump check. \
