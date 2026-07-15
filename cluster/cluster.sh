@@ -13,6 +13,13 @@
 # limitations under the License.
 
 export KUBEVIRT_PROVIDER=${KUBEVIRT_PROVIDER:-'k8s-1.34'}
+# Using stable tag 2606300938-ede497bd (2026-06-30) instead of latest to avoid
+# CI download timeout issues. Newer tags have been observed to cause image download
+# times that exceed Prow job timeouts, preventing tests from running.
+# This is an infrastructure issue (Prow timeouts/image download performance) that
+# requires fixes in kubevirt/project-infra (increased timeouts or image pre-caching).
+# See: https://github.com/kubevirt/cluster-network-addons-operator/issues/2895
+# Only bump this tag after verifying the new image downloads reliably in CI.
 export KUBEVIRTCI_TAG=${KUBEVIRTCI_TAG:-2606300938-ede497bd}
 
 # The CLUSTER_PATH var is used in cluster folder and points to the _kubevirtci where the cluster is deployed from.
