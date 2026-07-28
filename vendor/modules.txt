@@ -778,7 +778,7 @@ github.com/kevinburke/rest/resterror
 # github.com/kevinburke/ssh_config v1.2.0
 ## explicit
 github.com/kevinburke/ssh_config
-# github.com/klauspost/compress v1.18.5
+# github.com/klauspost/compress v1.18.7
 ## explicit; go 1.24
 github.com/klauspost/compress
 github.com/klauspost/compress/flate
