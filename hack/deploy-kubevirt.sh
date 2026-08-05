@@ -15,7 +15,10 @@ until ./cluster/kubectl.sh get crd kubevirts.kubevirt.io; do
     sleep 1
 done
 
-./cluster/kubectl.sh apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-cr.yaml
+curl -sSfL "https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-cr.yaml" \
+  | ./cluster/kubectl.sh create --dry-run=client -f - -o json \
+  | jq '.spec.configuration.developerConfiguration.disabledFeatureGates = ["ImageVolume"]' \
+  | ./cluster/kubectl.sh apply -f -
 
 # Ensure the KubeVirt CR is created
 count=0
