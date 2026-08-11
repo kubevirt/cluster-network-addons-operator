@@ -40,8 +40,6 @@ const (
 	KubeMacPoolImageDefault            = "quay.io/kubevirt/kubemacpool@sha256:3ab5ef69e48a3eb866aff174d3e806f17a0b044cc597ae1150d535386833b29a"
 	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:435f374b434b3bc70a5cfaba0011fdcf5f433d96b98b06d29306cbd8db3a8c21"
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:aee6d9beb458fa76b0eab34335e2b528ad9eaff74b87be2fd62658ba77cbfa87"
-	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:f5fe9c98fb6d7e5e57a6df23fe82e43e65db5953d76af44adda9ab40c46ad0bf"
-	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
 	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:83f03d3185ee5b27489ae4cb876bf64c9a0b9a910724deae8c341bfae0531152"
 )
 
@@ -53,8 +51,6 @@ type AddonsImages struct {
 	KubeMacPool            string
 	OvsCni                 string
 	MacvtapCni             string
-	KubeSecondaryDNS       string
-	CoreDNS                string
 	KubevirtIpamController string
 }
 
@@ -101,12 +97,6 @@ func (ai *AddonsImages) FillDefaults() *AddonsImages {
 	if ai.MacvtapCni == "" {
 		ai.MacvtapCni = MacvtapCniImageDefault
 	}
-	if ai.KubeSecondaryDNS == "" {
-		ai.KubeSecondaryDNS = KubeSecondaryDNSImageDefault
-	}
-	if ai.CoreDNS == "" {
-		ai.CoreDNS = CoreDNSImageDefault
-	}
 	if ai.KubevirtIpamController == "" {
 		ai.KubevirtIpamController = KubevirtIpamControllerImageDefault
 	}
@@ -122,8 +112,6 @@ func (ai AddonsImages) ToRelatedImages() RelatedImages {
 		ai.KubeMacPool,
 		ai.OvsCni,
 		ai.MacvtapCni,
-		ai.KubeSecondaryDNS,
-		ai.CoreDNS,
 		ai.KubevirtIpamController,
 	)
 }
@@ -233,14 +221,6 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 								{
 									Name:  "MACVTAP_CNI_IMAGE",
 									Value: addonsImages.MacvtapCni,
-								},
-								{
-									Name:  "KUBE_SECONDARY_DNS_IMAGE",
-									Value: addonsImages.KubeSecondaryDNS,
-								},
-								{
-									Name:  "CORE_DNS_IMAGE",
-									Value: addonsImages.CoreDNS,
 								},
 								{
 									Name:  "KUBEVIRT_IPAM_CONTROLLER_IMAGE",
@@ -1418,7 +1398,7 @@ func GetCrd() *extv1.CustomResourceDefinition {
 							},
 						},
 						"kubeSecondaryDNS": extv1.JSONSchemaProps{
-							Description: "KubeSecondaryDNS plugin allows to support FQDN for VMI's secondary networks",
+							Description: "Deprecated: KubeSecondaryDNS is no longer deployed by CNAO. The field is retained for API compatibility and is ignored.",
 							Type:        "object",
 							Properties: map[string]extv1.JSONSchemaProps{
 								"domain": extv1.JSONSchemaProps{
@@ -1663,7 +1643,6 @@ func GetCRV1() *cnaov1.NetworkAddonsConfig {
 			KubeMacPool:            &cnao.KubeMacPool{},
 			Ovs:                    &cnao.Ovs{},
 			MacvtapCni:             &cnao.MacvtapCni{},
-			KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 			KubevirtIpamController: &cnao.KubevirtIpamController{},
 			ImagePullPolicy:        corev1.PullIfNotPresent,
 		},

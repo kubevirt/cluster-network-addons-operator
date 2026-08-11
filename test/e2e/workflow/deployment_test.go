@@ -83,13 +83,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				[]Component{MultusComponent, MultusDynamicNetworks},
 			),
 			Entry(
-				KubeSecondaryDNSComponent.ComponentName,
-				cnao.NetworkAddonsConfigSpec{
-					KubeSecondaryDNS: &cnao.KubeSecondaryDNS{},
-				},
-				[]Component{KubeSecondaryDNSComponent},
-			),
-			Entry(
 				KubevirtIpamController.ComponentName,
 				cnao.NetworkAddonsConfigSpec{
 					Multus:                 &cnao.Multus{},
@@ -118,7 +111,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				OvsComponent,
 				MacvtapComponent,
 				MultusDynamicNetworks,
-				KubeSecondaryDNSComponent,
 				KubevirtIpamController,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
@@ -128,7 +120,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Ovs:                    &cnao.Ovs{},
 				MacvtapCni:             &cnao.MacvtapCni{},
 				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
-				KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 				KubevirtIpamController: &cnao.KubevirtIpamController{},
 			}
 			testConfigCreate(gvk, configSpec, components)
@@ -174,11 +165,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			components = append(components, MultusComponent, MultusDynamicNetworks)
 			testConfigUpdate(gvk, configSpec, components)
 
-			By("Add KubeSecondaryDNS component")
-			configSpec.KubeSecondaryDNS = &cnao.KubeSecondaryDNS{}
-			components = append(components, KubeSecondaryDNSComponent)
-			testConfigUpdate(gvk, configSpec, components)
-
 			By("Add KubevirtIpamController component")
 			configSpec.KubevirtIpamController = &cnao.KubevirtIpamController{}
 			components = append(components, KubevirtIpamController)
@@ -190,7 +176,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				OvsComponent,
 				LinuxBridgeComponent,
 				MultusComponent,
-				KubeSecondaryDNSComponent,
 				KubevirtIpamController,
 			}
 			configSpec := cnao.NetworkAddonsConfigSpec{
@@ -199,7 +184,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 				Ovs:                    &cnao.Ovs{},
 				MacvtapCni:             &cnao.MacvtapCni{},
 				MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
-				KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 				KubevirtIpamController: &cnao.KubevirtIpamController{},
 				PlacementConfiguration: &cnao.PlacementConfiguration{},
 			}
@@ -324,7 +308,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			MacvtapComponent,
 			MonitoringComponent,
 			MultusDynamicNetworks,
-			KubeSecondaryDNSComponent,
 		}
 		configSpec := cnao.NetworkAddonsConfigSpec{
 			LinuxBridge:           &cnao.LinuxBridge{},
@@ -333,7 +316,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			Ovs:                   &cnao.Ovs{},
 			MacvtapCni:            &cnao.MacvtapCni{},
 			MultusDynamicNetworks: &cnao.MultusDynamicNetworks{},
-			KubeSecondaryDNS:      &cnao.KubeSecondaryDNS{},
 		}
 		BeforeEach(func() {
 			CreateConfig(gvk, configSpec)
@@ -374,7 +356,6 @@ var _ = Describe("NetworkAddonsConfig", func() {
 			Ovs:                    &cnao.Ovs{},
 			Multus:                 &cnao.Multus{},
 			MacvtapCni:             &cnao.MacvtapCni{},
-			KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 		}
 		CreateConfig(gvk, configSpec)
 		CheckConfigCondition(gvk, ConditionAvailable, ConditionTrue, 15*time.Minute, CheckDoNotRepeat)

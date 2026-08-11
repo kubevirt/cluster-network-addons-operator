@@ -63,18 +63,6 @@ func init() {
 				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:435f374b434b3bc70a5cfaba0011fdcf5f433d96b98b06d29306cbd8db3a8c21",
 			},
 			{
-				ParentName: "secondary-dns",
-				ParentKind: "Deployment",
-				Name:       "status-monitor",
-				Image:      "ghcr.io/kubevirt/kubesecondarydns@sha256:f5fe9c98fb6d7e5e57a6df23fe82e43e65db5953d76af44adda9ab40c46ad0bf",
-			},
-			{
-				ParentName: "secondary-dns",
-				ParentKind: "Deployment",
-				Name:       "secondary-dns",
-				Image:      "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e",
-			},
-			{
 				ParentName: "kubevirt-ipam-controller-manager",
 				ParentKind: "Deployment",
 				Name:       "manager",
@@ -87,7 +75,6 @@ func init() {
 			Multus:                 &cnao.Multus{},
 			Ovs:                    &cnao.Ovs{},
 			MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
-			KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 			KubevirtIpamController: &cnao.KubevirtIpamController{},
 		},
 		Manifests: []string{
