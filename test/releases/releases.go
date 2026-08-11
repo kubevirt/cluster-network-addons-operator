@@ -142,7 +142,8 @@ func UninstallOperator(release Release) {
 func CheckReleaseUsesExpectedContainerImages(gvk schema.GroupVersionKind, release Release) {
 	By(fmt.Sprintf("Checking that all deployed images match release %s", release.Version))
 
-	expectedContainers := sortContainers(release.Containers)
+	expectedContainers := dropKubeSecondaryDNSContainers(release.Containers)
+	expectedContainers = sortContainers(expectedContainers)
 	configStatus := GetConfigStatus(gvk)
 	deployedContainers := sortContainers(configStatus.Containers)
 
@@ -162,6 +163,16 @@ func dropMultusContainers(containers []cnao.Container) []cnao.Container {
 	filteredContainers := []cnao.Container{}
 	for _, container := range containers {
 		if !strings.Contains(container.Name, "multus") {
+			filteredContainers = append(filteredContainers, container)
+		}
+	}
+	return filteredContainers
+}
+
+func dropKubeSecondaryDNSContainers(containers []cnao.Container) []cnao.Container {
+	filteredContainers := []cnao.Container{}
+	for _, container := range containers {
+		if container.ParentName != "secondary-dns" {
 			filteredContainers = append(filteredContainers, container)
 		}
 	}

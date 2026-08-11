@@ -76,7 +76,6 @@ EOF
     echo "  multusDynamicNetworks: {}" >> cr.yaml
     echo "  ovs: {}" >> cr.yaml
     echo "  macvtap: {}" >> cr.yaml
-    echo "  kubeSecondaryDNS: {}" >> cr.yaml
   fi
 
   cluster/kubectl.sh apply -f cr.yaml
