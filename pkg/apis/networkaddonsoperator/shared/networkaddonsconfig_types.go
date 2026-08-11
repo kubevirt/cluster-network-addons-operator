@@ -17,12 +17,16 @@ type NetworkAddonsConfigSpec struct {
 	KubeMacPool            *KubeMacPool              `json:"kubeMacPool,omitempty"`
 	ImagePullPolicy        corev1.PullPolicy         `json:"imagePullPolicy,omitempty"`
 	NMState                *NMState                  `json:"nmstate,omitempty"`
-	KubeSecondaryDNS       *KubeSecondaryDNS         `json:"kubeSecondaryDNS,omitempty"`
 	MacvtapCni             *MacvtapCni               `json:"macvtap,omitempty"`
 	KubevirtIpamController *KubevirtIpamController   `json:"kubevirtIpamController,omitempty"`
 	SelfSignConfiguration  *SelfSignConfiguration    `json:"selfSignConfiguration,omitempty"`
 	PlacementConfiguration *PlacementConfiguration   `json:"placementConfiguration,omitempty"`
 	TLSSecurityProfile     *ocpv1.TLSSecurityProfile `json:"tlsSecurityProfile,omitempty"`
+
+	// Deprecated: kept as a Go-only compatibility shim for historical release fixtures.
+	// This field is intentionally excluded from JSON/CRD generation so kube-secondary-dns
+	// stays removed from the live API surface while old tests continue to compile.
+	KubeSecondaryDNS *KubeSecondaryDNS `json:"-"`
 }
 
 // SelfSignConfiguration defines self sign configuration
@@ -69,13 +73,9 @@ type Ovs struct{}
 // NMState is a declarative node network configuration driven through Kubernetes API
 type NMState struct{}
 
-// KubeSecondaryDNS plugin allows to support FQDN for VMI's secondary networks
-type KubeSecondaryDNS struct {
-	// Domain defines the FQDN domain
-	Domain string `json:"domain,omitempty"`
-	// NameServerIp defines the name server IP
-	NameServerIP string `json:"nameServerIP,omitempty"`
-}
+// Deprecated: kept only so historical release fixtures compile after
+// kube-secondary-dns was removed from the product.
+type KubeSecondaryDNS struct{}
 
 // KubeMacPool plugin manages MAC allocation to Pods and VMs in Kubernetes
 type KubeMacPool struct {

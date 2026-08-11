@@ -28,7 +28,6 @@ var _ = Describe("TLS", func() {
 			MacvtapCni:             &cnao.MacvtapCni{},
 			Multus:                 &cnao.Multus{},
 			MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
-			KubeSecondaryDNS:       &cnao.KubeSecondaryDNS{},
 			SelfSignConfiguration: &cnao.SelfSignConfiguration{
 				// extend certificate intervals for 1 year to relax expired certificate warnings.
 				CertRotateInterval:  "8760h",
