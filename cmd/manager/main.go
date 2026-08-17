@@ -118,10 +118,10 @@ func main() {
 			FilterProvider: filters.WithAuthenticationAndAuthorization,
 			TLSOpts: []func(*tls.Config){func(cfg *tls.Config) {
 				cfg.GetConfigForClient = func(_ *tls.ClientHelloInfo) (*tls.Config, error) {
-					ciphers, minVersion := network.SelectCipherSuitesAndMinTLSVersion(tlsProfile.Load())
+					tlsCfg := network.SelectTLSSettings(tlsProfile.Load())
 					clone := cfg.Clone()
-					clone.CipherSuites = network.CipherSuiteIDs(ciphers)
-					clone.MinVersion = network.TLSMinVersionID(minVersion)
+					clone.CipherSuites = network.CipherSuiteIDs(tlsCfg.CipherSuites)
+					clone.MinVersion = network.TLSMinVersionID(tlsCfg.MinVersion)
 					return clone, nil
 				}
 			}},
