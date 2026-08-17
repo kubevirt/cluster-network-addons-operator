@@ -122,6 +122,7 @@ func main() {
 					clone := cfg.Clone()
 					clone.CipherSuites = network.CipherSuiteIDs(tlsCfg.CipherSuites)
 					clone.MinVersion = network.TLSMinVersionID(tlsCfg.MinVersion)
+					clone.CurvePreferences = network.CurveIDs(tlsCfg.Groups)
 					return clone, nil
 				}
 			}},
