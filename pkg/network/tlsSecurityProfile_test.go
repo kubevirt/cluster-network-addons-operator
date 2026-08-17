@@ -16,10 +16,12 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		config                *cnao.NetworkAddonsConfigSpec
 		expectedCiphers       []string
 		expectedMinTLSVersion ocpv1.TLSProtocolVersion
+		expectedGroups        []ocpv1.TLSGroup
 	}
 	testCustomTLSProfileSpec := ocpv1.TLSProfileSpec{
 		Ciphers:       []string{"foo,bar"},
 		MinTLSVersion: "foobar",
+		Groups:        []ocpv1.TLSGroup{"mygroup"},
 	}
 	DescribeTable("SecurityProfileSpec function",
 		func(c loadSecurityProfileCase) {
@@ -27,12 +29,14 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			Expect(tlsCfg).To(Equal(tlsConfig{
 				MinVersion:   c.expectedMinTLSVersion,
 				CipherSuites: c.expectedCiphers,
+				Groups:       c.expectedGroups,
 			}))
 		},
 		Entry("when TLSSecurityProfile is nil", loadSecurityProfileCase{
 			config:                &cnao.NetworkAddonsConfigSpec{},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Groups,
 		}),
 		Entry("when Old Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -43,6 +47,7 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].Groups,
 		}),
 		Entry("when Intermediate Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -53,6 +58,18 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Groups,
+		}),
+		Entry("when Modern Security Profile is selected", loadSecurityProfileCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+					Type:   ocpv1.TLSProfileModernType,
+					Modern: &ocpv1.ModernTLSProfile{},
+				},
+			},
+			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Ciphers,
+			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Groups,
 		}),
 		Entry("when Custom Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -65,6 +82,7 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			},
 			expectedCiphers:       testCustomTLSProfileSpec.Ciphers,
 			expectedMinTLSVersion: testCustomTLSProfileSpec.MinTLSVersion,
+			expectedGroups:        testCustomTLSProfileSpec.Groups,
 		}),
 	)
 
@@ -231,6 +249,37 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		It("should return 0 for unrecognized values", func() {
 			Expect(TLSMinVersionID("")).To(Equal(uint16(0)))
 			Expect(TLSMinVersionID("VersionTLS99")).To(Equal(uint16(0)))
+		})
+	})
+
+	Context("CurveIDs", func() {
+		It("should return nil for empty input", func() {
+			Expect(CurveIDs(nil)).To(BeNil())
+			Expect(CurveIDs([]ocpv1.TLSGroup{})).To(BeNil())
+		})
+		It("should convert OCP TLSGroup to IDs", func() {
+			ids := CurveIDs([]ocpv1.TLSGroup{
+				ocpv1.TLSGroupX25519MLKEM768,
+				ocpv1.TLSGroupX25519,
+				ocpv1.TLSGroupSecP256r1,
+				ocpv1.TLSGroupSecP384r1,
+				ocpv1.TLSGroupSecP521r1,
+			})
+			Expect(ids).To(Equal([]tls.CurveID{
+				tls.X25519MLKEM768,
+				tls.X25519,
+				tls.CurveP256,
+				tls.CurveP384,
+				tls.CurveP521,
+			}))
+		})
+		It("should skip groups with no known crypto/tls.CurveID", func() {
+			ids := CurveIDs([]ocpv1.TLSGroup{
+				ocpv1.TLSGroupX25519,
+				ocpv1.TLSGroupSecP256r1MLKEM768,  // available on Go 1.26
+				ocpv1.TLSGroupSecP384r1MLKEM1024, // available on Go 1.26
+			})
+			Expect(ids).To(Equal([]tls.CurveID{tls.X25519}))
 		})
 	})
 })
