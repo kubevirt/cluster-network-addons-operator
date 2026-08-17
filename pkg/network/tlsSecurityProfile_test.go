@@ -23,9 +23,11 @@ var _ = Describe("Testing TLS Security Profile", func() {
 	}
 	DescribeTable("SecurityProfileSpec function",
 		func(c loadSecurityProfileCase) {
-			ciphers, minTLSVersion := SelectCipherSuitesAndMinTLSVersion(c.config.TLSSecurityProfile)
-			Expect(ciphers).To(Equal(c.expectedCiphers))
-			Expect(minTLSVersion).To(Equal(c.expectedMinTLSVersion))
+			tlsCfg := SelectTLSSettings(c.config.TLSSecurityProfile)
+			Expect(tlsCfg).To(Equal(tlsConfig{
+				MinVersion:   c.expectedMinTLSVersion,
+				CipherSuites: c.expectedCiphers,
+			}))
 		},
 		Entry("when TLSSecurityProfile is nil", loadSecurityProfileCase{
 			config:                &cnao.NetworkAddonsConfigSpec{},
@@ -77,10 +79,10 @@ var _ = Describe("Testing TLS Security Profile", func() {
 				},
 				Intermediate: &ocpv1.IntermediateTLSProfile{},
 			}
-			var ciphers, _ = SelectCipherSuitesAndMinTLSVersion(profile)
-			for i, vi := range ciphers {
-				for j := i + 1; j < len(ciphers); j++ {
-					Expect(vi).ToNot(Equal(ciphers[j]))
+			var tlsCfg = SelectTLSSettings(profile)
+			for i, vi := range tlsCfg.CipherSuites {
+				for j := i + 1; j < len(tlsCfg.CipherSuites); j++ {
+					Expect(vi).ToNot(Equal(tlsCfg.CipherSuites[j]))
 				}
 			}
 		})
@@ -88,11 +90,11 @@ var _ = Describe("Testing TLS Security Profile", func() {
 
 	Context("GoTLSCipherSuiteNames", func() {
 		It("should convert Intermediate profile ciphers to Go crypto/tls names", func() {
-			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{
 				Type:         ocpv1.TLSProfileIntermediateType,
 				Intermediate: &ocpv1.IntermediateTLSProfile{},
 			})
-			goNames := OCPTLSProfileCiphersToGoCipherNames(ciphers)
+			goNames := OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites)
 
 			Expect(goNames).To(ConsistOf(
 				"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
@@ -105,22 +107,22 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		})
 
 		It("should return empty for Modern profile (TLS 1.3 only ciphers)", func() {
-			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{
 				Type:   ocpv1.TLSProfileModernType,
 				Modern: &ocpv1.ModernTLSProfile{},
 			})
-			goNames := OCPTLSProfileCiphersToGoCipherNames(ciphers)
+			goNames := OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites)
 
 			Expect(goNames).To(BeEmpty(),
 				"TLS 1.3 ciphers are not configurable in Go and should be excluded")
 		})
 
 		It("should convert Old profile ciphers and exclude TLS 1.3 entries", func() {
-			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{
 				Type: ocpv1.TLSProfileOldType,
 				Old:  &ocpv1.OldTLSProfile{},
 			})
-			goNames := OCPTLSProfileCiphersToGoCipherNames(ciphers)
+			goNames := OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites)
 
 			Expect(goNames).ToNot(BeEmpty())
 			Expect(goNames).To(ContainElement("TLS_RSA_WITH_3DES_EDE_CBC_SHA"),
@@ -162,8 +164,8 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		}
 		DescribeTable("should return expected IDs for each TLS profile",
 			func(c cipherSuiteIDsCase) {
-				ciphers, _ := SelectCipherSuitesAndMinTLSVersion(c.profile)
-				Expect(CipherSuiteIDs(ciphers)).To(Equal(c.expectedIDs))
+				tlsCfg := SelectTLSSettings(c.profile)
+				Expect(CipherSuiteIDs(tlsCfg.CipherSuites)).To(Equal(c.expectedIDs))
 			},
 			Entry("Intermediate profile", cipherSuiteIDsCase{
 				profile: &ocpv1.TLSSecurityProfile{

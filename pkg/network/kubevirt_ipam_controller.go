@@ -32,9 +32,9 @@ func RenderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 	data.Data["KubevirtIpamControllerImage"] = os.Getenv("KUBEVIRT_IPAM_CONTROLLER_IMAGE")
 	data.Data["DefaultNetNADNs"] = conf.KubevirtIpamController.DefaultNetworkNADNamespace
 
-	ciphers, tlsMinVersion := SelectCipherSuitesAndMinTLSVersion(conf.TLSSecurityProfile)
-	data.Data["TLSMinVersion"] = tlsMinVersion
-	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(ciphers), ",")
+	tlsCfg := SelectTLSSettings(conf.TLSSecurityProfile)
+	data.Data["TLSMinVersion"] = tlsCfg.MinVersion
+	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites), ",")
 
 	if clusterInfo.OpenShift4 {
 		data.Data["WebhookAnnotation"] = `service.beta.openshift.io/inject-cabundle: "true"`

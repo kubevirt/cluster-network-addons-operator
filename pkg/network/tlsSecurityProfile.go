@@ -41,7 +41,12 @@ var ocpTLSProfileOpenSSLCipherNames = map[string]uint16{
 	"DES-CBC3-SHA":                  tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
 }
 
-func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]string, ocpv1.TLSProtocolVersion) {
+type tlsConfig struct {
+	MinVersion   ocpv1.TLSProtocolVersion
+	CipherSuites []string
+}
+
+func SelectTLSSettings(profile *ocpv1.TLSSecurityProfile) tlsConfig {
 	if profile == nil {
 		profile = &ocpv1.TLSSecurityProfile{
 			Type:   ocpv1.TLSProfileModernType,
@@ -67,7 +72,10 @@ func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]st
 		result = append(result, c)
 	}
 
-	return result, minTlsVersion
+	return tlsConfig{
+		MinVersion:   minTlsVersion,
+		CipherSuites: result,
+	}
 }
 
 // OCPTLSProfileCiphersToGoCipherNames converts OpenSSL-format cipher names used in OpenShift TLS profiles
