@@ -120,7 +120,7 @@ make bump-kubevirtci       # Update kubevirtci version
 
 ## Build Toolchain
 
-- **Go version**: 1.25 (max allowed; auto-installed to `build/_output/bin/go/` via `hack/install-go.sh`)
+- **Go version**: 1.26 (max allowed; auto-installed to `build/_output/bin/go/` via `hack/install-go.sh`)
 - **Build flags**: `GOFLAGS=-mod=vendor GO111MODULE=on CGO_ENABLED=0`
 - **Multi-arch**: Builds for `linux/amd64`, `linux/arm64`, `linux/s390x`
 - **Container runtime**: Auto-detects podman or docker (`OCI_BIN`)
