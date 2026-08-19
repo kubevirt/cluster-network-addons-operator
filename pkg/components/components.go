@@ -42,7 +42,7 @@ const (
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:aee6d9beb458fa76b0eab34335e2b528ad9eaff74b87be2fd62658ba77cbfa87"
 	KubeSecondaryDNSImageDefault       = "ghcr.io/kubevirt/kubesecondarydns@sha256:f5fe9c98fb6d7e5e57a6df23fe82e43e65db5953d76af44adda9ab40c46ad0bf"
 	CoreDNSImageDefault                = "registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e"
-	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:1c761c8da9ba7d14f4eee8d566061ca452d0241d223c97116d2f36325fd47863"
+	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@"
 )
 
 type AddonsImages struct {
