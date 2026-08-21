@@ -1,2 +1,2 @@
 #!/bin/bash -e
-grep ^go go.mod | awk '{print $2}'
+grep ^toolchain go.mod | awk '{print $2}' | sed 's/^go//'
