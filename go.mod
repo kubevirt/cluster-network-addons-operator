@@ -28,7 +28,7 @@ require (
 	github.com/kubevirt/monitoring/pkg/metrics/parser v0.0.0-20231024120544-6a3ba1a680b4
 	github.com/onsi/ginkgo/v2 v2.25.1
 	github.com/onsi/gomega v1.38.1
-	github.com/openshift/api v0.0.0-20260228183123-9b2ee997d297
+	github.com/openshift/api v0.0.0-20260601143908-70f01b82bb53
 	github.com/openshift/custom-resource-status v1.1.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0

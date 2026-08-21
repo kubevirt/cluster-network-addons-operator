@@ -41,7 +41,13 @@ var ocpTLSProfileOpenSSLCipherNames = map[string]uint16{
 	"DES-CBC3-SHA":                  tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
 }
 
-func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]string, ocpv1.TLSProtocolVersion) {
+type tlsConfig struct {
+	MinVersion   ocpv1.TLSProtocolVersion
+	CipherSuites []string
+	Groups       []ocpv1.TLSGroup
+}
+
+func SelectTLSSettings(profile *ocpv1.TLSSecurityProfile) tlsConfig {
 	if profile == nil {
 		profile = &ocpv1.TLSSecurityProfile{
 			Type:   ocpv1.TLSProfileModernType,
@@ -50,12 +56,15 @@ func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]st
 	}
 	var ciphers []string
 	var minTlsVersion ocpv1.TLSProtocolVersion
+	var groups []ocpv1.TLSGroup
 	if profile.Custom != nil {
 		ciphers = profile.Custom.TLSProfileSpec.Ciphers
 		minTlsVersion = profile.Custom.TLSProfileSpec.MinTLSVersion
+		groups = profile.Custom.TLSProfileSpec.Groups
 	} else {
 		ciphers = ocpv1.TLSProfiles[profile.Type].Ciphers
 		minTlsVersion = ocpv1.TLSProfiles[profile.Type].MinTLSVersion
+		groups = ocpv1.TLSProfiles[profile.Type].Groups
 	}
 	m := make(map[string]bool)
 	var result []string
@@ -67,7 +76,11 @@ func SelectCipherSuitesAndMinTLSVersion(profile *ocpv1.TLSSecurityProfile) ([]st
 		result = append(result, c)
 	}
 
-	return result, minTlsVersion
+	return tlsConfig{
+		MinVersion:   minTlsVersion,
+		CipherSuites: result,
+		Groups:       groups,
+	}
 }
 
 // OCPTLSProfileCiphersToGoCipherNames converts OpenSSL-format cipher names used in OpenShift TLS profiles
@@ -111,4 +124,31 @@ var tlsVersionID = map[ocpv1.TLSProtocolVersion]uint16{
 // default minimum (currently TLS 1.2).
 func TLSMinVersionID(version ocpv1.TLSProtocolVersion) uint16 {
 	return tlsVersionID[version]
+}
+
+// ocpTLSProfileGroupIDs maps OpenShift TLS group identifiers to their corresponding
+// crypto/tls.CurveID values, for direct use in tls.Config.CurvePreferences.
+var ocpTLSProfileGroupIDs = map[ocpv1.TLSGroup]tls.CurveID{
+	ocpv1.TLSGroupX25519:         tls.X25519,
+	ocpv1.TLSGroupSecP256r1:      tls.CurveP256,
+	ocpv1.TLSGroupSecP384r1:      tls.CurveP384,
+	ocpv1.TLSGroupSecP521r1:      tls.CurveP521,
+	ocpv1.TLSGroupX25519MLKEM768: tls.X25519MLKEM768,
+	// TODO: ocpv1.TLSGroupSecP256r1MLKEM768 and ocpv1.TLSGroupSecP384r1MLKEM1024 require Go 1.26+
+	//  add those once the project transition to Go 1.26+
+}
+
+// CurveIDs converts OpenShift TLS group identifiers to crypto/tls.CurveID values
+// suitable for tls.Config.CurvePreferences.
+// The groups TLSGroupSecP256r1MLKEM768 and TLSGroupSecP384r1MLKEM1024 are not supported.
+// Unknown groups are silently skipped, in case all groups are unknown TLS groups is
+// selected by the runtime.
+func CurveIDs(groups []ocpv1.TLSGroup) []tls.CurveID {
+	var ids []tls.CurveID
+	for _, g := range groups {
+		if id, ok := ocpTLSProfileGroupIDs[g]; ok {
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
