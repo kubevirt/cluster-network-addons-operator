@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"slices"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -71,24 +72,18 @@ var _ = Describe("TLS", func() {
 				{
 					Type:   "Available",
 					Status: metav1.ConditionTrue,
-					Reason: "EndpointDiscovered",
 				},
 				{
-					Type:    "TLSCompliant",
-					Status:  metav1.ConditionTrue,
-					Reason:  "Compliant",
-					Message: "Endpoint supports modern TLS (1.2 or 1.3)",
+					Type:   "TLSCompliant",
+					Status: metav1.ConditionTrue,
 				},
 				{
 					Type:   "CertificateValid",
 					Status: "True",
-					Reason: "Valid",
 				},
 				{
-					Type:    "PQCCompliant",
-					Status:  metav1.ConditionTrue,
-					Reason:  "PQCReady",
-					Message: "Endpoint supports TLS 1.3 with post-quantum key exchange (ML-KEM)",
+					Type:   "PQCCompliant",
+					Status: metav1.ConditionTrue,
 				},
 			},
 		}
@@ -134,7 +129,7 @@ var _ = Describe("TLS", func() {
 			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 
-		By("set tlsSecurityProfile with custom type and explicit TLS group")
+		By("set tlsSecurityProfile with custom type and explicit non PQC TLS group")
 		c := operations.ConvertToConfigV1(operations.GetConfig(operations.GetCnaoV1GroupVersionKind()))
 		c.Spec.TLSSecurityProfile = &ocpv1.TLSSecurityProfile{}
 		c.Spec.TLSSecurityProfile.Type = ocpv1.TLSProfileCustomType
@@ -151,19 +146,22 @@ var _ = Describe("TLS", func() {
 			check.CheckDoNotRepeat,
 		)
 
-		// TODO: remove below slice and assert all tested components once they are all wired to tlsSecurityProfile groups
-		tlsGroupSupportedHosts := []string{cnaoHost, kmpMetricsHost, kmpSvcHost}
-
 		By("asserting the specified TLS group is set")
-		expectedNegotiatedCurves := map[string]string{"TLS 1.3": "CurveP521"}
+		for i := range expectedReports {
+			// expect non PQC compliant state because we configured non PQC TLS group
+			expectedReports[i].Status.NegotiatedCurves = map[string]string{"TLS 1.3": "CurveP521"}
+			expectedReports[i].Status.QuantumReady = false
+			for j := range expectedReports[i].Status.Conditions {
+				if expectedReports[j].Status.Conditions[j].Type == "PQCCompliant" {
+					expectedReports[j].Status.Conditions[j].Status = metav1.ConditionFalse
+				}
+			}
+		}
 		Eventually(func(g Gomega) {
 			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
 			g.Expect(err).NotTo(HaveOccurred())
-			actualReports := filterTLSReportsBySpecHost(tlsReports, tlsGroupSupportedHosts...)
-			g.Expect(actualReports).To(HaveLen(len(tlsGroupSupportedHosts)))
-			for _, report := range actualReports {
-				g.Expect(report.Status.NegotiatedCurves).To(Equal(expectedNegotiatedCurves))
-			}
+			actualReports := filterTLSReportsBySpecHost(tlsReports, cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost)
+			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 	})
 })
@@ -200,10 +198,10 @@ func filterTLSReportsBySpecHost(reports []tlsReport, hosts ...string) []tlsRepor
 	return filteredReports
 }
 
+var dynamicTextTLSReportConditionTypes = strings.Join([]string{"Available", "CertificateValid", "PQCCompliant"}, " ")
+
 // normalizeConditions strip status.Condition non-deterministic fields values.
-// Removes all conditions LastTransitionTime.
-// For condition of type 'Available' and 'CertificateValid' the 'Message' field is trimmed
-// because it contains non-deterministic text.
+// Removes all condition's LastTransitionTime, Message and Reason attributes.
 func normalizeConditions(reports []tlsReport) []tlsReport {
 	clonedReports := slices.Clone(reports)
 	// deep copy Conditions because slices.Clone perform shallow copy
@@ -214,16 +212,8 @@ func normalizeConditions(reports []tlsReport) []tlsReport {
 	for i, report := range clonedReports {
 		for j := range report.Status.Conditions {
 			clonedReports[i].Status.Conditions[j].LastTransitionTime = metav1.Time{}
-		}
-	}
-
-	// The following conditions type message's containing non-deterministic text,
-	// hence remove Message field value
-	for i, report := range clonedReports {
-		for j, condition := range report.Status.Conditions {
-			if condition.Type == "Available" || condition.Type == "CertificateValid" {
-				clonedReports[i].Status.Conditions[j].Message = ""
-			}
+			clonedReports[i].Status.Conditions[j].Message = ""
+			clonedReports[i].Status.Conditions[j].Reason = ""
 		}
 	}
 
