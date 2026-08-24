@@ -7,6 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	ocpv1 "github.com/openshift/api/config/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -131,6 +132,38 @@ var _ = Describe("TLS", func() {
 			g.Expect(err).NotTo(HaveOccurred())
 			actualReports := filterTLSReportsBySpecHost(tlsReports, cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost)
 			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
+		}, 5*time.Minute, 1*time.Second).Should(Succeed())
+
+		By("set tlsSecurityProfile with custom type and explicit TLS group")
+		c := operations.ConvertToConfigV1(operations.GetConfig(operations.GetCnaoV1GroupVersionKind()))
+		c.Spec.TLSSecurityProfile = &ocpv1.TLSSecurityProfile{}
+		c.Spec.TLSSecurityProfile.Type = ocpv1.TLSProfileCustomType
+		c.Spec.TLSSecurityProfile.Custom = &ocpv1.CustomTLSProfile{TLSProfileSpec: ocpv1.TLSProfileSpec{
+			MinTLSVersion: ocpv1.VersionTLS13,
+			Groups:        []ocpv1.TLSGroup{ocpv1.TLSGroupSecP521r1},
+		}}
+		operations.UpdateConfig(operations.GetCnaoV1GroupVersionKind(), c.Spec)
+		check.CheckConfigCondition(
+			operations.GetCnaoV1GroupVersionKind(),
+			check.ConditionAvailable,
+			check.ConditionTrue,
+			5*time.Minute,
+			check.CheckDoNotRepeat,
+		)
+
+		// TODO: remove below slice and assert all tested components once they are all wired to tlsSecurityProfile groups
+		tlsGroupSupportedHosts := []string{cnaoHost}
+
+		By("asserting the specified TLS group is set")
+		expectedNegotiatedCurves := map[string]string{"TLS 1.3": "CurveP521"}
+		Eventually(func(g Gomega) {
+			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
+			g.Expect(err).NotTo(HaveOccurred())
+			actualReports := filterTLSReportsBySpecHost(tlsReports, tlsGroupSupportedHosts...)
+			g.Expect(actualReports).To(HaveLen(len(tlsGroupSupportedHosts)))
+			for _, report := range actualReports {
+				g.Expect(report.Status.NegotiatedCurves).To(Equal(expectedNegotiatedCurves))
+			}
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 	})
 })
