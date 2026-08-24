@@ -58,8 +58,14 @@ var _ = Describe("TLS", func() {
 
 	It("all services in CNAO namespace should be TLS compliant per TLSComplianceReport", func() {
 		const cnaoNamespace = "cluster-network-addons"
+		cnaoHost := "cluster-network-addons-operator-prometheus-metrics." + cnaoNamespace
+		ipamExtHost := "kubevirt-ipam-controller-webhook-service." + cnaoNamespace
+		kmpMetricsHost := "kubemacpool-metrics-service." + cnaoNamespace
+		kmpSvcHost := "kubemacpool-service." + cnaoNamespace
+
 		expectedStatus := tlsReportStatus{
-			QuantumReady: true,
+			QuantumReady:     true,
+			NegotiatedCurves: map[string]string{"TLS 1.3": "X25519MLKEM768"},
 			Conditions: []metav1.Condition{
 				{
 					Type:   "Available",
@@ -88,7 +94,7 @@ var _ = Describe("TLS", func() {
 		expectedReports := []tlsReport{
 			{
 				Spec: tlsReportSpec{
-					Host:            "cluster-network-addons-operator-prometheus-metrics." + cnaoNamespace,
+					Host:            cnaoHost,
 					Port:            8443,
 					SourceNamespace: cnaoNamespace,
 				},
@@ -96,7 +102,7 @@ var _ = Describe("TLS", func() {
 			},
 			{
 				Spec: tlsReportSpec{
-					Host:            "kubevirt-ipam-controller-webhook-service." + cnaoNamespace,
+					Host:            ipamExtHost,
 					Port:            443,
 					SourceNamespace: cnaoNamespace,
 				},
@@ -104,7 +110,7 @@ var _ = Describe("TLS", func() {
 			},
 			{
 				Spec: tlsReportSpec{
-					Host:            "kubemacpool-metrics-service." + cnaoNamespace,
+					Host:            kmpMetricsHost,
 					Port:            8443,
 					SourceNamespace: cnaoNamespace,
 				},
@@ -112,26 +118,19 @@ var _ = Describe("TLS", func() {
 			},
 			{
 				Spec: tlsReportSpec{
-					Host:            "kubemacpool-service." + cnaoNamespace,
+					Host:            kmpSvcHost,
 					Port:            443,
 					SourceNamespace: cnaoNamespace,
 				},
 				Status: expectedStatus,
 			},
 		}
-
+		By("asserting TLS reports")
 		Eventually(func(g Gomega) {
-			var err error
 			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
 			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(tlsReports).To(
-				WithTransform(
-					// normalizeConditions is used because conditions contains non-deterministic
-					// values (such as LastTransitionTime, Message) breaking underlying equality matchers.
-					normalizeConditions,
-					// ContainElements is used due to existing reports for arbitrary pods exposing some ports.
-					// The test care about endpoints CNAO deploy and advertise via Services.
-					ContainElements(expectedReports)))
+			actualReports := filterTLSReportsBySpecHost(tlsReports, cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost)
+			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 	})
 })
@@ -156,6 +155,16 @@ func getNamespaceTLSReports(targetNamespace string) ([]tlsReport, error) {
 		reports = append(reports, report)
 	}
 	return reports, nil
+}
+
+func filterTLSReportsBySpecHost(reports []tlsReport, hosts ...string) []tlsReport {
+	var filteredReports []tlsReport
+	for _, report := range reports {
+		if slices.Contains(hosts, report.Spec.Host) {
+			filteredReports = append(filteredReports, report)
+		}
+	}
+	return filteredReports
 }
 
 // normalizeConditions strip status.Condition non-deterministic fields values.
@@ -203,6 +212,7 @@ type tlsReportSpec struct {
 }
 
 type tlsReportStatus struct {
-	Conditions   []metav1.Condition `json:"conditions"`
-	QuantumReady bool               `json:"quantumReady"`
+	Conditions       []metav1.Condition `json:"conditions"`
+	QuantumReady     bool               `json:"quantumReady"`
+	NegotiatedCurves map[string]string  `json:"negotiatedCurves"`
 }
