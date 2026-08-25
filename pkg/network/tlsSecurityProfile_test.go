@@ -11,19 +11,22 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
-var _ = Describe("Testing TLS Security Profile", func() {
+var _ = Describe("TLS Security Profile", func() {
 	type loadSecurityProfileCase struct {
 		config                *cnao.NetworkAddonsConfigSpec
 		expectedCiphers       []string
 		expectedMinTLSVersion ocpv1.TLSProtocolVersion
 		expectedGroups        []ocpv1.TLSGroup
+		expectedCurveIDs      []tls.CurveID
 	}
 	testCustomTLSProfileSpec := ocpv1.TLSProfileSpec{
 		Ciphers:       []string{"foo,bar"},
 		MinTLSVersion: "foobar",
 		Groups:        []ocpv1.TLSGroup{"mygroup"},
 	}
-	DescribeTable("SecurityProfileSpec function",
+	testCurveIDs := []tls.CurveID{tls.X25519MLKEM768, tls.X25519, tls.CurveP256, tls.CurveP384}
+
+	DescribeTable("SelectTLSSettings should aggregate valid selected TLS settings",
 		func(c loadSecurityProfileCase) {
 			tlsCfg := SelectTLSSettings(c.config.TLSSecurityProfile)
 			Expect(tlsCfg).To(Equal(tlsConfig{
@@ -31,12 +34,15 @@ var _ = Describe("Testing TLS Security Profile", func() {
 				CipherSuites: c.expectedCiphers,
 				Groups:       c.expectedGroups,
 			}))
+
+			Expect(CurveIDs(tlsCfg.Groups)).To(Equal(c.expectedCurveIDs))
 		},
 		Entry("when TLSSecurityProfile is nil", loadSecurityProfileCase{
 			config:                &cnao.NetworkAddonsConfigSpec{},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].MinTLSVersion,
 			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Old Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -48,6 +54,7 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].MinTLSVersion,
 			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Intermediate Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -59,6 +66,7 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].MinTLSVersion,
 			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Modern Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -70,6 +78,7 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].MinTLSVersion,
 			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Custom Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -83,6 +92,21 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			expectedCiphers:       testCustomTLSProfileSpec.Ciphers,
 			expectedMinTLSVersion: testCustomTLSProfileSpec.MinTLSVersion,
 			expectedGroups:        testCustomTLSProfileSpec.Groups,
+		}),
+		Entry("when Custom Security Profile, explicit no TLS groups set", loadSecurityProfileCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+					Type: ocpv1.TLSProfileCustomType,
+					Custom: &ocpv1.CustomTLSProfile{TLSProfileSpec: ocpv1.TLSProfileSpec{
+						MinTLSVersion: "myversion",
+						Ciphers:       []string{"myciphers"},
+					}},
+				},
+			},
+			expectedMinTLSVersion: "myversion",
+			expectedCiphers:       []string{"myciphers"},
+			expectedGroups:        nil,
+			expectedCurveIDs:      nil,
 		}),
 	)
 
