@@ -106,6 +106,17 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		})
 	})
 
+	It("when duplicate TLS groups are selected should aggregate unique ones", func() {
+		profile := &ocpv1.TLSSecurityProfile{
+			Type: ocpv1.TLSProfileCustomType,
+			Custom: &ocpv1.CustomTLSProfile{TLSProfileSpec: ocpv1.TLSProfileSpec{
+				Groups: []ocpv1.TLSGroup{ocpv1.TLSGroupX25519, ocpv1.TLSGroupX25519, ocpv1.TLSGroupX25519},
+			}},
+		}
+		tlsCfg := SelectTLSSettings(profile)
+		Expect(tlsCfg.Groups).To(Equal([]ocpv1.TLSGroup{ocpv1.TLSGroupX25519}))
+	})
+
 	Context("GoTLSCipherSuiteNames", func() {
 		It("should convert Intermediate profile ciphers to Go crypto/tls names", func() {
 			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{

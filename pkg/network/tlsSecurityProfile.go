@@ -66,21 +66,26 @@ func SelectTLSSettings(profile *ocpv1.TLSSecurityProfile) tlsConfig {
 		minTlsVersion = ocpv1.TLSProfiles[profile.Type].MinTLSVersion
 		groups = ocpv1.TLSProfiles[profile.Type].Groups
 	}
-	m := make(map[string]bool)
-	var result []string
-	for _, c := range ciphers {
-		if m[c] {
-			continue
-		}
-		m[c] = true
-		result = append(result, c)
-	}
-
 	return tlsConfig{
 		MinVersion:   minTlsVersion,
-		CipherSuites: result,
-		Groups:       groups,
+		CipherSuites: filterUniques(ciphers),
+		Groups:       filterUniques(groups),
 	}
+}
+
+// filterUniques returns a new slice containing unique elements of the given slice.
+// Elements keep their original relative order.
+func filterUniques[T comparable](items []T) []T {
+	seen := map[T]bool{}
+	var result []T
+	for _, item := range items {
+		if seen[item] {
+			continue
+		}
+		seen[item] = true
+		result = append(result, item)
+	}
+	return result
 }
 
 // OCPTLSProfileCiphersToGoCipherNames converts OpenSSL-format cipher names used in OpenShift TLS profiles
