@@ -11,26 +11,38 @@ import (
 	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
 )
 
-var _ = Describe("Testing TLS Security Profile", func() {
+var _ = Describe("TLS Security Profile", func() {
 	type loadSecurityProfileCase struct {
 		config                *cnao.NetworkAddonsConfigSpec
 		expectedCiphers       []string
 		expectedMinTLSVersion ocpv1.TLSProtocolVersion
+		expectedGroups        []ocpv1.TLSGroup
+		expectedCurveIDs      []tls.CurveID
 	}
 	testCustomTLSProfileSpec := ocpv1.TLSProfileSpec{
 		Ciphers:       []string{"foo,bar"},
 		MinTLSVersion: "foobar",
+		Groups:        []ocpv1.TLSGroup{"mygroup"},
 	}
-	DescribeTable("SecurityProfileSpec function",
+	testCurveIDs := []tls.CurveID{tls.X25519MLKEM768, tls.X25519, tls.CurveP256, tls.CurveP384}
+
+	DescribeTable("SelectTLSSettings should aggregate valid selected TLS settings",
 		func(c loadSecurityProfileCase) {
-			ciphers, minTLSVersion := SelectCipherSuitesAndMinTLSVersion(c.config.TLSSecurityProfile)
-			Expect(ciphers).To(Equal(c.expectedCiphers))
-			Expect(minTLSVersion).To(Equal(c.expectedMinTLSVersion))
+			tlsCfg := SelectTLSSettings(c.config.TLSSecurityProfile)
+			Expect(tlsCfg).To(Equal(tlsConfig{
+				MinVersion:   c.expectedMinTLSVersion,
+				CipherSuites: c.expectedCiphers,
+				Groups:       c.expectedGroups,
+			}))
+
+			Expect(CurveIDs(tlsCfg.Groups)).To(Equal(c.expectedCurveIDs))
 		},
 		Entry("when TLSSecurityProfile is nil", loadSecurityProfileCase{
 			config:                &cnao.NetworkAddonsConfigSpec{},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Old Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -41,6 +53,8 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileOldType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Intermediate Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -51,6 +65,20 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			},
 			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Ciphers,
 			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileIntermediateType].Groups,
+			expectedCurveIDs:      testCurveIDs,
+		}),
+		Entry("when Modern Security Profile is selected", loadSecurityProfileCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+					Type:   ocpv1.TLSProfileModernType,
+					Modern: &ocpv1.ModernTLSProfile{},
+				},
+			},
+			expectedCiphers:       ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Ciphers,
+			expectedMinTLSVersion: ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].MinTLSVersion,
+			expectedGroups:        ocpv1.TLSProfiles[ocpv1.TLSProfileModernType].Groups,
+			expectedCurveIDs:      testCurveIDs,
 		}),
 		Entry("when Custom Security Profile is selected", loadSecurityProfileCase{
 			config: &cnao.NetworkAddonsConfigSpec{
@@ -63,6 +91,22 @@ var _ = Describe("Testing TLS Security Profile", func() {
 			},
 			expectedCiphers:       testCustomTLSProfileSpec.Ciphers,
 			expectedMinTLSVersion: testCustomTLSProfileSpec.MinTLSVersion,
+			expectedGroups:        testCustomTLSProfileSpec.Groups,
+		}),
+		Entry("when Custom Security Profile, explicit no TLS groups set", loadSecurityProfileCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				TLSSecurityProfile: &ocpv1.TLSSecurityProfile{
+					Type: ocpv1.TLSProfileCustomType,
+					Custom: &ocpv1.CustomTLSProfile{TLSProfileSpec: ocpv1.TLSProfileSpec{
+						MinTLSVersion: "myversion",
+						Ciphers:       []string{"myciphers"},
+					}},
+				},
+			},
+			expectedMinTLSVersion: "myversion",
+			expectedCiphers:       []string{"myciphers"},
+			expectedGroups:        nil,
+			expectedCurveIDs:      nil,
 		}),
 	)
 
@@ -77,22 +121,33 @@ var _ = Describe("Testing TLS Security Profile", func() {
 				},
 				Intermediate: &ocpv1.IntermediateTLSProfile{},
 			}
-			var ciphers, _ = SelectCipherSuitesAndMinTLSVersion(profile)
-			for i, vi := range ciphers {
-				for j := i + 1; j < len(ciphers); j++ {
-					Expect(vi).ToNot(Equal(ciphers[j]))
+			var tlsCfg = SelectTLSSettings(profile)
+			for i, vi := range tlsCfg.CipherSuites {
+				for j := i + 1; j < len(tlsCfg.CipherSuites); j++ {
+					Expect(vi).ToNot(Equal(tlsCfg.CipherSuites[j]))
 				}
 			}
 		})
 	})
 
+	It("when duplicate TLS groups are selected should aggregate unique ones", func() {
+		profile := &ocpv1.TLSSecurityProfile{
+			Type: ocpv1.TLSProfileCustomType,
+			Custom: &ocpv1.CustomTLSProfile{TLSProfileSpec: ocpv1.TLSProfileSpec{
+				Groups: []ocpv1.TLSGroup{ocpv1.TLSGroupX25519, ocpv1.TLSGroupX25519, ocpv1.TLSGroupX25519},
+			}},
+		}
+		tlsCfg := SelectTLSSettings(profile)
+		Expect(tlsCfg.Groups).To(Equal([]ocpv1.TLSGroup{ocpv1.TLSGroupX25519}))
+	})
+
 	Context("GoTLSCipherSuiteNames", func() {
 		It("should convert Intermediate profile ciphers to Go crypto/tls names", func() {
-			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{
 				Type:         ocpv1.TLSProfileIntermediateType,
 				Intermediate: &ocpv1.IntermediateTLSProfile{},
 			})
-			goNames := OCPTLSProfileCiphersToGoCipherNames(ciphers)
+			goNames := OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites)
 
 			Expect(goNames).To(ConsistOf(
 				"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
@@ -105,22 +160,22 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		})
 
 		It("should return empty for Modern profile (TLS 1.3 only ciphers)", func() {
-			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{
 				Type:   ocpv1.TLSProfileModernType,
 				Modern: &ocpv1.ModernTLSProfile{},
 			})
-			goNames := OCPTLSProfileCiphersToGoCipherNames(ciphers)
+			goNames := OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites)
 
 			Expect(goNames).To(BeEmpty(),
 				"TLS 1.3 ciphers are not configurable in Go and should be excluded")
 		})
 
 		It("should convert Old profile ciphers and exclude TLS 1.3 entries", func() {
-			ciphers, _ := SelectCipherSuitesAndMinTLSVersion(&ocpv1.TLSSecurityProfile{
+			tlsCfg := SelectTLSSettings(&ocpv1.TLSSecurityProfile{
 				Type: ocpv1.TLSProfileOldType,
 				Old:  &ocpv1.OldTLSProfile{},
 			})
-			goNames := OCPTLSProfileCiphersToGoCipherNames(ciphers)
+			goNames := OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites)
 
 			Expect(goNames).ToNot(BeEmpty())
 			Expect(goNames).To(ContainElement("TLS_RSA_WITH_3DES_EDE_CBC_SHA"),
@@ -162,8 +217,8 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		}
 		DescribeTable("should return expected IDs for each TLS profile",
 			func(c cipherSuiteIDsCase) {
-				ciphers, _ := SelectCipherSuitesAndMinTLSVersion(c.profile)
-				Expect(CipherSuiteIDs(ciphers)).To(Equal(c.expectedIDs))
+				tlsCfg := SelectTLSSettings(c.profile)
+				Expect(CipherSuiteIDs(tlsCfg.CipherSuites)).To(Equal(c.expectedIDs))
 			},
 			Entry("Intermediate profile", cipherSuiteIDsCase{
 				profile: &ocpv1.TLSSecurityProfile{
@@ -229,6 +284,40 @@ var _ = Describe("Testing TLS Security Profile", func() {
 		It("should return 0 for unrecognized values", func() {
 			Expect(TLSMinVersionID("")).To(Equal(uint16(0)))
 			Expect(TLSMinVersionID("VersionTLS99")).To(Equal(uint16(0)))
+		})
+	})
+
+	Context("CurveIDs", func() {
+		It("should return nil for empty input", func() {
+			Expect(CurveIDs(nil)).To(BeNil())
+			Expect(CurveIDs([]ocpv1.TLSGroup{})).To(BeNil())
+		})
+		It("should convert OCP TLSGroup to IDs", func() {
+			ids := CurveIDs([]ocpv1.TLSGroup{
+				ocpv1.TLSGroupX25519MLKEM768,
+				ocpv1.TLSGroupX25519,
+				ocpv1.TLSGroupSecP256r1,
+				ocpv1.TLSGroupSecP384r1,
+				ocpv1.TLSGroupSecP521r1,
+				ocpv1.TLSGroupSecP256r1MLKEM768,
+				ocpv1.TLSGroupSecP384r1MLKEM1024,
+			})
+			Expect(ids).To(Equal([]tls.CurveID{
+				tls.X25519MLKEM768,
+				tls.X25519,
+				tls.CurveP256,
+				tls.CurveP384,
+				tls.CurveP521,
+				tls.SecP256r1MLKEM768,
+				tls.SecP384r1MLKEM1024,
+			}))
+		})
+		It("should skip groups with no known crypto/tls.CurveID", func() {
+			ids := CurveIDs([]ocpv1.TLSGroup{
+				ocpv1.TLSGroupX25519,
+				"my-non-exist-tls-group",
+			})
+			Expect(ids).To(Equal([]tls.CurveID{tls.X25519}))
 		})
 	})
 })

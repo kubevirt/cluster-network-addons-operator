@@ -7,6 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	ocpv1 "github.com/openshift/api/config/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -58,8 +59,14 @@ var _ = Describe("TLS", func() {
 
 	It("all services in CNAO namespace should be TLS compliant per TLSComplianceReport", func() {
 		const cnaoNamespace = "cluster-network-addons"
+		cnaoHost := "cluster-network-addons-operator-prometheus-metrics." + cnaoNamespace
+		ipamExtHost := "kubevirt-ipam-controller-webhook-service." + cnaoNamespace
+		kmpMetricsHost := "kubemacpool-metrics-service." + cnaoNamespace
+		kmpSvcHost := "kubemacpool-service." + cnaoNamespace
+
 		expectedStatus := tlsReportStatus{
-			QuantumReady: true,
+			QuantumReady:     true,
+			NegotiatedCurves: map[string]string{"TLS 1.3": "X25519MLKEM768"},
 			Conditions: []metav1.Condition{
 				{
 					Type:   "Available",
@@ -88,7 +95,7 @@ var _ = Describe("TLS", func() {
 		expectedReports := []tlsReport{
 			{
 				Spec: tlsReportSpec{
-					Host:            "cluster-network-addons-operator-prometheus-metrics." + cnaoNamespace,
+					Host:            cnaoHost,
 					Port:            8443,
 					SourceNamespace: cnaoNamespace,
 				},
@@ -96,7 +103,7 @@ var _ = Describe("TLS", func() {
 			},
 			{
 				Spec: tlsReportSpec{
-					Host:            "kubevirt-ipam-controller-webhook-service." + cnaoNamespace,
+					Host:            ipamExtHost,
 					Port:            443,
 					SourceNamespace: cnaoNamespace,
 				},
@@ -104,7 +111,7 @@ var _ = Describe("TLS", func() {
 			},
 			{
 				Spec: tlsReportSpec{
-					Host:            "kubemacpool-metrics-service." + cnaoNamespace,
+					Host:            kmpMetricsHost,
 					Port:            8443,
 					SourceNamespace: cnaoNamespace,
 				},
@@ -112,26 +119,51 @@ var _ = Describe("TLS", func() {
 			},
 			{
 				Spec: tlsReportSpec{
-					Host:            "kubemacpool-service." + cnaoNamespace,
+					Host:            kmpSvcHost,
 					Port:            443,
 					SourceNamespace: cnaoNamespace,
 				},
 				Status: expectedStatus,
 			},
 		}
-
+		By("asserting TLS reports")
 		Eventually(func(g Gomega) {
-			var err error
 			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
 			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(tlsReports).To(
-				WithTransform(
-					// normalizeConditions is used because conditions contains non-deterministic
-					// values (such as LastTransitionTime, Message) breaking underlying equality matchers.
-					normalizeConditions,
-					// ContainElements is used due to existing reports for arbitrary pods exposing some ports.
-					// The test care about endpoints CNAO deploy and advertise via Services.
-					ContainElements(expectedReports)))
+			actualReports := filterTLSReportsBySpecHost(tlsReports, cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost)
+			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
+		}, 5*time.Minute, 1*time.Second).Should(Succeed())
+
+		By("set tlsSecurityProfile with custom type and explicit TLS group")
+		c := operations.ConvertToConfigV1(operations.GetConfig(operations.GetCnaoV1GroupVersionKind()))
+		c.Spec.TLSSecurityProfile = &ocpv1.TLSSecurityProfile{}
+		c.Spec.TLSSecurityProfile.Type = ocpv1.TLSProfileCustomType
+		c.Spec.TLSSecurityProfile.Custom = &ocpv1.CustomTLSProfile{TLSProfileSpec: ocpv1.TLSProfileSpec{
+			MinTLSVersion: ocpv1.VersionTLS13,
+			Groups:        []ocpv1.TLSGroup{ocpv1.TLSGroupSecP521r1},
+		}}
+		operations.UpdateConfig(operations.GetCnaoV1GroupVersionKind(), c.Spec)
+		check.CheckConfigCondition(
+			operations.GetCnaoV1GroupVersionKind(),
+			check.ConditionAvailable,
+			check.ConditionTrue,
+			5*time.Minute,
+			check.CheckDoNotRepeat,
+		)
+
+		// TODO: remove below slice and assert all tested components once they are all wired to tlsSecurityProfile groups
+		tlsGroupSupportedHosts := []string{cnaoHost}
+
+		By("asserting the specified TLS group is set")
+		expectedNegotiatedCurves := map[string]string{"TLS 1.3": "CurveP521"}
+		Eventually(func(g Gomega) {
+			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
+			g.Expect(err).NotTo(HaveOccurred())
+			actualReports := filterTLSReportsBySpecHost(tlsReports, tlsGroupSupportedHosts...)
+			g.Expect(actualReports).To(HaveLen(len(tlsGroupSupportedHosts)))
+			for _, report := range actualReports {
+				g.Expect(report.Status.NegotiatedCurves).To(Equal(expectedNegotiatedCurves))
+			}
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 	})
 })
@@ -156,6 +188,16 @@ func getNamespaceTLSReports(targetNamespace string) ([]tlsReport, error) {
 		reports = append(reports, report)
 	}
 	return reports, nil
+}
+
+func filterTLSReportsBySpecHost(reports []tlsReport, hosts ...string) []tlsReport {
+	var filteredReports []tlsReport
+	for _, report := range reports {
+		if slices.Contains(hosts, report.Spec.Host) {
+			filteredReports = append(filteredReports, report)
+		}
+	}
+	return filteredReports
 }
 
 // normalizeConditions strip status.Condition non-deterministic fields values.
@@ -203,6 +245,7 @@ type tlsReportSpec struct {
 }
 
 type tlsReportStatus struct {
-	Conditions   []metav1.Condition `json:"conditions"`
-	QuantumReady bool               `json:"quantumReady"`
+	Conditions       []metav1.Condition `json:"conditions"`
+	QuantumReady     bool               `json:"quantumReady"`
+	NegotiatedCurves map[string]string  `json:"negotiatedCurves"`
 }

@@ -1195,6 +1195,27 @@ func GetCrd() *extv1.CustomResourceDefinition {
 			},
 			Type: "array",
 		},
+		"groups": extv1.JSONSchemaProps{
+			Description: "groups is an optional, ordered field used to specify the supported groups (formerly known as elliptic curves) that are used during the TLS handshake. The order of the groups represents a suggested preference, with the most preferred group first. Operators may remove entries their operands do not support. When omitted, this means no opinion and the platform is left to choose reasonable defaults, which are subject to change over time.",
+			Type:        "array",
+			XListType:   new("set"),
+			MinItems:    new(int64(1)),
+			MaxItems:    new(int64(7)),
+			Items: &extv1.JSONSchemaPropsOrArray{
+				Schema: &extv1.JSONSchemaProps{
+					Type: "string",
+					Enum: []extv1.JSON{
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupX25519))},
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupSecP256r1))},
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupSecP384r1))},
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupSecP521r1))},
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupX25519MLKEM768))},
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupSecP256r1MLKEM768))},
+						{Raw: []byte(fmt.Sprintf("\"%s\"", ocpv1.TLSGroupSecP384r1MLKEM1024))},
+					},
+				},
+			},
+		},
 		"minTLSVersion": extv1.JSONSchemaProps{
 			Description: "minTLSVersion is used to specify the minimal version of the TLS protocol that is negotiated during the TLS handshake. For example, to use TLS versions 1.1, 1.2 and 1.3 (yaml):\n   minTLSVersion: TLSv1.1\n NOTE: currently the highest minTLSVersion allowed is VersionTLS12",
 			Type:        "string",
