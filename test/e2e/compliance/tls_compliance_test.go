@@ -152,7 +152,7 @@ var _ = Describe("TLS", func() {
 		)
 
 		// TODO: remove below slice and assert all tested components once they are all wired to tlsSecurityProfile groups
-		tlsGroupSupportedHosts := []string{cnaoHost}
+		tlsGroupSupportedHosts := []string{cnaoHost, kmpMetricsHost, kmpSvcHost}
 
 		By("asserting the specified TLS group is set")
 		expectedNegotiatedCurves := map[string]string{"TLS 1.3": "CurveP521"}
