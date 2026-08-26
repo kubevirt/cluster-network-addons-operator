@@ -124,6 +124,7 @@ func renderKubeMacPool(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	tlsCfg := SelectTLSSettings(conf.TLSSecurityProfile)
 	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites), ",")
 	data.Data["TLSMinVersion"] = string(tlsCfg.MinVersion)
+	data.Data["TLSGroupPreferences"] = strings.Join(OCPTLSProfileTLSGroupNames(tlsCfg.Groups), ",")
 	data.Data["RunbookURLTemplate"] = alerts.GetRunbookURLTemplate()
 
 	objs, err := render.RenderDir(filepath.Join(manifestDir, "kubemacpool"), &data)

@@ -320,4 +320,38 @@ var _ = Describe("TLS Security Profile", func() {
 			Expect(ids).To(Equal([]tls.CurveID{tls.X25519}))
 		})
 	})
+
+	Context("OCPTLSProfileTLSGroupNames", func() {
+		It("should return nil for empty input", func() {
+			Expect(OCPTLSProfileTLSGroupNames(nil)).To(BeNil())
+			Expect(OCPTLSProfileTLSGroupNames([]ocpv1.TLSGroup{})).To(BeNil())
+		})
+		It("should convert OCP TLSGroup to names", func() {
+			names := OCPTLSProfileTLSGroupNames([]ocpv1.TLSGroup{
+				ocpv1.TLSGroupX25519MLKEM768,
+				ocpv1.TLSGroupX25519,
+				ocpv1.TLSGroupSecP256r1,
+				ocpv1.TLSGroupSecP384r1,
+				ocpv1.TLSGroupSecP521r1,
+				ocpv1.TLSGroupSecP256r1MLKEM768,
+				ocpv1.TLSGroupSecP384r1MLKEM1024,
+			})
+			Expect(names).To(Equal([]string{
+				"X25519MLKEM768",
+				"X25519",
+				"CurveP256",
+				"CurveP384",
+				"CurveP521",
+				"SecP256r1MLKEM768",
+				"SecP384r1MLKEM1024",
+			}))
+		})
+		It("should skip groups with no known crypto/tls.CurveID", func() {
+			names := OCPTLSProfileTLSGroupNames([]ocpv1.TLSGroup{
+				ocpv1.TLSGroupX25519,
+				"my-non-exist-tls-group",
+			})
+			Expect(names).To(Equal([]string{"X25519"}))
+		})
+	})
 })
