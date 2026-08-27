@@ -79,9 +79,16 @@ function __parametize_by_object() {
 				__set_empty_string_label ${f} 'spec.template.metadata.labels."allow-access-cluster-services"'
 				__unquote_toYaml ${f}
 				__unquote_numeric_and_boolean ${f}
-				# Templatize TLS args
-				sed -i '/            - --wait-time=/a\            - "--tls-min-version={{ .TLSMinVersion }}"' ${f}
-				sed -i '/            - "--tls-min-version={{ .TLSMinVersion }}"/a{{ if index . "TLSSecurityProfileCiphers" }}\n            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"\n{{ end }}' ${f}
+				# Templatize TLS args after the existing wait-time flag.
+				sed -i '/            - --wait-time=/r /dev/stdin' "${f}" <<'EOF'
+            - "--tls-min-version={{ .TLSMinVersion }}"
+{{ if index . "TLSSecurityProfileCiphers" }}
+            - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"
+{{ end }}
+{{ if index . "TLSGroupPreferences" }}
+            - "--tls-group-preferences={{ .TLSGroupPreferences }}"
+{{ end }}
+EOF
 				;;
 			./NetworkPolicy_kubemacpool-allow-ingress-to-metrics-endpoint.yaml | \
 			./NetworkPolicy_kubemacpool-allow-ingress-to-webhook.yaml)
