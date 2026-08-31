@@ -157,13 +157,13 @@ func CurveIDs(groups []ocpv1.TLSGroup) []tls.CurveID {
 	return ids
 }
 
-// OCPTLSProfileTLSGroupNames converts OpenShift TLS group identifiers to their corresponding
+// OCPTLSProfileTLSGroupToGoTLSGroupNames converts OpenShift TLS group identifiers to their corresponding
 // Go crypto/tls.CurveID constant names (e.g. "X25519", "CurveP256"), suitable
 // for operands whose CLI flags accept named TLS groups (e.g. kubevirt-ipam-controller's
 // '--tls-group-preferences').
 // Groups with no matching crypto/tls.CurveID are dropped and logged. If none remain,
 // TLS groups are selected by the runtime.
-func OCPTLSProfileTLSGroupNames(groups []ocpv1.TLSGroup) []string {
+func OCPTLSProfileTLSGroupToGoTLSGroupNames(groups []ocpv1.TLSGroup) []string {
 	var names []string
 	var dropped []ocpv1.TLSGroup
 	for _, g := range groups {
