@@ -64,68 +64,41 @@ var _ = Describe("TLS", func() {
 		ipamExtHost := "kubevirt-ipam-controller-webhook-service." + cnaoNamespace
 		kmpMetricsHost := "kubemacpool-metrics-service." + cnaoNamespace
 		kmpSvcHost := "kubemacpool-service." + cnaoNamespace
-
 		expectedStatus := tlsReportStatus{
 			QuantumReady:     true,
 			NegotiatedCurves: map[string]string{"TLS 1.3": "X25519MLKEM768"},
 			Conditions: []metav1.Condition{
-				{
-					Type:   "Available",
-					Status: metav1.ConditionTrue,
-				},
-				{
-					Type:   "TLSCompliant",
-					Status: metav1.ConditionTrue,
-				},
-				{
-					Type:   "CertificateValid",
-					Status: "True",
-				},
-				{
-					Type:   "PQCCompliant",
-					Status: metav1.ConditionTrue,
-				},
+				{Type: "Available", Status: metav1.ConditionTrue},
+				{Type: "TLSCompliant", Status: metav1.ConditionTrue},
+				{Type: "CertificateValid", Status: metav1.ConditionTrue},
+				{Type: "PQCCompliant", Status: metav1.ConditionTrue},
 			},
 		}
 		expectedReports := []tlsReport{
 			{
-				Spec: tlsReportSpec{
-					Host:            cnaoHost,
-					Port:            8443,
-					SourceNamespace: cnaoNamespace,
-				},
+				Spec:   tlsReportSpec{Host: cnaoHost, Port: 8443, SourceNamespace: cnaoNamespace},
 				Status: expectedStatus,
 			},
 			{
-				Spec: tlsReportSpec{
-					Host:            ipamExtHost,
-					Port:            443,
-					SourceNamespace: cnaoNamespace,
-				},
+				Spec:   tlsReportSpec{Host: ipamExtHost, Port: 443, SourceNamespace: cnaoNamespace},
 				Status: expectedStatus,
 			},
 			{
-				Spec: tlsReportSpec{
-					Host:            kmpMetricsHost,
-					Port:            8443,
-					SourceNamespace: cnaoNamespace,
-				},
+				Spec:   tlsReportSpec{Host: kmpMetricsHost, Port: 8443, SourceNamespace: cnaoNamespace},
 				Status: expectedStatus,
 			},
 			{
-				Spec: tlsReportSpec{
-					Host:            kmpSvcHost,
-					Port:            443,
-					SourceNamespace: cnaoNamespace,
-				},
+				Spec:   tlsReportSpec{Host: kmpSvcHost, Port: 443, SourceNamespace: cnaoNamespace},
 				Status: expectedStatus,
 			},
 		}
+		expectedHostReports := []string{cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost}
+
 		By("asserting TLS reports")
 		Eventually(func(g Gomega) {
 			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
 			g.Expect(err).NotTo(HaveOccurred())
-			actualReports := filterTLSReportsBySpecHost(tlsReports, cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost)
+			actualReports := filterTLSReportsBySpecHost(tlsReports, expectedHostReports...)
 			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 
@@ -160,7 +133,7 @@ var _ = Describe("TLS", func() {
 		Eventually(func(g Gomega) {
 			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
 			g.Expect(err).NotTo(HaveOccurred())
-			actualReports := filterTLSReportsBySpecHost(tlsReports, cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost)
+			actualReports := filterTLSReportsBySpecHost(tlsReports, expectedHostReports...)
 			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)))
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 	})
