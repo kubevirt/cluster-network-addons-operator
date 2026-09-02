@@ -51,6 +51,7 @@ var _ = Describe("RenderKubevirtIPAMController", func() {
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA," +
 					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_CBC_SHA256," +
 					"TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+				"--tls-group-preferences=X25519MLKEM768,X25519,CurveP256,CurveP384",
 			},
 		),
 		Entry("Intermediate",
@@ -58,11 +59,16 @@ var _ = Describe("RenderKubevirtIPAMController", func() {
 			[]string{
 				"--tls-min-version=VersionTLS12",
 				"--tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384," +
-					"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"},
+					"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+				"--tls-group-preferences=X25519MLKEM768,X25519,CurveP256,CurveP384",
+			},
 		),
 		Entry("Modern",
 			&ocpv1.TLSSecurityProfile{Type: ocpv1.TLSProfileModernType},
-			[]string{"--tls-min-version=VersionTLS13"},
+			[]string{
+				"--tls-min-version=VersionTLS13",
+				"--tls-group-preferences=X25519MLKEM768,X25519,CurveP256,CurveP384",
+			},
 		),
 		Entry("Custom, min TLS version 1.3 and ciphers, should not specify ciphers flag",
 			&ocpv1.TLSSecurityProfile{
@@ -89,6 +95,21 @@ var _ = Describe("RenderKubevirtIPAMController", func() {
 			[]string{
 				"--tls-min-version=VersionTLS12",
 				"--tls-cipher-suites=TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA",
+			},
+		),
+		Entry("Custom, min TLS version 1.3 and groups",
+			&ocpv1.TLSSecurityProfile{
+				Type: ocpv1.TLSProfileCustomType,
+				Custom: &ocpv1.CustomTLSProfile{
+					TLSProfileSpec: ocpv1.TLSProfileSpec{
+						MinTLSVersion: ocpv1.VersionTLS13,
+						Groups:        []ocpv1.TLSGroup{ocpv1.TLSGroupX25519MLKEM768},
+					},
+				},
+			},
+			[]string{
+				"--tls-min-version=VersionTLS13",
+				"--tls-group-preferences=X25519MLKEM768",
 			},
 		),
 	)

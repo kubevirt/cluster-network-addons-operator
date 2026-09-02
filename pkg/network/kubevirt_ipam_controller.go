@@ -35,6 +35,7 @@ func RenderKubevirtIPAMController(conf *cnao.NetworkAddonsConfigSpec, manifestDi
 	tlsCfg := SelectTLSSettings(conf.TLSSecurityProfile)
 	data.Data["TLSMinVersion"] = tlsCfg.MinVersion
 	data.Data["TLSSecurityProfileCiphers"] = strings.Join(OCPTLSProfileCiphersToGoCipherNames(tlsCfg.CipherSuites), ",")
+	data.Data["TLSGroupPreferences"] = strings.Join(OCPTLSProfileTLSGroupToGoTLSGroupNames(tlsCfg.Groups), ",")
 
 	if clusterInfo.OpenShift4 {
 		data.Data["WebhookAnnotation"] = `service.beta.openshift.io/inject-cabundle: "true"`
