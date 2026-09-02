@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"slices"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -16,6 +17,22 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/test/check"
 	"github.com/kubevirt/cluster-network-addons-operator/test/kubectl"
 	"github.com/kubevirt/cluster-network-addons-operator/test/operations"
+)
+
+const (
+	conditionTypeAvailable        = "Available"
+	conditionTypeTLSCompliant    = "TLSCompliant"
+	conditionTypeCertificateValid = "CertificateValid"
+	conditionTypePQCCompliant    = "PQCCompliant"
+
+	conditionReasonEndpointDiscovered = "EndpointDiscovered"
+	conditionReasonCompliant          = "Compliant"
+	conditionReasonValid              = "Valid"
+	conditionReasonPQCReady           = "PQCReady"
+
+	pqcLegacyMessageSubstring = "post-quantum key exchange (ML-KEM)"
+	pqcHybridMessageSubstring = "hybrid ML-KEM key exchange"
+	pqcActiveProbeSuffix      = " (verified by active probe)"
 )
 
 var _ = Describe("TLS", func() {
@@ -69,26 +86,26 @@ var _ = Describe("TLS", func() {
 			NegotiatedCurves: map[string]string{"TLS 1.3": "X25519MLKEM768"},
 			Conditions: []metav1.Condition{
 				{
-					Type:   "Available",
+					Type:   conditionTypeAvailable,
 					Status: metav1.ConditionTrue,
-					Reason: "EndpointDiscovered",
+					Reason: conditionReasonEndpointDiscovered,
 				},
 				{
-					Type:    "TLSCompliant",
+					Type:    conditionTypeTLSCompliant,
 					Status:  metav1.ConditionTrue,
-					Reason:  "Compliant",
+					Reason:  conditionReasonCompliant,
 					Message: "Endpoint supports modern TLS (1.2 or 1.3)",
 				},
 				{
-					Type:   "CertificateValid",
-					Status: "True",
-					Reason: "Valid",
+					Type:   conditionTypeCertificateValid,
+					Status: metav1.ConditionTrue,
+					Reason: conditionReasonValid,
 				},
 				{
-					Type:    "PQCCompliant",
+					Type:    conditionTypePQCCompliant,
 					Status:  metav1.ConditionTrue,
-					Reason:  "PQCReady",
-					Message: "Endpoint supports TLS 1.3 with post-quantum key exchange (ML-KEM)",
+					Reason:  conditionReasonPQCReady,
+					Message: "Endpoint supports TLS 1.3 with " + pqcHybridMessageSubstring,
 				},
 			},
 		}
@@ -206,23 +223,20 @@ func filterTLSReportsBySpecHost(reports []tlsReport, hosts ...string) []tlsRepor
 // because it contains non-deterministic text.
 func normalizeConditions(reports []tlsReport) []tlsReport {
 	clonedReports := slices.Clone(reports)
-	// deep copy Conditions because slices.Clone perform shallow copy
 	for i := range clonedReports {
+		// deep copy Conditions because slices.Clone perform shallow copy
 		clonedReports[i].Status.Conditions = slices.Clone(reports[i].Status.Conditions)
-	}
+		for j := range clonedReports[i].Status.Conditions {
+			condition := &clonedReports[i].Status.Conditions[j]
+			condition.LastTransitionTime = metav1.Time{}
+			condition.ObservedGeneration = 0
 
-	for i, report := range clonedReports {
-		for j := range report.Status.Conditions {
-			clonedReports[i].Status.Conditions[j].LastTransitionTime = metav1.Time{}
-		}
-	}
-
-	// The following conditions type message's containing non-deterministic text,
-	// hence remove Message field value
-	for i, report := range clonedReports {
-		for j, condition := range report.Status.Conditions {
-			if condition.Type == "Available" || condition.Type == "CertificateValid" {
-				clonedReports[i].Status.Conditions[j].Message = ""
+			switch condition.Type {
+			case conditionTypeAvailable, conditionTypeCertificateValid:
+				condition.Message = ""
+			case conditionTypePQCCompliant:
+				msg := strings.ReplaceAll(condition.Message, pqcLegacyMessageSubstring, pqcHybridMessageSubstring)
+				condition.Message = strings.TrimSuffix(msg, pqcActiveProbeSuffix)
 			}
 		}
 	}
