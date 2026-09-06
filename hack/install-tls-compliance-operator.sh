@@ -21,8 +21,8 @@ echo "Deleting the operator's network-policy to allow egress all services.."
 
 echo "Patching the operator's Deployment for fine tuning reporting intervals.."
 ./cluster/kubectl.sh -n $NAMESPACE patch deployment $DEPLOY_NAME --type='json' -p='[
-  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--scan-interval=30s"},
-  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--cleanup-interval=15s"}
+  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--scan-interval=5s"},
+  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--cleanup-interval=7s"}
 ]'
 
 echo "Waiting for TLS Compliance Operator readiness.."
