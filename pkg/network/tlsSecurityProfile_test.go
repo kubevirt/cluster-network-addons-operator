@@ -321,13 +321,13 @@ var _ = Describe("TLS Security Profile", func() {
 		})
 	})
 
-	Context("OCPTLSProfileTLSGroupNames", func() {
+	Context("OCPTLSProfileTLSGroupToGoTLSGroupNames", func() {
 		It("should return nil for empty input", func() {
-			Expect(OCPTLSProfileTLSGroupNames(nil)).To(BeNil())
-			Expect(OCPTLSProfileTLSGroupNames([]ocpv1.TLSGroup{})).To(BeNil())
+			Expect(OCPTLSProfileTLSGroupToGoTLSGroupNames(nil)).To(BeNil())
+			Expect(OCPTLSProfileTLSGroupToGoTLSGroupNames([]ocpv1.TLSGroup{})).To(BeNil())
 		})
-		It("should convert OCP TLSGroup to names", func() {
-			names := OCPTLSProfileTLSGroupNames([]ocpv1.TLSGroup{
+		It("should convert OCP TLSGroup to Go crypto/tls constant names", func() {
+			names := OCPTLSProfileTLSGroupToGoTLSGroupNames([]ocpv1.TLSGroup{
 				ocpv1.TLSGroupX25519MLKEM768,
 				ocpv1.TLSGroupX25519,
 				ocpv1.TLSGroupSecP256r1,
@@ -347,7 +347,7 @@ var _ = Describe("TLS Security Profile", func() {
 			}))
 		})
 		It("should skip groups with no known crypto/tls.CurveID", func() {
-			names := OCPTLSProfileTLSGroupNames([]ocpv1.TLSGroup{
+			names := OCPTLSProfileTLSGroupToGoTLSGroupNames([]ocpv1.TLSGroup{
 				ocpv1.TLSGroupX25519,
 				"my-non-exist-tls-group",
 			})

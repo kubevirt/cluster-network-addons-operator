@@ -191,6 +191,9 @@ spec:
 {{ if index . "TLSSecurityProfileCiphers" }}
             - "--tls-cipher-suites={{ .TLSSecurityProfileCiphers }}"
 {{ end }}
+{{ if index . "TLSGroupPreferences" }}
+            - "--tls-group-preferences={{ .TLSGroupPreferences }}"
+{{ end }}
           command:
             - /manager
           env:
