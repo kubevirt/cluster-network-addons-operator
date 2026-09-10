@@ -83,12 +83,6 @@ var (
 			"dynamic-networks-controller-ds",
 		},
 	}
-	KubeSecondaryDNSComponent = Component{
-		ComponentName:      "KubeSecondaryDNS",
-		ClusterRole:        "secondary",
-		ClusterRoleBinding: "secondary",
-		Deployments:        []string{"secondary-dns"},
-	}
 	KubevirtIpamController = Component{
 		ComponentName:      "KubevirtIpamController",
 		ClusterRole:        "kubevirt-ipam-controller-manager-role",
@@ -103,7 +97,6 @@ var (
 		MacvtapComponent,
 		MonitoringComponent,
 		MultusDynamicNetworks,
-		KubeSecondaryDNSComponent,
 		KubevirtIpamController,
 	}
 )

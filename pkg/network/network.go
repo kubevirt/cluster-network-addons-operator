@@ -82,6 +82,7 @@ func SpecialCleanUp(conf *cnao.NetworkAddonsConfigSpec, client k8sclient.Client,
 
 	errs = append(errs, cleanUpMultus(conf, ctx, client)...)
 	errs = append(errs, cleanUpKubevirtIpamController(conf, ctx, client, clusterInfo.OpenShift4)...)
+	errs = append(errs, cleanUpKubeSecondaryDNS(ctx, client)...)
 	errs = append(errs, cleanUpNamespaceLabels(ctx, client)...)
 
 	if len(errs) > 0 {
@@ -154,13 +155,6 @@ func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNet
 
 	// render MacvtapCni
 	o, err = renderMacvtapCni(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render KubeSecondaryDNS
-	o, err = renderKubeSecondaryDNS(conf, manifestDir, clusterInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -241,15 +235,6 @@ func RenderObjsToRemove(scheme *runtime.Scheme, prev, conf *cnao.NetworkAddonsCo
 	// render MacvtapCni
 	if conf.MacvtapCni == nil {
 		o, err := renderMacvtapCni(prev, manifestDir, clusterInfo)
-		if err != nil {
-			return nil, err
-		}
-		objsToRemove = append(objsToRemove, o...)
-	}
-
-	// render KubeSecondaryDNS
-	if conf.KubeSecondaryDNS == nil {
-		o, err := renderKubeSecondaryDNS(prev, manifestDir, clusterInfo)
 		if err != nil {
 			return nil, err
 		}
