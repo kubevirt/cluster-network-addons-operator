@@ -33,10 +33,6 @@ REPO+=("https://raw.githubusercontent.com/k8snetworkplumbingwg/kubemacpool")
 RELEASES+=("main release-0.45 release-0.44 release-0.43 release-0.42 release-0.41 release-0.39")
 GOMOD+=("go.mod")
 
-REPO+=("https://raw.githubusercontent.com/kubevirt/kubesecondarydns")
-RELEASES+=("main")
-GOMOD+=("go.mod")
-
 REPO+=("https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-dynamic-networks-controller")
 RELEASES+=("main")
 GOMOD+=("go.mod")

@@ -19,7 +19,6 @@ spec:
   kubeMacPool: {}
   ovs: {}
   macvtap: {}
-  kubeSecondaryDNS: {}
   kubevirtIpamController: {}
   imagePullPolicy: Always
 ```
@@ -160,26 +159,6 @@ interfaces on top of which logical networks can be created.
 A simple example on how to do so, the user must deploy a `ConfigMap`, such as in [this example](https://github.com/kubevirt/macvtap-cni/blob/main/examples/macvtap-deviceplugin-config-explicit.yaml).
 
 Currently, this configuration is not dynamic.
-
-## KubeSecondaryDNS
-
-[This controller](https://github.com/kubevirt/kubesecondarydns)
-allows to support FQDN for VMI's secondary networks.
-
-```yaml
-apiVersion: networkaddonsoperator.network.kubevirt.io/v1
-kind: NetworkAddonsConfig
-metadata:
-  name: cluster
-spec:
-  kubeSecondaryDNS:
-    DOMAIN: ""
-    NAME_SERVER_IP: ""
-```
-
-Additionally, container image used to deliver this plugin can be set using
-`KUBE_SECONDARY_DNS_IMAGE` environment variable in operator
-deployment manifest.
 
 ## kubevirtIpamController
 

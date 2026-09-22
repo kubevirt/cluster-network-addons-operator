@@ -35,7 +35,6 @@ Each component has deployment manifests under `data/` and rendering logic under 
 | OVS | Open vSwitch CNI plugin |
 | KubeMacPool | MAC address pool manager |
 | Macvtap | Macvtap CNI plugin |
-| KubeSecondaryDNS | Secondary DNS for VM interfaces |
 | KubevirtIpamController | IPAM controller for secondary networks |
 
 ### Key Directories

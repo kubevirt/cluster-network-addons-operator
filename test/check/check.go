@@ -102,9 +102,6 @@ func getConfigComponentsMap(gvk schema.GroupVersionKind) (map[string]struct{}, e
 	if configV1.Spec.KubevirtIpamController != nil {
 		existingComponentsMap[KubevirtIpamController.ComponentName] = struct{}{}
 	}
-	if configV1.Spec.KubeSecondaryDNS != nil {
-		existingComponentsMap[KubeSecondaryDNSComponent.ComponentName] = struct{}{}
-	}
 	if configV1.Spec.LinuxBridge != nil {
 		existingComponentsMap[LinuxBridgeComponent.ComponentName] = struct{}{}
 	}

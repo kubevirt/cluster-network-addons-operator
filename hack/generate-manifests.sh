@@ -25,7 +25,6 @@ for template in $templates; do
 		--container-prefix=${CONTAINER_PREFIX} \
 		--container-tag=${CONTAINER_TAG} \
 		--image-pull-policy=${IMAGE_PULL_POLICY} \
-		--core-dns-image=${CORE_DNS_IMAGE} \
 		--input-file=${infile} \
 	)
 	if [[ ! -z "$rendered" ]]; then
