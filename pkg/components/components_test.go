@@ -8,6 +8,24 @@ import (
 const imageName = "the-image-name"
 
 var _ = Describe("Components", func() {
+	It("should enable read-only root filesystem for the operator container", func() {
+		deployment := GetDeployment(
+			"1.0.0",
+			"1.0.0",
+			Namespace,
+			"quay.io/kubevirt",
+			"cluster-network-addons-operator",
+			"latest",
+			"IfNotPresent",
+			&AddonsImages{},
+		)
+
+		securityContext := deployment.Spec.Template.Spec.Containers[0].SecurityContext
+		Expect(securityContext).NotTo(BeNil())
+		Expect(securityContext.ReadOnlyRootFilesystem).NotTo(BeNil())
+		Expect(*securityContext.ReadOnlyRootFilesystem).To(BeTrue())
+	})
+
 	DescribeTable("When RelatedImage is called", func(fullImageName, expectedShortName string) {
 		ri := NewRelatedImage(fullImageName)
 		Expect(ri.Ref).To(Equal(fullImageName))

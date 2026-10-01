@@ -133,6 +133,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 	image := fmt.Sprintf("%s/%s:%s", repository, imageName, tag)
 	runAsNonRoot := true
 	allowPrivilegeEscalation := false
+	readOnlyRootFilesystem := true
 
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -285,6 +286,7 @@ func GetDeployment(version string, operatorVersion string, namespace string, rep
 							},
 							SecurityContext: &corev1.SecurityContext{
 								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 								Capabilities: &corev1.Capabilities{
 									Drop: []corev1.Capability{corev1.Capability("ALL")},
 								},
