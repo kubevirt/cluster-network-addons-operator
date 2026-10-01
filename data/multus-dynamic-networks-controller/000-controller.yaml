@@ -121,6 +121,7 @@ spec:
               memory: "50Mi"
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           volumeMounts:
             - name: dynamic-networks-controller-config-dir
               mountPath: /etc/dynamic-networks-controller/
