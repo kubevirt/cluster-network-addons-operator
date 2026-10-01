@@ -39,6 +39,7 @@ spec:
               memory: "30Mi"
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           volumeMounts:
             - name: deviceplugin
               mountPath: /var/lib/kubelet/device-plugins
@@ -54,6 +55,7 @@ spec:
               memory: "15Mi"
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           volumeMounts:
             - name: cni
               mountPath: /host/opt/cni/bin

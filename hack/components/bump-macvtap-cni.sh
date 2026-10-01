@@ -10,6 +10,8 @@ function __parametize_by_object() {
   for f in ./*; do
     case "${f}" in
       ./macvtap.yaml.in)
+        yaml-utils::set_param ${f} 'spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem' 'true'
+        yaml-utils::set_param ${f} 'spec.template.spec.initContainers[0].securityContext.readOnlyRootFilesystem' 'true'
         yaml-utils::set_param ${f} 'spec.template.spec.serviceAccountName' 'macvtap-cni'
         yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
         yaml-utils::set_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
