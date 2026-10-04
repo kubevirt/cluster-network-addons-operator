@@ -23,6 +23,7 @@ function __parametize_by_object() {
       ./DaemonSet_dynamic-networks-controller-ds.yaml)
         yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
         yaml-utils::set_param ${f} spec.template.spec.containers[0].imagePullPolicy '{{ .ImagePullPolicy }}'
+        yaml-utils::set_param ${f} spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem 'true'
         yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .MultusDynamicNetworksControllerImage }}'
         yaml-utils::update_param ${f} spec.template.spec.containers[0].volumeMounts\(name=="cri-socket"\).mountPath '/host{{ .HostCRISocketPath }}'
         yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
