@@ -28,7 +28,7 @@ main() {
 
     # Run ovs-cni functional tests
     cd ${TMP_COMPONENT_PATH}
-    OCI_BIN=${TMP_PROJECT_PATH}/automation/ovs-cni-oci-exec.sh OVS_WORKER_NODE=node01 KUBECONFIG=${KUBECONFIG} E2E_TEST_ARGS="-ginkgo.v -test.v -ginkgo.noColor -ginkgo.skip ovs-mirror -test.timeout 20m --junit-output=$ARTIFACTS/junit.functest.xml" make kubernetes-tests
+    OCI_BIN=${TMP_PROJECT_PATH}/automation/ovs-cni-oci-exec.sh OVS_WORKER_NODE=node01 KUBECONFIG=${KUBECONFIG} E2E_TEST_ARGS="-ginkgo.v -test.v -ginkgo.noColor -ginkgo.skip ovs-mirror -test.timeout 20m --ginkgo.junit-report=$ARTIFACTS/junit.functest.xml" make kubernetes-tests
 }
 
 [[ "${BASH_SOURCE[0]}" == "$0" ]] && main "$@"
