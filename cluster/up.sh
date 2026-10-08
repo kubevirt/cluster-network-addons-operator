@@ -23,6 +23,8 @@ export KUBEVIRT_DEPLOY_PROMETHEUS=true
 export KUBEVIRT_DEPLOY_PROMETHEUS_ALERTMANAGER=true
 export KUBEVIRT_DEPLOY_GRAFANA=true
 
+export KUBEVIRT_MEMORY_SIZE=8192M
+
 cluster::install
 
 $(cluster::path)/cluster-up/up.sh
