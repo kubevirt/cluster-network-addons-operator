@@ -38,6 +38,7 @@ spec:
           imagePullPolicy: {{ .ImagePullPolicy }}
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           resources:
             requests:
               cpu: "10m"
@@ -52,6 +53,7 @@ spec:
           imagePullPolicy: {{ .ImagePullPolicy }}
           securityContext:
             privileged: true
+            readOnlyRootFilesystem: true
           command:
             - /marker
           args:
@@ -66,6 +68,8 @@ spec:
           volumeMounts:
             - name: ovs-var-run
               mountPath: /host/var/run/openvswitch
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: "10m"
@@ -92,6 +96,8 @@ spec:
         - name: ovs-var-run
           hostPath:
             path: /var/run/openvswitch
+        - name: tmp
+          emptyDir: {}
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 ---
 kind: ClusterRole
