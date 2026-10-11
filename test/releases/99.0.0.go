@@ -54,13 +54,13 @@ func init() {
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-plugin",
-				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:435f374b434b3bc70a5cfaba0011fdcf5f433d96b98b06d29306cbd8db3a8c21",
+				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2",
 			},
 			{
 				ParentName: "ovs-cni-amd64",
 				ParentKind: "DaemonSet",
 				Name:       "ovs-cni-marker",
-				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:435f374b434b3bc70a5cfaba0011fdcf5f433d96b98b06d29306cbd8db3a8c21",
+				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2",
 			},
 			{
 				ParentName: "kubevirt-ipam-controller-manager",
