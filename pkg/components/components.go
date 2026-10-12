@@ -40,7 +40,7 @@ const (
 	KubeMacPoolImageDefault            = "quay.io/kubevirt/kubemacpool@sha256:9a7136b86e32a7d2d56ec7a8c8670404188aa593a062781c2a2088f9deea8257"
 	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2"
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:aee6d9beb458fa76b0eab34335e2b528ad9eaff74b87be2fd62658ba77cbfa87"
-	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:83f03d3185ee5b27489ae4cb876bf64c9a0b9a910724deae8c341bfae0531152"
+	KubevirtIpamControllerImageDefault = "ghcr.io/kubevirt/ipam-controller@sha256:1f0213ac44b517ec74600934b0b57f57f244d099e679580694675bf98592d704"
 )
 
 type AddonsImages struct {
