@@ -2,9 +2,11 @@ package test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
+	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -99,6 +101,7 @@ var _ = Describe("TLS", func() {
 		expectedHostReports := []string{cnaoHost, ipamExtHost, kmpMetricsHost, kmpSvcHost}
 
 		By("asserting TLS reports")
+		var baselineReports []tlsReport
 		Eventually(func(g Gomega) {
 			tlsReports, err := getNamespaceTLSReports(cnaoNamespace)
 			g.Expect(err).NotTo(HaveOccurred())
@@ -107,19 +110,13 @@ var _ = Describe("TLS", func() {
 				g.Expect(report.Status.LastError).To(BeEmpty(), "report %s: %+v", report.Spec.Host, report.Status)
 			}
 			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)), "TLS observations (lastCheckAt/checkCount): %+v", actualReports)
+			baselineReports = actualReports
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
 
-		baselineReports, err := getNamespaceTLSReports(cnaoNamespace)
-		Expect(err).NotTo(HaveOccurred())
 		By("stopping the scanner to drain in-flight TLS measurements")
-		DeferCleanup(func() {
-			_, stderr, err := kubectl.Kubectl("scale", "deployment/tls-compliance-operator-controller-manager", "-n", "tls-compliance-operator-system", "--replicas=1", "--request-timeout=15s")
-			Expect(err).NotTo(HaveOccurred(), stderr)
-		})
-		_, stderr, err := kubectl.Kubectl("scale", "deployment/tls-compliance-operator-controller-manager", "-n", "tls-compliance-operator-system", "--replicas=0", "--request-timeout=15s")
-		Expect(err).NotTo(HaveOccurred(), stderr)
-		_, stderr, err = kubectl.Kubectl("wait", "--for=delete", "pods", "--all", "-n", "tls-compliance-operator-system", "--timeout=120s")
-		Expect(err).NotTo(HaveOccurred(), stderr)
+		restoreScanner, err := pauseTLSScanner(kubectl.Kubectl)
+		Expect(err).NotTo(HaveOccurred())
+		DeferCleanup(restoreScanner)
 
 		By("set tlsSecurityProfile with custom type and explicit non PQC TLS group")
 		c := operations.ConvertToConfigV1(operations.GetConfig(operations.GetCnaoV1GroupVersionKind()))
@@ -140,12 +137,9 @@ var _ = Describe("TLS", func() {
 				g.Expect(tlsProfileRolledOut(deployment, "--tls-group-preferences=CurveP521")).To(Succeed())
 			}
 		}, 5*time.Minute, time.Second).Should(Succeed())
-		rolloutCompleted := time.Now()
 		By("discarding old observations and starting scans after rollout")
-		_, stderr, err = kubectl.Kubectl("delete", "tlscompliancereports", "--all", "--request-timeout=15s")
-		Expect(err).NotTo(HaveOccurred(), stderr)
-		_, stderr, err = kubectl.Kubectl("scale", "deployment/tls-compliance-operator-controller-manager", "-n", "tls-compliance-operator-system", "--replicas=1", "--request-timeout=15s")
-		Expect(err).NotTo(HaveOccurred(), stderr)
+		Expect(deleteTLSReports(kubectl.Kubectl, baselineReports)).To(Succeed())
+		Expect(restoreScanner()).To(Succeed())
 
 		By("asserting the specified TLS group is set")
 		for i := range expectedReports {
@@ -163,7 +157,7 @@ var _ = Describe("TLS", func() {
 			g.Expect(err).NotTo(HaveOccurred())
 			actualReports := filterTLSReportsBySpecHost(tlsReports, expectedHostReports...)
 			for _, report := range actualReports {
-				g.Expect(freshTLSReport(report, baselineReports, rolloutCompleted)).To(Succeed())
+				g.Expect(freshTLSReport(report, baselineReports)).To(Succeed())
 			}
 			g.Expect(actualReports).To(WithTransform(normalizeConditions, ConsistOf(expectedReports)), "TLS observations (lastCheckAt/checkCount): %+v", actualReports)
 		}, 5*time.Minute, 1*time.Second).Should(Succeed())
@@ -218,7 +212,61 @@ func tlsProfileRolledOut(deployment appsv1.Deployment, argument string) error {
 	return fmt.Errorf("deployment %s has not rolled out %s: generation=%d status=%+v", deployment.Name, argument, deployment.Generation, deployment.Status)
 }
 
-func freshTLSReport(report tlsReport, baseline []tlsReport, after time.Time) error {
+type tlsKubectl func(...string) (string, string, error)
+
+func runTLSCommand(run tlsKubectl, arguments ...string) error {
+	_, stderr, err := run(append(arguments, "--request-timeout=15s")...)
+	if err != nil {
+		return fmt.Errorf("kubectl %v: %w: %s", arguments, err, stderr)
+	}
+	return nil
+}
+
+func scaleTLSScanner(run tlsKubectl, replicas int32) error {
+	if err := runTLSCommand(run, "scale", "deployment/tls-compliance-operator-controller-manager", "-n", "tls-compliance-operator-system", "--replicas="+strconv.FormatInt(int64(replicas), 10)); err != nil {
+		return err
+	}
+	return runTLSCommand(run, "rollout", "status", "deployment/tls-compliance-operator-controller-manager", "-n", "tls-compliance-operator-system", "--timeout=120s")
+}
+
+func pauseTLSScanner(run tlsKubectl) (func() error, error) {
+	output, stderr, err := run("get", "deployment/tls-compliance-operator-controller-manager", "-n", "tls-compliance-operator-system", "-o", "json", "--request-timeout=15s")
+	if err != nil {
+		return nil, fmt.Errorf("get scanner deployment: %w: %s", err, stderr)
+	}
+	var deployment appsv1.Deployment
+	if err := json.Unmarshal([]byte(output), &deployment); err != nil {
+		return nil, fmt.Errorf("decode scanner deployment: %w", err)
+	}
+	if deployment.Spec.Replicas == nil || *deployment.Spec.Replicas < 1 {
+		return nil, fmt.Errorf("expected a running TLS scanner, got replicas=%v", deployment.Spec.Replicas)
+	}
+	replicas := *deployment.Spec.Replicas
+	restore := func() error { return scaleTLSScanner(run, replicas) }
+	if err := scaleTLSScanner(run, 0); err != nil {
+		return nil, errors.Join(err, restore())
+	}
+	if err := runTLSCommand(run, "wait", "--for=delete", "pods", "-l", "app.kubernetes.io/name=tls-compliance-operator,control-plane=controller-manager", "-n", "tls-compliance-operator-system", "--timeout=120s"); err != nil {
+		return nil, errors.Join(err, restore())
+	}
+	return restore, nil
+}
+
+func deleteTLSReports(run tlsKubectl, reports []tlsReport) error {
+	arguments := []string{"delete", "tlscompliancereports"}
+	for _, report := range reports {
+		if report.Metadata.Name == "" || report.Spec.SourceNamespace != "cluster-network-addons" {
+			return fmt.Errorf("refusing to delete report outside the TLS test scope: %+v", report)
+		}
+		arguments = append(arguments, report.Metadata.Name)
+	}
+	if len(reports) == 0 {
+		return fmt.Errorf("no TLS test reports to delete")
+	}
+	return runTLSCommand(run, append(arguments, "--ignore-not-found=true", "--timeout=30s")...)
+}
+
+func freshTLSReport(report tlsReport, baseline []tlsReport) error {
 	var previousCount int64
 	var sameReport bool
 	for _, previous := range baseline {
@@ -228,10 +276,10 @@ func freshTLSReport(report tlsReport, baseline []tlsReport, after time.Time) err
 			break
 		}
 	}
-	if sameReport || report.Status.LastCheckAt == nil || !report.Status.LastCheckAt.After(after) ||
+	if sameReport || report.Metadata.UID == "" || report.Status.LastCheckAt == nil ||
 		report.Status.CheckCount < 1 || report.Status.LastError != "" {
-		return fmt.Errorf("report %s:%d uid=%s after=%s baselineCheckCount=%d lastCheckAt=%v checkCount=%d lastError=%q",
-			report.Spec.Host, report.Spec.Port, report.Metadata.UID, after.UTC().Format(time.RFC3339Nano), previousCount,
+		return fmt.Errorf("report %s:%d uid=%s baselineCheckCount=%d lastCheckAt=%v checkCount=%d lastError=%q",
+			report.Spec.Host, report.Spec.Port, report.Metadata.UID, previousCount,
 			report.Status.LastCheckAt, report.Status.CheckCount, report.Status.LastError)
 	}
 	return nil

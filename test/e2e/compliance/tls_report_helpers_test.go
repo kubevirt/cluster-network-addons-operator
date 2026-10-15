@@ -1,6 +1,8 @@
 package test
 
 import (
+	"errors"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -34,7 +36,10 @@ func TestTLSReportFreshness(t *testing.T) {
 		{name: "recreated report first check", count: 1, checked: &metav1.Time{Time: after.Add(time.Second)}, uid: "replacement", wantFresh: true},
 		{name: "recreated report no checks", count: 0, checked: &metav1.Time{Time: after.Add(time.Second)}, uid: "replacement"},
 		{name: "recreated report no timestamp", count: 1, uid: "replacement"},
-		{name: "recreated report stale timestamp", count: 1, checked: &metav1.Time{Time: after.Add(-time.Second)}, uid: "replacement"},
+		{name: "new scanner report with clock behind runner", count: 1, checked: &metav1.Time{Time: after.Add(-time.Hour)}, uid: "replacement", wantFresh: true},
+		{name: "new scanner report with clock ahead of runner", count: 1, checked: &metav1.Time{Time: after.Add(time.Hour)}, uid: "replacement", wantFresh: true},
+		{name: "future timestamp cannot freshen old report", count: 100, checked: &metav1.Time{Time: after.Add(time.Hour)}, uid: "original"},
+		{name: "missing report identity", count: 1, checked: &metav1.Time{Time: after}},
 		{name: "recreated report failed check", count: 1, checked: &metav1.Time{Time: after.Add(time.Second)}, uid: "replacement", lastError: "timeout"},
 		{name: "recreated report second check", count: 2, checked: &metav1.Time{Time: after.Add(time.Second)}, uid: "replacement", wantFresh: true},
 	} {
@@ -42,12 +47,106 @@ func TestTLSReportFreshness(t *testing.T) {
 			report := previous
 			report.Metadata.UID = scenario.uid
 			report.Status = tlsReportStatus{CheckCount: scenario.count, LastCheckAt: scenario.checked, LastError: scenario.lastError}
-			err := freshTLSReport(report, []tlsReport{previous}, after)
+			err := freshTLSReport(report, []tlsReport{previous})
 			if (err == nil) != scenario.wantFresh {
 				t.Fatalf("fresh=%t: %v", scenario.wantFresh, err)
 			}
 			if err != nil && (!strings.Contains(err.Error(), "baselineCheckCount=") || !strings.Contains(err.Error(), "lastCheckAt=")) {
 				t.Fatalf("missing freshness diagnostics: %v", err)
+			}
+		})
+	}
+}
+
+func TestTLSScannerPauseAndRestore(t *testing.T) {
+	t.Parallel()
+	for _, scenario := range []struct {
+		name      string
+		failAt    int
+		output    string
+		wantCalls int
+	}{
+		{name: "drain and restore original replicas", output: `{"spec":{"replicas":2}}`, wantCalls: 6},
+		{name: "get failure does not mutate scanner", failAt: 1, wantCalls: 1},
+		{name: "decode failure does not mutate scanner", output: `invalid`, wantCalls: 1},
+		{name: "stopped scanner is rejected", output: `{"spec":{"replicas":0}}`, wantCalls: 1},
+		{name: "failed scale is restored", failAt: 2, output: `{"spec":{"replicas":2}}`, wantCalls: 4},
+		{name: "failed zero rollout is restored", failAt: 3, output: `{"spec":{"replicas":2}}`, wantCalls: 5},
+		{name: "failed pod drain is restored", failAt: 4, output: `{"spec":{"replicas":2}}`, wantCalls: 6},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			var commands [][]string
+			run := func(arguments ...string) (string, string, error) {
+				commands = append(commands, arguments)
+				if len(commands) == scenario.failAt {
+					return "", "injected failure", errors.New("kubectl failed")
+				}
+				return scenario.output, "", nil
+			}
+			restore, err := pauseTLSScanner(run)
+			if scenario.name == "drain and restore original replicas" {
+				if err != nil || restore == nil {
+					t.Fatalf("pause: %v", err)
+				}
+				if err := restore(); err != nil {
+					t.Fatalf("restore: %v", err)
+				}
+				if commands[2][0] != "rollout" || commands[3][0] != "wait" || !strings.Contains(strings.Join(commands[3], " "), "-l app.kubernetes.io/name=tls-compliance-operator,control-plane=controller-manager") {
+					t.Fatalf("scanner must observe zero rollout and drain only its Pods: %v", commands)
+				}
+			} else if err == nil || restore != nil {
+				t.Fatalf("expected pause error with handled restoration, got restore=%v err=%v", restore != nil, err)
+			}
+			if len(commands) != scenario.wantCalls {
+				t.Fatalf("expected %d commands, got %v", scenario.wantCalls, commands)
+			}
+			if scenario.wantCalls > 1 && !strings.Contains(strings.Join(commands[len(commands)-2], " "), "--replicas=2") {
+				t.Fatalf("original replica count not restored: %v", commands)
+			}
+			for _, command := range commands {
+				if !strings.Contains(strings.Join(command, " "), "--request-timeout=15s") {
+					t.Fatalf("unbounded API request: %v", command)
+				}
+			}
+		})
+	}
+}
+
+func TestTLSReportDeletionScope(t *testing.T) {
+	t.Parallel()
+	for _, scenario := range []struct {
+		name    string
+		reports []tlsReport
+		wantErr bool
+	}{
+		{name: "only matched reports", reports: []tlsReport{
+			{Metadata: metav1.ObjectMeta{Name: "cnao-metrics"}, Spec: tlsReportSpec{SourceNamespace: "cluster-network-addons"}},
+			{Metadata: metav1.ObjectMeta{Name: "ipam-webhook"}, Spec: tlsReportSpec{SourceNamespace: "cluster-network-addons"}},
+			{Metadata: metav1.ObjectMeta{Name: "kmp-metrics"}, Spec: tlsReportSpec{SourceNamespace: "cluster-network-addons"}},
+			{Metadata: metav1.ObjectMeta{Name: "kmp-webhook"}, Spec: tlsReportSpec{SourceNamespace: "cluster-network-addons"}},
+		}},
+		{name: "empty list", wantErr: true},
+		{name: "missing name", reports: []tlsReport{{Spec: tlsReportSpec{SourceNamespace: "cluster-network-addons"}}}, wantErr: true},
+		{name: "foreign namespace", reports: []tlsReport{{Metadata: metav1.ObjectMeta{Name: "foreign"}, Spec: tlsReportSpec{SourceNamespace: "kube-system"}}}, wantErr: true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			var commands [][]string
+			err := deleteTLSReports(func(arguments ...string) (string, string, error) {
+				commands = append(commands, arguments)
+				return "", "", nil
+			}, scenario.reports)
+			if (err != nil) != scenario.wantErr {
+				t.Fatalf("wantErr=%t: %v", scenario.wantErr, err)
+			}
+			if scenario.wantErr {
+				if len(commands) != 0 {
+					t.Fatalf("invalid deletion mutated reports: %v", commands)
+				}
+				return
+			}
+			want := [][]string{{"delete", "tlscompliancereports", "cnao-metrics", "ipam-webhook", "kmp-metrics", "kmp-webhook", "--ignore-not-found=true", "--timeout=30s", "--request-timeout=15s"}}
+			if !reflect.DeepEqual(commands, want) {
+				t.Fatalf("deletion must name only the four matched reports: %v", commands)
 			}
 		})
 	}

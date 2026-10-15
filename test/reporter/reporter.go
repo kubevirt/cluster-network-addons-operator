@@ -37,7 +37,7 @@ func (r *KubernetesCNAOReporter) DumpLogs() int {
 
 // DumpTLSComplianceOperatorReports dumps the TLSComplianceReport CRs provided by 'tls-compliance-operator'
 func (r *KubernetesCNAOReporter) DumpTLSComplianceOperatorReports() {
-	r.logCommand([]string{"get", "deployment,pods", "-n", "tls-compliance-operator-system", "-o", "yaml"}, "tls-scanner")
+	r.logCommand([]string{"get", "deployment,pods", "-n", "tls-compliance-operator-system", "-o", "yaml", "--request-timeout=15s"}, "tls-scanner")
 	r.logCommand([]string{"logs", "-n", "tls-compliance-operator-system", "deployment/tls-compliance-operator-controller-manager", "--all-containers=true", "--tail=500", "--request-timeout=15s"}, "tls-scanner-logs")
 	r.logCommand([]string{"get", "tlscompliancereport", "-o", "wide"}, "tlscompliancereport-overview")
 	r.logCommand([]string{"get", "tlscompliancereport", "-o", "yaml"}, "tlscompliancereports")
