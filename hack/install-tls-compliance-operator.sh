@@ -12,7 +12,7 @@ readonly NP_NAME="tls-compliance-operator-controller-manager"
 echo "Installing TLS Compliance Operator ${VERSION} from: ${URL}.."
 manifest=$(mktemp)
 trap 'rm -f "$manifest"' EXIT
-curl --fail --silent --show-error --location --max-time 60 "$URL" -o "$manifest"
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 60 "$URL" -o "$manifest"
 ./cluster/kubectl.sh create --dry-run=client -f "$manifest" -o json --request-timeout=15s |
   jq -s --arg deployment "$DEPLOY_NAME" '
     {apiVersion: "v1", kind: "List", items: map(if .kind == "Deployment" and .metadata.name == $deployment then

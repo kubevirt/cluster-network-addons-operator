@@ -84,31 +84,46 @@ func TestTLSScannerPauseAndRestore(t *testing.T) {
 				return scenario.output, "", nil
 			}
 			restore, err := pauseTLSScanner(run)
-			if scenario.name == "drain and restore original replicas" {
-				if err != nil || restore == nil {
-					t.Fatalf("pause: %v", err)
-				}
-				if err := restore(); err != nil {
-					t.Fatalf("restore: %v", err)
-				}
-				if commands[2][0] != "rollout" || commands[3][0] != "wait" || !strings.Contains(strings.Join(commands[3], " "), "-l app.kubernetes.io/name=tls-compliance-operator,control-plane=controller-manager") {
-					t.Fatalf("scanner must observe zero rollout and drain only its Pods: %v", commands)
-				}
-			} else if err == nil || restore != nil {
-				t.Fatalf("expected pause error with handled restoration, got restore=%v err=%v", restore != nil, err)
-			}
-			if len(commands) != scenario.wantCalls {
-				t.Fatalf("expected %d commands, got %v", scenario.wantCalls, commands)
-			}
-			if scenario.wantCalls > 1 && !strings.Contains(strings.Join(commands[len(commands)-2], " "), "--replicas=2") {
-				t.Fatalf("original replica count not restored: %v", commands)
-			}
-			for _, command := range commands {
-				if !strings.Contains(strings.Join(command, " "), "--request-timeout=15s") {
-					t.Fatalf("unbounded API request: %v", command)
-				}
-			}
+			assertTLSScannerPauseResult(t, commands, restore, err, scenario.failAt == 0 && scenario.wantCalls > 1)
+			assertTLSScannerRestoredCommands(t, commands, scenario.wantCalls)
 		})
+	}
+}
+
+func assertTLSScannerPauseResult(t *testing.T, commands [][]string, restore func() error, pauseError error, successful bool) {
+	t.Helper()
+	if !successful {
+		if pauseError == nil || restore != nil {
+			t.Fatalf("expected pause error with handled restoration, got restore=%v err=%v", restore != nil, pauseError)
+		}
+		return
+	}
+	if pauseError != nil || restore == nil {
+		t.Fatalf("pause: %v", pauseError)
+	}
+	if err := restore(); err != nil {
+		t.Fatalf("restore: %v", err)
+	}
+	if len(commands) < 4 {
+		t.Fatalf("missing scanner pause commands: %v", commands)
+	}
+	if commands[2][0] != "rollout" || commands[3][0] != "wait" || !strings.Contains(strings.Join(commands[3], " "), "-l app.kubernetes.io/name=tls-compliance-operator,control-plane=controller-manager") {
+		t.Fatalf("scanner must observe zero rollout and drain only its Pods: %v", commands)
+	}
+}
+
+func assertTLSScannerRestoredCommands(t *testing.T, commands [][]string, wantCalls int) {
+	t.Helper()
+	if len(commands) != wantCalls {
+		t.Fatalf("expected %d commands, got %v", wantCalls, commands)
+	}
+	if wantCalls > 1 && !strings.Contains(strings.Join(commands[len(commands)-2], " "), "--replicas=2") {
+		t.Fatalf("original replica count not restored: %v", commands)
+	}
+	for _, command := range commands {
+		if !strings.Contains(strings.Join(command, " "), "--request-timeout=15s") {
+			t.Fatalf("unbounded API request: %v", command)
+		}
 	}
 }
 
