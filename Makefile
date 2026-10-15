@@ -111,6 +111,7 @@ goimports-check: $(GO) $(cmd_sources) $(pkg_sources)
 
 test/unit: $(GO)
 	$(GO) test $(WHAT)
+	$(GO) test ./test/e2e/compliance -run '^TestTLS'
 
 manager: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./cmd/...
