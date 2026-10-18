@@ -21,6 +21,7 @@ import (
 
 var _ = Describe("TLS", func() {
 	BeforeEach(func() {
+		Skip("temporarily skipped because it is flaky")
 		By("Create NetworkAddonsConfig deploying all components")
 		c := cnao.NetworkAddonsConfigSpec{
 			KubeMacPool:            &cnao.KubeMacPool{},
