@@ -8,8 +8,9 @@ version="go${go_mod_version}"
 
 arch=$(uname -m | sed 's/x86_64/amd64/')
 tarball=$version.linux-$arch.tar.gz
-url=https://dl.google.com/go/
+url=https://dl.google.com/go
 
-mkdir -p $destination
-curl -L $url/$tarball -o $destination/$tarball
-tar -xf $destination/$tarball -C $destination
+mkdir -p "$destination"
+curl_opts=(-fsSL --retry 5 --retry-all-errors --retry-delay 5)
+curl "${curl_opts[@]}" -o "$destination/$tarball" "$url/$tarball"
+tar -xf "$destination/$tarball" -C "$destination"
