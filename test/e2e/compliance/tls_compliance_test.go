@@ -123,9 +123,10 @@ var _ = Describe("TLS", func() {
 			// expect non PQC compliant state because we configured non PQC TLS group
 			expectedReports[i].Status.NegotiatedCurves = map[string]string{"TLS 1.3": "CurveP521"}
 			expectedReports[i].Status.QuantumReady = false
+			expectedReports[i].Status.Conditions = slices.Clone(expectedReports[i].Status.Conditions)
 			for j := range expectedReports[i].Status.Conditions {
-				if expectedReports[j].Status.Conditions[j].Type == "PQCCompliant" {
-					expectedReports[j].Status.Conditions[j].Status = metav1.ConditionFalse
+				if expectedReports[i].Status.Conditions[j].Type == "PQCCompliant" {
+					expectedReports[i].Status.Conditions[j].Status = metav1.ConditionFalse
 				}
 			}
 		}
