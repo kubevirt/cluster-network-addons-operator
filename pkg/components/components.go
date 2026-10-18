@@ -997,6 +997,20 @@ func multusClusterRoles() []rbacv1.PolicyRule {
 				"*",
 			},
 		},
+		{
+			APIGroups: []string{
+				"resource.k8s.io",
+			},
+			Resources: []string{
+				"resourceclaims",
+				"resourceclaims/status",
+				"resourceslices",
+			},
+			Verbs: []string{
+				"get",
+				"list",
+			},
+		},
 	}
 }
 
