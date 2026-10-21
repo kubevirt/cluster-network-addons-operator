@@ -33,7 +33,7 @@ var (
 )
 
 const (
-	MultusImageDefault                 = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:2b9671447f3ea4e7e56730843dbf59445b9307246f393b61386b896d56ae51c9"
+	MultusImageDefault                 = "quay.io/oshoval/multus-cni@sha256:1686ee35c6e00ac3d7cc65e1ba17d37b53057d02028ffb52d2e0be64cfd58fa0"
 	MultusDynamicNetworksImageDefault  = "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:fa4b6ce3b060050b0db41daeabeb5ff6528375e7b679baa9954f767301f532b9"
 	LinuxBridgeCniImageDefault         = "quay.io/kubevirt/cni-default-plugins@sha256:976a24392c2a096c38c2663d234b2d3131f5c24558889196d30b9ac1b6716788"
 	LinuxBridgeMarkerImageDefault      = "quay.io/kubevirt/bridge-marker@sha256:f9611ec10bb4aec44b0ec19f9b9d748a36255c089a1f59bc76e5fc37acc0fed2"
@@ -995,6 +995,20 @@ func multusClusterRoles() []rbacv1.PolicyRule {
 			},
 			Verbs: []string{
 				"*",
+			},
+		},
+		{
+			APIGroups: []string{
+				"resource.k8s.io",
+			},
+			Resources: []string{
+				"resourceclaims",
+				"resourceclaims/status",
+				"resourceslices",
+			},
+			Verbs: []string{
+				"get",
+				"list",
 			},
 		},
 	}
