@@ -165,6 +165,50 @@ var _ = Describe("Testing SelfSignConfiguration", func() {
 			},
 			expectedError: "failed to validate selfSignConfiguration: certOverlapInterval duration has to be > 0",
 		}),
+		Entry("When CARotateInterval is negative should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "-1h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: caRotateInterval duration has to be > 0",
+		}),
+		Entry("When CAOverlapInterval is negative should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "-1h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "8h",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: caOverlapInterval duration has to be > 0",
+		}),
+		Entry("When CertRotateInterval is negative should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "-1h",
+					CertOverlapInterval: "8h",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: certRotateInterval duration has to be > 0",
+		}),
+		Entry("When CertOverlapInterval is negative should return an error", validateCase{
+			config: &cnao.NetworkAddonsConfigSpec{
+				SelfSignConfiguration: &cnao.SelfSignConfiguration{
+					CARotateInterval:    "12h",
+					CAOverlapInterval:   "10h",
+					CertRotateInterval:  "10h",
+					CertOverlapInterval: "-1h",
+				},
+			},
+			expectedError: "failed to validate selfSignConfiguration: certOverlapInterval duration has to be > 0",
+		}),
 		Entry("When CAOverlapInterval == CARotateInterval == CertRotateInterval == CertOverlapInterval should not return an error", validateCase{
 			config: &cnao.NetworkAddonsConfigSpec{
 				SelfSignConfiguration: &cnao.SelfSignConfiguration{
