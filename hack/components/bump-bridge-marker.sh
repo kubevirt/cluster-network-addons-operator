@@ -6,6 +6,22 @@ source hack/components/yaml-utils.sh
 source hack/components/git-utils.sh
 source hack/components/docker-utils.sh
 
+function __parametize_health_probe_port() {
+	local yaml_file=$1
+	local health_probe_port_arg_index
+
+	health_probe_port_arg_index=$(yaml-utils::get_array_index_by_value \
+		${yaml_file} \
+		'spec.template.spec.containers[0].args' \
+		'-health-probe-port')
+	yaml-utils::set_param ${yaml_file} \
+		"spec.template.spec.containers[0].args[$((health_probe_port_arg_index + 1))]" \
+		'"{{ .LinuxBridgeMarkerHealthProbePort }}"'
+	yaml-utils::set_param ${yaml_file} \
+		'spec.template.spec.containers[0].ports.(name==healthport).containerPort' \
+		'{{ .LinuxBridgeMarkerHealthProbePort }}'
+}
+
 #here we do all the object specific parametizing
 function __parametize_by_object() {
 	for f in ./*; do
@@ -22,6 +38,7 @@ function __parametize_by_object() {
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .LinuxBridgeMarkerImage }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].imagePullPolicy  '{{ .ImagePullPolicy }}'
+				__parametize_health_probe_port ${f}
 				yaml-utils::update_param ${f} spec.template.spec.nodeSelector '{{ toYaml .Placement.NodeSelector | nindent 8 }}'
 				yaml-utils::set_param ${f} spec.template.spec.affinity '{{ toYaml .Placement.Affinity | nindent 8 }}'
 				yaml-utils::set_param ${f} 'spec.template.metadata.annotations."openshift.io/required-scc"' '"bridge-marker"'

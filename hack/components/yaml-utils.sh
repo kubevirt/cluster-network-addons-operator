@@ -16,6 +16,27 @@ function yaml-utils::get_param() {
 	__yq r ${yaml_file} ${arg}
 }
 
+function yaml-utils::get_array_index_by_value() {
+	local yaml_file=$1
+	local arg=$2
+	local expected_value=$3
+	local matching_indexes
+
+	matching_indexes=$(__yq r -j "${yaml_file}" "${arg}" | jq -r --arg expected_value "${expected_value}" \
+		'to_entries[] | select(.value == $expected_value) | .key'
+	)
+	if [[ -z "${matching_indexes}" ]]; then
+		echo "Error: value ${expected_value} is not found in ${arg} of ${yaml_file}"
+		exit 1
+	fi
+	if [[ "$(printf '%s\n' "${matching_indexes}" | wc -l)" -ne 1 ]]; then
+		echo "Error: value ${expected_value} is found more than once in ${arg} of ${yaml_file}"
+		exit 1
+	fi
+
+	echo "${matching_indexes}"
+}
+
 function yaml-utils::set_param() {
 	local yaml_file=$1
 	local path=$2
