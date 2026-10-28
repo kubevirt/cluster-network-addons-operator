@@ -19,6 +19,7 @@ function __parametize_by_object() {
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
 			./DaemonSet_bridge-marker.yaml)
+				sed -i 's/${HEALTH_PROBE_PORT}/8081/g' "${f}"
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .LinuxBridgeMarkerImage }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].imagePullPolicy  '{{ .ImagePullPolicy }}'
