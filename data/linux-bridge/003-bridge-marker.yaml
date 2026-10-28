@@ -35,8 +35,11 @@ spec:
           image: {{ .LinuxBridgeMarkerImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           args:
+            - -logtostderr=true
             - -node-name
             - $(NODE_NAME)
+            - -health-probe-port
+            - "${HEALTH_PROBE_PORT}"
           resources:
             requests:
               cpu: "10m"
@@ -48,7 +51,7 @@ spec:
                   fieldPath: spec.nodeName
           ports:
             - name: healthport
-              containerPort: 8081
+              containerPort: ${HEALTH_PROBE_PORT}
               protocol: TCP
           terminationMessagePolicy: FallbackToLogsOnError
           readinessProbe:
@@ -85,10 +88,13 @@ rules:
   - ""
   resources:
   - nodes
-  - nodes/status
   verbs:
   - get
-  - update
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
   - patch
 ---
 kind: ClusterRoleBinding
