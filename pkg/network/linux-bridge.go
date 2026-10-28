@@ -12,6 +12,8 @@ import (
 	"github.com/kubevirt/cluster-network-addons-operator/pkg/network/cni"
 )
 
+const linuxBridgeMarkerHealthProbePort = 8081
+
 // renderLinuxBridge generates the manifests of Linux Bridge
 func renderLinuxBridge(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
 	if conf.LinuxBridge == nil {
@@ -23,6 +25,7 @@ func renderLinuxBridge(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, c
 	data.Data["Namespace"] = os.Getenv("OPERAND_NAMESPACE")
 	data.Data["LinuxBridgeMarkerImage"] = os.Getenv("LINUX_BRIDGE_MARKER_IMAGE")
 	data.Data["LinuxBridgeImage"] = os.Getenv("LINUX_BRIDGE_IMAGE")
+	data.Data["LinuxBridgeMarkerHealthProbePort"] = linuxBridgeMarkerHealthProbePort
 	data.Data["ImagePullPolicy"] = conf.ImagePullPolicy
 	if clusterInfo.OpenShift4 {
 		data.Data["CNIBinDir"] = cni.BinDirOpenShift4

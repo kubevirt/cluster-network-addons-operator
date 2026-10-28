@@ -39,7 +39,7 @@ spec:
             - -node-name
             - $(NODE_NAME)
             - -health-probe-port
-            - "${HEALTH_PROBE_PORT}"
+            - "{{ .LinuxBridgeMarkerHealthProbePort }}"
           resources:
             requests:
               cpu: "10m"
@@ -51,7 +51,7 @@ spec:
                   fieldPath: spec.nodeName
           ports:
             - name: healthport
-              containerPort: ${HEALTH_PROBE_PORT}
+              containerPort: {{ .LinuxBridgeMarkerHealthProbePort }}
               protocol: TCP
           terminationMessagePolicy: FallbackToLogsOnError
           readinessProbe:
