@@ -35,6 +35,7 @@ spec:
           image: {{ .LinuxBridgeMarkerImage }}
           imagePullPolicy: {{ .ImagePullPolicy }}
           args:
+            - -logtostderr=true
             - -node-name
             - $(NODE_NAME)
             - -health-probe-port
@@ -87,10 +88,13 @@ rules:
   - ""
   resources:
   - nodes
-  - nodes/status
   verbs:
   - get
-  - update
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
   - patch
 ---
 kind: ClusterRoleBinding
