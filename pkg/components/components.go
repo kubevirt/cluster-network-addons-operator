@@ -36,7 +36,7 @@ const (
 	MultusImageDefault                 = "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:2b9671447f3ea4e7e56730843dbf59445b9307246f393b61386b896d56ae51c9"
 	MultusDynamicNetworksImageDefault  = "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:fa4b6ce3b060050b0db41daeabeb5ff6528375e7b679baa9954f767301f532b9"
 	LinuxBridgeCniImageDefault         = "quay.io/kubevirt/cni-default-plugins@sha256:976a24392c2a096c38c2663d234b2d3131f5c24558889196d30b9ac1b6716788"
-	LinuxBridgeMarkerImageDefault      = "quay.io/kubevirt/bridge-marker@sha256:f9611ec10bb4aec44b0ec19f9b9d748a36255c089a1f59bc76e5fc37acc0fed2"
+	LinuxBridgeMarkerImageDefault      = "quay.io/kubevirt/bridge-marker@sha256:c9fefb3e3458502a7bb70f556b13cfab8961288c589f5898d85ee68916d5cfb5"
 	KubeMacPoolImageDefault            = "quay.io/kubevirt/kubemacpool@sha256:8caf7e930b19ac0752106bfdc735cd10ff6cdbbe93db8a2547b3df563ef36f87"
 	OvsCniImageDefault                 = "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2"
 	MacvtapCniImageDefault             = "quay.io/kubevirt/macvtap-cni@sha256:aee6d9beb458fa76b0eab34335e2b528ad9eaff74b87be2fd62658ba77cbfa87"
@@ -1387,6 +1387,13 @@ func GetCrd() *extv1.CustomResourceDefinition {
 						"linuxBridge": extv1.JSONSchemaProps{
 							Description: "LinuxBridge plugin allows users to create a bridge and add the host and the container to it",
 							Type:        "object",
+							Properties: map[string]extv1.JSONSchemaProps{
+								"bridgeMarkerHealthPort": extv1.JSONSchemaProps{
+									Description: "BridgeMarkerHealthPort defines the health check port for the linux-bridge marker container",
+									Type:        "integer",
+									Format:      "int32",
+								},
+							},
 						},
 						"macvtap": extv1.JSONSchemaProps{
 							Description: "MacvtapCni plugin allows users to define Kubernetes networks on top of existing host interfaces",
