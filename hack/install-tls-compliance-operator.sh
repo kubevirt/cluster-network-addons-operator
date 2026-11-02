@@ -42,9 +42,13 @@ echo "Deleting the operator's network-policy to allow egress all services.."
 ./cluster/kubectl.sh -n $NAMESPACE delete networkpolicy $NP_NAME
 
 echo "Patching the operator's Deployment for fine tuning reporting intervals.."
+# A closed pod IP is retried inside scanAllEndpoints. The default 3 retries
+# sleep in that pass, so the next scan cannot start. Zero retries lets the
+# pass finish and the Service report get checked again.
 ./cluster/kubectl.sh -n $NAMESPACE patch deployment $DEPLOY_NAME --type='json' -p='[
   {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--scan-interval=5s"},
-  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--cleanup-interval=7s"}
+  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--cleanup-interval=7s"},
+  {"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--max-retries=0"}
 ]'
 
 echo "Waiting for TLS Compliance Operator readiness.."
