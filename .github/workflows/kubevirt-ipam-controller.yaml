@@ -14,14 +14,43 @@ jobs:
 
     - name: Free up disk space
       run: |
-        sudo rm -rf /usr/local/lib/android/sdk
+        sudo rm -rf \
+          /usr/local/lib/android \
+          /usr/share/dotnet \
+          /opt/microsoft/powershell \
+          /usr/local/share/powershell \
+          /opt/ghc \
+          /usr/local/.ghcup \
+          /usr/local/share/vcpkg \
+          /usr/local/share/chromium \
+          /usr/local/share/chromedriver-linux64 \
+          /usr/local/share/edge_driver \
+          /usr/local/share/gecko_driver \
+          /usr/share/swift \
+          /etc/skel/.rustup \
+          /etc/skel/.cargo \
+          /usr/share/java/selenium-server*.jar \
+          /usr/local/google-cloud-sdk \
+          /usr/local/aws-cli \
+          /usr/share/apache-maven-* \
+          /usr/share/gradle-* \
+          /usr/local/n \
+          /usr/local/lib/node_modules \
+          /opt/hostedtoolcache/CodeQL \
+          /opt/hostedtoolcache/Python \
+          /opt/hostedtoolcache/PyPy \
+          /opt/hostedtoolcache/Ruby \
+          /opt/hostedtoolcache/node
         sudo apt-get update
-        sudo eatmydata apt-get purge --auto-remove -y \
-          azure-cli aspnetcore-* dotnet-* ghc-* firefox \
-          google-chrome-stable \
-          llvm-* microsoft-edge-stable mono-* \
-          mysql-server-core-* php-* php7* \
-          powershell temurin-* zulu-*
+        mapfile -t removable_packages < <(
+          dpkg-query -W -f='${Package}\n' 2>/dev/null |
+            grep -E '^(azure-cli|aspnetcore-.*|clang-.*|dotnet-.*|ghc.*|firefox|google-chrome-stable|lld-.*|lldb-.*|llvm-.*|microsoft-edge-stable|mono-.*|mysql-server-core-.*|php.*|temurin-.*)$' ||
+            true
+        )
+        if (( ${#removable_packages[@]} )); then
+          sudo eatmydata apt-get purge --auto-remove -y "${removable_packages[@]}"
+        fi
+        sudo apt-get clean
 
     - name: Run e2e tests
       env:
