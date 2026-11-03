@@ -1,6 +1,7 @@
 package network
 
 import (
+	"bytes"
 	"crypto/rand"
 	"fmt"
 	"net"
@@ -162,10 +163,10 @@ func generateRandomMacPrefix() ([]byte, error) {
 }
 
 func validateRange(startMac, endMac net.HardwareAddr) error {
-	for idx := 0; idx <= 5; idx++ {
-		if startMac[idx] < endMac[idx] {
-			return nil
-		}
+	// MAC addresses are ordered like big-endian numbers, so the first differing
+	// octet decides which address is greater.
+	if bytes.Compare(startMac, endMac) < 0 {
+		return nil
 	}
 	return fmt.Errorf("invalid range. Range end is lesser than or equal to its start. start: %v end: %v", startMac, endMac)
 }
