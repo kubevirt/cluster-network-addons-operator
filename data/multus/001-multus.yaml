@@ -66,6 +66,15 @@ rules:
       - update
       - watch
   - apiGroups:
+      - "resource.k8s.io"
+    resources:
+      - resourceclaims
+      - resourceclaims/status
+      - resourceslices
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - ""
       - events.k8s.io
     resources:
@@ -141,6 +150,7 @@ spec:
       hostPID: true
       tolerations: {{ toYaml .Placement.Tolerations | nindent 8 }}
       serviceAccountName: multus
+      priorityClassName: system-cluster-critical
       containers:
         - name: kube-multus
           image: {{ .MultusImage }}
@@ -212,7 +222,7 @@ spec:
             - name: cnibin
               mountPath: /host/opt/cni/bin
               mountPropagation: Bidirectional
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 30
       volumes:
         - name: cni
           hostPath:
@@ -247,7 +257,6 @@ spec:
         - name: multus-conf-dir
           hostPath:
             path: /etc/cni/multus/net.d
-      priorityClassName: system-cluster-critical
       nodeSelector: {{ toYaml .Placement.NodeSelector | nindent 8 }}
       affinity: {{ toYaml .Placement.Affinity | nindent 8 }}
 {{ if .EnableSCC }}
