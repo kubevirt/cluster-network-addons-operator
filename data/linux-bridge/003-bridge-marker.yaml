@@ -39,7 +39,7 @@ spec:
             - -node-name
             - $(NODE_NAME)
             - -health-probe-port
-            - "8081"
+            - "{{ .HealthPort }}"
           resources:
             requests:
               cpu: "10m"
@@ -51,7 +51,7 @@ spec:
                   fieldPath: spec.nodeName
           ports:
             - name: healthport
-              containerPort: 8081
+              containerPort: {{ .HealthPort }}
               protocol: TCP
           terminationMessagePolicy: FallbackToLogsOnError
           readinessProbe:
