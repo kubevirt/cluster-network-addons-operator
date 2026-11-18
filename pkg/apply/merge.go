@@ -171,8 +171,11 @@ func mergeWebhookConfiguration(current, updated *unstructured.Unstructured) erro
 			continue
 		}
 
+		// Webhooks that are not part of the current configuration yet have
+		// nothing to preserve, keep them as they are
 		currentWebhook, found := currentWebhooksByName[updatedWebhookName]
 		if !found {
+			mergedWebhooks = append(mergedWebhooks, updatedWebhook)
 			continue
 		}
 
