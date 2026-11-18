@@ -249,8 +249,6 @@ func main() {
 	macvtapCniImage := flag.String("macvtap-cni-image", components.MacvtapCniImageDefault, "The macvtap cni image managed by CNA")
 	multusDynamicNetworksImage := flag.String("multus-dynamic-networks-image", components.MultusDynamicNetworksImageDefault, "The multus dynamic networks controller image managed by CNA")
 	kubevirtIpamControllerImage := flag.String("kubevirt-ipam-controller-image", components.KubevirtIpamControllerImageDefault, "The kubevirtipamcontroller-image managed by CNA")
-	flag.String("core-dns-image", "", "N/A: kube-secondary-dns support has been removed")
-	flag.String("kube-secondary-dns-image", "", "N/A: kube-secondary-dns support has been removed")
 	dumpOperatorCRD := flag.Bool("dump-crds", false, "Append operator CRD to bottom of template. Used for csv-generator")
 	inputFile := flag.String("input-file", "", "Not used for csv-generator")
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
