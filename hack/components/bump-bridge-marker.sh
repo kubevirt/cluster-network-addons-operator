@@ -19,7 +19,6 @@ function __parametize_by_object() {
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
 			./DaemonSet_bridge-marker.yaml)
-				sed -i 's/${HEALTH_PROBE_PORT}/8081/g' "${f}"
 				yaml-utils::update_param ${f} metadata.namespace  '{{ .Namespace }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].image  '{{ .LinuxBridgeMarkerImage }}'
 				yaml-utils::update_param ${f} spec.template.spec.containers[0].imagePullPolicy  '{{ .ImagePullPolicy }}'
@@ -34,6 +33,12 @@ function __parametize_by_object() {
 				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsNonRoot 'true'
 				yaml-utils::set_param ${f} spec.template.spec.securityContext.runAsUser '1001'
 				yaml-utils::set_param ${f} spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem 'true'
+				yaml-utils::set_param ${f} 'spec.template.spec.containers[0].args.(.==${HEALTH_PROBE_PORT})' '"{{ .HealthPort }}"'
+				yaml-utils::set_param ${f} 'spec.template.spec.containers[0].ports.(name==healthport).containerPort' '{{ .HealthPort }}'
+				if [ "$(grep -c '{{ .HealthPort }}' "${f}")" -ne 2 ]; then
+					echo "Error: expected 2 occurrences of {{ .HealthPort }} in ${f}"
+					exit 1
+				fi
 				yaml-utils::remove_single_quotes_from_yaml ${f}
 				;;
 		esac
