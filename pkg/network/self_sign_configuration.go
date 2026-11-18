@@ -135,7 +135,7 @@ func validateNotEmpty(name, value string) error {
 }
 
 func validateGreaterThanZero(name string, d time.Duration) error {
-	if d == 0 {
+	if d <= 0 {
 		return errors.Errorf("failed to validate selfSignConfiguration: %s duration has to be > 0", name)
 	}
 	return nil
