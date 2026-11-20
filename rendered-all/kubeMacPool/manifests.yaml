@@ -1,0 +1,534 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-network-addons
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubemacpool-sa
+  namespace: cluster-network-addons
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubemacpool-manager-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - list
+  - watch
+  - create
+  - update
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kubevirt.io
+  resources:
+  - virtualmachines
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - kubevirt.io
+  resources:
+  - virtualmachineinstances
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubemacpool-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubemacpool-manager-role
+subjects:
+- kind: ServiceAccount
+  name: kubemacpool-sa
+  namespace: cluster-network-addons
+---
+apiVersion: v1
+data:
+  RANGE_END: 02:24:07:ff:ff:ff
+  RANGE_START: "02:24:07:00:00:00"
+kind: ConfigMap
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-mac-range-config
+  namespace: cluster-network-addons
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubemacpool-service
+  namespace: cluster-network-addons
+spec:
+  ports:
+  - port: 443
+    targetPort: 8000
+  selector:
+    control-plane: mac-controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: cert-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-cert-manager
+  namespace: cluster-network-addons
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: cert-manager
+      controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        allow-access-cluster-services: ""
+        app: kubemacpool
+        control-plane: cert-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+            weight: 10
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+            weight: 1
+      containers:
+      - args:
+        - --v=production
+        command:
+        - /manager
+        env:
+        - name: RUN_CERT_MANAGER
+          value: ""
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: COMPONENT
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/component']
+        - name: PART_OF
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/part-of']
+        - name: VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/version']
+        - name: MANAGED_BY
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/managed-by']
+        - name: CA_ROTATE_INTERVAL
+          value: 48h0m0s
+        - name: CA_OVERLAP_INTERVAL
+          value: 24h0m0s
+        - name: CERT_ROTATE_INTERVAL
+          value: 24h0m0s
+        - name: CERT_OVERLAP_INTERVAL
+          value: 12h0m0s
+        image: quay.io/kubevirt/kubemacpool@sha256:5f806ab6dccc023363c258c94355fd5dba1eeb0d11e17624a14d767b0d950d7b
+        imagePullPolicy: IfNotPresent
+        name: manager
+        resources:
+          requests:
+            cpu: 30m
+            memory: 30Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+      nodeSelector: null
+      priorityClassName: system-cluster-critical
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 107
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kubemacpool-sa
+      terminationGracePeriodSeconds: 5
+      tolerations: null
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-mac-controller-manager
+  namespace: cluster-network-addons
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: mac-controller-manager
+      controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        description: KubeMacPool manages MAC allocation to Pods and VMs
+        openshift.io/required-scc: restricted-v2
+      labels:
+        allow-access-cluster-services: ""
+        app: kubemacpool
+        control-plane: mac-controller-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+            weight: 10
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+            weight: 1
+      containers:
+      - args:
+        - --v=production
+        - --wait-time=300
+        - --tls-min-version=VersionTLS13
+        - --tls-group-preferences=X25519MLKEM768,X25519,CurveP256,CurveP384
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: RANGE_START
+          valueFrom:
+            configMapKeyRef:
+              key: RANGE_START
+              name: kubemacpool-mac-range-config
+        - name: RANGE_END
+          valueFrom:
+            configMapKeyRef:
+              key: RANGE_END
+              name: kubemacpool-mac-range-config
+        - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
+          value: v1
+        image: quay.io/kubevirt/kubemacpool@sha256:5f806ab6dccc023363c258c94355fd5dba1eeb0d11e17624a14d767b0d950d7b
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Content-Type
+              value: application/json
+            path: /healthz
+            port: webhook-server
+            scheme: HTTPS
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports:
+        - containerPort: 8000
+          name: webhook-server
+          protocol: TCP
+        - containerPort: 8443
+          name: metrics
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Content-Type
+              value: application/json
+            path: /readyz
+            port: webhook-server
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs/
+          name: tls-key-pair
+          readOnly: true
+      nodeSelector: null
+      priorityClassName: system-cluster-critical
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 107
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kubemacpool-sa
+      terminationGracePeriodSeconds: 5
+      tolerations: null
+      volumes:
+      - name: tls-key-pair
+        secret:
+          secretName: kubemacpool-service
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-metrics-endpoint
+  namespace: cluster-network-addons
+spec:
+  ingress:
+  - ports:
+    - port: 8443
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      control-plane: mac-controller-manager
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-webhook
+  namespace: cluster-network-addons
+spec:
+  ingress:
+  - ports:
+    - port: 8000
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      control-plane: mac-controller-manager
+  policyTypes:
+  - Ingress
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kubemacpool-mutator
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: cluster-network-addons
+      path: /mutate-pods
+  failurePolicy: Fail
+  name: mutatepods.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: mutatepods.kubemacpool.io
+      operator: In
+      values:
+      - allocate
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+  sideEffects: NoneOnDryRun
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: cluster-network-addons
+      path: /mutate-virtualmachines
+  failurePolicy: Fail
+  name: mutatevirtualmachines.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: mutatevirtualmachines.kubemacpool.io
+      operator: NotIn
+      values:
+      - ignore
+  rules:
+  - apiGroups:
+    - kubevirt.io
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachines
+  sideEffects: NoneOnDryRun
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress

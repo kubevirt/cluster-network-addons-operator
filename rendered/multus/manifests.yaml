@@ -1,0 +1,317 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-network-addons
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: network-attachment-definitions.k8s.cni.cncf.io
+spec:
+  group: k8s.cni.cncf.io
+  names:
+    kind: NetworkAttachmentDefinition
+    plural: network-attachment-definitions
+    shortNames:
+    - nad
+    - net-attach-def
+    singular: network-attachment-definition
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: 'NetworkAttachmentDefinition is a CRD schema specified by the
+          Network Plumbing Working Group to express the intent for attaching pods
+          to one or more logical or physical networks. More information available
+          at: https://github.com/k8snetworkplumbingwg/multi-net-spec'
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this represen
+              tation of an object. Servers should convert recognized schemas to the
+              latest internal value, and may reject unrecognized values. More info:
+              https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: NetworkAttachmentDefinition spec defines the desired state
+              of a network attachment
+            properties:
+              config:
+                description: NetworkAttachmentDefinition config is a JSON-formatted
+                  CNI configuration
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: multus
+rules:
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/status
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - resource.k8s.io
+  resources:
+  - resourceclaims
+  - resourceclaims/status
+  - resourceslices
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: multus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: multus
+subjects:
+- kind: ServiceAccount
+  name: multus
+  namespace: cluster-network-addons
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: multus
+  namespace: cluster-network-addons
+---
+apiVersion: v1
+data:
+  daemon-config.json: |
+    {
+        "chrootDir": "/hostroot",
+        "cniVersion": "0.3.1",
+        "logLevel": "verbose",
+        "logToStderr": true,
+        "cniConfigDir": "/host/etc/cni/net.d",
+        "multusAutoconfigDir": "/host/etc/cni/net.d",
+        "multusConfigFile": "auto",
+        "socketDir": "/host/run/multus/"
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app: multus
+    tier: node
+  name: multus-daemon-config
+  namespace: cluster-network-addons
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: multus
+    name: multus
+    tier: node
+  name: multus
+  namespace: cluster-network-addons
+spec:
+  selector:
+    matchLabels:
+      name: kube-multus-ds-amd64
+  template:
+    metadata:
+      labels:
+        app: multus
+        name: kube-multus-ds-amd64
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - command:
+        - /usr/src/multus-cni/bin/multus-daemon
+        env:
+        - name: MULTUS_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:109b885d8752fe7a7bc3b2371750bfad6789b8b8e2d0b0820b337386ba9b93c9
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - rm -rf /host/etc/cni/net.d/00-multus.conf /host/var/lib/cni/*
+        name: kube-multus
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /host/etc/cni/net.d
+          name: cni
+        - mountPath: /opt/cni/bin
+          name: cnibin
+        - mountPath: /host/run
+          name: host-run
+        - mountPath: /var/lib/cni/multus
+          name: host-var-lib-cni-multus
+        - mountPath: /var/lib/kubelet
+          mountPropagation: HostToContainer
+          name: host-var-lib-kubelet
+        - mountPath: /run/k8s.cni.cncf.io
+          name: host-run-k8s-cni-cncf-io
+        - mountPath: /run/netns
+          mountPropagation: HostToContainer
+          name: host-run-netns
+        - mountPath: /etc/cni/net.d/multus.d
+          name: multus-daemon-config
+          readOnly: true
+        - mountPath: /hostroot
+          mountPropagation: HostToContainer
+          name: hostroot
+        - mountPath: /etc/cni/multus/net.d
+          name: multus-conf-dir
+      hostNetwork: true
+      hostPID: true
+      initContainers:
+      - command:
+        - /usr/src/multus-cni/bin/install_multus
+        - -d
+        - /host/opt/cni/bin
+        - -t
+        - thick
+        image: ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:109b885d8752fe7a7bc3b2371750bfad6789b8b8e2d0b0820b337386ba9b93c9
+        name: install-multus-binary
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /host/opt/cni/bin
+          mountPropagation: Bidirectional
+          name: cnibin
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: multus
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /etc/cni/net.d
+        name: cni
+      - hostPath:
+          path: /opt/cni/bin
+        name: cnibin
+      - hostPath:
+          path: /
+        name: hostroot
+      - configMap:
+          items:
+          - key: daemon-config.json
+            path: daemon-config.json
+          name: multus-daemon-config
+        name: multus-daemon-config
+      - hostPath:
+          path: /run
+        name: host-run
+      - hostPath:
+          path: /var/lib/cni/multus
+        name: host-var-lib-cni-multus
+      - hostPath:
+          path: /var/lib/kubelet
+        name: host-var-lib-kubelet
+      - hostPath:
+          path: /run/k8s.cni.cncf.io
+        name: host-run-k8s-cni-cncf-io
+      - hostPath:
+          path: /run/netns/
+        name: host-run-netns
+      - hostPath:
+          path: /etc/cni/multus/net.d
+        name: multus-conf-dir
+  updateStrategy:
+    type: RollingUpdate
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress

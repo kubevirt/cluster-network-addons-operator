@@ -118,6 +118,9 @@ manager: $(GO)
 manifest-templator: $(GO)
 	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./tools/manifest-templator/...
 
+cnao-render: $(GO)
+	CGO_ENABLED=0 GOOS=linux $(GO) build -o $(BIN_DIR)/$@ ./tools/cnao-render/...
+
 docker-build: docker-build-operator docker-build-registry
 
 docker-build-operator:

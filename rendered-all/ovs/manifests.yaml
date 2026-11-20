@@ -1,0 +1,187 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-network-addons
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: ovs-cni
+    tier: node
+  name: ovs-cni-amd64
+  namespace: cluster-network-addons
+spec:
+  selector:
+    matchLabels:
+      app: ovs-cni
+  template:
+    metadata:
+      annotations:
+        description: OVS CNI allows users to attach their Pods/VMs to Open vSwitch
+          bridges available on nodes
+      labels:
+        app: ovs-cni
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - -v
+        - "3"
+        - -logtostderr
+        - -node-name
+        - $(NODE_NAME)
+        - -ovs-socket
+        - unix:/host/var/run/openvswitch/db.sock
+        - -healthcheck-interval=60
+        command:
+        - /marker
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - find /tmp/healthy -mmin -2 | grep -q /tmp/healthy
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        name: ovs-cni-marker
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /host/var/run/openvswitch
+          name: ovs-var-run
+        - mountPath: /tmp
+          name: tmp
+      hostNetwork: true
+      initContainers:
+      - args:
+        - |
+          cp /ovs /host/opt/cni/bin/ovs && cp /ovs-mirror-producer /host/opt/cni/bin/ovs-mirror-producer && cp /ovs-mirror-consumer /host/opt/cni/bin/ovs-mirror-consumer
+        command:
+        - /bin/sh
+        - -c
+        image: ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2
+        imagePullPolicy: IfNotPresent
+        name: ovs-cni-plugin
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /host/opt/cni/bin
+          name: cnibin
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      serviceAccountName: ovs-cni-marker
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /opt/cni/bin
+        name: cnibin
+      - hostPath:
+          path: /var/run/openvswitch
+        name: ovs-var-run
+      - emptyDir: {}
+        name: tmp
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 10%
+    type: RollingUpdate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ovs-cni-marker-cr
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/status
+  verbs:
+  - get
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ovs-cni-marker-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ovs-cni-marker-cr
+subjects:
+- kind: ServiceAccount
+  name: ovs-cni-marker
+  namespace: cluster-network-addons
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ovs-cni-marker
+  namespace: cluster-network-addons
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress

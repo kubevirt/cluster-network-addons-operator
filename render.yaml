@@ -1,0 +1,7 @@
+platform: kubernetes
+namespace: cluster-network-addons
+spec:
+  multus: {}
+  kubeMacPool:
+    rangeStart: 02:24:07:00:00:00
+    rangeEnd: 02:24:07:ff:ff:ff

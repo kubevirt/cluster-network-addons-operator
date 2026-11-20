@@ -1,0 +1,204 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dynamic-networks-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dynamic-networks-controller
+subjects:
+- kind: ServiceAccount
+  name: dynamic-networks-controller
+  namespace: cluster-network-addons
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dynamic-networks-controller
+rules:
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - network-attachment-definitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/status
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: v1
+data:
+  dynamic-networks-config.json: |
+    {
+        "criSocketPath": "/host/run/crio/crio.sock",
+        "multusSocketPath": "/host/run/multus/multus.sock"
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app: multus-dynamic-networks-controller
+    tier: node
+  name: dynamic-networks-controller-config
+  namespace: cluster-network-addons
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: dynamic-networks-controller
+    name: dynamic-networks-controller
+    tier: node
+  name: dynamic-networks-controller-ds
+  namespace: cluster-network-addons
+spec:
+  selector:
+    matchLabels:
+      name: dynamic-networks-controller
+  template:
+    metadata:
+      labels:
+        app: dynamic-networks-controller
+        name: dynamic-networks-controller
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - -config=/etc/dynamic-networks-controller/dynamic-networks-config.json
+        - -v=5
+        command:
+        - /dynamic-networks-controller
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:fa4b6ce3b060050b0db41daeabeb5ff6528375e7b679baa9954f767301f532b9
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - --fail
+            - --unix-socket
+            - /host/run/multus/multus.sock
+            - localhost/healthz
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        name: dynamic-networks-controller
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - --fail
+            - --unix-socket
+            - /host/run/multus/multus.sock
+            - localhost/healthz
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /etc/dynamic-networks-controller/
+          name: dynamic-networks-controller-config-dir
+          readOnly: true
+        - mountPath: /host/run/multus/multus.sock
+          name: multus-server-socket
+        - mountPath: /host/run/crio/crio.sock
+          name: cri-socket
+      serviceAccountName: dynamic-networks-controller
+      terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - configMap:
+          items:
+          - key: dynamic-networks-config.json
+            path: dynamic-networks-config.json
+          name: dynamic-networks-controller-config
+        name: dynamic-networks-controller-config-dir
+      - hostPath:
+          path: /run/multus/multus.sock
+          type: Socket
+        name: multus-server-socket
+      - hostPath:
+          path: /run/crio/crio.sock
+          type: Socket
+        name: cri-socket
+  updateStrategy:
+    type: RollingUpdate
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dynamic-networks-controller
+  namespace: cluster-network-addons
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress

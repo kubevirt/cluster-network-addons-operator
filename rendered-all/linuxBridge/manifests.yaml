@@ -1,0 +1,252 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-network-addons
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: cni-linux-bridge-plugin
+    tier: node
+  name: kube-cni-linux-bridge-plugin
+  namespace: cluster-network-addons
+spec:
+  selector:
+    matchLabels:
+      name: kube-cni-linux-bridge-plugin
+  template:
+    metadata:
+      annotations:
+        description: LinuxBridge installs 'bridge' CNI on cluster nodes, so it can
+          be later used to attach Pods/VMs to Linux bridges
+      labels:
+        app: cni-plugins
+        name: kube-cni-linux-bridge-plugin
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - command:
+        - /bin/bash
+        - -ce
+        - |
+          cni_mount_dir=/opt/cni/bin
+          host_dir=/opt/cni/bin
+          components=("bridge" "tuning")
+          for component in "${components[@]}"; do
+            if find "${cni_mount_dir}/${component}" &>/dev/null && ! test -L "${cni_mount_dir}/${component}"; then
+              echo "${component} binary found, creating symbolic link ${cni_mount_dir}/cnv-${component}"
+              ln -sf "${host_dir}/${component}" "${cni_mount_dir}/cnv-${component}"
+            else
+              echo "installing cnv-${component}, and creating symbolic link ${cni_mount_dir}/${component}"
+
+              sourcebinpath="/usr/src/github.com/containernetworking/plugins/bin"
+              cp --remove-destination "${sourcebinpath}/${component}" "${cni_mount_dir}/cnv-${component}"
+
+              printf -v component_checksum "%s" "$(<${sourcebinpath}/${component}.checksum)"
+              printf "%s %s" "${component_checksum% *}" "${cni_mount_dir}/cnv-${component}" | sha256sum --check
+
+              ln -sf "${host_dir}/cnv-${component}" "${cni_mount_dir}/${component}"
+            fi
+          done
+          echo 'Entering sleep... (success)'
+          sleep infinity
+        image: quay.io/kubevirt/cni-default-plugins@sha256:976a24392c2a096c38c2663d234b2d3131f5c24558889196d30b9ac1b6716788
+        imagePullPolicy: IfNotPresent
+        name: cni-plugins
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /opt/cni/bin
+          name: cnibin
+        - mountPath: /tmp
+          name: tmp
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /opt/cni/bin
+        name: cnibin
+      - emptyDir: {}
+        name: tmp
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 10%
+    type: RollingUpdate
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: bridge-marker
+    tier: node
+  name: bridge-marker
+  namespace: cluster-network-addons
+spec:
+  selector:
+    matchLabels:
+      name: bridge-marker
+  template:
+    metadata:
+      annotations:
+        description: Bridge marker exposes network bridges available on nodes as node
+          resources
+        openshift.io/required-scc: bridge-marker
+      labels:
+        app: bridge-marker
+        name: bridge-marker
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - -logtostderr=true
+        - -node-name
+        - $(NODE_NAME)
+        - -health-probe-port
+        - "8081"
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: quay.io/kubevirt/bridge-marker@sha256:c9fefb3e3458502a7bb70f556b13cfab8961288c589f5898d85ee68916d5cfb5
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: healthport
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        name: bridge-marker
+        ports:
+        - containerPort: 8081
+          name: healthport
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: healthport
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      serviceAccountName: bridge-marker
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - emptyDir: {}
+        name: tmp
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 10%
+    type: RollingUpdate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bridge-marker-cr
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: bridge-marker-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bridge-marker-cr
+subjects:
+- kind: ServiceAccount
+  name: bridge-marker
+  namespace: cluster-network-addons
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bridge-marker
+  namespace: cluster-network-addons
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: cluster-network-addons
+spec:
+  egress:
+  - ports:
+    - port: 53
+      protocol: TCP
+    - port: 53
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress

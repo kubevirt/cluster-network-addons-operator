@@ -118,71 +118,63 @@ func IsChangeSafe(prev, next *cnao.NetworkAddonsConfigSpec) error {
 
 // Render creates a list of components to be created
 func Render(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) ([]*unstructured.Unstructured, error) {
+	byComponent, err := RenderByComponent(conf, manifestDir, openshiftNetworkConfig, clusterInfo)
+	if err != nil {
+		return nil, err
+	}
 	objs := []*unstructured.Unstructured{}
-
-	// render Multus
-	o, err := renderMultus(conf, manifestDir, openshiftNetworkConfig, clusterInfo)
-	if err != nil {
-		return nil, err
+	for _, name := range []string{"multus", "multusDynamicNetworks", "linuxBridge", "kubeMacPool", "ovs", "macvtap", "kubevirtIpamController", "common"} {
+		objs = append(objs, byComponent[name]...)
 	}
-	objs = append(objs, o...)
-
-	o, err = renderMultusDynamicNetworks(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render Linux Bridge
-	o, err = renderLinuxBridge(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render kubeMacPool
-	o, err = renderKubeMacPool(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render Ovs
-	o, err = renderOvs(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render MacvtapCni
-	o, err = renderMacvtapCni(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render KubevirtIPAMController
-	o, err = RenderKubevirtIPAMController(conf, manifestDir, clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	// render Monitoring Service
-	o, err = monitoring.RenderMonitoring(manifestDir, clusterInfo.MonitoringAvailable)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
-
-	o, err = RenderNetworkPolicy(manifestDir, *clusterInfo)
-	if err != nil {
-		return nil, err
-	}
-	objs = append(objs, o...)
 
 	renderLog.V(1).Info("render phase done", "objectCount", len(objs))
 	return objs, nil
+}
+
+// RenderByComponent renders enabled components separately and returns shared monitoring and
+// network policy resources under the "common" key.
+func RenderByComponent(conf *cnao.NetworkAddonsConfigSpec, manifestDir string, openshiftNetworkConfig *osv1.Network, clusterInfo *ClusterInfo) (map[string][]*unstructured.Unstructured, error) {
+	result := map[string][]*unstructured.Unstructured{}
+	renderers := []struct {
+		name   string
+		render func() ([]*unstructured.Unstructured, error)
+	}{
+		{"multus", func() ([]*unstructured.Unstructured, error) {
+			return renderMultus(conf, manifestDir, openshiftNetworkConfig, clusterInfo)
+		}},
+		{"multusDynamicNetworks", func() ([]*unstructured.Unstructured, error) {
+			return renderMultusDynamicNetworks(conf, manifestDir, clusterInfo)
+		}},
+		{"linuxBridge", func() ([]*unstructured.Unstructured, error) { return renderLinuxBridge(conf, manifestDir, clusterInfo) }},
+		{"kubeMacPool", func() ([]*unstructured.Unstructured, error) { return renderKubeMacPool(conf, manifestDir, clusterInfo) }},
+		{"ovs", func() ([]*unstructured.Unstructured, error) { return renderOvs(conf, manifestDir, clusterInfo) }},
+		{"macvtap", func() ([]*unstructured.Unstructured, error) { return renderMacvtapCni(conf, manifestDir, clusterInfo) }},
+		{"kubevirtIpamController", func() ([]*unstructured.Unstructured, error) {
+			return RenderKubevirtIPAMController(conf, manifestDir, clusterInfo)
+		}},
+	}
+	for _, renderer := range renderers {
+		objects, err := renderer.render()
+		if err != nil {
+			return nil, err
+		}
+		if len(objects) > 0 {
+			result[renderer.name] = objects
+		}
+	}
+
+	monitoringObjects, err := monitoring.RenderMonitoring(manifestDir, clusterInfo.MonitoringAvailable)
+	if err != nil {
+		return nil, err
+	}
+	result["common"] = append(result["common"], monitoringObjects...)
+
+	networkPolicyObjects, err := RenderNetworkPolicy(manifestDir, *clusterInfo)
+	if err != nil {
+		return nil, err
+	}
+	result["common"] = append(result["common"], networkPolicyObjects...)
+	return result, nil
 }
 
 // RenderObjsToRemove creates list of components to be removed
