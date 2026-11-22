@@ -5,7 +5,8 @@ if [ -z "${KUBEVIRT_VERSION}" ];then
   export KUBEVIRT_VERSION=$(curl -sSfL https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
 fi
 
-./cluster/kubectl.sh apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml
+# Server-side apply avoids the last-applied annotation exceeding the 256KiB limit on the KubeVirt CRD.
+./cluster/kubectl.sh apply --server-side --force-conflicts -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml
 
 # Ensure the KubeVirt CRD is created
 count=0
@@ -18,7 +19,7 @@ done
 curl -sSfL "https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-cr.yaml" \
   | ./cluster/kubectl.sh create --dry-run=client -f - -o json \
   | jq '.spec.configuration.developerConfiguration.disabledFeatureGates = ["ImageVolume"]' \
-  | ./cluster/kubectl.sh apply -f -
+  | ./cluster/kubectl.sh apply --server-side --force-conflicts -f -
 
 # Ensure the KubeVirt CR is created
 count=0
