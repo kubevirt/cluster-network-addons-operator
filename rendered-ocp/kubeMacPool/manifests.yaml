@@ -1,0 +1,773 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kubemacpool-prometheus
+  namespace: openshift-cnv
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubemacpool-prometheus
+  namespace: openshift-cnv
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubemacpool-prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    prometheus.kubemacpool.io: "true"
+  name: kubemacpool-metrics-service
+  namespace: openshift-cnv
+spec:
+  ports:
+  - name: metrics
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    control-plane: mac-controller-manager
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+    prometheus.kubemacpool.io: "true"
+  name: kubemacpool-prometheus-rule
+  namespace: openshift-cnv
+spec:
+  groups:
+  - name: alerts.rules
+    rules:
+    - alert: KubemacpoolMACCollisionDetected
+      annotations:
+        description: '{{ $value }} MAC address(es) have collisions. Multiple running
+          objects are using the same MAC address.'
+        runbook_url: https://kubevirt.io/monitoring/runbooks/KubemacpoolMACCollisionDetected
+        summary: MAC address collisions detected.
+      expr: count(kmp_mac_collisions > 1) > 0
+      for: 30s
+      labels:
+        severity: warning
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: "true"
+    prometheus.kubemacpool.io: "true"
+  name: kubemacpool-metrics-monitor
+  namespace: openshift-cnv
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  selector:
+    matchLabels:
+      control-plane: mac-controller-manager
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-cnv
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubemacpool-sa
+  namespace: openshift-cnv
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubemacpool-manager-role
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - list
+  - watch
+  - create
+  - update
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kubevirt.io
+  resources:
+  - virtualmachines
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - kubevirt.io
+  resources:
+  - virtualmachineinstances
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - delete
+  - list
+  - watch
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubemacpool-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubemacpool-manager-role
+subjects:
+- kind: ServiceAccount
+  name: kubemacpool-sa
+  namespace: openshift-cnv
+---
+apiVersion: v1
+data:
+  RANGE_END: 02:c4:c2:ff:ff:ff
+  RANGE_START: 02:c4:c2:00:00:00
+kind: ConfigMap
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-mac-range-config
+  namespace: openshift-cnv
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubemacpool-service
+  namespace: openshift-cnv
+spec:
+  ports:
+  - port: 443
+    targetPort: 8000
+  selector:
+    control-plane: mac-controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: cert-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-cert-manager
+  namespace: openshift-cnv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: cert-manager
+      controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        openshift.io/required-scc: restricted-v2
+      labels:
+        allow-access-cluster-services: ""
+        app: kubemacpool
+        control-plane: cert-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+            weight: 10
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+            weight: 1
+      containers:
+      - args:
+        - --v=production
+        command:
+        - /manager
+        env:
+        - name: RUN_CERT_MANAGER
+          value: ""
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: COMPONENT
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/component']
+        - name: PART_OF
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/part-of']
+        - name: VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/version']
+        - name: MANAGED_BY
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['app.kubernetes.io/managed-by']
+        - name: CA_ROTATE_INTERVAL
+          value: 48h0m0s
+        - name: CA_OVERLAP_INTERVAL
+          value: 24h0m0s
+        - name: CERT_ROTATE_INTERVAL
+          value: 24h0m0s
+        - name: CERT_OVERLAP_INTERVAL
+          value: 12h0m0s
+        image: quay.io/openshift-cnv/container-native-virtualization-kubemacpool-rhel9@sha256:b82e4a3e44d9e6e0788ce0d31d0711cc18c36b5448cf0b5a54567da1987ae585
+        imagePullPolicy: IfNotPresent
+        name: manager
+        resources:
+          requests:
+            cpu: 30m
+            memory: 30Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+      nodeSelector: null
+      priorityClassName: system-cluster-critical
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: null
+        runAsUser: null
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kubemacpool-sa
+      terminationGracePeriodSeconds: 5
+      tolerations: null
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: mac-controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: kubemacpool-mac-controller-manager
+  namespace: openshift-cnv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: mac-controller-manager
+      controller-tools.k8s.io: "1.0"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        description: KubeMacPool manages MAC allocation to Pods and VMs
+        openshift.io/required-scc: restricted-v2
+      labels:
+        allow-access-cluster-services: ""
+        app: kubemacpool
+        control-plane: mac-controller-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+            weight: 10
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+            weight: 1
+      containers:
+      - args:
+        - --v=production
+        - --wait-time=300
+        - --tls-min-version=VersionTLS12
+        - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+        - --tls-group-preferences=X25519MLKEM768,X25519,CurveP256,CurveP384
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: RANGE_START
+          valueFrom:
+            configMapKeyRef:
+              key: RANGE_START
+              name: kubemacpool-mac-range-config
+        - name: RANGE_END
+          valueFrom:
+            configMapKeyRef:
+              key: RANGE_END
+              name: kubemacpool-mac-range-config
+        - name: KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION
+          value: v1
+        image: quay.io/openshift-cnv/container-native-virtualization-kubemacpool-rhel9@sha256:b82e4a3e44d9e6e0788ce0d31d0711cc18c36b5448cf0b5a54567da1987ae585
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Content-Type
+              value: application/json
+            path: /healthz
+            port: webhook-server
+            scheme: HTTPS
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports:
+        - containerPort: 8000
+          name: webhook-server
+          protocol: TCP
+        - containerPort: 8443
+          name: metrics
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            httpHeaders:
+            - name: Content-Type
+              value: application/json
+            path: /readyz
+            port: webhook-server
+            scheme: HTTPS
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs/
+          name: tls-key-pair
+          readOnly: true
+      nodeSelector: null
+      priorityClassName: system-cluster-critical
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: null
+        runAsUser: null
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: kubemacpool-sa
+      terminationGracePeriodSeconds: 5
+      tolerations: null
+      volumes:
+      - name: tls-key-pair
+        secret:
+          secretName: kubemacpool-service
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-metrics-endpoint
+  namespace: openshift-cnv
+spec:
+  ingress:
+  - ports:
+    - port: 8443
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      control-plane: mac-controller-manager
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubemacpool-allow-ingress-to-webhook
+  namespace: openshift-cnv
+spec:
+  ingress:
+  - ports:
+    - port: 8000
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      control-plane: mac-controller-manager
+  policyTypes:
+  - Ingress
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kubemacpool-mutator
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: openshift-cnv
+      path: /mutate-pods
+  failurePolicy: Fail
+  name: mutatepods.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: mutatepods.kubemacpool.io
+      operator: In
+      values:
+      - allocate
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+  sideEffects: NoneOnDryRun
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: kubemacpool-service
+      namespace: openshift-cnv
+      path: /mutate-virtualmachines
+  failurePolicy: Fail
+  name: mutatevirtualmachines.kubemacpool.io
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: openshift.io/run-level
+      operator: NotIn
+      values:
+      - "0"
+      - "1"
+    - key: mutatevirtualmachines.kubemacpool.io
+      operator: NotIn
+      values:
+      - ignore
+  rules:
+  - apiGroups:
+    - kubevirt.io
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - virtualmachines
+  sideEffects: NoneOnDryRun
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-network-addons-operator-monitoring
+  namespace: openshift-cnv
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-network-addons-operator-monitoring
+  namespace: openshift-cnv
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-network-addons-operator-monitoring
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prometheus.cnao.io: "true"
+  name: cluster-network-addons-operator-prometheus-metrics
+  namespace: openshift-cnv
+spec:
+  ports:
+  - name: metrics
+    port: 8443
+    protocol: TCP
+    targetPort: metrics
+  selector:
+    prometheus.cnao.io: "true"
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: ""
+    prometheus.cnao.io: "true"
+  name: service-monitor-cluster-network-addons-operator
+  namespace: openshift-cnv
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+    - openshift-cnv
+  selector:
+    matchLabels:
+      prometheus.cnao.io: "true"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus.cnao.io: "true"
+  name: prometheus-rules-cluster-network-addons-operator
+  namespace: openshift-cnv
+spec:
+  groups:
+  - name: recordingRules.rules
+    rules:
+    - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='openshift-cnv'} or
+        vector(0))
+      record: cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum
+    - expr: sum(up{namespace='openshift-cnv', pod=~'kubemacpool-mac-controller-manager-.*'}
+        or vector(0))
+      record: cluster:kubevirt_cnao_kubemacpool_manager_up:sum
+    - expr: sum(up{namespace='openshift-cnv', pod=~'cluster-network-addons-operator-.*'}
+        or vector(0))
+      record: cluster:kubevirt_cnao_operator_up:sum
+    - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='openshift-cnv'} or
+        vector(0))
+      record: kubevirt_cnao_cr_kubemacpool_aggregated
+    - expr: sum(kubevirt_kmp_duplicate_macs{namespace='openshift-cnv'} or vector(0))
+      record: kubevirt_cnao_kubemacpool_duplicate_macs
+    - expr: sum(up{namespace='openshift-cnv', pod=~'kubemacpool-mac-controller-manager-.*'}
+        or vector(0))
+      record: kubevirt_cnao_kubemacpool_manager_up
+    - expr: sum(up{namespace='openshift-cnv', pod=~'cluster-network-addons-operator-.*'}
+        or vector(0))
+      record: kubevirt_cnao_operator_up
+  - name: alerts.rules
+    rules:
+    - alert: CnaoDown
+      annotations:
+        runbook_url: https://kubevirt.io/monitoring/runbooks/CnaoDown
+        summary: CNAO pod is down.
+      expr: cluster:kubevirt_cnao_operator_up:sum == 0
+      for: 5m
+      labels:
+        kubernetes_operator_component: cluster-network-addons-operator
+        kubernetes_operator_part_of: kubevirt
+        operator_health_impact: warning
+        severity: warning
+    - alert: KubemacpoolDown
+      annotations:
+        runbook_url: https://kubevirt.io/monitoring/runbooks/KubemacpoolDown
+        summary: KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down.
+      expr: cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum == 1 and cluster:kubevirt_cnao_kubemacpool_manager_up:sum
+        == 0
+      for: 5m
+      labels:
+        kubernetes_operator_component: cluster-network-addons-operator
+        kubernetes_operator_part_of: kubevirt
+        operator_health_impact: critical
+        severity: critical
+    - alert: NetworkAddonsConfigNotReady
+      annotations:
+        runbook_url: https://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady
+        summary: CNAO CR NetworkAddonsConfig is not ready.
+      expr: sum(kubevirt_cnao_cr_ready{namespace='openshift-cnv'} or vector(0)) ==
+        0
+      for: 5m
+      labels:
+        kubernetes_operator_component: cluster-network-addons-operator
+        kubernetes_operator_part_of: kubevirt
+        operator_health_impact: warning
+        severity: warning
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: openshift-cnv
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: openshift-cnv
+spec:
+  egress:
+  - ports:
+    - port: 5353
+      protocol: TCP
+    - port: 5353
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-dns
+      podSelector:
+        matchLabels:
+          dns.operator.openshift.io/daemonset-dns: default
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress

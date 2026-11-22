@@ -1,0 +1,29 @@
+platform: openshift
+namespace: openshift-cnv
+cluster:
+  sccAvailable: true
+  monitoringAvailable: true
+  isSingleReplica: false
+images:
+  kubeMacPool: quay.io/openshift-cnv/container-native-virtualization-kubemacpool-rhel9@sha256:b82e4a3e44d9e6e0788ce0d31d0711cc18c36b5448cf0b5a54567da1987ae585
+  kubevirtIpamController: quay.io/openshift-cnv/container-native-virtualization-kubevirt-ipam-controller-rhel9@sha256:303f576f3b50b8b906a2ef1ecfc7b8d57d7108bb1cd993f78acee4f9f45a7cfd
+  linuxBridge: quay.io/openshift-cnv/container-native-virtualization-cnv-containernetworking-plugins-rhel9@sha256:aa6c613dcd85e1557b7eb3beb856393e619e668a007c790a14daea245fd50d6c
+  linuxBridgeMarker: quay.io/openshift-cnv/container-native-virtualization-bridge-marker-rhel9@sha256:cd308a776c36acfb7bc949fe32371b0abb8f8a3e94b29e9e57e3d3ba54d32609
+spec:
+  kubeMacPool:
+    rangeStart: 02:c4:c2:00:00:00
+    rangeEnd: 02:c4:c2:ff:ff:ff
+  kubevirtIpamController:
+    defaultNetworkNADNamespace: openshift-ovn-kubernetes
+  linuxBridge: {}
+  multus: {}
+  selfSignConfiguration:
+    caOverlapInterval: 24h0m0s
+    caRotateInterval: 48h0m0s
+    certOverlapInterval: 12h0m0s
+    certRotateInterval: 24h0m0s
+  tlsSecurityProfile:
+    intermediate: {}
+    type: Intermediate
+openShiftNetwork:
+  spec: {}

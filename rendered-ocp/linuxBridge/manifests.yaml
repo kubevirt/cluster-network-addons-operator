@@ -1,0 +1,499 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-cnv
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: linux-bridge
+  namespace: openshift-cnv
+---
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: true
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: linux-bridge
+readOnlyRootFilesystem: true
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  seLinuxOptions:
+    type: spc_t
+  type: MustRunAs
+volumes:
+- hostPath
+- configMap
+- secret
+- emptyDir
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: linux-bridge-scc-use
+rules:
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - linux-bridge
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: linux-bridge-scc-use
+  namespace: openshift-cnv
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: linux-bridge-scc-use
+subjects:
+- kind: ServiceAccount
+  name: linux-bridge
+  namespace: openshift-cnv
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: cni-linux-bridge-plugin
+    tier: node
+  name: kube-cni-linux-bridge-plugin
+  namespace: openshift-cnv
+spec:
+  selector:
+    matchLabels:
+      name: kube-cni-linux-bridge-plugin
+  template:
+    metadata:
+      annotations:
+        description: LinuxBridge installs 'bridge' CNI on cluster nodes, so it can
+          be later used to attach Pods/VMs to Linux bridges
+        openshift.io/required-scc: linux-bridge
+      labels:
+        app: cni-plugins
+        name: kube-cni-linux-bridge-plugin
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - command:
+        - /bin/bash
+        - -ce
+        - |
+          cni_mount_dir=/opt/cni/bin
+          host_dir=/var/lib/cni/bin
+          components=("bridge" "tuning")
+          for component in "${components[@]}"; do
+            if find "${cni_mount_dir}/${component}" &>/dev/null && ! test -L "${cni_mount_dir}/${component}"; then
+              echo "${component} binary found, creating symbolic link ${cni_mount_dir}/cnv-${component}"
+              ln -sf "${host_dir}/${component}" "${cni_mount_dir}/cnv-${component}"
+            else
+              echo "installing cnv-${component}, and creating symbolic link ${cni_mount_dir}/${component}"
+
+              sourcebinpath="/usr/src/github.com/containernetworking/plugins/bin"
+              cp --remove-destination "${sourcebinpath}/${component}" "${cni_mount_dir}/cnv-${component}"
+
+              printf -v component_checksum "%s" "$(<${sourcebinpath}/${component}.checksum)"
+              printf "%s %s" "${component_checksum% *}" "${cni_mount_dir}/cnv-${component}" | sha256sum --check
+
+              ln -sf "${host_dir}/cnv-${component}" "${cni_mount_dir}/${component}"
+            fi
+          done
+          echo 'Entering sleep... (success)'
+          sleep infinity
+        image: quay.io/openshift-cnv/container-native-virtualization-cnv-containernetworking-plugins-rhel9@sha256:aa6c613dcd85e1557b7eb3beb856393e619e668a007c790a14daea245fd50d6c
+        imagePullPolicy: IfNotPresent
+        name: cni-plugins
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          privileged: true
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /opt/cni/bin
+          name: cnibin
+        - mountPath: /tmp
+          name: tmp
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: linux-bridge
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /var/lib/cni/bin
+        name: cnibin
+      - emptyDir: {}
+        name: tmp
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 10%
+    type: RollingUpdate
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: bridge-marker
+    tier: node
+  name: bridge-marker
+  namespace: openshift-cnv
+spec:
+  selector:
+    matchLabels:
+      name: bridge-marker
+  template:
+    metadata:
+      annotations:
+        description: Bridge marker exposes network bridges available on nodes as node
+          resources
+        openshift.io/required-scc: bridge-marker
+      labels:
+        app: bridge-marker
+        name: bridge-marker
+        tier: node
+    spec:
+      affinity: {}
+      containers:
+      - args:
+        - -logtostderr=true
+        - -node-name
+        - $(NODE_NAME)
+        - -health-probe-port
+        - "8081"
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: quay.io/openshift-cnv/container-native-virtualization-bridge-marker-rhel9@sha256:cd308a776c36acfb7bc949fe32371b0abb8f8a3e94b29e9e57e3d3ba54d32609
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: healthport
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        name: bridge-marker
+        ports:
+        - containerPort: 8081
+          name: healthport
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: healthport
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 10m
+            memory: 15Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+        terminationMessagePolicy: FallbackToLogsOnError
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      serviceAccountName: bridge-marker
+      tolerations:
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      volumes:
+      - emptyDir: {}
+        name: tmp
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 10%
+    type: RollingUpdate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bridge-marker-cr
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: bridge-marker-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bridge-marker-cr
+subjects:
+- kind: ServiceAccount
+  name: bridge-marker
+  namespace: openshift-cnv
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bridge-marker
+  namespace: openshift-cnv
+---
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: true
+allowHostPID: false
+allowHostPorts: true
+allowPrivilegedContainer: false
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: bridge-marker
+readOnlyRootFilesystem: true
+runAsUser:
+  type: MustRunAsNonRoot
+seLinuxContext:
+  type: MustRunAs
+volumes:
+- configMap
+- emptyDir
+- projected
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bridge-marker-scc-use
+rules:
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - bridge-marker
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bridge-marker-scc-use
+  namespace: openshift-cnv
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bridge-marker-scc-use
+subjects:
+- kind: ServiceAccount
+  name: bridge-marker
+  namespace: openshift-cnv
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-network-addons-operator-monitoring
+  namespace: openshift-cnv
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-network-addons-operator-monitoring
+  namespace: openshift-cnv
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-network-addons-operator-monitoring
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    prometheus.cnao.io: "true"
+  name: cluster-network-addons-operator-prometheus-metrics
+  namespace: openshift-cnv
+spec:
+  ports:
+  - name: metrics
+    port: 8443
+    protocol: TCP
+    targetPort: metrics
+  selector:
+    prometheus.cnao.io: "true"
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    openshift.io/cluster-monitoring: ""
+    prometheus.cnao.io: "true"
+  name: service-monitor-cluster-network-addons-operator
+  namespace: openshift-cnv
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    port: metrics
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+  namespaceSelector:
+    matchNames:
+    - openshift-cnv
+  selector:
+    matchLabels:
+      prometheus.cnao.io: "true"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus.cnao.io: "true"
+  name: prometheus-rules-cluster-network-addons-operator
+  namespace: openshift-cnv
+spec:
+  groups:
+  - name: recordingRules.rules
+    rules:
+    - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='openshift-cnv'} or
+        vector(0))
+      record: cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum
+    - expr: sum(up{namespace='openshift-cnv', pod=~'kubemacpool-mac-controller-manager-.*'}
+        or vector(0))
+      record: cluster:kubevirt_cnao_kubemacpool_manager_up:sum
+    - expr: sum(up{namespace='openshift-cnv', pod=~'cluster-network-addons-operator-.*'}
+        or vector(0))
+      record: cluster:kubevirt_cnao_operator_up:sum
+    - expr: sum(kubevirt_cnao_cr_kubemacpool_deployed{namespace='openshift-cnv'} or
+        vector(0))
+      record: kubevirt_cnao_cr_kubemacpool_aggregated
+    - expr: sum(kubevirt_kmp_duplicate_macs{namespace='openshift-cnv'} or vector(0))
+      record: kubevirt_cnao_kubemacpool_duplicate_macs
+    - expr: sum(up{namespace='openshift-cnv', pod=~'kubemacpool-mac-controller-manager-.*'}
+        or vector(0))
+      record: kubevirt_cnao_kubemacpool_manager_up
+    - expr: sum(up{namespace='openshift-cnv', pod=~'cluster-network-addons-operator-.*'}
+        or vector(0))
+      record: kubevirt_cnao_operator_up
+  - name: alerts.rules
+    rules:
+    - alert: CnaoDown
+      annotations:
+        runbook_url: https://kubevirt.io/monitoring/runbooks/CnaoDown
+        summary: CNAO pod is down.
+      expr: cluster:kubevirt_cnao_operator_up:sum == 0
+      for: 5m
+      labels:
+        kubernetes_operator_component: cluster-network-addons-operator
+        kubernetes_operator_part_of: kubevirt
+        operator_health_impact: warning
+        severity: warning
+    - alert: KubemacpoolDown
+      annotations:
+        runbook_url: https://kubevirt.io/monitoring/runbooks/KubemacpoolDown
+        summary: KubeMacpool is deployed by CNAO CR but KubeMacpool pod is down.
+      expr: cluster:kubevirt_cnao_cr_kubemacpool_deployed:sum == 1 and cluster:kubevirt_cnao_kubemacpool_manager_up:sum
+        == 0
+      for: 5m
+      labels:
+        kubernetes_operator_component: cluster-network-addons-operator
+        kubernetes_operator_part_of: kubevirt
+        operator_health_impact: critical
+        severity: critical
+    - alert: NetworkAddonsConfigNotReady
+      annotations:
+        runbook_url: https://kubevirt.io/monitoring/runbooks/NetworkAddonsConfigNotReady
+        summary: CNAO CR NetworkAddonsConfig is not ready.
+      expr: sum(kubevirt_cnao_cr_ready{namespace='openshift-cnv'} or vector(0)) ==
+        0
+      for: 5m
+      labels:
+        kubernetes_operator_component: cluster-network-addons-operator
+        kubernetes_operator_part_of: kubevirt
+        operator_health_impact: warning
+        severity: warning
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-api
+  namespace: openshift-cnv
+spec:
+  egress:
+  - ports:
+    - port: 6443
+      protocol: TCP
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cnao-allow-egress-to-cluster-dns
+  namespace: openshift-cnv
+spec:
+  egress:
+  - ports:
+    - port: 5353
+      protocol: TCP
+    - port: 5353
+      protocol: UDP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-dns
+      podSelector:
+        matchLabels:
+          dns.operator.openshift.io/daemonset-dns: default
+  podSelector:
+    matchExpressions:
+    - key: allow-access-cluster-services
+      operator: Exists
+  policyTypes:
+  - Egress
