@@ -1,0 +1,90 @@
+package releases
+
+import (
+	cnao "github.com/kubevirt/cluster-network-addons-operator/pkg/apis/networkaddonsoperator/shared"
+)
+
+func init() {
+	release := Release{
+		Version: "0.104.0-rc-1",
+		Containers: []cnao.Container{
+			{
+				ParentName: "multus",
+				ParentKind: "DaemonSet",
+				Name:       "kube-multus",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:109b885d8752fe7a7bc3b2371750bfad6789b8b8e2d0b0820b337386ba9b93c9",
+			},
+			{
+				ParentName: "dynamic-networks-controller-ds",
+				ParentKind: "DaemonSet",
+				Name:       "dynamic-networks-controller",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-dynamic-networks-controller@sha256:fa4b6ce3b060050b0db41daeabeb5ff6528375e7b679baa9954f767301f532b9",
+			},
+			{
+				ParentName: "multus",
+				ParentKind: "DaemonSet",
+				Name:       "install-multus-binary",
+				Image:      "ghcr.io/k8snetworkplumbingwg/multus-cni@sha256:109b885d8752fe7a7bc3b2371750bfad6789b8b8e2d0b0820b337386ba9b93c9",
+			},
+			{
+				ParentName: "bridge-marker",
+				ParentKind: "DaemonSet",
+				Name:       "bridge-marker",
+				Image:      "quay.io/kubevirt/bridge-marker@sha256:c9fefb3e3458502a7bb70f556b13cfab8961288c589f5898d85ee68916d5cfb5",
+			},
+			{
+				ParentName: "kube-cni-linux-bridge-plugin",
+				ParentKind: "DaemonSet",
+				Name:       "cni-plugins",
+				Image:      "quay.io/kubevirt/cni-default-plugins@sha256:976a24392c2a096c38c2663d234b2d3131f5c24558889196d30b9ac1b6716788",
+			},
+			{
+				ParentName: "kubemacpool-mac-controller-manager",
+				ParentKind: "Deployment",
+				Name:       "manager",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:5f806ab6dccc023363c258c94355fd5dba1eeb0d11e17624a14d767b0d950d7b",
+			},
+			{
+				ParentName: "kubemacpool-cert-manager",
+				ParentKind: "Deployment",
+				Name:       "manager",
+				Image:      "quay.io/kubevirt/kubemacpool@sha256:5f806ab6dccc023363c258c94355fd5dba1eeb0d11e17624a14d767b0d950d7b",
+			},
+			{
+				ParentName: "ovs-cni-amd64",
+				ParentKind: "DaemonSet",
+				Name:       "ovs-cni-plugin",
+				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2",
+			},
+			{
+				ParentName: "ovs-cni-amd64",
+				ParentKind: "DaemonSet",
+				Name:       "ovs-cni-marker",
+				Image:      "ghcr.io/k8snetworkplumbingwg/ovs-cni-plugin@sha256:e59f7ed19d305e0d99db5eb58be52b49394164f3eea0c6db66e6083df5b7d8f2",
+			},
+			{
+				ParentName: "kubevirt-ipam-controller-manager",
+				ParentKind: "Deployment",
+				Name:       "manager",
+				Image:      "ghcr.io/kubevirt/ipam-controller@sha256:1f0213ac44b517ec74600934b0b57f57f244d099e679580694675bf98592d704",
+			},
+		},
+		SupportedSpec: cnao.NetworkAddonsConfigSpec{
+			KubeMacPool:            &cnao.KubeMacPool{},
+			LinuxBridge:            &cnao.LinuxBridge{},
+			Multus:                 &cnao.Multus{},
+			Ovs:                    &cnao.Ovs{},
+			MultusDynamicNetworks:  &cnao.MultusDynamicNetworks{},
+			KubevirtIpamController: &cnao.KubevirtIpamController{},
+		},
+		Manifests: []string{
+			"network-addons-config.crd.yaml",
+			"operator.yaml",
+		},
+		CrdCleanUp: []string{
+			"network-attachment-definitions.k8s.cni.cncf.io",
+			"networkaddonsconfigs.networkaddonsoperator.network.kubevirt.io",
+		},
+	}
+	releases = append(releases, release)
+}
