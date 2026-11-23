@@ -63,13 +63,6 @@ git-utils::fetch_component ${OVS_PATH} ${OVS_URL} ${OVS_COMMIT}
 	echo 'parametize manifests by object'
 	__parametize_by_object
 
-	cat <<EOF > 000-ns.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ .Namespace }}
-EOF
-
 	cat <<EOF > SecurityContextConstraints_ovs-cni-marker.yaml
 {{ if .EnableSCC }}
 ---
@@ -124,7 +117,6 @@ EOF
 
 echo 'copy manifests'
 rm -rf data/ovs/*
-cp ${OVS_PATH}/config/cnao/000-ns.yaml data/ovs/
 cp ${OVS_PATH}/config/cnao/001-ovs-cni.yaml data/ovs/
 
 OVS_TAG=$(git-utils::get_component_tag ${OVS_PATH})
