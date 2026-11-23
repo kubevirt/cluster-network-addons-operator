@@ -29,10 +29,6 @@ function __set_empty_string_label() {
 function __parametize_by_object() {
 	for f in ./*; do
 		case "${f}" in
-			./Namespace_kubemacpool-system.yaml)
-				yaml-utils::update_param ${f} metadata.name '{{ .Namespace }}'
-				yaml-utils::delete_param ${f} metadata.labels
-				;;
 			./ServiceAccount_kubemacpool-sa.yaml)
 				yaml-utils::update_param ${f} metadata.namespace '{{ .Namespace }}'
 				;;
@@ -151,8 +147,7 @@ echo 'Adjust kubemacpool manifests for CNAO'
 	__parametize_by_object
 
 	echo 'Rejoin sub-manifests to final manifest'
-	cat Namespace_kubemacpool-system.yaml \
-		ServiceAccount_kubemacpool-sa.yaml \
+	cat ServiceAccount_kubemacpool-sa.yaml \
 		ClusterRole_kubemacpool-manager-role.yaml \
 		ClusterRoleBinding_kubemacpool-manager-rolebinding.yaml \
 		ConfigMap_kubemacpool-mac-range-config.yaml \
