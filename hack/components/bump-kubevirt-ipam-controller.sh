@@ -11,10 +11,6 @@ IPAMCLAIMS_CRD_VERSION="v0.4.0-alpha"
 function __parametize_by_object() {
   for f in ./*; do
     case "${f}" in
-      ./Namespace_kubevirt-ipam-controller-system.yaml)
-        yaml-utils::update_param ${f} metadata.name '{{ .Namespace }}'
-        yaml-utils::remove_single_quotes_from_yaml ${f}
-        ;;
       ./ClusterRoleBinding_kubevirt-ipam-controller-manager-rolebinding.yaml)
         yaml-utils::update_param ${f} subjects[0].namespace '{{ .Namespace }}'
         yaml-utils::remove_single_quotes_from_yaml ${f}
@@ -125,8 +121,7 @@ echo 'Adjust kubevirt-ipam-controller to CNAO'
 {{ end }}' Deployment_kubevirt-ipam-controller-manager.yaml
 
   echo 'rejoin sub-manifests to a final manifest'
-  cat Namespace_kubevirt-ipam-controller-system.yaml \
-      ServiceAccount_kubevirt-ipam-controller-manager.yaml \
+  cat ServiceAccount_kubevirt-ipam-controller-manager.yaml \
       Role_kubevirt-ipam-controller-leader-election-role.yaml \
       ClusterRole_kubevirt-ipam-controller-manager-role.yaml \
       RoleBinding_kubevirt-ipam-controller-leader-election-rolebinding.yaml \

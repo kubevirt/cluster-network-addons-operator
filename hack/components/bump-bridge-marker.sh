@@ -134,6 +134,7 @@ EOF
 )
 
 echo 'copy manifests'
+rm -f data/linux-bridge/000-ns.yaml
 rm -f data/linux-bridge/003*.yaml
 rm -f data/linux-bridge/0004*.yaml #remove old file
 cp ${BRIDGE_MARKER_PATH}/config/cnao/003-bridge-marker.yaml data/linux-bridge/

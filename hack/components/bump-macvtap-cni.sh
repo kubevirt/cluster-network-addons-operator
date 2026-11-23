@@ -36,7 +36,6 @@ git-utils::fetch_component ${MACVTAP_PATH} ${MACVTAP_URL} ${MACVTAP_COMMIT}
 
 rm -rf data/macvtap/*
 echo 'Copy the templates from the macvtap-cni repo ...'
-cp ${MACVTAP_PATH}/templates/namespace.yaml.in data/macvtap/000-ns.yaml
 cat <<'EOF' > data/macvtap/001-rbac.yaml
 ---
 apiVersion: v1

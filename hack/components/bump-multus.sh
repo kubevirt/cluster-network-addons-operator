@@ -74,13 +74,6 @@ git-utils::fetch_component ${MULTUS_PATH} ${MULTUS_URL} ${MULTUS_COMMIT}
 	echo 'parametize manifests by object'
 	__parametize_by_object
 
-	cat <<EOF > 000-ns.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ .Namespace }}
-EOF
-
 	cat <<EOF > SecurityContextConstraints_multus.yaml
 {{ if .EnableSCC }}
 ---
@@ -143,7 +136,6 @@ EOF
 
 echo 'copy manifests'
 rm -rf data/multus/*
-cp ${MULTUS_PATH}/config/cnao/000-ns.yaml data/multus/
 cp ${MULTUS_PATH}/config/cnao/001-multus.yaml data/multus/
 
 echo 'Get multus image name'
