@@ -1,13 +1,5 @@
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    app: ipam-virt-workloads
-    control-plane: manager
-  name: {{ .Namespace }}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
