@@ -26,7 +26,6 @@ const (
 
 func Register(namespace string) error {
 	alerts := [][]promv1.Rule{
-		kubemacpoolAlerts,
 		operatorAlerts(namespace),
 	}
 
