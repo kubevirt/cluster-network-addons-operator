@@ -86,12 +86,11 @@ var _ = Context("Prometheus Alerts", func() {
 			CheckConfigCondition(gvk, ConditionAvailable, ConditionFalse, 1*time.Minute, 1*time.Minute)
 		})
 
-		It("should issue NetworkAddonsConfigNotReady and KubemacpoolDown alerts", func() {
-			By("waiting for the amount of time it takes the alerts to fire")
+		It("should issue the NetworkAddonsConfigNotReady alert", func() {
+			By("waiting for the amount of time it takes the alert to fire")
 			time.Sleep(5 * time.Minute)
 			By("checking existence of alerts")
 			prometheusClient.checkForAlert("NetworkAddonsConfigNotReady")
-			prometheusClient.checkForAlert("KubemacpoolDown")
 		})
 	})
 

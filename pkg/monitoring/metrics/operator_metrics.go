@@ -23,7 +23,7 @@ var (
 	kmpDeployed = operatormetrics.NewGauge(
 		operatormetrics.MetricOpts{
 			Name: "kubevirt_cnao_cr_kubemacpool_deployed",
-			Help: "KubeMacpool is deployed by CNAO CR",
+			Help: "[Deprecated] KubeMacpool is deployed by CNAO CR",
 		},
 	)
 )
