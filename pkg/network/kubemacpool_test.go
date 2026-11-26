@@ -92,6 +92,35 @@ var _ = Describe("Testing kubeMacPool", func() {
 			})
 		})
 
+		Context("When range end is lesser than its start but has a greater lower octet", func() {
+			It("should return an error", func() {
+				clusterConfig := &cnao.NetworkAddonsConfigSpec{
+					KubeMacPool: &cnao.KubeMacPool{RangeStart: "02:00:00:00:01:00", RangeEnd: "02:00:00:00:00:ff"}}
+				errorList := validateKubeMacPool(clusterConfig)
+				Expect(len(errorList)).To(Equal(1), "validation failed due to an unexpected error: %v", errorList)
+				Expect(errorList[0].Error()).To(Equal("failed to set mac address range: invalid range. Range end is lesser than or equal to its start. start: 02:00:00:00:01:00 end: 02:00:00:00:00:ff"))
+			})
+		})
+
+		Context("When range end has a lesser first octet than its start", func() {
+			It("should return an error", func() {
+				clusterConfig := &cnao.NetworkAddonsConfigSpec{
+					KubeMacPool: &cnao.KubeMacPool{RangeStart: "0a:00:00:00:00:00", RangeEnd: "02:ff:ff:ff:ff:ff"}}
+				errorList := validateKubeMacPool(clusterConfig)
+				Expect(len(errorList)).To(Equal(1), "validation failed due to an unexpected error: %v", errorList)
+				Expect(errorList[0].Error()).To(Equal("failed to set mac address range: invalid range. Range end is lesser than or equal to its start. start: 0a:00:00:00:00:00 end: 02:ff:ff:ff:ff:ff"))
+			})
+		})
+
+		Context("When range end is greater than its start but has a lesser lower octet", func() {
+			It("should NOT return an error", func() {
+				clusterConfig := &cnao.NetworkAddonsConfigSpec{
+					KubeMacPool: &cnao.KubeMacPool{RangeStart: "02:00:00:00:00:ff", RangeEnd: "02:00:00:00:01:00"}}
+				errorList := validateKubeMacPool(clusterConfig)
+				Expect(errorList).To(BeEmpty())
+			})
+		})
+
 		Context("When range end is the same as its start", func() {
 			It("should return an error", func() {
 				clusterConfig := &cnao.NetworkAddonsConfigSpec{
