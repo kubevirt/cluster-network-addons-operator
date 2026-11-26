@@ -411,6 +411,68 @@ webhooks:
 				},
 			}),
 		)
+		It("should keep webhooks that are missing at current config and preserve caBundle of existing ones", func() {
+			current := k8s.UnstructuredFromYaml(`
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kubemacpool-mutator
+webhooks:
+  - name: mutatepods.kubemacpool.io
+    clientConfig:
+      caBundle: cawh1
+      service:
+        name: kubemacpool-service
+        namespace: kubemacpool
+        path: "/mutate-pods"
+`)
+			updated := k8s.UnstructuredFromYaml(`
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kubemacpool-mutator
+webhooks:
+  - name: mutatepods.kubemacpool.io
+    clientConfig:
+      service:
+        name: kubemacpool-service
+        namespace: kubemacpool
+        path: "/mutate-pods"
+  - name: mutatevirtualmachines.kubemacpool.io
+    clientConfig:
+      service:
+        name: kubemacpool-service
+        namespace: kubemacpool
+        path: "/mutate-virtualmachines"
+`)
+			expected := k8s.UnstructuredFromYaml(`
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kubemacpool-mutator
+  labels: {}
+  annotations: {}
+webhooks:
+  - name: mutatepods.kubemacpool.io
+    clientConfig:
+      caBundle: cawh1
+      service:
+        name: kubemacpool-service
+        namespace: kubemacpool
+        path: "/mutate-pods"
+  - name: mutatevirtualmachines.kubemacpool.io
+    clientConfig:
+      service:
+        name: kubemacpool-service
+        namespace: kubemacpool
+        path: "/mutate-virtualmachines"
+`)
+
+			err := apply.MergeObjectForUpdate(current, updated)
+			Expect(err).ToNot(HaveOccurred(), "should successfully execute merge function")
+
+			Expect(*updated).To(Equal(*expected), "the new webhook should be kept and the original caBundle left intact")
+		})
 	})
 })
 
